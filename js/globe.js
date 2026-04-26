@@ -1,0 +1,549 @@
+/* ThreatGlobe owns the Three.js scene, globe mesh, markers, input handling, and per-frame animation. */
+class ThreatGlobe {
+  constructor(container, threatsSource) {
+    // The container holds the Three.js canvas, and the threats array stays external on purpose.
+    this.container = container;
+    this.threats = threatsSource;
+
+    // These references are filled in by init() when the 3D scene is created.
+    this.scene = null;
+    this.camera = null;
+    this.renderer = null;
+    this.globe = null;
+
+    // The group lets us rotate the globe, atmosphere, and threat markers together.
+    this.globeGroup = new THREE.Group();
+
+    // Raycasting turns mouse position into object selection for clicks and hover.
+    this.raycaster = new THREE.Raycaster();
+    this.pointer = new THREE.Vector2();
+
+    // The clock drives animation timing so pulses stay smooth and time-based.
+    this.clock = new THREE.Clock();
+
+    // nodeMap keeps the live 3D meshes aligned with each active threat object.
+    this.nodeMap = new Map();
+
+    // Layer 2 will subscribe through this hook when it needs to react to clicks.
+    this.clickHandlers = [];
+    this.hoveredThreatId = null;
+
+    // Drag state stores the last pointer position so rotation can follow the mouse.
+    this.dragState = {
+      isDragging: false,
+      lastX: 0,
+      lastY: 0,
+      moved: false
+    };
+
+    // Small velocity values let drag input blend into the globe's slow auto-rotation.
+    this.rotationVelocity = {
+      x: 0,
+      y: 0
+    };
+    this.autoRotateSpeed = 0.0012;
+    this.globeRadius = 2.15;
+
+    // Each severity maps to a color and pulse behavior for the node meshes.
+    this.severityConfig = {
+      critical: { color: "#ff2233", pulseSpeed: 3.8, pulseAmp: 0.34, baseScale: 1.15 },
+      high: { color: "#ff6600", pulseSpeed: 3.0, pulseAmp: 0.24, baseScale: 1.0 },
+      medium: { color: "#ffcc00", pulseSpeed: 2.3, pulseAmp: 0.18, baseScale: 0.9 },
+      low: { color: "#00ffcc", pulseSpeed: 1.7, pulseAmp: 0.12, baseScale: 0.82 }
+    };
+  }
+
+  // init() builds the renderer, camera, lights, globe meshes, and input handlers.
+  init() {
+    // The scene is the root container for everything Three.js draws.
+    this.scene = new THREE.Scene();
+    // The camera defines how we view the globe from a slight front-facing angle.
+    this.camera = new THREE.PerspectiveCamera(
+      45,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      100
+    );
+    this.camera.position.set(0, 0.45, 7);
+
+    // The renderer turns the scene into pixels and attaches the canvas to the page.
+    this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.renderer.outputEncoding = THREE.sRGBEncoding;
+    this.container.appendChild(this.renderer.domElement);
+
+    // The globe group holds the planet and the nodes so we can rotate them together.
+    this.scene.add(this.globeGroup);
+
+    // Ambient, key, and fill lights give the sphere depth without making it too bright.
+    const ambientLight = new THREE.AmbientLight(0x88ffaa, 0.75);
+    this.scene.add(ambientLight);
+
+    const keyLight = new THREE.DirectionalLight(0x6fd8ff, 0.95);
+    keyLight.position.set(5, 3, 6);
+    this.scene.add(keyLight);
+
+    const fillLight = new THREE.DirectionalLight(0x00ff88, 0.25);
+    fillLight.position.set(-4, -2, -3);
+    this.scene.add(fillLight);
+
+    // The backdrop, globe, nodes, and input listeners all need to exist before animation starts.
+    this.addBackdrop();
+    this.createGlobe();
+    this.syncThreatNodes();
+    this.attachEvents();
+    this.updateActiveCount();
+    this.animate();
+  }
+
+  // addBackdrop() creates a star field by scattering random points on a large sphere shell.
+  addBackdrop() {
+    const starGeometry = new THREE.BufferGeometry();
+    const starCount = 1500;
+    const positions = new Float32Array(starCount * 3);
+
+    // Each star gets a random spherical position so the backdrop wraps around the camera.
+    for (let i = 0; i < starCount; i += 1) {
+      const r = 45 + Math.random() * 30;
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos((Math.random() * 2) - 1);
+      positions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+      positions[(i * 3) + 1] = r * Math.cos(phi);
+      positions[(i * 3) + 2] = r * Math.sin(phi) * Math.sin(theta);
+    }
+
+    starGeometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+
+    const starMaterial = new THREE.PointsMaterial({
+      color: 0x9cdcff,
+      size: 0.08,
+      transparent: true,
+      opacity: 0.9,
+      depthWrite: false
+    });
+
+    const stars = new THREE.Points(starGeometry, starMaterial);
+    this.scene.add(stars);
+  }
+
+  // createGlobe() builds the planet mesh, its atmosphere, and a texture fallback path.
+  createGlobe() {
+    // SphereGeometry gives us the round Earth-like shape for the planet.
+    const geometry = new THREE.SphereGeometry(this.globeRadius, 96, 96);
+    // Start with a procedural texture so the globe always renders, even if the network image fails.
+    const baseTexture = this.createProceduralGlobeTexture();
+    const material = new THREE.MeshPhongMaterial({
+      map: baseTexture,
+      emissive: new THREE.Color("#04150d"),
+      emissiveIntensity: 0.85,
+      shininess: 18,
+      specular: new THREE.Color("#1f734c")
+    });
+
+    this.globe = new THREE.Mesh(geometry, material);
+    this.globeGroup.add(this.globe);
+
+    // A faint atmosphere shell gives the globe a subtle glow around the edge.
+    const atmosphere = new THREE.Mesh(
+      new THREE.SphereGeometry(this.globeRadius * 1.035, 64, 64),
+      new THREE.MeshBasicMaterial({
+        color: 0x00ff88,
+        transparent: true,
+        opacity: 0.08,
+        side: THREE.BackSide
+      })
+    );
+    this.globeGroup.add(atmosphere);
+
+    // If the public Earth texture loads, it replaces the fallback map with a better surface image.
+    const loader = new THREE.TextureLoader();
+    loader.setCrossOrigin("anonymous");
+    loader.load(
+      "https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg",
+      (texture) => {
+        texture.encoding = THREE.sRGBEncoding;
+        texture.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
+        material.map = texture;
+        material.needsUpdate = true;
+      },
+      undefined,
+      () => {
+        console.warn("Earth texture failed to load. Using procedural fallback texture.");
+      }
+    );
+  }
+
+  // createProceduralGlobeTexture() draws a fake Earth texture on a canvas in case the CDN image fails.
+  createProceduralGlobeTexture() {
+    // A canvas texture lets us paint colors, grid lines, and land shapes with plain 2D drawing code.
+    const canvas = document.createElement("canvas");
+    canvas.width = 2048;
+    canvas.height = 1024;
+    const ctx = canvas.getContext("2d");
+
+    // Start with a dark gradient so the globe feels like a night-side tactical map.
+    const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+    gradient.addColorStop(0, "#061018");
+    gradient.addColorStop(0.5, "#0b1f24");
+    gradient.addColorStop(1, "#03080c");
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Draw a faint latitude/longitude grid so the fallback still feels geospatial.
+    ctx.strokeStyle = "rgba(0, 255, 136, 0.12)";
+    ctx.lineWidth = 1;
+    for (let x = 0; x <= canvas.width; x += 128) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, canvas.height);
+      ctx.stroke();
+    }
+    for (let y = 0; y <= canvas.height; y += 128) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(canvas.width, y);
+      ctx.stroke();
+    }
+
+    // These polygon shapes approximate continents so the fallback looks like a stylized Earth.
+    const continents = [
+      [[190, 150], [310, 110], [430, 145], [480, 250], [440, 380], [300, 390], [220, 300]],
+      [[520, 180], [660, 160], [720, 240], [690, 350], [610, 410], [540, 310]],
+      [[950, 140], [1130, 120], [1310, 170], [1400, 260], [1330, 330], [1170, 320], [1040, 250]],
+      [[1170, 360], [1260, 390], [1320, 480], [1300, 650], [1200, 760], [1120, 660], [1100, 500]],
+      [[1500, 180], [1670, 130], [1810, 190], [1880, 310], [1800, 410], [1620, 370], [1510, 290]],
+      [[1640, 560], [1740, 590], [1810, 690], [1750, 800], [1640, 780], [1580, 660]]
+    ];
+
+    ctx.lineWidth = 3;
+    continents.forEach((points, index) => {
+      // Alternate fill tones create a little contrast between land masses.
+      const fill = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      fill.addColorStop(0, index % 2 === 0 ? "rgba(26, 102, 73, 0.9)" : "rgba(18, 83, 63, 0.9)");
+      fill.addColorStop(1, "rgba(5, 35, 23, 0.92)");
+      ctx.fillStyle = fill;
+      ctx.strokeStyle = "rgba(123, 255, 191, 0.42)";
+      ctx.beginPath();
+      points.forEach((point, pointIndex) => {
+        if (pointIndex === 0) {
+          ctx.moveTo(point[0], point[1]);
+        } else {
+          ctx.lineTo(point[0], point[1]);
+        }
+      });
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    });
+
+    // Random speckles add visual noise so the surface does not look flat or synthetic.
+    for (let i = 0; i < 220; i += 1) {
+      ctx.fillStyle = `rgba(0, 255, 136, ${0.02 + Math.random() * 0.04})`;
+      ctx.beginPath();
+      ctx.arc(
+        Math.random() * canvas.width,
+        Math.random() * canvas.height,
+        Math.random() * 3.6,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
+    }
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.encoding = THREE.sRGBEncoding;
+    texture.needsUpdate = true;
+    return texture;
+  }
+
+  // syncThreatNodes() compares the source-of-truth array with the live scene and adds/removes meshes as needed.
+  syncThreatNodes() {
+    this.threats.forEach((threat) => {
+      // Active threats should have a node in the scene.
+      if (threat.status === "active" && !this.nodeMap.has(threat.id)) {
+        this.addThreatNode(threat);
+      }
+      // Inactive threats should disappear from the scene.
+      if (threat.status !== "active" && this.nodeMap.has(threat.id)) {
+        this.removeThreatNode(threat.id);
+      }
+    });
+  }
+
+  // addThreatNode() builds the visible marker for one threat using three meshes layered together.
+  addThreatNode(threat) {
+    const severity = this.severityConfig[threat.severity];
+    const nodeGroup = new THREE.Group();
+
+    // The core sphere is the clickable point the player sees on the globe.
+    const pointGeometry = new THREE.SphereGeometry(0.042 * severity.baseScale, 18, 18);
+    const pointMaterial = new THREE.MeshBasicMaterial({
+      color: new THREE.Color(severity.color),
+      transparent: true,
+      opacity: 0.95
+    });
+    const pointMesh = new THREE.Mesh(pointGeometry, pointMaterial);
+
+    // The ring is a halo that helps the node read as a glowing alert.
+    const ringGeometry = new THREE.RingGeometry(0.075, 0.115, 48);
+    const ringMaterial = new THREE.MeshBasicMaterial({
+      color: new THREE.Color(severity.color),
+      transparent: true,
+      opacity: 0.35,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    });
+    const ringMesh = new THREE.Mesh(ringGeometry, ringMaterial);
+
+    // The glow sphere softens the marker and gives it a bright pulse shell.
+    const glowGeometry = new THREE.SphereGeometry(0.08 * severity.baseScale, 16, 16);
+    const glowMaterial = new THREE.MeshBasicMaterial({
+      color: new THREE.Color(severity.color),
+      transparent: true,
+      opacity: 0.16
+    });
+    const glowMesh = new THREE.Mesh(glowGeometry, glowMaterial);
+
+    const position = this.latLngToVector3(
+      threat.location.lat,
+      threat.location.lng,
+      this.globeRadius + 0.03
+    );
+
+    // The group is positioned on the globe surface, and the meshes inherit that location.
+    nodeGroup.position.copy(position);
+    nodeGroup.userData = {
+      threatId: threat.id,
+      pulseSpeed: severity.pulseSpeed,
+      pulseAmp: severity.pulseAmp,
+      baseScale: severity.baseScale,
+      hovered: false
+    };
+
+    pointMesh.userData.threatId = threat.id;
+    ringMesh.userData.threatId = threat.id;
+    glowMesh.userData.threatId = threat.id;
+
+    nodeGroup.add(glowMesh);
+    nodeGroup.add(ringMesh);
+    nodeGroup.add(pointMesh);
+
+    this.globeGroup.add(nodeGroup);
+    this.nodeMap.set(threat.id, {
+      group: nodeGroup,
+      pointMesh,
+      ringMesh,
+      glowMesh,
+      threat
+    });
+  }
+
+  // removeThreatNode() cleans up the group and its map entry when a threat is no longer active.
+  removeThreatNode(id) {
+    const node = this.nodeMap.get(id);
+    if (!node) {
+      return;
+    }
+    this.globeGroup.remove(node.group);
+    this.nodeMap.delete(id);
+  }
+
+  // onThreatClick() lets other UI layers react to a node click without coupling to the globe internals.
+  onThreatClick(callback) {
+    this.clickHandlers.push(callback);
+  }
+
+  // attachEvents() wires resize, drag, hover, and click behavior to the rendered canvas.
+  attachEvents() {
+    window.addEventListener("resize", () => this.handleResize());
+
+    // pointerdown starts a drag gesture and stores the initial mouse position.
+    this.renderer.domElement.addEventListener("pointerdown", (event) => {
+      this.dragState.isDragging = true;
+      this.dragState.lastX = event.clientX;
+      this.dragState.lastY = event.clientY;
+      this.dragState.moved = false;
+    });
+
+    // pointermove drives both drag rotation and hover checks as the mouse moves.
+    window.addEventListener("pointermove", (event) => {
+      this.updatePointer(event);
+
+      if (this.dragState.isDragging) {
+        // Rotation is based on pointer delta so the globe follows the drag direction naturally.
+        const deltaX = event.clientX - this.dragState.lastX;
+        const deltaY = event.clientY - this.dragState.lastY;
+        this.dragState.lastX = event.clientX;
+        this.dragState.lastY = event.clientY;
+
+        if (Math.abs(deltaX) + Math.abs(deltaY) > 1) {
+          this.dragState.moved = true;
+        }
+
+        this.globeGroup.rotation.y += deltaX * 0.0052;
+        this.globeGroup.rotation.x += deltaY * 0.0038;
+        this.globeGroup.rotation.x = Math.max(
+          -0.85,
+          Math.min(0.85, this.globeGroup.rotation.x)
+        );
+
+        this.rotationVelocity.y = deltaX * 0.00045;
+        this.rotationVelocity.x = deltaY * 0.0002;
+      }
+
+      this.updateHoverState();
+    });
+
+    // pointerup ends the drag, and a short movement threshold lets clicks register cleanly.
+    window.addEventListener("pointerup", (event) => {
+      const wasDragging = this.dragState.isDragging;
+      const moved = this.dragState.moved;
+      this.dragState.isDragging = false;
+
+      if (wasDragging && !moved) {
+        this.handleClick(event);
+      }
+    });
+
+    // Leaving the canvas clears hover feedback so the cursor and glow state reset.
+    this.renderer.domElement.addEventListener("mouseleave", () => {
+      this.clearHoverState();
+    });
+  }
+
+  // handleResize() keeps the camera and renderer matched to the current viewport size.
+  handleResize() {
+    this.camera.aspect = window.innerWidth / window.innerHeight;
+    this.camera.updateProjectionMatrix();
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
+  }
+
+  // updatePointer() converts screen coordinates into normalized device coordinates for raycasting.
+  updatePointer(event) {
+    const rect = this.renderer.domElement.getBoundingClientRect();
+    this.pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    this.pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+  }
+
+  // getThreatIntersection() asks the raycaster which node, if any, is under the pointer.
+  getThreatIntersection() {
+    const pointMeshes = Array.from(this.nodeMap.values()).map((node) => node.pointMesh);
+    this.raycaster.setFromCamera(this.pointer, this.camera);
+    const intersections = this.raycaster.intersectObjects(pointMeshes, false);
+    return intersections[0] || null;
+  }
+
+  // handleClick() uses the raycast result to find the threat object and pass it to the registered callbacks.
+  handleClick(event) {
+    this.updatePointer(event);
+    const intersection = this.getThreatIntersection();
+    if (!intersection) {
+      return;
+    }
+
+    const threatId = intersection.object.userData.threatId;
+    const node = this.nodeMap.get(threatId);
+    if (!node) {
+      return;
+    }
+
+    this.clickHandlers.forEach((callback) => callback(node.threat));
+  }
+
+  // updateHoverState() changes the cursor and marks the hovered node so the pulse can brighten.
+  updateHoverState() {
+    const intersection = this.getThreatIntersection();
+    const nextId = intersection ? intersection.object.userData.threatId : null;
+
+    if (this.hoveredThreatId === nextId) {
+      return;
+    }
+
+    this.hoveredThreatId = nextId;
+    document.body.style.cursor = nextId ? "pointer" : "default";
+
+    this.nodeMap.forEach((node, id) => {
+      node.group.userData.hovered = id === nextId;
+    });
+  }
+
+  // clearHoverState() resets any highlight when the pointer leaves the globe area.
+  clearHoverState() {
+    this.hoveredThreatId = null;
+    document.body.style.cursor = "default";
+    this.nodeMap.forEach((node) => {
+      node.group.userData.hovered = false;
+    });
+  }
+
+  // updateActiveCount() reads the threats array directly so the HUD stays in sync with global state.
+  updateActiveCount() {
+    const count = this.threats.filter((threat) => threat.status === "active").length;
+    document.getElementById("active-count").textContent = String(count).padStart(2, "0");
+  }
+
+  // respawnRandomThreat() is a simple placeholder for future threat lifecycle logic.
+  respawnRandomThreat() {
+    const inactiveThreats = this.threats.filter((threat) => threat.status !== "active");
+    if (inactiveThreats.length === 0) {
+      return;
+    }
+
+    const threat = inactiveThreats[Math.floor(Math.random() * inactiveThreats.length)];
+    threat.status = "active";
+    this.addThreatNode(threat);
+    this.updateActiveCount();
+  }
+
+  // animate() runs once per frame, updating rotation, pulsing, hover glow, and the final render call.
+  animate() {
+    requestAnimationFrame(() => this.animate());
+
+    const elapsed = this.clock.getElapsedTime();
+
+    // Auto-rotation keeps the globe moving even when the player is not dragging it.
+    this.globeGroup.rotation.y += this.autoRotateSpeed + this.rotationVelocity.y;
+    this.globeGroup.rotation.x += this.rotationVelocity.x;
+    this.globeGroup.rotation.x = Math.max(-0.85, Math.min(0.85, this.globeGroup.rotation.x));
+
+    // Rotation velocity decays over time so drag input eases out instead of stopping instantly.
+    this.rotationVelocity.y *= 0.94;
+    this.rotationVelocity.x *= 0.9;
+
+    this.nodeMap.forEach((node) => {
+      const { group, pointMesh, ringMesh, glowMesh } = node;
+      const { pulseSpeed, pulseAmp, baseScale, hovered } = group.userData;
+
+      // The sine wave turns elapsed time into a smooth up-and-down pulse for each threat marker.
+      const wave = (Math.sin(elapsed * pulseSpeed) + 1) * 0.5;
+      const hoverBoost = hovered ? 0.22 : 0;
+      const scale = baseScale + (wave * pulseAmp) + hoverBoost;
+
+      // Each mesh scales separately so the core, ring, and glow feel like one animated alert.
+      pointMesh.scale.setScalar(scale);
+      glowMesh.scale.setScalar(scale * 1.45);
+      ringMesh.scale.setScalar(1 + (wave * 0.55) + (hovered ? 0.2 : 0));
+      ringMesh.lookAt(this.camera.position);
+
+      pointMesh.material.opacity = hovered ? 1 : 0.92;
+      glowMesh.material.opacity = hovered ? 0.24 : 0.16;
+      ringMesh.material.opacity = hovered ? 0.55 : 0.35;
+    });
+
+    this.renderer.render(this.scene, this.camera);
+  }
+
+  // latLngToVector3() turns latitude/longitude into a 3D point on the sphere.
+  // Phi and theta are the spherical angles needed to map real-world coordinates to Three.js space.
+  latLngToVector3(lat, lng, radius) {
+    const phi = (90 - lat) * (Math.PI / 180);
+    const theta = (lng + 180) * (Math.PI / 180);
+
+    return new THREE.Vector3(
+      -(radius * Math.sin(phi) * Math.cos(theta)),
+      radius * Math.cos(phi),
+      radius * Math.sin(phi) * Math.sin(theta)
+    );
+  }
+}

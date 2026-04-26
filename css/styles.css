@@ -1,0 +1,554 @@
+/* Shared THREATGRID styles for the full-screen HUD, boot overlays, and menu screens. */
+:root {
+  --bg: #0a0a0f;
+  --hud: #00ff88;
+  --hud-dim: rgba(0, 255, 136, 0.62);
+  --grid: rgba(0, 255, 136, 0.08);
+  --glow: rgba(0, 255, 136, 0.18);
+}
+
+/* Reset box sizing so layout math stays predictable across the whole page. */
+* {
+  box-sizing: border-box;
+}
+
+/* The page itself fills the viewport, hides scrollbars, and uses monospace text by default. */
+html, body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--hud);
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+}
+
+/* The body background layers subtle gradients so the screen feels like a dark operations console. */
+body {
+  position: relative;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(0, 255, 136, 0.06), transparent 24%),
+    radial-gradient(circle at 80% 10%, rgba(0, 255, 136, 0.05), transparent 22%),
+    radial-gradient(circle at 50% 80%, rgba(0, 255, 136, 0.04), transparent 30%),
+    var(--bg);
+}
+
+/* The main app wrapper provides a positioning context for the globe and overlays. */
+#app {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+/* The Three.js canvas is anchored full-screen under the UI overlays. */
+#globe-root {
+  position: absolute;
+  inset: 0;
+}
+
+/* Prevent the renderer canvas from leaving default inline gaps. */
+canvas {
+  display: block;
+}
+
+/* HUD elements sit above the globe but below the boot screen and never intercept clicks. */
+.hud {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Shared HUD block styling gives the top-left and top-right readouts the same terminal look. */
+.hud-block {
+  position: absolute;
+  padding: 18px 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  text-shadow: 0 0 14px rgba(0, 255, 136, 0.28);
+}
+
+/* Places the title block in the upper-left corner. */
+.hud-title {
+  top: 0;
+  left: 0;
+}
+
+/* Title text is larger so the project name reads like a system banner. */
+.hud-title h1 {
+  margin: 0 0 6px;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+/* The subtitle and active count use a dimmer green to reduce visual noise. */
+.hud-title p,
+.hud-stats p {
+  margin: 0;
+  color: var(--hud-dim);
+  font-size: 0.72rem;
+}
+
+/* Places the active count block in the upper-right corner. */
+.hud-stats {
+  top: 0;
+  right: 0;
+  text-align: right;
+}
+
+/* The numeric count is larger so the current threat total is easy to scan. */
+.hud-stats strong {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 1.8rem;
+  line-height: 1;
+  font-weight: 700;
+  color: var(--hud);
+}
+
+/* Corner brackets are a lightweight frame to make the HUD feel like a targeting display. */
+.corner-bracket::before,
+.corner-bracket::after {
+  content: "";
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  border-color: rgba(0, 255, 136, 0.35);
+  border-style: solid;
+}
+
+/* Top-left bracket for the title block. */
+.hud-title.corner-bracket::before {
+  top: 10px;
+  left: 10px;
+  border-width: 1px 0 0 1px;
+}
+
+/* Top-right bracket for the stats block. */
+.hud-stats.corner-bracket::after {
+  top: 10px;
+  right: 10px;
+  border-width: 1px 1px 0 0;
+}
+
+/* A thin scan band at the bottom adds motion without needing JavaScript. */
+.scan-overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 20vh;
+  pointer-events: none;
+  background:
+    linear-gradient(to top, rgba(0, 255, 136, 0.09), transparent 70%),
+    repeating-linear-gradient(
+      to bottom,
+      rgba(0, 255, 136, 0.12) 0,
+      rgba(0, 255, 136, 0.12) 1px,
+      transparent 1px,
+      transparent 8px
+    );
+  border-top: 1px solid rgba(0, 255, 136, 0.16);
+  opacity: 0.7;
+  mix-blend-mode: screen;
+}
+
+/* A faint grid vignette gives the globe area a tactical overlay feel. */
+.grid-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(rgba(0, 255, 136, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 136, 0.03) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 0.6) 22%, transparent 72%);
+  opacity: 0.26;
+}
+
+/* The boot overlay covers the full viewport until the player starts the game. */
+#boot-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  background: #0a0a0f;
+  overflow: hidden;
+  opacity: 1;
+  transition: opacity 600ms ease;
+}
+
+/* The fade-out state keeps the overlay around long enough for the transition to complete. */
+#boot-overlay.is-hiding {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Slow moving scanlines create the boot-up terminal effect for the menu screens. */
+.boot-scanlines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(to bottom, rgba(0, 255, 136, 0.03), transparent 18%),
+    repeating-linear-gradient(
+      to bottom,
+      rgba(0, 255, 136, 0.07) 0,
+      rgba(0, 255, 136, 0.07) 1px,
+      transparent 1px,
+      transparent 6px
+    );
+  background-size: 100% 240px, 100% 100%;
+  animation: scanlines 14s linear infinite;
+  opacity: 0.42;
+  mix-blend-mode: screen;
+}
+
+/* Each overlay screen starts hidden and fades in when marked active. */
+.screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 32px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 150ms ease;
+}
+
+/* Active screens receive pointer events so buttons remain clickable. */
+.screen.is-active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Menu screen centers the boot controls and copy. */
+.menu-screen {
+  text-align: center;
+}
+
+/* The shell keeps the menu content aligned and comfortably spaced. */
+.menu-shell {
+  width: min(720px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+/* Big title with wide tracking to mimic a command-center boot banner. */
+.menu-title {
+  margin: 0;
+  color: #00ff88;
+  font-size: clamp(3rem, 8vw, 5.8rem);
+  line-height: 0.95;
+  letter-spacing: 0.22em;
+  text-indent: 0.22em;
+  text-shadow: 0 0 28px rgba(0, 255, 136, 0.2);
+}
+
+/* The cursor line blinks so the title feels alive without needing JS. */
+.cursor-line {
+  width: 160px;
+  height: 1px;
+  background: rgba(0, 255, 136, 0.76);
+  box-shadow: 0 0 16px rgba(0, 255, 136, 0.22);
+  animation: blink 1s steps(2, end) infinite;
+}
+
+/* Shared monospace, uppercase treatment for all boot-screen labels and copy. */
+.menu-subtitle,
+.menu-footnote,
+.briefing-copy,
+.section-body,
+.section-list,
+.legend-label,
+.severity-desc,
+.back-button,
+.menu-button {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  text-transform: uppercase;
+}
+
+/* Secondary menu text stays dimmer so the title remains the focus. */
+.menu-subtitle {
+  margin: 0;
+  color: rgba(0, 255, 136, 0.52);
+  letter-spacing: 0.18em;
+  font-size: 0.82rem;
+  line-height: 1.8;
+}
+
+/* The divider line separates the title stack from the action buttons. */
+.menu-rule {
+  width: min(340px, 62vw);
+  height: 1px;
+  background: rgba(0, 255, 136, 0.28);
+  margin: 2px 0 10px;
+}
+
+/* Stacks the two main menu actions vertically for a boot-menu layout. */
+.menu-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(340px, 72vw);
+}
+
+/* Sharp-cornered buttons reinforce the terminal aesthetic. */
+.menu-button,
+.back-button {
+  appearance: none;
+  border: 1px solid rgba(0, 255, 136, 0.6);
+  border-radius: 0;
+  background: rgba(10, 10, 15, 0.92);
+  color: #00ff88;
+  padding: 16px 18px;
+  cursor: pointer;
+  letter-spacing: 0.16em;
+  font-size: 0.82rem;
+  transition: background 150ms ease, border-color 150ms ease, box-shadow 150ms ease, color 150ms ease;
+  text-align: center;
+  box-shadow: inset 0 0 0 1px rgba(0, 255, 136, 0.04);
+}
+
+/* The prefix starts hidden and expands on hover to mimic a command prompt. */
+.menu-button::before,
+.back-button::before {
+  content: ">";
+  display: inline-block;
+  width: 0;
+  margin-right: 0;
+  overflow: hidden;
+  transition: width 150ms ease, margin-right 150ms ease;
+}
+
+/* Hover and focus states brighten the button and add a subtle glow for feedback. */
+.menu-button:hover,
+.menu-button:focus-visible,
+.back-button:hover,
+.back-button:focus-visible {
+  background: rgba(0, 255, 136, 0.1);
+  border-color: rgba(0, 255, 136, 1);
+  box-shadow: 0 0 18px rgba(0, 255, 136, 0.16), inset 0 0 0 1px rgba(0, 255, 136, 0.05);
+  text-shadow: 0 0 10px rgba(0, 255, 136, 0.34);
+  outline: none;
+}
+
+/* The prompt prefix appears only when the button is interactive. */
+.menu-button:hover::before,
+.menu-button:focus-visible::before,
+.back-button:hover::before,
+.back-button:focus-visible::before {
+  width: 1.2em;
+  margin-right: 0.3em;
+}
+
+/* The bottom footnote shows the build/version and stays pinned to the viewport edge. */
+.menu-footnote {
+  position: absolute;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  margin: 0;
+  color: rgba(0, 255, 136, 0.48);
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  white-space: nowrap;
+}
+
+/* The briefing screen starts at the top so its content can scroll if the viewport is short. */
+.howto-screen {
+  justify-content: flex-start;
+  align-items: stretch;
+  padding: 22px 22px 26px;
+}
+
+/* The briefing shell keeps the layout centered while letting the body content expand. */
+.howto-shell {
+  width: min(980px, 100%);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  min-height: 100%;
+}
+
+/* Header row combines the back button and the mission title. */
+.howto-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-top: 10px;
+}
+
+/* The back button anchors navigation back to the main menu. */
+.back-button {
+  min-width: 158px;
+  align-self: flex-start;
+}
+
+/* Mission title uses the same green terminal style as the main menu banner. */
+.briefing-title {
+  margin: 0;
+  color: #00ff88;
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  letter-spacing: 0.18em;
+  text-shadow: 0 0 16px rgba(0, 255, 136, 0.18);
+}
+
+/* Briefing copy is dimmer so the section headings stay readable at a glance. */
+.briefing-copy {
+  margin: 0;
+  color: rgba(0, 255, 136, 0.5);
+  letter-spacing: 0.12em;
+  font-size: 0.76rem;
+  line-height: 1.8;
+}
+
+/* Thin rule separates the header from the briefing sections. */
+.briefing-rule {
+  height: 1px;
+  background: rgba(0, 255, 136, 0.22);
+}
+
+/* The briefing content becomes a scrollable grid so the layout survives smaller screens. */
+.howto-content {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: start;
+  overflow: auto;
+  padding-right: 4px;
+  flex: 1;
+}
+
+/* Each section gets a left border to read like a briefing panel in a terminal UI. */
+.briefing-section {
+  border-left: 1px solid rgba(0, 255, 136, 0.18);
+  padding-left: 14px;
+  min-width: 0;
+}
+
+/* Section headings use brighter green for quick scanning. */
+.section-heading {
+  margin: 0 0 8px;
+  color: #00ff88;
+  font-size: 0.84rem;
+  letter-spacing: 0.18em;
+}
+
+/* Body copy and list copy stay dimmer to keep the hierarchy clear. */
+.section-body {
+  margin: 0;
+  color: rgba(0, 255, 136, 0.56);
+  font-size: 0.78rem;
+  line-height: 1.8;
+  letter-spacing: 0.08em;
+}
+
+/* The controls list uses the same text treatment but removes default bullets. */
+.section-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: rgba(0, 255, 136, 0.56);
+  font-size: 0.78rem;
+  line-height: 1.9;
+  letter-spacing: 0.08em;
+}
+
+/* Simple vertical grids keep the threat type and severity legends readable. */
+.legend-list,
+.severity-list {
+  display: grid;
+  gap: 10px;
+}
+
+/* Each legend row lines up a colored dot with its label. */
+.legend-item,
+.severity-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+/* Small glowing dots are used as the visual key for both threats and severities. */
+.legend-dot,
+.severity-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  box-shadow: 0 0 10px currentColor;
+}
+
+/* Threat type colors help the player recognize categories at a glance. */
+.legend-dot.ransomware { color: #ff2233; background: #ff2233; }
+.legend-dot.phishing { color: #ffcc00; background: #ffcc00; }
+.legend-dot.ddos { color: #00ffcc; background: #00ffcc; }
+.legend-dot.botnet { color: #00ff88; background: #00ff88; }
+.legend-dot.zero-day { color: #ff6600; background: #ff6600; }
+.legend-dot.trojan { color: #8ce9ff; background: #8ce9ff; }
+
+/* Severity dots match the threat pulse colors used later in the Three.js scene. */
+.severity-dot.critical { color: #ff2233; background: #ff2233; }
+.severity-dot.high { color: #ff6600; background: #ff6600; }
+.severity-dot.medium { color: #ffcc00; background: #ffcc00; }
+.severity-dot.low { color: #00ffcc; background: #00ffcc; }
+
+/* Labels stay uppercase so the briefing reads like a system document. */
+.legend-label,
+.severity-label {
+  color: #00ff88;
+  letter-spacing: 0.18em;
+  font-size: 0.76rem;
+  white-space: nowrap;
+}
+
+/* Severity descriptions provide the short explanation for each alert level. */
+.severity-desc {
+  color: rgba(0, 255, 136, 0.5);
+  letter-spacing: 0.08em;
+  font-size: 0.74rem;
+}
+
+/* Footer spacing keeps the return button centered at the bottom of the briefing panel. */
+.howto-footer {
+  display: flex;
+  justify-content: center;
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+
+/* Cursor blink for the menu title line. */
+@keyframes blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0.15; }
+}
+
+/* Downward-moving scanlines create the boot sequence motion in the background. */
+@keyframes scanlines {
+  from { background-position: 0 -240px, 0 0; }
+  to { background-position: 0 0, 0 0; }
+}
+
+/* Narrow viewports collapse the briefing grid into a single column. */
+@media (max-width: 860px) {
+  .howto-content {
+    grid-template-columns: 1fr;
+  }
+
+  .menu-title {
+    letter-spacing: 0.16em;
+  }
+
+  .menu-footnote {
+    white-space: normal;
+    text-align: center;
+    width: 100%;
+    padding: 0 16px;
+  }
+}
