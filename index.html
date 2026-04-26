@@ -153,6 +153,352 @@
       mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 0.6) 22%, transparent 72%);
       opacity: 0.26;
     }
+
+    #boot-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      background: #0a0a0f;
+      overflow: hidden;
+      opacity: 1;
+      transition: opacity 600ms ease;
+    }
+
+    #boot-overlay.is-hiding {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .boot-scanlines {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(to bottom, rgba(0, 255, 136, 0.03), transparent 18%),
+        repeating-linear-gradient(
+          to bottom,
+          rgba(0, 255, 136, 0.07) 0,
+          rgba(0, 255, 136, 0.07) 1px,
+          transparent 1px,
+          transparent 6px
+        );
+      background-size: 100% 240px, 100% 100%;
+      animation: scanlines 14s linear infinite;
+      opacity: 0.42;
+      mix-blend-mode: screen;
+    }
+
+    .screen {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 32px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 150ms ease;
+    }
+
+    .screen.is-active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .menu-screen {
+      text-align: center;
+    }
+
+    .menu-shell {
+      width: min(720px, 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .menu-title {
+      margin: 0;
+      color: #00ff88;
+      font-size: clamp(3rem, 8vw, 5.8rem);
+      line-height: 0.95;
+      letter-spacing: 0.22em;
+      text-indent: 0.22em;
+      text-shadow: 0 0 28px rgba(0, 255, 136, 0.2);
+    }
+
+    .cursor-line {
+      width: 160px;
+      height: 1px;
+      background: rgba(0, 255, 136, 0.76);
+      box-shadow: 0 0 16px rgba(0, 255, 136, 0.22);
+      animation: blink 1s steps(2, end) infinite;
+    }
+
+    .menu-subtitle,
+    .menu-footnote,
+    .briefing-copy,
+    .section-body,
+    .section-list,
+    .legend-label,
+    .severity-desc,
+    .back-button,
+    .menu-button {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      text-transform: uppercase;
+    }
+
+    .menu-subtitle {
+      margin: 0;
+      color: rgba(0, 255, 136, 0.52);
+      letter-spacing: 0.18em;
+      font-size: 0.82rem;
+      line-height: 1.8;
+    }
+
+    .menu-rule {
+      width: min(340px, 62vw);
+      height: 1px;
+      background: rgba(0, 255, 136, 0.28);
+      margin: 2px 0 10px;
+    }
+
+    .menu-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: min(340px, 72vw);
+    }
+
+    .menu-button,
+    .back-button {
+      appearance: none;
+      border: 1px solid rgba(0, 255, 136, 0.6);
+      border-radius: 0;
+      background: rgba(10, 10, 15, 0.92);
+      color: #00ff88;
+      padding: 16px 18px;
+      cursor: pointer;
+      letter-spacing: 0.16em;
+      font-size: 0.82rem;
+      transition: background 150ms ease, border-color 150ms ease, box-shadow 150ms ease, color 150ms ease;
+      text-align: center;
+      box-shadow: inset 0 0 0 1px rgba(0, 255, 136, 0.04);
+    }
+
+    .menu-button::before,
+    .back-button::before {
+      content: ">";
+      display: inline-block;
+      width: 0;
+      margin-right: 0;
+      overflow: hidden;
+      transition: width 150ms ease, margin-right 150ms ease;
+    }
+
+    .menu-button:hover,
+    .menu-button:focus-visible,
+    .back-button:hover,
+    .back-button:focus-visible {
+      background: rgba(0, 255, 136, 0.1);
+      border-color: rgba(0, 255, 136, 1);
+      box-shadow: 0 0 18px rgba(0, 255, 136, 0.16), inset 0 0 0 1px rgba(0, 255, 136, 0.05);
+      text-shadow: 0 0 10px rgba(0, 255, 136, 0.34);
+      outline: none;
+    }
+
+    .menu-button:hover::before,
+    .menu-button:focus-visible::before,
+    .back-button:hover::before,
+    .back-button:focus-visible::before {
+      width: 1.2em;
+      margin-right: 0.3em;
+    }
+
+    .menu-footnote {
+      position: absolute;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      margin: 0;
+      color: rgba(0, 255, 136, 0.48);
+      font-size: 0.7rem;
+      letter-spacing: 0.14em;
+      white-space: nowrap;
+    }
+
+    .howto-screen {
+      justify-content: flex-start;
+      align-items: stretch;
+      padding: 22px 22px 26px;
+    }
+
+    .howto-shell {
+      width: min(980px, 100%);
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+      min-height: 100%;
+    }
+
+    .howto-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding-top: 10px;
+    }
+
+    .back-button {
+      min-width: 158px;
+      align-self: flex-start;
+    }
+
+    .briefing-title {
+      margin: 0;
+      color: #00ff88;
+      font-size: clamp(1.6rem, 4vw, 2.4rem);
+      letter-spacing: 0.18em;
+      text-shadow: 0 0 16px rgba(0, 255, 136, 0.18);
+    }
+
+    .briefing-copy {
+      margin: 0;
+      color: rgba(0, 255, 136, 0.5);
+      letter-spacing: 0.12em;
+      font-size: 0.76rem;
+      line-height: 1.8;
+    }
+
+    .briefing-rule {
+      height: 1px;
+      background: rgba(0, 255, 136, 0.22);
+    }
+
+    .howto-content {
+      display: grid;
+      gap: 20px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      align-content: start;
+      overflow: auto;
+      padding-right: 4px;
+      flex: 1;
+    }
+
+    .briefing-section {
+      border-left: 1px solid rgba(0, 255, 136, 0.18);
+      padding-left: 14px;
+      min-width: 0;
+    }
+
+    .section-heading {
+      margin: 0 0 8px;
+      color: #00ff88;
+      font-size: 0.84rem;
+      letter-spacing: 0.18em;
+    }
+
+    .section-body {
+      margin: 0;
+      color: rgba(0, 255, 136, 0.56);
+      font-size: 0.78rem;
+      line-height: 1.8;
+      letter-spacing: 0.08em;
+    }
+
+    .section-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      color: rgba(0, 255, 136, 0.56);
+      font-size: 0.78rem;
+      line-height: 1.9;
+      letter-spacing: 0.08em;
+    }
+
+    .legend-list,
+    .severity-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .legend-item,
+    .severity-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .legend-dot,
+    .severity-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex: 0 0 auto;
+      box-shadow: 0 0 10px currentColor;
+    }
+
+    .legend-dot.ransomware { color: #ff2233; background: #ff2233; }
+    .legend-dot.phishing { color: #ffcc00; background: #ffcc00; }
+    .legend-dot.ddos { color: #00ffcc; background: #00ffcc; }
+    .legend-dot.botnet { color: #00ff88; background: #00ff88; }
+    .legend-dot.zero-day { color: #ff6600; background: #ff6600; }
+    .legend-dot.trojan { color: #8ce9ff; background: #8ce9ff; }
+
+    .severity-dot.critical { color: #ff2233; background: #ff2233; }
+    .severity-dot.high { color: #ff6600; background: #ff6600; }
+    .severity-dot.medium { color: #ffcc00; background: #ffcc00; }
+    .severity-dot.low { color: #00ffcc; background: #00ffcc; }
+
+    .legend-label,
+    .severity-label {
+      color: #00ff88;
+      letter-spacing: 0.18em;
+      font-size: 0.76rem;
+      white-space: nowrap;
+    }
+
+    .severity-desc {
+      color: rgba(0, 255, 136, 0.5);
+      letter-spacing: 0.08em;
+      font-size: 0.74rem;
+    }
+
+    .howto-footer {
+      display: flex;
+      justify-content: center;
+      padding-top: 2px;
+      padding-bottom: 2px;
+    }
+
+    @keyframes blink {
+      0%, 49% { opacity: 1; }
+      50%, 100% { opacity: 0.15; }
+    }
+
+    @keyframes scanlines {
+      from { background-position: 0 -240px, 0 0; }
+      to { background-position: 0 0, 0 0; }
+    }
+
+    @media (max-width: 860px) {
+      .howto-content {
+        grid-template-columns: 1fr;
+      }
+
+      .menu-title {
+        letter-spacing: 0.16em;
+      }
+
+      .menu-footnote {
+        white-space: normal;
+        text-align: center;
+        width: 100%;
+        padding: 0 16px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -169,6 +515,79 @@
       </div>
       <div class="grid-vignette"></div>
       <div class="scan-overlay"></div>
+    </div>
+    <div id="boot-overlay">
+      <div class="boot-scanlines"></div>
+
+      <section id="menu-screen" class="screen menu-screen is-active" aria-label="Main Menu">
+        <div class="menu-shell">
+          <h1 class="menu-title">THREATGRID</h1>
+          <div class="cursor-line" aria-hidden="true"></div>
+          <p class="menu-subtitle">GLOBAL CYBER THREAT RESPONSE SYSTEM</p>
+          <div class="menu-rule" aria-hidden="true"></div>
+          <div class="menu-actions">
+            <button id="initialize-button" class="menu-button" type="button">INITIALIZE SYSTEM</button>
+            <button id="howto-button" class="menu-button" type="button">HOW TO PLAY</button>
+          </div>
+        </div>
+        <p class="menu-footnote">v0.1.0 — LAYER 1 FOUNDATION</p>
+      </section>
+
+      <section id="howto-screen" class="screen howto-screen" aria-label="How To Play">
+        <div class="howto-shell">
+          <div class="howto-header">
+            <button id="back-button" class="back-button" type="button">← RETURN TO MENU</button>
+            <h2 class="briefing-title">MISSION BRIEFING</h2>
+          </div>
+          <div class="briefing-rule" aria-hidden="true"></div>
+          <div class="howto-content">
+            <section class="briefing-section">
+              <h3 class="section-heading">SITUATION</h3>
+              <p class="section-body">Cyber threats are emerging across the globe in real time. As a THREATGRID analyst, your mission is to identify, investigate, and neutralize each threat before it propagates.</p>
+            </section>
+
+            <section class="briefing-section">
+              <h3 class="section-heading">CONTROLS</h3>
+              <ul class="section-list">
+                <li>Click and drag to rotate the globe</li>
+                <li>Click a threat node to open the threat panel</li>
+                <li>Threats pulse faster as severity increases</li>
+                <li>Critical threats <span style="color:#ff2233;">[RED]</span> require immediate action</li>
+              </ul>
+            </section>
+
+            <section class="briefing-section">
+              <h3 class="section-heading">THREAT TYPES</h3>
+              <div class="legend-list">
+                <div class="legend-item"><span class="legend-dot ransomware" aria-hidden="true"></span><span class="legend-label">RANSOMWARE</span></div>
+                <div class="legend-item"><span class="legend-dot phishing" aria-hidden="true"></span><span class="legend-label">PHISHING</span></div>
+                <div class="legend-item"><span class="legend-dot ddos" aria-hidden="true"></span><span class="legend-label">DDOS</span></div>
+                <div class="legend-item"><span class="legend-dot botnet" aria-hidden="true"></span><span class="legend-label">BOTNET</span></div>
+                <div class="legend-item"><span class="legend-dot zero-day" aria-hidden="true"></span><span class="legend-label">ZERO-DAY</span></div>
+                <div class="legend-item"><span class="legend-dot trojan" aria-hidden="true"></span><span class="legend-label">TROJAN</span></div>
+              </div>
+            </section>
+
+            <section class="briefing-section">
+              <h3 class="section-heading">SEVERITY LEVELS</h3>
+              <div class="severity-list">
+                <div class="severity-item"><span class="severity-dot critical" aria-hidden="true"></span><span class="severity-label">CRITICAL</span><span class="severity-desc">Immediate neutralization required</span></div>
+                <div class="severity-item"><span class="severity-dot high" aria-hidden="true"></span><span class="severity-label">HIGH</span><span class="severity-desc">Escalating, respond within the hour</span></div>
+                <div class="severity-item"><span class="severity-dot medium" aria-hidden="true"></span><span class="severity-label">MEDIUM</span><span class="severity-desc">Contained but active, monitor closely</span></div>
+                <div class="severity-item"><span class="severity-dot low" aria-hidden="true"></span><span class="severity-label">LOW</span><span class="severity-desc">Early stage, log and observe</span></div>
+              </div>
+            </section>
+
+            <section class="briefing-section">
+              <h3 class="section-heading">COMING SOON</h3>
+              <p class="section-body">Investigation panel, AI analyst deployment, neutralization protocols, and mission debrief reports.</p>
+            </section>
+          </div>
+          <div class="howto-footer">
+            <button id="return-button" class="back-button" type="button">RETURN TO MENU</button>
+          </div>
+        </div>
+      </section>
     </div>
   </div>
 
@@ -721,20 +1140,69 @@
       }
     }
 
+    let screenState = "menu"; // 'menu' | 'howtoplay' | 'game'
+    let globeStarted = false;
+
     const globe = new ThreatGlobe(document.getElementById("globe-root"), threats);
-    globe.init();
+    const bootOverlay = document.getElementById("boot-overlay");
+    const menuScreen = document.getElementById("menu-screen");
+    const howtoScreen = document.getElementById("howto-screen");
+    const initializeButton = document.getElementById("initialize-button");
+    const howtoButton = document.getElementById("howto-button");
+    const backButton = document.getElementById("back-button");
+    const returnButton = document.getElementById("return-button");
 
-    globe.onThreatClick((threat) => {
-      console.log("THREATGRID node selected:", threat);
-      // TODO: Layer 2 will open a threat detail panel using this callback.
-    });
+    function setScreen(nextScreen) {
+      screenState = nextScreen;
+      menuScreen.classList.toggle("is-active", nextScreen === "menu");
+      howtoScreen.classList.toggle("is-active", nextScreen === "howtoplay");
+    }
 
-    setInterval(() => {
-      globe.respawnRandomThreat();
-      globe.syncThreatNodes();
-    }, 12000);
+    function showMenu() {
+      bootOverlay.style.display = "block";
+      bootOverlay.classList.remove("is-hiding");
+      setScreen("menu");
+    }
 
-    // TODO: Layer 2 will subscribe to threat state updates instead of reading the scene directly.
+    function showHowToPlay() {
+      bootOverlay.style.display = "block";
+      bootOverlay.classList.remove("is-hiding");
+      setScreen("howtoplay");
+    }
+
+    function startGame() {
+      screenState = "game";
+      bootOverlay.classList.add("is-hiding");
+
+      if (!globeStarted) {
+        globeStarted = true;
+        globe.init();
+        globe.onThreatClick((threat) => {
+          console.log("THREATGRID node selected:", threat);
+          // TODO: Layer 2 will open a threat detail panel using this callback.
+        });
+
+        window.setInterval(() => {
+          globe.respawnRandomThreat();
+          globe.syncThreatNodes();
+        }, 12000);
+
+        // TODO: Layer 2 will subscribe to threat state updates instead of reading the scene directly.
+      }
+
+      window.setTimeout(() => {
+        if (screenState === "game") {
+          bootOverlay.style.display = "none";
+        }
+      }, 600);
+    }
+
+    initializeButton.addEventListener("click", startGame);
+    howtoButton.addEventListener("click", showHowToPlay);
+    backButton.addEventListener("click", showMenu);
+    returnButton.addEventListener("click", showMenu);
+
+    showMenu();
   </script>
 </body>
 </html>
