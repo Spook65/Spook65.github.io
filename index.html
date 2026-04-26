@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>THREATGRID — Layer 1</title>
   <style>
+    /* Core palette variables keep the whole interface on one consistent terminal theme. */
     :root {
       --bg: #0a0a0f;
       --hud: #00ff88;
@@ -13,10 +14,12 @@
       --glow: rgba(0, 255, 136, 0.18);
     }
 
+    /* Reset box sizing so layout math stays predictable across the whole page. */
     * {
       box-sizing: border-box;
     }
 
+    /* The page itself fills the viewport, hides scrollbars, and uses monospace text by default. */
     html, body {
       margin: 0;
       width: 100%;
@@ -27,6 +30,7 @@
       font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
     }
 
+    /* The body background layers subtle gradients so the screen feels like a dark operations console. */
     body {
       position: relative;
       background:
@@ -36,21 +40,25 @@
         var(--bg);
     }
 
+    /* The main app wrapper provides a positioning context for the globe and overlays. */
     #app {
       position: relative;
       width: 100%;
       height: 100%;
     }
 
+    /* The Three.js canvas is anchored full-screen under the UI overlays. */
     #globe-root {
       position: absolute;
       inset: 0;
     }
 
+    /* Prevent the renderer canvas from leaving default inline gaps. */
     canvas {
       display: block;
     }
 
+    /* HUD elements sit above the globe but below the boot screen and never intercept clicks. */
     .hud {
       position: absolute;
       inset: 0;
@@ -58,6 +66,7 @@
       z-index: 2;
     }
 
+    /* Shared HUD block styling gives the top-left and top-right readouts the same terminal look. */
     .hud-block {
       position: absolute;
       padding: 18px 20px;
@@ -66,17 +75,20 @@
       text-shadow: 0 0 14px rgba(0, 255, 136, 0.28);
     }
 
+    /* Places the title block in the upper-left corner. */
     .hud-title {
       top: 0;
       left: 0;
     }
 
+    /* Title text is larger so the project name reads like a system banner. */
     .hud-title h1 {
       margin: 0 0 6px;
       font-size: 1.05rem;
       font-weight: 700;
     }
 
+    /* The subtitle and active count use a dimmer green to reduce visual noise. */
     .hud-title p,
     .hud-stats p {
       margin: 0;
@@ -84,12 +96,14 @@
       font-size: 0.72rem;
     }
 
+    /* Places the active count block in the upper-right corner. */
     .hud-stats {
       top: 0;
       right: 0;
       text-align: right;
     }
 
+    /* The numeric count is larger so the current threat total is easy to scan. */
     .hud-stats strong {
       display: block;
       margin-bottom: 6px;
@@ -99,6 +113,7 @@
       color: var(--hud);
     }
 
+    /* Corner brackets are a lightweight frame to make the HUD feel like a targeting display. */
     .corner-bracket::before,
     .corner-bracket::after {
       content: "";
@@ -109,18 +124,21 @@
       border-style: solid;
     }
 
+    /* Top-left bracket for the title block. */
     .hud-title.corner-bracket::before {
       top: 10px;
       left: 10px;
       border-width: 1px 0 0 1px;
     }
 
+    /* Top-right bracket for the stats block. */
     .hud-stats.corner-bracket::after {
       top: 10px;
       right: 10px;
       border-width: 1px 1px 0 0;
     }
 
+    /* A thin scan band at the bottom adds motion without needing JavaScript. */
     .scan-overlay {
       position: absolute;
       left: 0;
@@ -142,6 +160,7 @@
       mix-blend-mode: screen;
     }
 
+    /* A faint grid vignette gives the globe area a tactical overlay feel. */
     .grid-vignette {
       position: absolute;
       inset: 0;
@@ -154,6 +173,7 @@
       opacity: 0.26;
     }
 
+    /* The boot overlay covers the full viewport until the player starts the game. */
     #boot-overlay {
       position: absolute;
       inset: 0;
@@ -164,11 +184,13 @@
       transition: opacity 600ms ease;
     }
 
+    /* The fade-out state keeps the overlay around long enough for the transition to complete. */
     #boot-overlay.is-hiding {
       opacity: 0;
       pointer-events: none;
     }
 
+    /* Slow moving scanlines create the boot-up terminal effect for the menu screens. */
     .boot-scanlines {
       position: absolute;
       inset: 0;
@@ -188,6 +210,7 @@
       mix-blend-mode: screen;
     }
 
+    /* Each overlay screen starts hidden and fades in when marked active. */
     .screen {
       position: absolute;
       inset: 0;
@@ -201,15 +224,18 @@
       transition: opacity 150ms ease;
     }
 
+    /* Active screens receive pointer events so buttons remain clickable. */
     .screen.is-active {
       opacity: 1;
       pointer-events: auto;
     }
 
+    /* Menu screen centers the boot controls and copy. */
     .menu-screen {
       text-align: center;
     }
 
+    /* The shell keeps the menu content aligned and comfortably spaced. */
     .menu-shell {
       width: min(720px, 100%);
       display: flex;
@@ -218,6 +244,7 @@
       gap: 18px;
     }
 
+    /* Big title with wide tracking to mimic a command-center boot banner. */
     .menu-title {
       margin: 0;
       color: #00ff88;
@@ -228,6 +255,7 @@
       text-shadow: 0 0 28px rgba(0, 255, 136, 0.2);
     }
 
+    /* The cursor line blinks so the title feels alive without needing JS. */
     .cursor-line {
       width: 160px;
       height: 1px;
@@ -236,6 +264,7 @@
       animation: blink 1s steps(2, end) infinite;
     }
 
+    /* Shared monospace, uppercase treatment for all boot-screen labels and copy. */
     .menu-subtitle,
     .menu-footnote,
     .briefing-copy,
@@ -249,6 +278,7 @@
       text-transform: uppercase;
     }
 
+    /* Secondary menu text stays dimmer so the title remains the focus. */
     .menu-subtitle {
       margin: 0;
       color: rgba(0, 255, 136, 0.52);
@@ -257,6 +287,7 @@
       line-height: 1.8;
     }
 
+    /* The divider line separates the title stack from the action buttons. */
     .menu-rule {
       width: min(340px, 62vw);
       height: 1px;
@@ -264,6 +295,7 @@
       margin: 2px 0 10px;
     }
 
+    /* Stacks the two main menu actions vertically for a boot-menu layout. */
     .menu-actions {
       display: flex;
       flex-direction: column;
@@ -271,6 +303,7 @@
       width: min(340px, 72vw);
     }
 
+    /* Sharp-cornered buttons reinforce the terminal aesthetic. */
     .menu-button,
     .back-button {
       appearance: none;
@@ -287,6 +320,7 @@
       box-shadow: inset 0 0 0 1px rgba(0, 255, 136, 0.04);
     }
 
+    /* The prefix starts hidden and expands on hover to mimic a command prompt. */
     .menu-button::before,
     .back-button::before {
       content: ">";
@@ -297,6 +331,7 @@
       transition: width 150ms ease, margin-right 150ms ease;
     }
 
+    /* Hover and focus states brighten the button and add a subtle glow for feedback. */
     .menu-button:hover,
     .menu-button:focus-visible,
     .back-button:hover,
@@ -308,6 +343,7 @@
       outline: none;
     }
 
+    /* The prompt prefix appears only when the button is interactive. */
     .menu-button:hover::before,
     .menu-button:focus-visible::before,
     .back-button:hover::before,
@@ -316,6 +352,7 @@
       margin-right: 0.3em;
     }
 
+    /* The bottom footnote shows the build/version and stays pinned to the viewport edge. */
     .menu-footnote {
       position: absolute;
       left: 50%;
@@ -328,12 +365,14 @@
       white-space: nowrap;
     }
 
+    /* The briefing screen starts at the top so its content can scroll if the viewport is short. */
     .howto-screen {
       justify-content: flex-start;
       align-items: stretch;
       padding: 22px 22px 26px;
     }
 
+    /* The briefing shell keeps the layout centered while letting the body content expand. */
     .howto-shell {
       width: min(980px, 100%);
       margin: 0 auto;
@@ -343,6 +382,7 @@
       min-height: 100%;
     }
 
+    /* Header row combines the back button and the mission title. */
     .howto-header {
       display: flex;
       align-items: center;
@@ -350,11 +390,13 @@
       padding-top: 10px;
     }
 
+    /* The back button anchors navigation back to the main menu. */
     .back-button {
       min-width: 158px;
       align-self: flex-start;
     }
 
+    /* Mission title uses the same green terminal style as the main menu banner. */
     .briefing-title {
       margin: 0;
       color: #00ff88;
@@ -363,6 +405,7 @@
       text-shadow: 0 0 16px rgba(0, 255, 136, 0.18);
     }
 
+    /* Briefing copy is dimmer so the section headings stay readable at a glance. */
     .briefing-copy {
       margin: 0;
       color: rgba(0, 255, 136, 0.5);
@@ -371,11 +414,13 @@
       line-height: 1.8;
     }
 
+    /* Thin rule separates the header from the briefing sections. */
     .briefing-rule {
       height: 1px;
       background: rgba(0, 255, 136, 0.22);
     }
 
+    /* The briefing content becomes a scrollable grid so the layout survives smaller screens. */
     .howto-content {
       display: grid;
       gap: 20px;
@@ -386,12 +431,14 @@
       flex: 1;
     }
 
+    /* Each section gets a left border to read like a briefing panel in a terminal UI. */
     .briefing-section {
       border-left: 1px solid rgba(0, 255, 136, 0.18);
       padding-left: 14px;
       min-width: 0;
     }
 
+    /* Section headings use brighter green for quick scanning. */
     .section-heading {
       margin: 0 0 8px;
       color: #00ff88;
@@ -399,6 +446,7 @@
       letter-spacing: 0.18em;
     }
 
+    /* Body copy and list copy stay dimmer to keep the hierarchy clear. */
     .section-body {
       margin: 0;
       color: rgba(0, 255, 136, 0.56);
@@ -407,6 +455,7 @@
       letter-spacing: 0.08em;
     }
 
+    /* The controls list uses the same text treatment but removes default bullets. */
     .section-list {
       margin: 0;
       padding: 0;
@@ -417,12 +466,14 @@
       letter-spacing: 0.08em;
     }
 
+    /* Simple vertical grids keep the threat type and severity legends readable. */
     .legend-list,
     .severity-list {
       display: grid;
       gap: 10px;
     }
 
+    /* Each legend row lines up a colored dot with its label. */
     .legend-item,
     .severity-item {
       display: flex;
@@ -431,6 +482,7 @@
       min-width: 0;
     }
 
+    /* Small glowing dots are used as the visual key for both threats and severities. */
     .legend-dot,
     .severity-dot {
       width: 8px;
@@ -440,6 +492,7 @@
       box-shadow: 0 0 10px currentColor;
     }
 
+    /* Threat type colors help the player recognize categories at a glance. */
     .legend-dot.ransomware { color: #ff2233; background: #ff2233; }
     .legend-dot.phishing { color: #ffcc00; background: #ffcc00; }
     .legend-dot.ddos { color: #00ffcc; background: #00ffcc; }
@@ -447,11 +500,13 @@
     .legend-dot.zero-day { color: #ff6600; background: #ff6600; }
     .legend-dot.trojan { color: #8ce9ff; background: #8ce9ff; }
 
+    /* Severity dots match the threat pulse colors used later in the Three.js scene. */
     .severity-dot.critical { color: #ff2233; background: #ff2233; }
     .severity-dot.high { color: #ff6600; background: #ff6600; }
     .severity-dot.medium { color: #ffcc00; background: #ffcc00; }
     .severity-dot.low { color: #00ffcc; background: #00ffcc; }
 
+    /* Labels stay uppercase so the briefing reads like a system document. */
     .legend-label,
     .severity-label {
       color: #00ff88;
@@ -460,12 +515,14 @@
       white-space: nowrap;
     }
 
+    /* Severity descriptions provide the short explanation for each alert level. */
     .severity-desc {
       color: rgba(0, 255, 136, 0.5);
       letter-spacing: 0.08em;
       font-size: 0.74rem;
     }
 
+    /* Footer spacing keeps the return button centered at the bottom of the briefing panel. */
     .howto-footer {
       display: flex;
       justify-content: center;
@@ -473,16 +530,19 @@
       padding-bottom: 2px;
     }
 
+    /* Cursor blink for the menu title line. */
     @keyframes blink {
       0%, 49% { opacity: 1; }
       50%, 100% { opacity: 0.15; }
     }
 
+    /* Downward-moving scanlines create the boot sequence motion in the background. */
     @keyframes scanlines {
       from { background-position: 0 -240px, 0 0; }
       to { background-position: 0 0, 0 0; }
     }
 
+    /* Narrow viewports collapse the briefing grid into a single column. */
     @media (max-width: 860px) {
       .howto-content {
         grid-template-columns: 1fr;
@@ -593,6 +653,7 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script>
+    /* This array is the single source of truth for threat data, so the scene can always be rebuilt from it. */
     const threats = [
       {
         id: "tg-001",
@@ -662,31 +723,50 @@
 
     class ThreatGlobe {
       constructor(container, threatsSource) {
+        // The container holds the Three.js canvas, and the threats array stays external on purpose.
         this.container = container;
         this.threats = threatsSource;
+
+        // These references are filled in by init() when the 3D scene is created.
         this.scene = null;
         this.camera = null;
         this.renderer = null;
         this.globe = null;
+
+        // The group lets us rotate the globe, atmosphere, and threat markers together.
         this.globeGroup = new THREE.Group();
+
+        // Raycasting turns mouse position into object selection for clicks and hover.
         this.raycaster = new THREE.Raycaster();
         this.pointer = new THREE.Vector2();
+
+        // The clock drives animation timing so pulses stay smooth and time-based.
         this.clock = new THREE.Clock();
+
+        // nodeMap keeps the live 3D meshes aligned with each active threat object.
         this.nodeMap = new Map();
+
+        // Layer 2 will subscribe through this hook when it needs to react to clicks.
         this.clickHandlers = [];
         this.hoveredThreatId = null;
+
+        // Drag state stores the last pointer position so rotation can follow the mouse.
         this.dragState = {
           isDragging: false,
           lastX: 0,
           lastY: 0,
           moved: false
         };
+
+        // Small velocity values let drag input blend into the globe's slow auto-rotation.
         this.rotationVelocity = {
           x: 0,
           y: 0
         };
         this.autoRotateSpeed = 0.0012;
         this.globeRadius = 2.15;
+
+        // Each severity maps to a color and pulse behavior for the node meshes.
         this.severityConfig = {
           critical: { color: "#ff2233", pulseSpeed: 3.8, pulseAmp: 0.34, baseScale: 1.15 },
           high: { color: "#ff6600", pulseSpeed: 3.0, pulseAmp: 0.24, baseScale: 1.0 },
@@ -695,8 +775,11 @@
         };
       }
 
+      // init() builds the renderer, camera, lights, globe meshes, and input handlers.
       init() {
+        // The scene is the root container for everything Three.js draws.
         this.scene = new THREE.Scene();
+        // The camera defines how we view the globe from a slight front-facing angle.
         this.camera = new THREE.PerspectiveCamera(
           45,
           window.innerWidth / window.innerHeight,
@@ -705,14 +788,17 @@
         );
         this.camera.position.set(0, 0.45, 7);
 
+        // The renderer turns the scene into pixels and attaches the canvas to the page.
         this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.outputEncoding = THREE.sRGBEncoding;
         this.container.appendChild(this.renderer.domElement);
 
+        // The globe group holds the planet and the nodes so we can rotate them together.
         this.scene.add(this.globeGroup);
 
+        // Ambient, key, and fill lights give the sphere depth without making it too bright.
         const ambientLight = new THREE.AmbientLight(0x88ffaa, 0.75);
         this.scene.add(ambientLight);
 
@@ -724,6 +810,7 @@
         fillLight.position.set(-4, -2, -3);
         this.scene.add(fillLight);
 
+        // The backdrop, globe, nodes, and input listeners all need to exist before animation starts.
         this.addBackdrop();
         this.createGlobe();
         this.syncThreatNodes();
@@ -732,11 +819,13 @@
         this.animate();
       }
 
+      // addBackdrop() creates a star field by scattering random points on a large sphere shell.
       addBackdrop() {
         const starGeometry = new THREE.BufferGeometry();
         const starCount = 1500;
         const positions = new Float32Array(starCount * 3);
 
+        // Each star gets a random spherical position so the backdrop wraps around the camera.
         for (let i = 0; i < starCount; i += 1) {
           const r = 45 + Math.random() * 30;
           const theta = Math.random() * Math.PI * 2;
@@ -760,8 +849,11 @@
         this.scene.add(stars);
       }
 
+      // createGlobe() builds the planet mesh, its atmosphere, and a texture fallback path.
       createGlobe() {
+        // SphereGeometry gives us the round Earth-like shape for the planet.
         const geometry = new THREE.SphereGeometry(this.globeRadius, 96, 96);
+        // Start with a procedural texture so the globe always renders, even if the network image fails.
         const baseTexture = this.createProceduralGlobeTexture();
         const material = new THREE.MeshPhongMaterial({
           map: baseTexture,
@@ -774,6 +866,7 @@
         this.globe = new THREE.Mesh(geometry, material);
         this.globeGroup.add(this.globe);
 
+        // A faint atmosphere shell gives the globe a subtle glow around the edge.
         const atmosphere = new THREE.Mesh(
           new THREE.SphereGeometry(this.globeRadius * 1.035, 64, 64),
           new THREE.MeshBasicMaterial({
@@ -785,6 +878,7 @@
         );
         this.globeGroup.add(atmosphere);
 
+        // If the public Earth texture loads, it replaces the fallback map with a better surface image.
         const loader = new THREE.TextureLoader();
         loader.setCrossOrigin("anonymous");
         loader.load(
@@ -802,12 +896,15 @@
         );
       }
 
+      // createProceduralGlobeTexture() draws a fake Earth texture on a canvas in case the CDN image fails.
       createProceduralGlobeTexture() {
+        // A canvas texture lets us paint colors, grid lines, and land shapes with plain 2D drawing code.
         const canvas = document.createElement("canvas");
         canvas.width = 2048;
         canvas.height = 1024;
         const ctx = canvas.getContext("2d");
 
+        // Start with a dark gradient so the globe feels like a night-side tactical map.
         const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
         gradient.addColorStop(0, "#061018");
         gradient.addColorStop(0.5, "#0b1f24");
@@ -815,6 +912,7 @@
         ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+        // Draw a faint latitude/longitude grid so the fallback still feels geospatial.
         ctx.strokeStyle = "rgba(0, 255, 136, 0.12)";
         ctx.lineWidth = 1;
         for (let x = 0; x <= canvas.width; x += 128) {
@@ -830,6 +928,7 @@
           ctx.stroke();
         }
 
+        // These polygon shapes approximate continents so the fallback looks like a stylized Earth.
         const continents = [
           [[190, 150], [310, 110], [430, 145], [480, 250], [440, 380], [300, 390], [220, 300]],
           [[520, 180], [660, 160], [720, 240], [690, 350], [610, 410], [540, 310]],
@@ -841,6 +940,7 @@
 
         ctx.lineWidth = 3;
         continents.forEach((points, index) => {
+          // Alternate fill tones create a little contrast between land masses.
           const fill = ctx.createLinearGradient(0, 0, 0, canvas.height);
           fill.addColorStop(0, index % 2 === 0 ? "rgba(26, 102, 73, 0.9)" : "rgba(18, 83, 63, 0.9)");
           fill.addColorStop(1, "rgba(5, 35, 23, 0.92)");
@@ -859,6 +959,7 @@
           ctx.stroke();
         });
 
+        // Random speckles add visual noise so the surface does not look flat or synthetic.
         for (let i = 0; i < 220; i += 1) {
           ctx.fillStyle = `rgba(0, 255, 136, ${0.02 + Math.random() * 0.04})`;
           ctx.beginPath();
@@ -878,21 +979,26 @@
         return texture;
       }
 
+      // syncThreatNodes() compares the source-of-truth array with the live scene and adds/removes meshes as needed.
       syncThreatNodes() {
         this.threats.forEach((threat) => {
+          // Active threats should have a node in the scene.
           if (threat.status === "active" && !this.nodeMap.has(threat.id)) {
             this.addThreatNode(threat);
           }
+          // Inactive threats should disappear from the scene.
           if (threat.status !== "active" && this.nodeMap.has(threat.id)) {
             this.removeThreatNode(threat.id);
           }
         });
       }
 
+      // addThreatNode() builds the visible marker for one threat using three meshes layered together.
       addThreatNode(threat) {
         const severity = this.severityConfig[threat.severity];
         const nodeGroup = new THREE.Group();
 
+        // The core sphere is the clickable point the player sees on the globe.
         const pointGeometry = new THREE.SphereGeometry(0.042 * severity.baseScale, 18, 18);
         const pointMaterial = new THREE.MeshBasicMaterial({
           color: new THREE.Color(severity.color),
@@ -901,6 +1007,7 @@
         });
         const pointMesh = new THREE.Mesh(pointGeometry, pointMaterial);
 
+        // The ring is a halo that helps the node read as a glowing alert.
         const ringGeometry = new THREE.RingGeometry(0.075, 0.115, 48);
         const ringMaterial = new THREE.MeshBasicMaterial({
           color: new THREE.Color(severity.color),
@@ -911,6 +1018,7 @@
         });
         const ringMesh = new THREE.Mesh(ringGeometry, ringMaterial);
 
+        // The glow sphere softens the marker and gives it a bright pulse shell.
         const glowGeometry = new THREE.SphereGeometry(0.08 * severity.baseScale, 16, 16);
         const glowMaterial = new THREE.MeshBasicMaterial({
           color: new THREE.Color(severity.color),
@@ -925,6 +1033,7 @@
           this.globeRadius + 0.03
         );
 
+        // The group is positioned on the globe surface, and the meshes inherit that location.
         nodeGroup.position.copy(position);
         nodeGroup.userData = {
           threatId: threat.id,
@@ -952,6 +1061,7 @@
         });
       }
 
+      // removeThreatNode() cleans up the group and its map entry when a threat is no longer active.
       removeThreatNode(id) {
         const node = this.nodeMap.get(id);
         if (!node) {
@@ -961,13 +1071,16 @@
         this.nodeMap.delete(id);
       }
 
+      // onThreatClick() lets other UI layers react to a node click without coupling to the globe internals.
       onThreatClick(callback) {
         this.clickHandlers.push(callback);
       }
 
+      // attachEvents() wires resize, drag, hover, and click behavior to the rendered canvas.
       attachEvents() {
         window.addEventListener("resize", () => this.handleResize());
 
+        // pointerdown starts a drag gesture and stores the initial mouse position.
         this.renderer.domElement.addEventListener("pointerdown", (event) => {
           this.dragState.isDragging = true;
           this.dragState.lastX = event.clientX;
@@ -975,10 +1088,12 @@
           this.dragState.moved = false;
         });
 
+        // pointermove drives both drag rotation and hover checks as the mouse moves.
         window.addEventListener("pointermove", (event) => {
           this.updatePointer(event);
 
           if (this.dragState.isDragging) {
+            // Rotation is based on pointer delta so the globe follows the drag direction naturally.
             const deltaX = event.clientX - this.dragState.lastX;
             const deltaY = event.clientY - this.dragState.lastY;
             this.dragState.lastX = event.clientX;
@@ -1002,6 +1117,7 @@
           this.updateHoverState();
         });
 
+        // pointerup ends the drag, and a short movement threshold lets clicks register cleanly.
         window.addEventListener("pointerup", (event) => {
           const wasDragging = this.dragState.isDragging;
           const moved = this.dragState.moved;
@@ -1012,23 +1128,27 @@
           }
         });
 
+        // Leaving the canvas clears hover feedback so the cursor and glow state reset.
         this.renderer.domElement.addEventListener("mouseleave", () => {
           this.clearHoverState();
         });
       }
 
+      // handleResize() keeps the camera and renderer matched to the current viewport size.
       handleResize() {
         this.camera.aspect = window.innerWidth / window.innerHeight;
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(window.innerWidth, window.innerHeight);
       }
 
+      // updatePointer() converts screen coordinates into normalized device coordinates for raycasting.
       updatePointer(event) {
         const rect = this.renderer.domElement.getBoundingClientRect();
         this.pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
         this.pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
       }
 
+      // getThreatIntersection() asks the raycaster which node, if any, is under the pointer.
       getThreatIntersection() {
         const pointMeshes = Array.from(this.nodeMap.values()).map((node) => node.pointMesh);
         this.raycaster.setFromCamera(this.pointer, this.camera);
@@ -1036,6 +1156,7 @@
         return intersections[0] || null;
       }
 
+      // handleClick() uses the raycast result to find the threat object and pass it to the registered callbacks.
       handleClick(event) {
         this.updatePointer(event);
         const intersection = this.getThreatIntersection();
@@ -1052,6 +1173,7 @@
         this.clickHandlers.forEach((callback) => callback(node.threat));
       }
 
+      // updateHoverState() changes the cursor and marks the hovered node so the pulse can brighten.
       updateHoverState() {
         const intersection = this.getThreatIntersection();
         const nextId = intersection ? intersection.object.userData.threatId : null;
@@ -1068,6 +1190,7 @@
         });
       }
 
+      // clearHoverState() resets any highlight when the pointer leaves the globe area.
       clearHoverState() {
         this.hoveredThreatId = null;
         document.body.style.cursor = "default";
@@ -1076,11 +1199,13 @@
         });
       }
 
+      // updateActiveCount() reads the threats array directly so the HUD stays in sync with global state.
       updateActiveCount() {
         const count = this.threats.filter((threat) => threat.status === "active").length;
         document.getElementById("active-count").textContent = String(count).padStart(2, "0");
       }
 
+      // respawnRandomThreat() is a simple placeholder for future threat lifecycle logic.
       respawnRandomThreat() {
         const inactiveThreats = this.threats.filter((threat) => threat.status !== "active");
         if (inactiveThreats.length === 0) {
@@ -1093,25 +1218,31 @@
         this.updateActiveCount();
       }
 
+      // animate() runs once per frame, updating rotation, pulsing, hover glow, and the final render call.
       animate() {
         requestAnimationFrame(() => this.animate());
 
         const elapsed = this.clock.getElapsedTime();
 
+        // Auto-rotation keeps the globe moving even when the player is not dragging it.
         this.globeGroup.rotation.y += this.autoRotateSpeed + this.rotationVelocity.y;
         this.globeGroup.rotation.x += this.rotationVelocity.x;
         this.globeGroup.rotation.x = Math.max(-0.85, Math.min(0.85, this.globeGroup.rotation.x));
 
+        // Rotation velocity decays over time so drag input eases out instead of stopping instantly.
         this.rotationVelocity.y *= 0.94;
         this.rotationVelocity.x *= 0.9;
 
         this.nodeMap.forEach((node) => {
           const { group, pointMesh, ringMesh, glowMesh } = node;
           const { pulseSpeed, pulseAmp, baseScale, hovered } = group.userData;
+
+          // The sine wave turns elapsed time into a smooth up-and-down pulse for each threat marker.
           const wave = (Math.sin(elapsed * pulseSpeed) + 1) * 0.5;
           const hoverBoost = hovered ? 0.22 : 0;
           const scale = baseScale + (wave * pulseAmp) + hoverBoost;
 
+          // Each mesh scales separately so the core, ring, and glow feel like one animated alert.
           pointMesh.scale.setScalar(scale);
           glowMesh.scale.setScalar(scale * 1.45);
           ringMesh.scale.setScalar(1 + (wave * 0.55) + (hovered ? 0.2 : 0));
@@ -1125,9 +1256,8 @@
         this.renderer.render(this.scene, this.camera);
       }
 
-      // Converts geographic coordinates to a position on the globe surface.
-      // Latitude controls north/south angle, longitude controls east/west angle,
-      // and radius lets us place markers slightly above the sphere instead of inside it.
+      // latLngToVector3() turns latitude/longitude into a 3D point on the sphere.
+      // Phi and theta are the spherical angles needed to map real-world coordinates to Three.js space.
       latLngToVector3(lat, lng, radius) {
         const phi = (90 - lat) * (Math.PI / 180);
         const theta = (lng + 180) * (Math.PI / 180);
@@ -1140,9 +1270,11 @@
       }
     }
 
+    // screenState controls which overlay is visible: menu, briefing, or gameplay.
     let screenState = "menu"; // 'menu' | 'howtoplay' | 'game'
     let globeStarted = false;
 
+    // DOM references let the screen functions switch overlays without recreating elements.
     const globe = new ThreatGlobe(document.getElementById("globe-root"), threats);
     const bootOverlay = document.getElementById("boot-overlay");
     const menuScreen = document.getElementById("menu-screen");
@@ -1152,24 +1284,28 @@
     const backButton = document.getElementById("back-button");
     const returnButton = document.getElementById("return-button");
 
+    // setScreen() toggles which overlay panel is active inside the shared boot screen.
     function setScreen(nextScreen) {
       screenState = nextScreen;
       menuScreen.classList.toggle("is-active", nextScreen === "menu");
       howtoScreen.classList.toggle("is-active", nextScreen === "howtoplay");
     }
 
+    // showMenu() restores the main menu and keeps the overlay visible.
     function showMenu() {
       bootOverlay.style.display = "block";
       bootOverlay.classList.remove("is-hiding");
       setScreen("menu");
     }
 
+    // showHowToPlay() crossfades to the briefing screen without touching the globe logic.
     function showHowToPlay() {
       bootOverlay.style.display = "block";
       bootOverlay.classList.remove("is-hiding");
       setScreen("howtoplay");
     }
 
+    // startGame() flips into gameplay, fades the overlay out, and boots the globe exactly once.
     function startGame() {
       screenState = "game";
       bootOverlay.classList.add("is-hiding");
@@ -1177,11 +1313,13 @@
       if (!globeStarted) {
         globeStarted = true;
         globe.init();
+        // This callback hook is the bridge for future side panels and threat detail UI.
         globe.onThreatClick((threat) => {
           console.log("THREATGRID node selected:", threat);
           // TODO: Layer 2 will open a threat detail panel using this callback.
         });
 
+        // The respawn loop will eventually bring neutralized threats back into play.
         window.setInterval(() => {
           globe.respawnRandomThreat();
           globe.syncThreatNodes();
@@ -1190,6 +1328,7 @@
         // TODO: Layer 2 will subscribe to threat state updates instead of reading the scene directly.
       }
 
+      // The delayed hide gives the fade-out time to finish before the overlay stops intercepting input.
       window.setTimeout(() => {
         if (screenState === "game") {
           bootOverlay.style.display = "none";
@@ -1197,11 +1336,13 @@
       }, 600);
     }
 
+    // The buttons simply switch between the three screen states.
     initializeButton.addEventListener("click", startGame);
     howtoButton.addEventListener("click", showHowToPlay);
     backButton.addEventListener("click", showMenu);
     returnButton.addEventListener("click", showMenu);
 
+    // Start on the main menu so the globe can boot behind it when the player is ready.
     showMenu();
   </script>
 </body>
