@@ -81,6 +81,10 @@ function requestReturnToMenu() {
     // A second click inside the window confirms the exit and freezes the globe behind the overlay.
     clearMenuExitConfirm();
     globe.autoRotateSpeed = 0;
+    // The threat panel is also closed so the menu overlay returns to a clean boot state.
+    if (typeof closeThreatPanel === "function") {
+      closeThreatPanel(true);
+    }
     // Returning to the menu also flips the shared screen state back to the menu branch.
     screenState = "menu";
     showMenu();

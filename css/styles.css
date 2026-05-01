@@ -92,6 +92,422 @@ canvas {
   outline: none;
 }
 
+/* The threat panel is fixed to the right and slides on/off screen without dimming the globe. */
+.threat-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 380px;
+  height: 100vh;
+  z-index: 4;
+  pointer-events: none;
+  transform: translateX(100%);
+  transition: transform 320ms ease;
+}
+
+/* Opening the panel only enables pointer events over the panel itself, not the whole viewport. */
+.threat-panel.is-open {
+  pointer-events: auto;
+  transform: translateX(0);
+}
+
+/* The shell provides the dark glassy terminal surface and keeps the scroll area clipped cleanly. */
+.threat-panel-shell {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: rgba(10, 10, 15, 0.97);
+  border-left: 1px solid rgba(0, 255, 136, 0.2);
+  border-right: 1px solid rgba(0, 255, 136, 0.2);
+  box-shadow: -18px 0 36px rgba(0, 0, 0, 0.38);
+}
+
+/* Backdrop blur is optional, so it is only applied when the browser supports it. */
+@supports ((backdrop-filter: blur(4px)) or (-webkit-backdrop-filter: blur(4px))) {
+  .threat-panel-shell {
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+}
+
+/* The close control stays pinned in the corner so the player can dismiss the panel at any scroll position. */
+.threat-panel-close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  z-index: 2;
+  appearance: none;
+  border: 1px solid rgba(0, 255, 136, 0.5);
+  border-radius: 0;
+  background: rgba(0, 255, 136, 0.05);
+  color: #00ff88;
+  padding: 8px 10px;
+  cursor: pointer;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  line-height: 1;
+  text-transform: uppercase;
+  transition: background 150ms ease, border-color 150ms ease, box-shadow 150ms ease, text-shadow 150ms ease;
+}
+
+/* Hover feedback matches the rest of the terminal controls. */
+.threat-panel-close:hover,
+.threat-panel-close:focus-visible {
+  background: rgba(0, 255, 136, 0.12);
+  border-color: rgba(0, 255, 136, 1);
+  box-shadow: 0 0 16px rgba(0, 255, 136, 0.14);
+  text-shadow: 0 0 10px rgba(0, 255, 136, 0.28);
+  outline: none;
+}
+
+/* Disabled state is used while a neutralization sequence is running so the panel is not interrupted mid-flow. */
+.threat-panel-close:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* The content area scrolls internally so the panel never changes size as sections expand. */
+.threat-panel-content {
+  height: 100%;
+  overflow-y: auto;
+  padding: 24px 22px 28px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 255, 136, 0.45) rgba(0, 255, 136, 0.06);
+}
+
+/* Custom scrollbars keep the panel feeling like part of the same console UI. */
+.threat-panel-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.threat-panel-content::-webkit-scrollbar-track {
+  background: rgba(0, 255, 136, 0.06);
+}
+
+.threat-panel-content::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 136, 0.35);
+  border: 1px solid rgba(0, 255, 136, 0.12);
+}
+
+/* This vertical stack keeps spacing consistent whether the panel is showing a threat or a debrief. */
+.threat-panel-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding-top: 28px;
+}
+
+/* The header groups all top-level threat metadata before the analyst section starts. */
+.threat-panel-header {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Severity is shown as a small badge so the alert level is visible immediately. */
+.threat-severity-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  color: #00ff88;
+  font-size: 0.78rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+/* The badge dot is colored in JavaScript so one CSS shape can represent all severities. */
+.threat-severity-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  box-shadow: 0 0 10px currentColor;
+}
+
+/* Secondary metadata stays dimmer so the title and status remain the visual anchors. */
+.threat-type-label,
+.threat-location,
+.threat-meta-row,
+.panel-section-label,
+.panel-body-copy,
+.panel-list-copy,
+.panel-step-index,
+.panel-code-block,
+.panel-debrief-time,
+.panel-debrief-copy,
+.panel-bullet-list {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+}
+
+.threat-type-label {
+  color: rgba(0, 255, 136, 0.48);
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+/* The clicked threat title gets the brightest treatment because it is the main subject of the panel. */
+.threat-panel-title {
+  margin: 0;
+  color: #00ff88;
+  font-size: 1.42rem;
+  line-height: 1.2;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-shadow: 0 0 16px rgba(0, 255, 136, 0.14);
+}
+
+.threat-location {
+  color: rgba(0, 255, 136, 0.52);
+  font-size: 0.76rem;
+  letter-spacing: 0.08em;
+}
+
+/* Target and vector rows are short structured metadata lines for quick scanning. */
+.threat-meta-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.threat-meta-row {
+  display: grid;
+  gap: 2px;
+}
+
+.threat-meta-label {
+  color: rgba(0, 255, 136, 0.42);
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.threat-meta-value {
+  color: #00ff88;
+  font-size: 0.77rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* The thin rule visually closes the header before the narrative sections begin. */
+.threat-panel-rule {
+  height: 1px;
+  background: rgba(0, 255, 136, 0.22);
+}
+
+/* Section labels unify the analyst, protocol, and debrief blocks under one visual system. */
+.panel-section-label {
+  color: #00ff88;
+  font-size: 0.76rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+/* This one-shot blink gives the analyst deployment banner a boot-up feel without looping forever. */
+.panel-section-label.is-booting {
+  animation: analyst-boot 680ms ease 1;
+}
+
+/* The typewriter area uses a minimum height so the panel does not jump while text is being written. */
+.panel-typewriter {
+  min-height: 132px;
+  color: rgba(0, 255, 136, 0.68);
+  font-size: 0.8rem;
+  line-height: 1.75;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* The cursor is a separate element so the text can type independently while the cursor keeps blinking. */
+.typewriter-cursor {
+  display: inline-block;
+  margin-left: 2px;
+  color: #00ff88;
+  animation: blink 1s steps(2, end) infinite;
+}
+
+/* Hiding the cursor after typing finishes prevents it from drawing attention away from the next section. */
+.typewriter-cursor.is-hidden {
+  display: none;
+}
+
+/* Steps stack vertically and are filled by JavaScript one row at a time. */
+.panel-steps {
+  display: grid;
+  gap: 14px;
+}
+
+/* Each step animates in once so the protocol feels staged and deliberate. */
+.panel-step {
+  display: grid;
+  gap: 8px;
+  opacity: 0;
+  transform: translateY(10px);
+  animation: protocol-step-reveal 240ms ease forwards;
+}
+
+/* Step headings separate the number from the action label for better scanability. */
+.panel-step-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.panel-step-index {
+  color: rgba(0, 255, 136, 0.48);
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.panel-step-label {
+  color: #00ff88;
+  font-size: 0.82rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* Command blocks are styled like terminal snippets to reinforce the ops-dashboard tone. */
+.panel-code-block {
+  margin: 0;
+  background: rgba(0, 255, 136, 0.06);
+  border-left: 2px solid rgba(0, 255, 136, 0.4);
+  padding: 12px 12px 12px 14px;
+  color: #00ff88;
+  font-size: 0.74rem;
+  line-height: 1.65;
+  letter-spacing: 0.04em;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* The primary action stays hidden until the protocol finishes so the player reads before acting. */
+.panel-action-wrap {
+  display: none;
+}
+
+.panel-action-wrap.is-visible {
+  display: block;
+}
+
+/* The neutralize button matches the existing terminal buttons but fills the panel width. */
+.panel-action-button,
+.debrief-close-button {
+  width: 100%;
+  appearance: none;
+  border: 1px solid rgba(0, 255, 136, 0.6);
+  border-radius: 0;
+  background: rgba(10, 10, 15, 0.92);
+  color: #00ff88;
+  padding: 16px 18px;
+  cursor: pointer;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.82rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  box-shadow: inset 0 0 0 1px rgba(0, 255, 136, 0.04);
+  transition: background 150ms ease, border-color 150ms ease, box-shadow 150ms ease, text-shadow 150ms ease, opacity 150ms ease;
+}
+
+/* Shared hover treatment keeps all call-to-action buttons feeling related. */
+.panel-action-button:hover,
+.panel-action-button:focus-visible,
+.debrief-close-button:hover,
+.debrief-close-button:focus-visible {
+  background: rgba(0, 255, 136, 0.1);
+  border-color: rgba(0, 255, 136, 1);
+  box-shadow: 0 0 18px rgba(0, 255, 136, 0.16), inset 0 0 0 1px rgba(0, 255, 136, 0.05);
+  text-shadow: 0 0 10px rgba(0, 255, 136, 0.34);
+  outline: none;
+}
+
+/* Disabled state signals that the neutralization sequence is already in progress. */
+.panel-action-button:disabled,
+.debrief-close-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Debrief sections reuse the same vertical rhythm but shift to a mission-complete emphasis. */
+.debrief-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding-top: 28px;
+}
+
+.debrief-title {
+  margin: 0;
+  color: #00ff88;
+  font-size: 1.18rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.debrief-threat-name {
+  color: #00ff88;
+  font-size: 1.04rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.panel-debrief-time {
+  color: rgba(0, 255, 136, 0.54);
+  font-size: 0.74rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.panel-debrief-copy,
+.panel-body-copy,
+.panel-list-copy,
+.panel-bullet-list {
+  color: rgba(0, 255, 136, 0.66);
+  font-size: 0.78rem;
+  line-height: 1.75;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* IOC and prevention lists use compact bullets so the debrief remains easy to skim. */
+.panel-bullet-list {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.panel-bullet-list li + li {
+  margin-top: 8px;
+}
+
+/* One-shot animation for the analyst banner on panel open. */
+@keyframes analyst-boot {
+  0%,
+  25%,
+  50% {
+    opacity: 0.2;
+  }
+
+  12%,
+  37%,
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Step reveal animation keeps each protocol item feeling sequential. */
+@keyframes protocol-step-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Shared HUD block styling gives the top-left and top-right readouts the same terminal look. */
 .hud-block {
   position: absolute;

@@ -98,6 +98,13 @@
         </div>
       </section>
     </div>
+    <!-- The side panel stays mounted so it can slide in quickly without rebuilding the outer shell each time. -->
+    <aside id="threat-panel" class="threat-panel" aria-hidden="true">
+      <div class="threat-panel-shell">
+        <button id="threat-panel-close" class="threat-panel-close" type="button">[ × ]</button>
+        <div id="threat-panel-content" class="threat-panel-content"></div>
+      </div>
+    </aside>
   </div>
 
   <script src="js/threats.js"></script>
