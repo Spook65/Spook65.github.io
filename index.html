@@ -20,6 +20,11 @@
         <strong id="active-count">0</strong>
         <p>Active Threats</p>
       </div>
+      <!-- The score block stays in the HUD so it updates globally no matter which threat the player is handling. -->
+      <div class="hud-block hud-score">
+        <strong id="score-display">SCORE: 00000</strong>
+        <p id="accuracy-display">ACC: 100%</p>
+      </div>
       <!-- This button re-enables pointer events because the HUD container itself stays click-through. -->
       <button id="hud-menu-button" class="hud-menu-button" type="button">[ MENU ]</button>
       <div class="grid-vignette"></div>
@@ -35,7 +40,12 @@
           <p class="menu-subtitle">GLOBAL CYBER THREAT RESPONSE SYSTEM</p>
           <div class="menu-rule" aria-hidden="true"></div>
           <div class="menu-actions">
-            <button id="initialize-button" class="menu-button" type="button">INITIALIZE SYSTEM</button>
+            <button id="analyst-mode-button" class="menu-button" type="button">ANALYST MODE</button>
+            <button id="operator-mode-button" class="menu-button" type="button">OPERATOR MODE</button>
+          </div>
+          <!-- The mode description swaps on hover so the player sees the rules before committing to a start path. -->
+          <p id="menu-mode-description" class="menu-mode-description">OBSERVE AND DIRECT — NO TYPING REQUIRED</p>
+          <div class="menu-actions">
             <button id="howto-button" class="menu-button" type="button">HOW TO PLAY</button>
           </div>
         </div>

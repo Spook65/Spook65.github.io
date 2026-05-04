@@ -1,17 +1,28 @@
-/* Screen-state and boot-overlay behavior for THREATGRID's menu, briefing, and game transitions. */
+/* Screen-state and mode-selection behavior for THREATGRID's menu, briefing, and gameplay transitions. */
 // screenState controls which overlay is visible: menu, briefing, or gameplay.
 let screenState = "menu"; // 'menu' | 'howtoplay' | 'game'
 let globeStarted = false;
+
+// gameMode is chosen before the game starts so later UI logic knows whether to show passive or typed actions.
+let gameMode = "analyst"; // 'analyst' | 'operator'
 
 // DOM references let the screen functions switch overlays without recreating elements.
 const bootOverlay = document.getElementById("boot-overlay");
 const menuScreen = document.getElementById("menu-screen");
 const howtoScreen = document.getElementById("howto-screen");
-const initializeButton = document.getElementById("initialize-button");
+const analystModeButton = document.getElementById("analyst-mode-button");
+const operatorModeButton = document.getElementById("operator-mode-button");
 const howtoButton = document.getElementById("howto-button");
 const backButton = document.getElementById("back-button");
 const returnButton = document.getElementById("return-button");
 const hudMenuButton = document.getElementById("hud-menu-button");
+const menuModeDescription = document.getElementById("menu-mode-description");
+
+// The mode descriptions explain the two start paths without adding another full menu screen.
+const modeDescriptionLookup = {
+  analyst: "OBSERVE AND DIRECT — NO TYPING REQUIRED",
+  operator: "TYPE COMMANDS YOURSELF — HINTS AVAILABLE"
+};
 
 // The menu button uses a two-step confirm pattern so players do not exit the mission by accident.
 let menuExitConfirmArmed = false;
@@ -20,6 +31,17 @@ let menuExitTimerId = null;
 // updateHudMenuButton() keeps the HUD label in sync with whether exit confirmation is armed.
 function updateHudMenuButton() {
   hudMenuButton.textContent = menuExitConfirmArmed ? "[ CONFIRM? ]" : "[ MENU ]";
+}
+
+// updateModeDescription() swaps the one-line menu help text to match the hovered or selected mode.
+function updateModeDescription(mode) {
+  menuModeDescription.textContent = modeDescriptionLookup[mode] || modeDescriptionLookup.analyst;
+}
+
+// setGameMode() stores the chosen mode before the game boots so the panel logic can render the right controls immediately.
+function setGameMode(mode) {
+  gameMode = mode;
+  updateModeDescription(mode);
 }
 
 // clearMenuExitConfirm() resets the exit guard and cancels any pending timer.
@@ -44,6 +66,7 @@ function showMenu() {
   bootOverlay.style.display = "block";
   bootOverlay.classList.remove("is-hiding");
   setScreen("menu");
+  updateModeDescription(gameMode);
 }
 
 // showHowToPlay() crossfades to the briefing screen without touching the globe logic.
@@ -101,12 +124,29 @@ function requestReturnToMenu() {
   }, 3000);
 }
 
-// The buttons simply switch between the three screen states.
-initializeButton.addEventListener("click", startGame);
+// Hover previews let the player compare both modes before actually committing to a start button.
+analystModeButton.addEventListener("mouseenter", () => updateModeDescription("analyst"));
+operatorModeButton.addEventListener("mouseenter", () => updateModeDescription("operator"));
+analystModeButton.addEventListener("mouseleave", () => updateModeDescription(gameMode));
+operatorModeButton.addEventListener("mouseleave", () => updateModeDescription(gameMode));
+
+// Each mode button stores the mode first, then starts the game, so downstream UI code knows which behavior to build.
+analystModeButton.addEventListener("click", () => {
+  setGameMode("analyst");
+  startGame();
+});
+
+operatorModeButton.addEventListener("click", () => {
+  setGameMode("operator");
+  startGame();
+});
+
+// The remaining buttons simply switch between the three screen states.
 howtoButton.addEventListener("click", showHowToPlay);
 backButton.addEventListener("click", showMenu);
 returnButton.addEventListener("click", showMenu);
 hudMenuButton.addEventListener("click", requestReturnToMenu);
 
-// Initialize the HUD exit button label so the menu state starts in its neutral form.
+// Initialize the HUD exit button label and menu mode description so the boot screen starts fully populated.
 updateHudMenuButton();
+updateModeDescription(gameMode);

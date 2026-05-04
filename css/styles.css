@@ -92,6 +92,23 @@ canvas {
   outline: none;
 }
 
+/* The score block lives in the bottom-right corner so progress stays visible during all gameplay states. */
+.hud-score {
+  right: 0;
+  bottom: 0;
+  text-align: right;
+}
+
+/* Score and accuracy use stacked lines so both values fit in a small footprint. */
+.hud-score strong {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 1.12rem;
+  line-height: 1;
+  font-weight: 700;
+  color: var(--hud);
+}
+
 /* The threat panel is fixed to the right and slides on/off screen without dimming the globe. */
 .threat-panel {
   position: fixed;
@@ -470,6 +487,57 @@ canvas {
   text-transform: uppercase;
 }
 
+/* Mission time tracks how long the player has spent in the current panel, not the threat's escalation clock. */
+.panel-mission-timer {
+  color: rgba(0, 255, 136, 0.5);
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* Color shifts warn the player when the speed-bonus window or response window is slipping away. */
+.panel-mission-timer.is-warning {
+  color: #ffcc00;
+}
+
+.panel-mission-timer.is-danger {
+  color: #ff2233;
+}
+
+/* The escalation block appears only for high and critical threats so urgent missions feel different. */
+.panel-escalation-wrap {
+  display: none;
+  gap: 8px;
+}
+
+.panel-escalation-wrap.is-visible {
+  display: grid;
+}
+
+.panel-escalation-timer {
+  color: #ff2233;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* The escalation bar is a simple CSS-only progress indicator so game rules stay out of globe.js. */
+.panel-escalation-bar {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 34, 51, 0.12);
+  border: 1px solid rgba(255, 34, 51, 0.24);
+}
+
+.panel-escalation-bar-fill {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, rgba(255, 102, 0, 0.88), rgba(255, 34, 51, 0.98));
+  transform-origin: left center;
+}
+
 /* IOC and prevention lists use compact bullets so the debrief remains easy to skim. */
 .panel-bullet-list {
   margin: 0;
@@ -478,6 +546,164 @@ canvas {
 
 .panel-bullet-list li + li {
   margin-top: 8px;
+}
+
+/* Operator mode swaps the passive action button for a terminal execution area. */
+.operator-terminal-wrap {
+  display: none;
+  gap: 10px;
+}
+
+.operator-terminal-wrap.is-visible {
+  display: grid;
+}
+
+/* The shell frames the prompt and hint area like a mission command console. */
+.operator-terminal-shell {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  background: rgba(0, 255, 136, 0.04);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+}
+
+.operator-terminal-label,
+.operator-terminal-hint,
+.operator-terminal-feedback,
+.operator-suggested-command,
+.operator-terminal-prefix,
+.operator-terminal-input {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  text-transform: uppercase;
+}
+
+.operator-terminal-label {
+  color: rgba(0, 255, 136, 0.8);
+  font-size: 0.76rem;
+  letter-spacing: 0.14em;
+}
+
+/* This area changes by hint tier, so it reserves space to avoid layout jumps between attempts. */
+.operator-terminal-hint-zone {
+  display: grid;
+  gap: 6px;
+  min-height: 44px;
+}
+
+.operator-terminal-hint {
+  color: rgba(0, 255, 136, 0.56);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+}
+
+.operator-suggested-command {
+  color: rgba(0, 255, 136, 0.4);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  word-break: break-word;
+}
+
+/* The prompt row keeps the > marker outside the typed value so the player focuses on the command verb. */
+.operator-terminal-input-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.operator-terminal-prefix {
+  color: #00ff88;
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+}
+
+.operator-terminal-input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #00ff88;
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  outline: none;
+  box-shadow: none;
+}
+
+.operator-terminal-input::placeholder {
+  color: rgba(0, 255, 136, 0.22);
+}
+
+/* Error and assisted-execution messages use the alert palette so failure state is obvious immediately. */
+.operator-terminal-feedback {
+  min-height: 18px;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+}
+
+.operator-terminal-feedback.is-error {
+  color: #ff2233;
+}
+
+.operator-terminal-feedback.is-warning {
+  color: #ff6600;
+}
+
+/* The hint button is visually quieter than primary actions because it is assistive, not the goal. */
+.operator-hint-button {
+  justify-self: end;
+  appearance: none;
+  border: 1px solid rgba(0, 255, 136, 0.34);
+  border-radius: 0;
+  background: rgba(0, 255, 136, 0.04);
+  color: rgba(0, 255, 136, 0.68);
+  padding: 8px 12px;
+  cursor: pointer;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  transition: background 150ms ease, border-color 150ms ease, color 150ms ease, box-shadow 150ms ease;
+}
+
+.operator-hint-button:hover,
+.operator-hint-button:focus-visible {
+  background: rgba(0, 255, 136, 0.08);
+  border-color: rgba(0, 255, 136, 0.68);
+  color: #00ff88;
+  box-shadow: 0 0 14px rgba(0, 255, 136, 0.12);
+  outline: none;
+}
+
+/* A quick shake gives immediate feedback on invalid operator input without requiring extra copy. */
+.operator-terminal-shell.is-shaking {
+  animation: operator-shake 200ms linear 1;
+}
+
+/* Step state classes show whether a row was completed cleanly or required assistance. */
+.panel-step.is-success .panel-code-block {
+  border-left-color: #00ff88;
+  opacity: 1;
+}
+
+.panel-step.is-warning .panel-code-block {
+  border-left-color: #ff6600;
+  opacity: 1;
+}
+
+.panel-step.is-pending .panel-code-block {
+  opacity: 0.82;
+}
+
+/* The mode description text explains the selected start path without cluttering the main menu. */
+.menu-mode-description {
+  margin: -2px 0 4px;
+  min-height: 1.2em;
+  color: rgba(0, 255, 136, 0.54);
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  line-height: 1.6;
+  text-transform: uppercase;
 }
 
 /* One-shot animation for the analyst banner on panel open. */
@@ -505,6 +731,22 @@ canvas {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* The terminal shake is short so it reads as feedback, not a full panel motion. */
+@keyframes operator-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  25% {
+    transform: translateX(-6px);
+  }
+
+  75% {
+    transform: translateX(6px);
   }
 }
 
