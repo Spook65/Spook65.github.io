@@ -785,6 +785,9 @@ canvas {
   top: 0;
   right: 0;
   text-align: right;
+  display: grid;
+  justify-items: end;
+  gap: 4px;
 }
 
 /* The numeric count is larger so the current threat total is easy to scan. */
@@ -795,6 +798,23 @@ canvas {
   line-height: 1;
   font-weight: 700;
   color: var(--hud);
+}
+
+/* The deadline line uses the same HUD font and picks up warning colors as the clock runs down. */
+.hud-deadline {
+  margin: 0;
+  color: var(--hud);
+  font-size: 0.72rem;
+  line-height: 1.5;
+  letter-spacing: 0.14em;
+}
+
+.hud-deadline.is-warning {
+  color: #ffcc00;
+}
+
+.hud-deadline.is-danger {
+  color: #ff2233;
 }
 
 /* Corner brackets are a lightweight frame to make the HUD feel like a targeting display. */
@@ -912,6 +932,60 @@ canvas {
 .screen.is-active {
   opacity: 1;
   pointer-events: auto;
+}
+
+/* The onboarding and mission-end overlays reuse a strict terminal layout with no soft edges. */
+.onboarding-screen,
+.game-state-screen {
+  text-align: center;
+}
+
+.terminal-shell {
+  width: min(860px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.terminal-headline {
+  margin: 0;
+  color: #00ff88;
+  font-size: clamp(1.5rem, 4vw, 2.4rem);
+  letter-spacing: 0.16em;
+  line-height: 1.25;
+  text-transform: uppercase;
+  text-shadow: 0 0 18px rgba(0, 255, 136, 0.18);
+}
+
+.terminal-rule {
+  width: min(420px, 100%);
+  height: 1px;
+  background: rgba(0, 255, 136, 0.24);
+}
+
+.terminal-copy {
+  margin: 0;
+  color: rgba(0, 255, 136, 0.66);
+  font-size: 0.8rem;
+  line-height: 1.8;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.game-state-content {
+  width: min(860px, 100%);
+}
+
+.path-choice-actions {
+  display: grid;
+  gap: 12px;
+  width: min(680px, 100%);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.path-choice-actions .menu-button {
+  width: 100%;
 }
 
 /* Menu screen centers the boot controls and copy. */
@@ -1229,6 +1303,10 @@ canvas {
 /* Narrow viewports collapse the briefing grid into a single column. */
 @media (max-width: 860px) {
   .howto-content {
+    grid-template-columns: 1fr;
+  }
+
+  .path-choice-actions {
     grid-template-columns: 1fr;
   }
 

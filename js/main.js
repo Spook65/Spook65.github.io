@@ -1,5 +1,6 @@
 /* Main wiring for THREATGRID: create the globe, run game rules, and drive the Layer 2 and Layer 3 panel UI. */
 const globe = new ThreatGlobe(document.getElementById("globe-root"), threats);
+const initialThreatBlueprints = threats.map((threat) => JSON.parse(JSON.stringify(threat)));
 
 // activePanelThreat tracks which threat is currently being shown in the side panel.
 let activePanelThreat = null;
@@ -19,11 +20,20 @@ let panelOpenedAt = 0;
 let currentOperatorSession = null;
 let threatResponsesWired = false;
 let escalationTimersStarted = false;
+let deadlineTimerIntervalId = null;
+let respawnIntervalId = null;
 let typewriterIntervalId = null;
 let missionTimerIntervalId = null;
 let escalationTickerId = null;
 let closePanelTimeoutId = null;
 let panelTimeoutIds = [];
+let deadlineStartTime = null;
+// Deadline = threat_count * 1.5 min (8 threats = 12 min), so the clock scales with the live roster.
+let deadlineMs = 12 * 60 * 1000;
+let playerDeadlineExpired = false;
+let missionEnded = false;
+let pendingGameOverOutcome = null;
+let playerPath = null;
 
 // Escalation state is tracked outside globe.js because these are game rules, while globe.js only renders state.
 const escalationStateByThreatId = {};
@@ -34,6 +44,8 @@ const threatPanelContent = document.getElementById("threat-panel-content");
 const threatPanelClose = document.getElementById("threat-panel-close");
 const scoreDisplay = document.getElementById("score-display");
 const accuracyDisplay = document.getElementById("accuracy-display");
+const deadlineDisplay = document.getElementById("deadline-display");
+const gameStateContent = document.getElementById("game-state-content");
 
 // Severity colors are reused in the panel so the text UI matches the node colors on the globe.
 const severityColorLookup = {
@@ -189,6 +201,165 @@ function updateScoreDisplay() {
 function addScore(amount) {
   playerScore = Math.max(0, playerScore + amount);
   updateScoreDisplay();
+}
+
+// cloneThreatBlueprint() keeps restart data isolated from the live threat objects that mutate during play.
+function cloneThreatBlueprint(threat) {
+  return JSON.parse(JSON.stringify(threat));
+}
+
+// restoreThreatRoster() resets the shared threat array back to the original eight live targets.
+function restoreThreatRoster() {
+  const restoredThreats = initialThreatBlueprints.map(cloneThreatBlueprint);
+  threats.length = 0;
+  restoredThreats.forEach((threat) => {
+    threats.push(threat);
+  });
+
+  Object.keys(escalationStateByThreatId).forEach((threatId) => {
+    delete escalationStateByThreatId[threatId];
+  });
+}
+
+// updateDeadlineDisplay() keeps the HUD countdown synchronized with the mission clock.
+function updateDeadlineDisplay() {
+  if (!deadlineDisplay) {
+    return;
+  }
+
+  if (screenState !== "game" || deadlineStartTime === null) {
+    deadlineDisplay.textContent = "DEADLINE: --:--";
+    deadlineDisplay.classList.remove("is-warning", "is-danger");
+    return;
+  }
+
+  const elapsed = Date.now() - deadlineStartTime;
+  const remaining = Math.max(0, deadlineMs - elapsed);
+
+  deadlineDisplay.textContent = `DEADLINE: ${formatClock(remaining)}`;
+  deadlineDisplay.classList.toggle("is-warning", remaining <= 180000 && remaining > 60000);
+  deadlineDisplay.classList.toggle("is-danger", remaining <= 60000);
+}
+
+// stopMissionSystems() clears the long-running mission timers so an ended run cannot keep mutating state.
+function stopMissionSystems() {
+  clearPanelAsyncWork();
+
+  if (deadlineTimerIntervalId !== null) {
+    window.clearInterval(deadlineTimerIntervalId);
+    deadlineTimerIntervalId = null;
+  }
+
+  if (respawnIntervalId !== null) {
+    window.clearInterval(respawnIntervalId);
+    respawnIntervalId = null;
+  }
+
+  if (escalationTickerId !== null) {
+    window.clearInterval(escalationTickerId);
+    escalationTickerId = null;
+  }
+
+  escalationTimersStarted = false;
+}
+
+// resetMissionState() restores score, timers, and the threat roster before a fresh mission starts.
+function resetMissionState() {
+  stopMissionSystems();
+
+  if (globe && globe.nodeMap) {
+    Array.from(globe.nodeMap.keys()).forEach((threatId) => {
+      globe.removeThreatNode(threatId);
+    });
+  }
+
+  restoreThreatRoster();
+
+  playerScore = 0;
+  playerAccuracy = 100;
+  threatsNeutralized = 0;
+  totalCommandAttempts = 0;
+  correctCommandAttempts = 0;
+  stepHintState = {};
+  panelNeutralizing = false;
+  panelOpenedAt = 0;
+  currentOperatorSession = null;
+  playerDeadlineExpired = false;
+  missionEnded = false;
+  pendingGameOverOutcome = null;
+  deadlineStartTime = null;
+  playerPath = null;
+
+  updateScoreDisplay();
+  updateDeadlineDisplay();
+  globe.syncThreatNodes();
+  globe.updateActiveCount();
+}
+
+// startRespawnInterval() keeps the earlier-layer background lifecycle running while the mission is active.
+function startRespawnInterval() {
+  if (respawnIntervalId !== null) {
+    window.clearInterval(respawnIntervalId);
+  }
+
+  respawnIntervalId = window.setInterval(() => {
+    if (missionEnded || screenState !== "game") {
+      return;
+    }
+
+    globe.respawnRandomThreat();
+    globe.syncThreatNodes();
+
+    threats.forEach((threat) => {
+      if (threat.status === "active") {
+        ensureEscalationState(threat, false);
+      }
+    });
+  }, 12000);
+}
+
+// checkDeadlineExpired() ends the mission if the clock reaches zero before all eight threats are cleared.
+function checkDeadlineExpired() {
+  if (missionEnded || playerDeadlineExpired || deadlineStartTime === null) {
+    return;
+  }
+
+  const remaining = deadlineMs - (Date.now() - deadlineStartTime);
+
+  if (remaining <= 0 && threatsNeutralized < 8) {
+    playerDeadlineExpired = true;
+    missionEnded = true;
+    pendingGameOverOutcome = null;
+    stopMissionSystems();
+    closeThreatPanel(true);
+    showGameOverScreen("lose");
+  }
+}
+
+// startDeadlineTimer() drives the HUD countdown and the fail-state check every second.
+function startDeadlineTimer() {
+  if (deadlineTimerIntervalId !== null) {
+    window.clearInterval(deadlineTimerIntervalId);
+  }
+
+  if (deadlineStartTime === null) {
+    deadlineStartTime = Date.now();
+  }
+
+  updateDeadlineDisplay();
+  checkDeadlineExpired();
+
+  deadlineTimerIntervalId = window.setInterval(() => {
+    updateDeadlineDisplay();
+    checkDeadlineExpired();
+  }, 1000);
+}
+
+// startMissionSystems() restarts the mission-level timers together so their state stays synchronized.
+function startMissionSystems() {
+  startRespawnInterval();
+  startEscalationTimers();
+  startDeadlineTimer();
 }
 
 // registerWrongAttempt() applies the wrong-command penalty and lowers accuracy because the player missed a step.
@@ -897,9 +1068,143 @@ function showDebriefScreen(threat) {
   threatPanelContent.innerHTML = buildDebriefMarkup(threat);
 
   const closeDebriefButton = document.getElementById("close-debrief-button");
+  if (!closeDebriefButton) {
+    return;
+  }
+
+  if (pendingGameOverOutcome === "win") {
+    closeDebriefButton.textContent = "[ CONTINUE ]";
+  }
   closeDebriefButton.addEventListener("click", () => {
+    if (pendingGameOverOutcome) {
+      const nextOutcome = pendingGameOverOutcome;
+      pendingGameOverOutcome = null;
+      closeThreatPanel(true);
+      showGameOverScreen(nextOutcome);
+      return;
+    }
+
     closeThreatPanel();
   });
+}
+
+// createGameOverMarkup() builds the win, lose, path, and waiting overlays as terminal-style screen copy.
+function createGameOverMarkup(outcome) {
+  if (outcome === "win") {
+    return `
+      <div class="terminal-shell">
+        <div class="terminal-headline">MISSION COMPLETE</div>
+        <div class="terminal-rule" aria-hidden="true"></div>
+        <p class="terminal-copy">ALL THREATS NEUTRALIZED.</p>
+        <p class="terminal-copy">NEXUS SECURITY IS SECURE.</p>
+        <p class="terminal-copy">GOOD WORK, INTERN.</p>
+        <button id="game-over-advance-button" class="menu-button" type="button">[ CONTINUE ]</button>
+      </div>
+    `;
+  }
+
+  if (outcome === "lose") {
+    return `
+      <div class="terminal-shell">
+        <div class="terminal-headline">MISSION FAILED</div>
+        <div class="terminal-rule" aria-hidden="true"></div>
+        <p class="terminal-copy">DEADLINE EXCEEDED.</p>
+        <p class="terminal-copy">THE HACKERS HAVE TAKEN CONTROL.</p>
+        <p class="terminal-copy">NEXUS SECURITY IS COMPROMISED.</p>
+        <p class="terminal-copy">YOU'RE FIRED.</p>
+        <button id="game-over-advance-button" class="menu-button" type="button">[ ACCEPT FATE ]</button>
+      </div>
+    `;
+  }
+
+  if (outcome === "path-choice") {
+    return `
+      <div class="terminal-shell">
+        <div class="terminal-headline">WHAT'S YOUR NEXT MOVE?</div>
+        <div class="terminal-rule" aria-hidden="true"></div>
+        <p class="terminal-copy">[ JOIN THE HACKERS ]</p>
+        <p class="terminal-copy">EMBRACE THE CHAOS. STRIKE FROM THE SHADOWS.</p>
+        <p class="terminal-copy">[ JOIN THE RESISTANCE ]</p>
+        <p class="terminal-copy">FIGHT TO RECLAIM WHAT WAS LOST.</p>
+        <div class="path-choice-actions">
+          <button id="path-hackers-button" class="menu-button" type="button">[ JOIN THE HACKERS ]</button>
+          <button id="path-resistance-button" class="menu-button" type="button">[ JOIN THE RESISTANCE ]</button>
+        </div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="terminal-shell">
+      <div class="terminal-headline">PATH CHOSEN</div>
+      <div class="terminal-rule" aria-hidden="true"></div>
+      <p class="terminal-copy">PATH CHOSEN. CONTINUE TO LAYER 5...</p>
+      <p class="terminal-copy">SELECTED PATH: ${String(playerPath || "UNSET").toUpperCase()}</p>
+      <button id="game-over-advance-button" class="menu-button" type="button">[ RETURN TO MENU ]</button>
+    </div>
+  `;
+}
+
+// showGameOverScreen() swaps the boot overlay content to the requested end-state branch and wires its actions.
+function showGameOverScreen(outcome) {
+  stopMissionSystems();
+  missionEnded = true;
+
+  const nextScreen = outcome === "path-choice" || outcome === "waiting-for-layer-5"
+    ? outcome
+    : "game-over";
+
+  setScreen(nextScreen);
+  updateDeadlineDisplay();
+  bootOverlay.style.display = "block";
+  bootOverlay.classList.remove("is-hiding");
+
+  if (!gameStateContent) {
+    return;
+  }
+
+  gameStateContent.innerHTML = createGameOverMarkup(outcome);
+
+  if (outcome === "win" || outcome === "lose") {
+    const advanceButton = document.getElementById("game-over-advance-button");
+    if (advanceButton) {
+      advanceButton.addEventListener("click", () => {
+        showGameOverScreen("path-choice");
+      });
+    }
+    return;
+  }
+
+  if (outcome === "path-choice") {
+    const hackersButton = document.getElementById("path-hackers-button");
+    const resistanceButton = document.getElementById("path-resistance-button");
+
+    if (hackersButton) {
+      hackersButton.addEventListener("click", () => {
+        playerPath = "hackers";
+        console.log("PATH CHOSEN: HACKERS");
+        console.log("Path chosen. Continue to Layer 5...");
+        showGameOverScreen("waiting-for-layer-5");
+      });
+    }
+
+    if (resistanceButton) {
+      resistanceButton.addEventListener("click", () => {
+        playerPath = "resistance";
+        console.log("PATH CHOSEN: RESISTANCE");
+        console.log("Path chosen. Continue to Layer 5...");
+        showGameOverScreen("waiting-for-layer-5");
+      });
+    }
+    return;
+  }
+
+  const advanceButton = document.getElementById("game-over-advance-button");
+  if (advanceButton) {
+    advanceButton.addEventListener("click", () => {
+      showMenu();
+    });
+  }
 }
 
 // animateThreatRemoval() speeds up the marker pulse, shrinks it, and darkens its materials before removal.
@@ -986,6 +1291,12 @@ function neutralizeThreat(threat) {
     globe.removeThreatNode(threat.id);
     globe.updateActiveCount();
 
+    if (threatsNeutralized >= 8) {
+      pendingGameOverOutcome = "win";
+      missionEnded = true;
+      stopMissionSystems();
+    }
+
     if (activePanelThreat !== threat || screenState !== "game") {
       panelNeutralizing = false;
       threatPanelClose.disabled = false;
@@ -1056,7 +1367,7 @@ function spawnEchoThreat(sourceThreat) {
 
 // tickThreatEscalation() advances threat timers and applies upgrades or echo spawns once a window expires.
 function tickThreatEscalation() {
-  if (screenState !== "game") {
+  if (screenState !== "game" || missionEnded) {
     return;
   }
 
@@ -1103,8 +1414,8 @@ function tickThreatEscalation() {
 
 // startEscalationTimers() owns threat countdown rules here in main.js because escalation is gameplay, not rendering.
 function startEscalationTimers() {
-  if (escalationTimersStarted) {
-    return;
+  if (escalationTickerId !== null) {
+    window.clearInterval(escalationTickerId);
   }
 
   escalationTimersStarted = true;
@@ -1121,7 +1432,7 @@ function startEscalationTimers() {
 
 // openThreatPanel() fills the panel for the clicked threat, opens it, and starts the staged panel timeline.
 function openThreatPanel(threat) {
-  if (panelNeutralizing || threat.status !== "active") {
+  if (panelNeutralizing || missionEnded || playerDeadlineExpired || threat.status !== "active") {
     return;
   }
 
@@ -1183,19 +1494,7 @@ function wireThreatResponses() {
     openThreatPanel(threat);
   });
 
-  // Respawn checks keep the original Layer 1 source-of-truth behavior running underneath later layers.
-  window.setInterval(() => {
-    globe.respawnRandomThreat();
-    globe.syncThreatNodes();
-
-    threats.forEach((threat) => {
-      if (threat.status === "active") {
-        ensureEscalationState(threat, false);
-      }
-    });
-  }, 12000);
-
-  startEscalationTimers();
+  startMissionSystems();
 }
 
 // The panel close button resets the view and slides the panel back off screen.

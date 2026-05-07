@@ -1,6 +1,6 @@
 /* Screen-state and mode-selection behavior for THREATGRID's menu, briefing, and gameplay transitions. */
-// screenState controls which overlay is visible: menu, briefing, or gameplay.
-let screenState = "menu"; // 'menu' | 'howtoplay' | 'game'
+// screenState controls which overlay is visible: menu, briefing, onboarding, gameplay, or the end-state branches.
+let screenState = "menu"; // 'menu' | 'howtoplay' | 'onboarding' | 'game' | 'game-over' | 'path-choice' | 'waiting-for-layer-5'
 let globeStarted = false;
 
 // gameMode is chosen before the game starts so later UI logic knows whether to show passive or typed actions.
@@ -15,6 +15,9 @@ const operatorModeButton = document.getElementById("operator-mode-button");
 const howtoButton = document.getElementById("howto-button");
 const backButton = document.getElementById("back-button");
 const returnButton = document.getElementById("return-button");
+const onboardingScreen = document.getElementById("onboarding-screen");
+const onboardingStartButton = document.getElementById("onboarding-start-button");
+const gameStateScreen = document.getElementById("game-state-screen");
 const hudMenuButton = document.getElementById("hud-menu-button");
 const menuModeDescription = document.getElementById("menu-mode-description");
 
@@ -59,6 +62,11 @@ function setScreen(nextScreen) {
   screenState = nextScreen;
   menuScreen.classList.toggle("is-active", nextScreen === "menu");
   howtoScreen.classList.toggle("is-active", nextScreen === "howtoplay");
+  onboardingScreen.classList.toggle("is-active", nextScreen === "onboarding");
+  gameStateScreen.classList.toggle(
+    "is-active",
+    nextScreen === "game-over" || nextScreen === "path-choice" || nextScreen === "waiting-for-layer-5"
+  );
 }
 
 // showMenu() restores the main menu and keeps the overlay visible.
@@ -66,6 +74,9 @@ function showMenu() {
   bootOverlay.style.display = "block";
   bootOverlay.classList.remove("is-hiding");
   setScreen("menu");
+  if (typeof updateDeadlineDisplay === "function") {
+    updateDeadlineDisplay();
+  }
   updateModeDescription(gameMode);
 }
 
@@ -76,9 +87,24 @@ function showHowToPlay() {
   setScreen("howtoplay");
 }
 
-// startGame() flips into gameplay, fades the overlay out, and boots the globe exactly once.
+// showOnboarding() introduces the mission briefing before the countdown and globe activity begin.
+function showOnboarding() {
+  bootOverlay.style.display = "block";
+  bootOverlay.classList.remove("is-hiding");
+  setScreen("onboarding");
+  if (typeof updateDeadlineDisplay === "function") {
+    updateDeadlineDisplay();
+  }
+}
+
+// startGame() resets mission state, fades the overlay out, and boots the globe exactly once.
 function startGame() {
+  if (typeof resetMissionState === "function") {
+    resetMissionState();
+  }
+
   screenState = "game";
+  deadlineStartTime = Date.now();
   // The globe rotates again as the game begins, so the background motion resumes before the fade ends.
   globe.autoRotateSpeed = 0.0012;
   clearMenuExitConfirm();
@@ -88,6 +114,8 @@ function startGame() {
     globeStarted = true;
     globe.init();
     wireThreatResponses();
+  } else if (typeof startMissionSystems === "function") {
+    startMissionSystems();
   }
 
   // The delayed hide gives the fade-out time to finish before the overlay stops intercepting input.
@@ -104,6 +132,9 @@ function requestReturnToMenu() {
     // A second click inside the window confirms the exit and freezes the globe behind the overlay.
     clearMenuExitConfirm();
     globe.autoRotateSpeed = 0;
+    if (typeof stopMissionSystems === "function") {
+      stopMissionSystems();
+    }
     // The threat panel is also closed so the menu overlay returns to a clean boot state.
     if (typeof closeThreatPanel === "function") {
       closeThreatPanel(true);
@@ -130,22 +161,23 @@ operatorModeButton.addEventListener("mouseenter", () => updateModeDescription("o
 analystModeButton.addEventListener("mouseleave", () => updateModeDescription(gameMode));
 operatorModeButton.addEventListener("mouseleave", () => updateModeDescription(gameMode));
 
-// Each mode button stores the mode first, then starts the game, so downstream UI code knows which behavior to build.
+// The remaining buttons switch between the informational screens, and the onboarding start button begins the mission.
+howtoButton.addEventListener("click", showHowToPlay);
+backButton.addEventListener("click", showMenu);
+returnButton.addEventListener("click", showMenu);
+onboardingStartButton.addEventListener("click", startGame);
+hudMenuButton.addEventListener("click", requestReturnToMenu);
+
+// Mode selection now lands on the onboarding scene so the player gets the mission briefing before the clock starts.
 analystModeButton.addEventListener("click", () => {
   setGameMode("analyst");
-  startGame();
+  showOnboarding();
 });
 
 operatorModeButton.addEventListener("click", () => {
   setGameMode("operator");
-  startGame();
+  showOnboarding();
 });
-
-// The remaining buttons simply switch between the three screen states.
-howtoButton.addEventListener("click", showHowToPlay);
-backButton.addEventListener("click", showMenu);
-returnButton.addEventListener("click", showMenu);
-hudMenuButton.addEventListener("click", requestReturnToMenu);
 
 // Initialize the HUD exit button label and menu mode description so the boot screen starts fully populated.
 updateHudMenuButton();

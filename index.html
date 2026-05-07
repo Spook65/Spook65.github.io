@@ -19,6 +19,7 @@
       <div class="hud-block hud-stats corner-bracket">
         <strong id="active-count">0</strong>
         <p>Active Threats</p>
+        <p id="deadline-display" class="hud-deadline">DEADLINE: --:--</p>
       </div>
       <!-- The score block stays in the HUD so it updates globally no matter which threat the player is handling. -->
       <div class="hud-block hud-score">
@@ -106,6 +107,26 @@
             <button id="return-button" class="back-button" type="button">RETURN TO MENU</button>
           </div>
         </div>
+      </section>
+
+      <section id="onboarding-screen" class="screen onboarding-screen" aria-label="Intern Onboarding">
+        <div class="terminal-shell onboarding-shell">
+          <div class="terminal-headline">NEXUS SECURITY - THREAT OPERATIONS CENTER</div>
+          <div class="terminal-rule" aria-hidden="true"></div>
+          <p class="terminal-copy">WELCOME, INTERN.</p>
+          <p class="terminal-copy">YOU'VE BEEN BROUGHT IN TO HANDLE AN ACTIVE THREAT SURGE.</p>
+          <p class="terminal-copy">8 THREATS ARE LIVE ON THE NETWORK RIGHT NOW.</p>
+          <p class="terminal-copy">YOUR MISSION: NEUTRALIZE ALL OF THEM.</p>
+          <p class="terminal-copy">YOUR DEADLINE: 12 MINUTES.</p>
+          <p class="terminal-copy">FAIL TO CLEAR THEM IN TIME, AND THE COMPANY FALLS.</p>
+          <p class="terminal-copy">YOU GET FIRED. THE HACKERS WIN.</p>
+          <p class="terminal-copy">READY?</p>
+          <button id="onboarding-start-button" class="menu-button" type="button">[ START MISSION ]</button>
+        </div>
+      </section>
+
+      <section id="game-state-screen" class="screen game-state-screen" aria-label="Mission Status">
+        <div id="game-state-content" class="game-state-content"></div>
       </section>
     </div>
     <!-- The side panel stays mounted so it can slide in quickly without rebuilding the outer shell each time. -->
