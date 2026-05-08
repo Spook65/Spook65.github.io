@@ -1840,6 +1840,10 @@ function buildCombatState(sourceThreat) {
     activeProgramId: firstProgram ? firstProgram.ref.id : playerParty[0].id,
     responseGauge: 0,
     battleLog: [],
+    battleMessage: "",
+    battleSubmessage: "",
+    visualEffect: null,
+    actionLocked: false,
     outcome: "ongoing",
     phase: "battle",
     nextDamageReduction: 0,
@@ -1943,7 +1947,7 @@ function buildTurnOrderMarkup(state) {
 
 // buildBattleLogMarkup() keeps the last few combat events visible without stealing the whole screen.
 function buildBattleLogMarkup(state) {
-  const entries = state.battleLog.slice(-5);
+  const entries = state.battleLog.slice(-4);
 
   if (!entries.length) {
     return '<div class="combat-log-entry">SYSTEM READY. AWAITING FIRST TURN.</div>';
@@ -1955,27 +1959,106 @@ function buildBattleLogMarkup(state) {
   }).join("");
 }
 
-// buildProgramBattlefieldMarkup() renders the active program as the primary fighter on the left side.
-function buildProgramBattlefieldMarkup(program, isCurrentTurn) {
+// getBattleMessageText() keeps the primary battle prompt readable even while the engine is animating a move.
+function getBattleMessageText(state) {
+  if (state.battleMessage) {
+    return state.battleMessage;
+  }
+
+  const currentActor = state.turnOrder[state.currentTurnIndex];
+  if (!currentActor) {
+    return "SYSTEM READY.";
+  }
+
+  if (currentActor.kind === "program") {
+    return `WHAT WILL ${currentActor.ref.name.toUpperCase()} DO?`;
+  }
+
+  return `${currentActor.ref.title.toUpperCase()} IS PREPARING AN ATTACK.`;
+}
+
+// getBattleSubmessageText() keeps a smaller supporting line available for hit feedback and effect callouts.
+function getBattleSubmessageText(state) {
+  if (state.battleSubmessage) {
+    return state.battleSubmessage;
+  }
+
+  return "RESPONSE GATE ONLINE.";
+}
+
+// getAbilityPresentation() maps a move to a small animation family without changing the move's combat rules.
+function getAbilityPresentation(ability) {
+  const effect = String(ability && ability.effect ? ability.effect : "");
+
+  if (
+    effect === "reduce_next_damage" ||
+    effect === "boost_def" ||
+    effect === "shared_ability" ||
+    effect === "cleanse" ||
+    effect === "combo_sync_defense" ||
+    effect === "combo_containment" ||
+    effect === "self_level_up"
+  ) {
+    return "buff";
+  }
+
+  if (effect === "damage_all" || effect === "status_encrypted" || effect === "status_detected" || effect === "status_isolated") {
+    return "beam";
+  }
+
+  return "impact";
+}
+
+// buildReserveStripMarkup() keeps the inactive party members visible without crowding the main battlefield.
+function buildReserveStripMarkup(state, activeProgramId) {
+  return state.playerParty.map((program) => {
+    const isActive = program.id === activeProgramId;
+    const isTargeted = state.visualEffect && state.visualEffect.targetId === program.id && state.visualEffect.phase !== "recover";
+
+    return `
+      <article class="combat-reserve-card ${isActive ? "is-active" : ""} ${program.hp <= 0 ? "is-down" : ""} ${isTargeted ? "is-targeted" : ""}" style="color: ${program.color};">
+        <div class="combat-reserve-name">${program.name}</div>
+        <div class="combat-reserve-meta">LVL ${program.level} | HP ${program.hp}/${program.maxHp}</div>
+      </article>
+    `;
+  }).join("");
+}
+
+// buildProgramBattlefieldMarkup() renders the active program as the foreground fighter on the left side.
+function buildProgramBattlefieldMarkup(program, state, isCurrentTurn) {
   const statusMarkup = renderStatusPills(program.statusEffects);
+  const effect = state.visualEffect || {};
+  const figureClass = [
+    "combat-battler",
+    "combat-battler-player",
+    isCurrentTurn ? "is-current" : "",
+    effect.attackerKind === "program" && effect.attackerId === program.id ? `is-${effect.phase || "windup"}` : "",
+    effect.targetKind === "program" && effect.targetId === program.id ? "is-hit" : "",
+    program.hp <= 0 ? "is-fainted" : ""
+  ].filter(Boolean).join(" ");
 
   return `
-    <article class="battle-figure ${isCurrentTurn ? "is-active" : ""}" style="color: ${program.color};">
-      <div class="battle-figure-body">
-        <div class="battle-sprite ${getProgramSpriteClass(program)}" aria-hidden="true"></div>
-        <div class="battle-figure-meta">
-          <div class="combat-name-row">
-            <span class="combat-name">${program.name}</span>
-            <span class="combat-lvl">LVL ${program.level}</span>
-          </div>
-          <div class="combat-subline">TYPE ${String(program.type).toUpperCase()}</div>
-          <div class="combat-subline">HP ${program.hp}/${program.maxHp}</div>
-          ${renderBar(program.hp, program.maxHp, "is-hp")}
-          <div class="combat-subline">XP ${program.xp}/${program.level * 100}</div>
-          ${renderBar(program.xp, program.level * 100, "is-xp")}
-          ${statusMarkup}
+    <article class="${figureClass}" style="color: ${program.color};">
+      <div class="combat-status-box combat-status-box-player">
+        <div class="combat-name-row">
+          <span class="combat-name">${program.name}</span>
+          <span class="combat-lvl">LVL ${program.level}</span>
         </div>
+        <div class="combat-subline">TYPE: ${String(program.type).toUpperCase()}</div>
+        <div class="combat-subline">HP ${program.hp}/${program.maxHp}</div>
+        ${renderBar(program.hp, program.maxHp, "is-hp")}
+        <div class="combat-subline">XP ${program.xp}/${program.level * 100}</div>
+        ${renderBar(program.xp, program.level * 100, "is-xp")}
+        ${statusMarkup}
       </div>
+      <div class="combat-battler-sprite-wrap">
+        <div class="battle-sprite ${getProgramSpriteClass(program)}" aria-hidden="true"></div>
+        ${effect.phase === "impact" && effect.targetKind === "program" && effect.targetId === program.id ? `
+          <div class="combat-hit-spark"></div>
+          <div class="combat-damage-pop">-${effect.damage || 0}</div>
+        ` : ""}
+      </div>
+      <div class="combat-battler-label">ACTIVE PROGRAM</div>
     </article>
   `;
 }
@@ -1985,9 +2068,9 @@ function buildProgramBenchMarkup(program, isCurrentTurn) {
   const statusMarkup = renderStatusPills(program.statusEffects);
 
   return `
-    <article class="battle-bench-card ${program.hp <= 0 ? "is-down" : ""} ${isCurrentTurn ? "is-current" : ""}" style="color: ${program.color};">
-      <div class="battle-bench-name">${program.name}</div>
-      <div class="battle-bench-meta">LVL ${program.level} | HP ${program.hp}/${program.maxHp}</div>
+    <article class="combat-reserve-card ${program.hp <= 0 ? "is-down" : ""} ${isCurrentTurn ? "is-active" : ""}" style="color: ${program.color};">
+      <div class="combat-reserve-name">${program.name}</div>
+      <div class="combat-reserve-meta">LVL ${program.level} | HP ${program.hp}/${program.maxHp}</div>
       ${statusMarkup}
     </article>
   `;
@@ -2000,26 +2083,38 @@ function buildThreatVisualMarkup(state) {
   const activeProgram = getActiveBattleProgram(state);
   const matchup = getTypeAdvantage(getActorCombatType(activeProgram), getActorCombatType(threat, true));
   const matchupLabel = matchup.state === "super-effective" ? "SUPER EFFECTIVE" : matchup.state === "weak" ? "NOT VERY EFFECTIVE" : "NEUTRAL";
+  const effect = state.visualEffect || {};
+  const figureClass = [
+    "combat-battler",
+    "combat-battler-enemy",
+    effect.attackerKind === "threat" && effect.attackerId === threat.id ? `is-${effect.phase || "windup"}` : "",
+    effect.targetKind === "threat" && effect.targetId === threat.id ? "is-hit" : "",
+    threat.hp <= 0 ? "is-fainted" : ""
+  ].filter(Boolean).join(" ");
 
   return `
-    <div class="battle-figure is-enemy">
-      <div class="battle-figure-body">
-        <div class="battle-figure-meta">
-          <div class="combat-name-row">
-            <span class="combat-name">${threat.title}</span>
-            <span class="combat-lvl">LVL ${threat.level}</span>
-          </div>
-          <div class="combat-subline">${getThreatTypeLabel(threat.type)}</div>
-          <div class="combat-subline">HP ${threat.hp}/${threat.maxHp}</div>
-          ${renderBar(threat.hp, threat.maxHp, "is-hp")}
-          <div class="combat-subline">WEAK: ${String(threat.weakPoint || "UNKNOWN").toUpperCase()}</div>
-          <div class="threat-weakness">WEAK TO: ${String(getActorCombatType(threat, true) || "UNKNOWN").toUpperCase()}</div>
-          <div class="combat-matchup-hint is-${matchup.state}">TYPE MATCHUP: ${String(activeProgram.type || "UNKNOWN").toUpperCase()} → ${String(getActorCombatType(threat, true) || "UNKNOWN").toUpperCase()} [${matchupLabel}]</div>
-          ${statusMarkup}
-        </div>
+    <article class="${figureClass}" style="color: #ff2233;">
+      <div class="combat-battler-label">HOSTILE THREAT</div>
+      <div class="combat-battler-sprite-wrap">
         <div class="battle-sprite threat-sprite ${getThreatSpriteClass(threat)}" aria-hidden="true"></div>
+        ${effect.phase === "impact" && effect.targetKind === "threat" && effect.targetId === threat.id ? `
+          <div class="combat-hit-spark"></div>
+          <div class="combat-damage-pop">-${effect.damage || 0}</div>
+        ` : ""}
       </div>
-    </div>
+      <div class="combat-status-box combat-status-box-enemy">
+        <div class="combat-name-row">
+          <span class="combat-name">${threat.title}</span>
+          <span class="combat-lvl">LVL ${threat.level}</span>
+        </div>
+        <div class="combat-subline">${getThreatTypeLabel(threat.type)}</div>
+        <div class="combat-subline">HP ${threat.hp}/${threat.maxHp}</div>
+        ${renderBar(threat.hp, threat.maxHp, "is-hp")}
+        <div class="combat-subline">WEAK TO: ${String(getActorCombatType(threat, true) || "UNKNOWN").toUpperCase()}</div>
+        <div class="combat-matchup-hint is-${matchup.state}">TYPE MATCHUP: ${String(activeProgram.type || "UNKNOWN").toUpperCase()} → ${String(getActorCombatType(threat, true) || "UNKNOWN").toUpperCase()} [${matchupLabel}]</div>
+        ${statusMarkup}
+      </div>
+    </article>
   `;
 }
 
@@ -2028,6 +2123,10 @@ function buildActionButtonMarkup(state) {
   const currentActor = state.turnOrder[state.currentTurnIndex];
   const activeProgram = getActiveBattleProgram(state);
   const matchup = activeProgram ? getTypeAdvantage(getActorCombatType(activeProgram), getActorCombatType(state.threat, true)) : { state: "neutral" };
+
+  if (state.actionLocked) {
+    return '<div class="combat-action-note">EXECUTING MOVE...</div>';
+  }
 
   if (!currentActor || currentActor.kind !== "program" || currentActor.ref.hp <= 0) {
     return `
@@ -2064,10 +2163,11 @@ function buildActionButtonMarkup(state) {
     <div class="combat-matchup-hint is-${matchup.state}">TYPE MATCHUP: ${String(actor.type || "UNKNOWN").toUpperCase()} → ${String(getActorCombatType(state.threat, true) || "UNKNOWN").toUpperCase()} [${matchup.state === "super-effective" ? "SUPER EFFECTIVE" : matchup.state === "weak" ? "NOT VERY EFFECTIVE" : "NEUTRAL"}]</div>
     <div class="combat-actions">
       ${actor.abilities.map((ability, index) => {
-        const disabled = state.responseGauge < ability.cost ? "disabled" : "";
+        const disabled = state.responseGauge < ability.cost || state.actionLocked ? "disabled" : "";
         return `
           <button class="combat-action-button" type="button" data-combat-ability="${index}" ${disabled}>
-            [ ${ability.name.toUpperCase()} | COST ${ability.cost} ]
+            <span class="combat-command-name">${ability.name.toUpperCase()}</span>
+            <span class="combat-command-cost">COST ${ability.cost}</span>
           </button>
         `;
       }).join("")}
@@ -2087,53 +2187,62 @@ function buildCombatMarkup(state) {
       <header class="combat-header">
         <div class="combat-title-block">
           <div class="combat-panel-title">THREATGRID COMBAT</div>
-          <div class="combat-encounter-name">${state.threat.title} / LEVEL ${state.threat.level}</div>
+          <div class="combat-encounter-name">${state.threat.title} / LVL ${state.threat.level}</div>
         </div>
         <div class="combat-turn-preview">
-          <div class="combat-panel-title">TURN ORDER</div>
+          <div class="combat-panel-title">NEXT</div>
           <div class="combat-turn-preview-row">
             ${buildTurnOrderMarkup(state)}
           </div>
         </div>
       </header>
 
-      <section class="combat-battlefield">
-        <div class="battle-side battle-side-player">
-          <div class="combat-panel-title">ACTIVE PROGRAM</div>
-          ${buildProgramBattlefieldMarkup(currentProgram, true)}
-          <div class="battle-bench">
-            ${benchPrograms.map((program) => buildProgramBenchMarkup(program, currentActor && currentActor.kind === "program" && currentActor.ref.id === program.id)).join("")}
-          </div>
-        </div>
-
-        <div class="battle-midpoint">
-          <div class="combat-vs">VS</div>
-          <div class="battle-field-note">CYBER RESPONSE ONLINE</div>
-        </div>
-
-        <div class="battle-side battle-side-enemy">
-          <div class="combat-panel-title">THREAT TARGET</div>
+      <section class="combat-stage">
+        <div class="combat-floor-grid" aria-hidden="true"></div>
+        <div class="combat-stage-glow" aria-hidden="true"></div>
+        ${state.visualEffect && state.visualEffect.style === "beam" ? `
+          <div class="combat-beam ${state.visualEffect.attackerKind === "program" ? "from-player" : "from-enemy"} ${state.visualEffect.phase === "impact" ? "is-impact" : ""}"></div>
+        ` : ""}
+        ${state.visualEffect && state.visualEffect.style === "buff" ? `
+          <div class="combat-aura ${state.visualEffect.attackerKind === "program" ? "from-player" : "from-enemy"} ${state.visualEffect.phase === "impact" ? "is-impact" : ""}"></div>
+        ` : ""}
+        <div class="combat-stage-enemy">
           ${buildThreatVisualMarkup(state)}
+        </div>
+        <div class="combat-stage-player">
+          ${buildProgramBattlefieldMarkup(currentProgram, state, state.activeProgramId === currentProgram.id)}
+        </div>
+        <div class="combat-reserve-strip">
+          <div class="combat-panel-title">RESERVE PARTY</div>
+          <div class="combat-reserve-row">
+            ${buildReserveStripMarkup(state, currentProgram.id)}
+          </div>
         </div>
       </section>
 
-      <footer class="battle-footer combat-footer">
-        <aside class="combat-log-panel">
-          <div class="combat-panel-title">BATTLE LOG</div>
+      <footer class="combat-footer">
+        <div class="combat-footer-left">
+          <div class="combat-voice-box">
+            <div class="combat-panel-title">BATTLE MESSAGE</div>
+            <div id="battle-message" class="combat-voice-text">${getBattleMessageText(state)}</div>
+            <div id="battle-submessage" class="combat-voice-subtext">${getBattleSubmessageText(state)}</div>
+          </div>
+
+          <div class="combat-command-box">
+            <div class="combat-panel-title">COMMANDS</div>
+            ${buildActionButtonMarkup(state)}
+            <div class="combat-gauge-wrap">
+              <div class="combat-gauge-label">RESPONSE GAUGE</div>
+              ${renderBar(state.responseGauge, 100, "is-gauge")}
+              <div class="combat-gauge-text">${state.responseGauge}/100</div>
+            </div>
+          </div>
+        </div>
+
+        <aside class="combat-log-panel combat-log-panel-mini">
+          <div class="combat-panel-title">LOG</div>
           <div id="battle-log" class="combat-log">${buildBattleLogMarkup(state)}</div>
         </aside>
-
-        <section class="combat-action-panel">
-          <div class="combat-panel-title">ACTIONS</div>
-          <div class="combat-gauge-wrap">
-            <div class="combat-gauge-label">RESPONSE GAUGE</div>
-            ${renderBar(state.responseGauge, 100, "is-gauge")}
-            <div class="combat-gauge-text">${state.responseGauge}/100</div>
-          </div>
-          <div class="combat-action-grid">
-            ${buildActionButtonMarkup(state)}
-          </div>
-        </section>
       </footer>
     </div>
   `;
@@ -2218,7 +2327,7 @@ function bindCombatButtons() {
 
   threatPanelContent.querySelectorAll("[data-combat-ability]").forEach((button) => {
     button.addEventListener("click", () => {
-      if (!combatEngine || !actor || actor.kind !== "program") {
+      if (!combatEngine || !actor || actor.kind !== "program" || combatState.actionLocked) {
         return;
       }
 
@@ -2235,7 +2344,7 @@ function bindCombatButtons() {
 
   threatPanelContent.querySelectorAll("[data-combat-combo]").forEach((button) => {
     button.addEventListener("click", () => {
-      if (!combatEngine || !actor || actor.kind !== "program") {
+      if (!combatEngine || !actor || actor.kind !== "program" || combatState.actionLocked) {
         return;
       }
 
@@ -2439,6 +2548,7 @@ class ThreatCombat {
   constructor(state) {
     this.state = state;
     this.turnTimeoutId = null;
+    this.animationTimeoutIds = [];
   }
 
   init() {
@@ -2446,6 +2556,10 @@ class ThreatCombat {
     this.state.currentTurnIndex = 0;
     this.state.phase = "battle";
     this.state.activeProgramId = this.state.turnOrder.find((entry) => entry.kind === "program" && entry.ref.hp > 0)?.ref.id || this.state.activeProgramId;
+    this.state.battleMessage = "";
+    this.state.battleSubmessage = "";
+    this.state.visualEffect = null;
+    this.state.actionLocked = false;
     screenState = "combat";
     addBattleLog(`ENGAGING ${this.state.threat.title.toUpperCase()} AT LEVEL ${this.state.threat.level}.`);
     renderCombatScreen();
@@ -2457,10 +2571,55 @@ class ThreatCombat {
       window.clearTimeout(this.turnTimeoutId);
       this.turnTimeoutId = null;
     }
+
+    this.animationTimeoutIds.forEach((timeoutId) => {
+      window.clearTimeout(timeoutId);
+    });
+    this.animationTimeoutIds = [];
   }
 
   getCurrentActor() {
     return this.state.turnOrder[this.state.currentTurnIndex];
+  }
+
+  scheduleBattleStep(callback, delay) {
+    const timeoutId = window.setTimeout(() => {
+      this.animationTimeoutIds = this.animationTimeoutIds.filter((activeId) => activeId !== timeoutId);
+      callback();
+    }, delay);
+
+    this.animationTimeoutIds.push(timeoutId);
+    return timeoutId;
+  }
+
+  clearBattleVisual() {
+    this.state.visualEffect = null;
+    renderCombatScreen();
+  }
+
+  setBattleCue(message, submessage = "", visualEffect = null) {
+    this.state.battleMessage = message;
+    this.state.battleSubmessage = submessage;
+    this.state.visualEffect = visualEffect;
+    renderCombatScreen();
+  }
+
+  buildVisualEffect(actorEntry, targetEntry, ability, damageResult, phase) {
+    const attackerKind = actorEntry.kind;
+    const targetKind = targetEntry.kind;
+    const attackerId = attackerKind === "program" ? actorEntry.ref.id : this.state.threat.id;
+    const targetId = targetKind === "program" ? targetEntry.ref.id : this.state.threat.id;
+
+    return {
+      attackerKind,
+      targetKind,
+      attackerId,
+      targetId,
+      phase,
+      style: getAbilityPresentation(ability),
+      damage: damageResult ? damageResult.damage : 0,
+      typeState: damageResult ? damageResult.typeState : "neutral"
+    };
   }
 
   resolveCurrentTurn() {
@@ -2475,6 +2634,10 @@ class ThreatCombat {
     }
 
     if (currentActor.kind === "threat") {
+      this.state.battleMessage = `${currentActor.ref.title.toUpperCase()} IS PREPARING AN ATTACK.`;
+      this.state.battleSubmessage = "HOLD POSITION.";
+      this.state.visualEffect = null;
+      renderCombatScreen();
       this.turnTimeoutId = window.setTimeout(() => {
         this.turnTimeoutId = null;
         this.takeTurn(currentActor, null);
@@ -2482,6 +2645,9 @@ class ThreatCombat {
       return;
     }
 
+    this.state.battleMessage = "";
+    this.state.battleSubmessage = "";
+    this.state.visualEffect = null;
     renderCombatScreen();
   }
 
@@ -2512,6 +2678,9 @@ class ThreatCombat {
       }
     } while (safety <= totalActors + 1);
 
+    this.state.battleMessage = "";
+    this.state.battleSubmessage = "";
+    this.state.visualEffect = null;
     renderCombatScreen();
     this.resolveCurrentTurn();
   }
@@ -2701,24 +2870,48 @@ class ThreatCombat {
         return;
       }
 
-      this.state.responseGauge = Math.max(0, this.state.responseGauge - ability.cost);
-      const damageResult = this.resolveDamage(actor, this.state.threat, ability);
-      this.state.responseGauge = Math.min(100, this.state.responseGauge + getRandomInt(10, 15));
+      this.state.actionLocked = true;
+      this.setBattleCue(
+        `${actor.name.toUpperCase()} USED ${ability.name.toUpperCase()}!`,
+        "ATTACK WINDING UP...",
+        this.buildVisualEffect(actorEntry, { kind: "threat", ref: this.state.threat }, ability, null, "windup")
+      );
 
-      if (damageResult.typeState === "super-effective") {
-        addBattleLog(`${actor.name.toUpperCase()} USED ${ability.name.toUpperCase()} - ${damageResult.damage} DAMAGE [SUPER-EFFECTIVE!]`, "damage");
-      } else {
-        addBattleLog(`${actor.name.toUpperCase()} USED ${ability.name.toUpperCase()} - ${damageResult.damage} DAMAGE [${damageResult.levelMultiplier.toFixed(1)}X LEVEL BONUS]`, "damage");
-      }
+      this.scheduleBattleStep(() => {
+        this.state.responseGauge = Math.max(0, this.state.responseGauge - ability.cost);
+        const damageResult = this.resolveDamage(actor, this.state.threat, ability);
+        this.state.responseGauge = Math.min(100, this.state.responseGauge + getRandomInt(10, 15));
+        this.applyPlayerEffect(actor, ability, damageResult);
 
-      this.applyPlayerEffect(actor, ability, damageResult);
+        const effectivenessText = damageResult.typeState === "super-effective"
+          ? "IT WAS SUPER-EFFECTIVE!"
+          : damageResult.typeState === "weak"
+            ? "THE ATTACK FALTERED."
+            : `${damageResult.levelMultiplier.toFixed(1)}X LEVEL BONUS.`;
 
-      if (this.state.threat.hp <= 0) {
-        this.end("victory");
-        return;
-      }
+        this.setBattleCue(
+          `${this.state.threat.title.toUpperCase()} TOOK ${damageResult.damage} DAMAGE!`,
+          effectivenessText,
+          this.buildVisualEffect(actorEntry, { kind: "threat", ref: this.state.threat }, ability, damageResult, "impact")
+        );
 
-      this.advanceTurn();
+        if (this.state.threat.hp <= 0) {
+          this.scheduleBattleStep(() => {
+            this.state.actionLocked = false;
+            this.clearBattleVisual();
+            this.end("victory");
+          }, 420);
+          return;
+        }
+
+        this.scheduleBattleStep(() => {
+          this.state.battleMessage = "";
+          this.state.battleSubmessage = "";
+          this.state.actionLocked = false;
+          this.clearBattleVisual();
+          this.advanceTurn();
+        }, 420);
+      }, 220);
       return;
     }
 
@@ -2732,38 +2925,85 @@ class ThreatCombat {
       }
 
       this.applyThreatEffect(actor, threatAbility);
-
       if (threatAbility.effect === "self_level_up") {
-        renderCombatScreen();
+        this.state.actionLocked = true;
+        this.setBattleCue(
+          `${actor.title.toUpperCase()} UPGRADED ITS CORE!`,
+          "THREAT POWER INCREASED.",
+          this.buildVisualEffect(actorEntry, { kind: "threat", ref: this.state.threat }, threatAbility, null, "buff")
+        );
+
+        this.scheduleBattleStep(() => {
+          this.state.actionLocked = false;
+          renderCombatScreen();
+          if (this.checkWinCondition()) {
+            return;
+          }
+          this.advanceTurn();
+        }, 360);
+        return;
+      }
+
+      this.state.actionLocked = true;
+      const chosenTarget = threatAbility.effect === "damage_all"
+        ? livingPrograms[0]
+        : livingPrograms[getRandomInt(0, livingPrograms.length - 1)];
+
+      this.setBattleCue(
+        `${actor.title.toUpperCase()} USED ${threatAbility.name.toUpperCase()}!`,
+        "COUNTERMEASURE DEPLOYED.",
+        this.buildVisualEffect(actorEntry, { kind: "program", ref: chosenTarget }, threatAbility, null, "windup")
+      );
+
+      this.scheduleBattleStep(() => {
+        const damageResult = threatAbility.effect === "damage_all"
+          ? this.resolveDamage(actor, chosenTarget, threatAbility, { multiplier: 0.75, isThreatAttack: true })
+          : this.resolveDamage(actor, chosenTarget, threatAbility, { isThreatAttack: true });
+
+        if (threatAbility.effect === "damage_all") {
+          livingPrograms.forEach((program) => {
+            if (program === chosenTarget) {
+              return;
+            }
+
+            const splashResult = this.resolveDamage(actor, program, threatAbility, { multiplier: 0.75, isThreatAttack: true });
+            addBattleLog(`${actor.title.toUpperCase()} SPLASHED ${program.name.toUpperCase()} FOR ${splashResult.damage} DAMAGE.`, "damage");
+          });
+        }
+
+        addBattleLog(`${actor.title.toUpperCase()} USED ${threatAbility.name.toUpperCase()} - ${damageResult.damage} DAMAGE ON ${chosenTarget.name.toUpperCase()}.`, "damage");
+
+        const effectText = damageResult.typeState === "super-effective"
+          ? "PRESSURE INCREASED."
+          : damageResult.typeState === "weak"
+            ? "THE STRIKE WAS SOFTENED."
+            : `${damageResult.levelMultiplier.toFixed(1)}X LEVEL BONUS.`;
+
+        this.setBattleCue(
+          `${chosenTarget.name.toUpperCase()} TOOK ${damageResult.damage} DAMAGE!`,
+          effectText,
+          this.buildVisualEffect(actorEntry, { kind: "program", ref: chosenTarget }, threatAbility, damageResult, "impact")
+        );
+
+        if (this.state.nextCounterDamage > 0) {
+          this.state.threat.hp = Math.max(0, this.state.threat.hp - this.state.nextCounterDamage);
+          addBattleLog(`COUNTER DAMAGE DEALT ${this.state.nextCounterDamage} TO ${this.state.threat.title.toUpperCase()}.`, "buff");
+          this.state.nextCounterDamage = 0;
+        }
+
         if (this.checkWinCondition()) {
+          this.state.actionLocked = false;
           return;
         }
-        this.advanceTurn();
-        return;
-      }
 
-      if (threatAbility.effect === "damage_all") {
-        livingPrograms.forEach((program) => {
-          const damageResult = this.resolveDamage(actor, program, threatAbility, { multiplier: 0.75, isThreatAttack: true });
-          addBattleLog(`${actor.title.toUpperCase()} SPLASHED ${program.name.toUpperCase()} FOR ${damageResult.damage} DAMAGE.`, "damage");
-        });
-      } else {
-        const target = livingPrograms[getRandomInt(0, livingPrograms.length - 1)];
-        const damageResult = this.resolveDamage(actor, target, threatAbility, { isThreatAttack: true });
-        addBattleLog(`${actor.title.toUpperCase()} USED ${threatAbility.name.toUpperCase()} - ${damageResult.damage} DAMAGE ON ${target.name.toUpperCase()}.`, "damage");
-      }
-
-      if (this.state.nextCounterDamage > 0) {
-        this.state.threat.hp = Math.max(0, this.state.threat.hp - this.state.nextCounterDamage);
-        addBattleLog(`COUNTER DAMAGE DEALT ${this.state.nextCounterDamage} TO ${this.state.threat.title.toUpperCase()}.`, "buff");
-        this.state.nextCounterDamage = 0;
-      }
-
-      if (this.checkWinCondition()) {
-        return;
-      }
-
-      this.advanceTurn();
+        this.scheduleBattleStep(() => {
+          this.state.battleMessage = "";
+          this.state.battleSubmessage = "";
+          this.state.actionLocked = false;
+          this.clearBattleVisual();
+          this.advanceTurn();
+        }, 420);
+      }, 260);
     }
   }
 
@@ -2789,6 +3029,10 @@ class ThreatCombat {
 
     this.destroy();
     this.state.outcome = outcome;
+    this.state.actionLocked = false;
+    this.state.battleMessage = "";
+    this.state.battleSubmessage = "";
+    this.state.visualEffect = null;
 
     if (outcome === "victory") {
       this.state.phase = "reward";
