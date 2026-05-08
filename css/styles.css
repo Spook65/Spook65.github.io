@@ -1463,7 +1463,7 @@ canvas {
   justify-content: space-between;
   gap: 12px;
   align-items: flex-end;
-  padding: 12px 14px;
+  padding: 10px 12px;
   border: 1px solid rgba(0, 255, 136, 0.18);
   background: rgba(10, 10, 15, 0.9);
 }
@@ -1482,20 +1482,20 @@ canvas {
 
 .combat-turn-preview {
   display: grid;
-  gap: 6px;
+  gap: 4px;
   justify-items: end;
 }
 
 .combat-turn-preview-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
   justify-content: flex-end;
 }
 
 .combat-turn-preview .combat-turn-chip {
-  padding: 5px 7px;
-  font-size: 0.62rem;
+  padding: 4px 6px;
+  font-size: 0.56rem;
 }
 
 .combat-turn-separator {
@@ -2488,7 +2488,7 @@ canvas {
 
 .combat-stage {
   position: relative;
-  min-height: 0;
+  min-height: clamp(520px, 66vh, 820px);
   overflow: hidden;
   border: 1px solid rgba(0, 255, 136, 0.16);
   background:
@@ -2529,16 +2529,16 @@ canvas {
 }
 
 .combat-stage-enemy {
-  top: 7%;
+  top: 3%;
   right: 4%;
-  width: min(40vw, 470px);
+  width: min(38vw, 560px);
   justify-items: end;
 }
 
 .combat-stage-player {
   left: 4%;
-  bottom: 11%;
-  width: min(44vw, 520px);
+  bottom: 6%;
+  width: min(48vw, 640px);
 }
 
 .combat-battler {
@@ -2576,12 +2576,12 @@ canvas {
 
 .combat-status-box {
   display: grid;
-  gap: 8px;
-  padding: 12px 14px;
+  gap: 6px;
+  padding: 10px 12px;
   border: 1px solid rgba(0, 255, 136, 0.16);
   background: rgba(8, 10, 14, 0.94);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
 }
 
 .combat-status-box-enemy {
@@ -2595,7 +2595,7 @@ canvas {
 }
 
 .combat-status-box .combat-name-row {
-  font-size: 0.72rem;
+  font-size: 0.66rem;
 }
 
 .combat-status-box .combat-lvl {
@@ -2615,7 +2615,7 @@ canvas {
 
 .combat-battler-sprite-wrap {
   position: relative;
-  min-height: 220px;
+  min-height: 280px;
   display: grid;
   align-items: center;
 }
@@ -2634,15 +2634,15 @@ canvas {
 }
 
 .combat-battler-player .battle-sprite {
-  width: 216px;
-  height: 216px;
+  width: clamp(240px, 22vw, 340px);
+  height: clamp(260px, 24vw, 380px);
   transform: scaleX(-1) translateY(0);
   filter: drop-shadow(0 0 18px rgba(0, 255, 136, 0.16));
 }
 
 .combat-battler-enemy .battle-sprite {
-  width: 176px;
-  height: 176px;
+  width: clamp(210px, 19vw, 300px);
+  height: clamp(210px, 19vw, 300px);
   filter: drop-shadow(0 0 18px rgba(255, 34, 51, 0.16));
 }
 
@@ -2660,16 +2660,16 @@ canvas {
 
 .combat-battler-label {
   color: rgba(0, 255, 136, 0.38);
-  font-size: 0.62rem;
-  letter-spacing: 0.18em;
+  font-size: 0.54rem;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 
 .combat-reserve-strip {
   position: absolute;
-  left: 14px;
-  right: 14px;
-  bottom: 12px;
+  left: 16px;
+  right: 16px;
+  bottom: 10px;
   z-index: 4;
   display: grid;
   gap: 8px;
@@ -2684,13 +2684,13 @@ canvas {
 }
 
 .combat-reserve-card {
-  min-width: 132px;
-  padding: 8px 10px;
+  min-width: 102px;
+  padding: 6px 8px;
   border: 1px solid rgba(0, 255, 136, 0.14);
   background: rgba(8, 10, 14, 0.9);
   color: rgba(0, 255, 136, 0.78);
-  font-size: 0.62rem;
-  letter-spacing: 0.08em;
+  font-size: 0.54rem;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
@@ -2718,19 +2718,18 @@ canvas {
 
 .combat-footer {
   display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(220px, 0.65fr);
-  gap: 12px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
   min-height: 0;
 }
 
 .combat-footer-left {
   display: grid;
-  gap: 12px;
+  gap: 8px;
 }
 
 .combat-voice-box,
-.combat-command-box,
-.combat-log-panel-mini {
+.combat-command-box {
   min-height: 0;
   border: 1px solid rgba(0, 255, 136, 0.16);
   background: rgba(10, 10, 15, 0.94);
@@ -2738,42 +2737,65 @@ canvas {
 
 .combat-voice-box {
   display: grid;
-  gap: 8px;
-  padding: 12px 14px;
+  gap: 5px;
+  padding: 9px 11px;
 }
 
 .combat-voice-text {
   color: #00ff88;
-  font-size: 0.92rem;
-  letter-spacing: 0.1em;
-  line-height: 1.5;
+  font-size: 0.72rem;
+  letter-spacing: 0.07em;
+  line-height: 1.35;
   text-transform: uppercase;
-  min-height: 2.6em;
+  min-height: 2em;
 }
 
 .combat-voice-subtext {
   color: rgba(0, 255, 136, 0.58);
-  font-size: 0.68rem;
-  letter-spacing: 0.14em;
+  font-size: 0.56rem;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
+}
+
+.combat-history-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: rgba(0, 255, 136, 0.5);
+  font-size: 0.52rem;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.combat-history-entry {
+  flex: 0 1 auto;
+  max-width: 100%;
+  padding-right: 10px;
+  border-right: 1px solid rgba(0, 255, 136, 0.12);
+}
+
+.combat-history-entry:last-child {
+  border-right: 0;
+  padding-right: 0;
 }
 
 .combat-command-box {
   display: grid;
-  gap: 10px;
-  padding: 12px 14px;
+  gap: 7px;
+  padding: 9px 11px;
 }
 
 .combat-command-box .combat-actions {
   display: grid;
-  gap: 8px;
+  gap: 5px;
   flex-wrap: initial;
 }
 
 .combat-command-box .combat-ability-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 5px;
 }
 
 .combat-command-box .combat-action-note {
@@ -2796,23 +2818,14 @@ canvas {
   justify-content: space-between;
   gap: 10px;
   align-items: center;
-  padding: 12px 14px;
+  padding: 9px 11px;
   border-color: rgba(0, 255, 136, 0.42);
   background: rgba(8, 10, 14, 0.96);
+  font-size: 0.6rem;
 }
 
 .combat-gauge-wrap {
-  gap: 4px;
-}
-
-.combat-log-panel-mini {
-  display: grid;
-  gap: 10px;
-  padding: 12px;
-}
-
-.combat-log-panel-mini .combat-log {
-  max-height: 100%;
+  gap: 3px;
 }
 
 .combat-beam {
@@ -2826,17 +2839,17 @@ canvas {
 }
 
 .combat-beam.from-player {
-  left: 16%;
-  right: 32%;
-  top: 63%;
+  left: 20%;
+  right: 27%;
+  top: 64%;
   color: #00ff88;
   background: linear-gradient(90deg, rgba(0, 255, 136, 0.08), #00ff88, rgba(0, 255, 136, 0.08));
 }
 
 .combat-beam.from-enemy {
-  left: 26%;
-  right: 18%;
-  top: 28%;
+  left: 30%;
+  right: 14%;
+  top: 26%;
   color: #ff2233;
   background: linear-gradient(90deg, rgba(255, 34, 51, 0.08), #ff2233, rgba(255, 34, 51, 0.08));
 }
@@ -2847,7 +2860,7 @@ canvas {
 
 .combat-aura {
   position: absolute;
-  inset: 12% 14%;
+  inset: 10% 12%;
   z-index: 2;
   pointer-events: none;
   border: 1px solid currentColor;
@@ -2883,7 +2896,7 @@ canvas {
   top: -6px;
   right: 12px;
   color: #ff2233;
-  font-size: 1rem;
+  font-size: 0.9rem;
   letter-spacing: 0.18em;
   text-shadow: 0 0 10px rgba(255, 34, 51, 0.3);
   animation: battle-damage-pop 540ms ease-out both;
@@ -2900,7 +2913,7 @@ canvas {
 }
 
 .combat-bar {
-  height: 13px;
+  height: 11px;
 }
 
 .combat-bar-fill {

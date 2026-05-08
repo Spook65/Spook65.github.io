@@ -1936,26 +1936,26 @@ function buildTurnOrderMarkup(state) {
     const turnIndex = (state.currentTurnIndex + index) % state.turnOrder.length;
     const entry = state.turnOrder[turnIndex];
     const actor = entry.ref;
-    const label = entry.kind === "program"
-      ? `${actor.name} LVL ${actor.level}`
-      : `${actor.title} LVL ${actor.level}`;
+    const label = entry.kind === "program" ? actor.name : actor.title;
     preview.push(`<span class="combat-turn-chip ${index === 0 ? "is-current" : ""} ${entry.kind === "threat" ? "is-threat" : ""}">${label}</span>`);
   }
 
   return preview.join('<span class="combat-turn-separator" aria-hidden="true">→</span>');
 }
 
-// buildBattleLogMarkup() keeps the last few combat events visible without stealing the whole screen.
+// buildBattleLogMarkup() keeps a tiny history summary available without turning the screen back into a dashboard.
 function buildBattleLogMarkup(state) {
   const entries = state.battleLog.slice(-4);
 
   if (!entries.length) {
-    return '<div class="combat-log-entry">SYSTEM READY. AWAITING FIRST TURN.</div>';
+    return '<div class="combat-history-entry">SYSTEM READY. AWAITING FIRST TURN.</div>';
   }
 
-  return entries.map((entry) => {
+  const summary = entries.slice(-2);
+
+  return summary.map((entry) => {
     const variantClass = entry.variant ? `is-${entry.variant}` : "";
-    return `<div class="combat-log-entry ${variantClass}">${entry.message}</div>`;
+    return `<div class="combat-history-entry ${variantClass}">${entry.message}</div>`;
   }).join("");
 }
 
@@ -2018,7 +2018,7 @@ function buildReserveStripMarkup(state, activeProgramId) {
     return `
       <article class="combat-reserve-card ${isActive ? "is-active" : ""} ${program.hp <= 0 ? "is-down" : ""} ${isTargeted ? "is-targeted" : ""}" style="color: ${program.color};">
         <div class="combat-reserve-name">${program.name}</div>
-        <div class="combat-reserve-meta">LVL ${program.level} | HP ${program.hp}/${program.maxHp}</div>
+        <div class="combat-reserve-meta">HP ${program.hp}/${program.maxHp}</div>
       </article>
     `;
   }).join("");
@@ -2044,7 +2044,6 @@ function buildProgramBattlefieldMarkup(program, state, isCurrentTurn) {
           <span class="combat-name">${program.name}</span>
           <span class="combat-lvl">LVL ${program.level}</span>
         </div>
-        <div class="combat-subline">TYPE: ${String(program.type).toUpperCase()}</div>
         <div class="combat-subline">HP ${program.hp}/${program.maxHp}</div>
         ${renderBar(program.hp, program.maxHp, "is-hp")}
         <div class="combat-subline">XP ${program.xp}/${program.level * 100}</div>
@@ -2058,7 +2057,6 @@ function buildProgramBattlefieldMarkup(program, state, isCurrentTurn) {
           <div class="combat-damage-pop">-${effect.damage || 0}</div>
         ` : ""}
       </div>
-      <div class="combat-battler-label">ACTIVE PROGRAM</div>
     </article>
   `;
 }
@@ -2080,9 +2078,6 @@ function buildProgramBenchMarkup(program, isCurrentTurn) {
 function buildThreatVisualMarkup(state) {
   const threat = state.threat;
   const statusMarkup = renderStatusPills(threat.statusEffects);
-  const activeProgram = getActiveBattleProgram(state);
-  const matchup = getTypeAdvantage(getActorCombatType(activeProgram), getActorCombatType(threat, true));
-  const matchupLabel = matchup.state === "super-effective" ? "SUPER EFFECTIVE" : matchup.state === "weak" ? "NOT VERY EFFECTIVE" : "NEUTRAL";
   const effect = state.visualEffect || {};
   const figureClass = [
     "combat-battler",
@@ -2094,7 +2089,6 @@ function buildThreatVisualMarkup(state) {
 
   return `
     <article class="${figureClass}" style="color: #ff2233;">
-      <div class="combat-battler-label">HOSTILE THREAT</div>
       <div class="combat-battler-sprite-wrap">
         <div class="battle-sprite threat-sprite ${getThreatSpriteClass(threat)}" aria-hidden="true"></div>
         ${effect.phase === "impact" && effect.targetKind === "threat" && effect.targetId === threat.id ? `
@@ -2107,11 +2101,9 @@ function buildThreatVisualMarkup(state) {
           <span class="combat-name">${threat.title}</span>
           <span class="combat-lvl">LVL ${threat.level}</span>
         </div>
-        <div class="combat-subline">${getThreatTypeLabel(threat.type)}</div>
         <div class="combat-subline">HP ${threat.hp}/${threat.maxHp}</div>
         ${renderBar(threat.hp, threat.maxHp, "is-hp")}
         <div class="combat-subline">WEAK TO: ${String(getActorCombatType(threat, true) || "UNKNOWN").toUpperCase()}</div>
-        <div class="combat-matchup-hint is-${matchup.state}">TYPE MATCHUP: ${String(activeProgram.type || "UNKNOWN").toUpperCase()} → ${String(getActorCombatType(threat, true) || "UNKNOWN").toUpperCase()} [${matchupLabel}]</div>
         ${statusMarkup}
       </div>
     </article>
@@ -2121,8 +2113,6 @@ function buildThreatVisualMarkup(state) {
 // buildActionButtonMarkup() renders only the current actor's moves so the bottom bar feels like a battle menu.
 function buildActionButtonMarkup(state) {
   const currentActor = state.turnOrder[state.currentTurnIndex];
-  const activeProgram = getActiveBattleProgram(state);
-  const matchup = activeProgram ? getTypeAdvantage(getActorCombatType(activeProgram), getActorCombatType(state.threat, true)) : { state: "neutral" };
 
   if (state.actionLocked) {
     return '<div class="combat-action-note">EXECUTING MOVE...</div>';
@@ -2131,7 +2121,6 @@ function buildActionButtonMarkup(state) {
   if (!currentActor || currentActor.kind !== "program" || currentActor.ref.hp <= 0) {
     return `
       <div class="combat-action-note">THREAT TURN IN PROGRESS.</div>
-      <div class="combat-matchup-hint is-${matchup.state}">TYPE MATCHUP: ${String(activeProgram.type || "UNKNOWN").toUpperCase()} → ${String(getActorCombatType(state.threat, true) || "UNKNOWN").toUpperCase()} [${matchup.state === "super-effective" ? "SUPER EFFECTIVE" : matchup.state === "weak" ? "NOT VERY EFFECTIVE" : "NEUTRAL"}]</div>
     `;
   }
 
@@ -2159,8 +2148,6 @@ function buildActionButtonMarkup(state) {
   }
 
   return `
-    <div class="combat-action-note">CURRENT ACTOR: ${actor.name} (LVL ${actor.level})</div>
-    <div class="combat-matchup-hint is-${matchup.state}">TYPE MATCHUP: ${String(actor.type || "UNKNOWN").toUpperCase()} → ${String(getActorCombatType(state.threat, true) || "UNKNOWN").toUpperCase()} [${matchup.state === "super-effective" ? "SUPER EFFECTIVE" : matchup.state === "weak" ? "NOT VERY EFFECTIVE" : "NEUTRAL"}]</div>
     <div class="combat-actions">
       ${actor.abilities.map((ability, index) => {
         const disabled = state.responseGauge < ability.cost || state.actionLocked ? "disabled" : "";
@@ -2213,7 +2200,6 @@ function buildCombatMarkup(state) {
           ${buildProgramBattlefieldMarkup(currentProgram, state, state.activeProgramId === currentProgram.id)}
         </div>
         <div class="combat-reserve-strip">
-          <div class="combat-panel-title">RESERVE PARTY</div>
           <div class="combat-reserve-row">
             ${buildReserveStripMarkup(state, currentProgram.id)}
           </div>
@@ -2226,6 +2212,7 @@ function buildCombatMarkup(state) {
             <div class="combat-panel-title">BATTLE MESSAGE</div>
             <div id="battle-message" class="combat-voice-text">${getBattleMessageText(state)}</div>
             <div id="battle-submessage" class="combat-voice-subtext">${getBattleSubmessageText(state)}</div>
+            <div id="battle-log" class="combat-history-strip">${buildBattleLogMarkup(state)}</div>
           </div>
 
           <div class="combat-command-box">
@@ -2238,11 +2225,6 @@ function buildCombatMarkup(state) {
             </div>
           </div>
         </div>
-
-        <aside class="combat-log-panel combat-log-panel-mini">
-          <div class="combat-panel-title">LOG</div>
-          <div id="battle-log" class="combat-log">${buildBattleLogMarkup(state)}</div>
-        </aside>
       </footer>
     </div>
   `;
