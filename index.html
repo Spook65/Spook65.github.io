@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>THREATGRID — Layer 1</title>
+  <title>THREATGRID — Layer 4</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <link rel="stylesheet" href="css/styles.css">
 </head>
@@ -19,7 +19,6 @@
       <div class="hud-block hud-stats corner-bracket">
         <strong id="active-count">0</strong>
         <p>Active Threats</p>
-        <p id="deadline-display" class="hud-deadline">DEADLINE: --:--</p>
       </div>
       <!-- The score block stays in the HUD so it updates globally no matter which threat the player is handling. -->
       <div class="hud-block hud-score">
@@ -28,6 +27,7 @@
       </div>
       <!-- This button re-enables pointer events because the HUD container itself stays click-through. -->
       <button id="hud-menu-button" class="hud-menu-button" type="button">[ MENU ]</button>
+      <button id="expedition-flag-button" class="hud-flag-button" type="button">[ EXPEDITION FLAG ]</button>
       <div class="grid-vignette"></div>
       <div class="scan-overlay"></div>
     </div>
@@ -50,7 +50,7 @@
             <button id="howto-button" class="menu-button" type="button">HOW TO PLAY</button>
           </div>
         </div>
-        <p class="menu-footnote">v0.1.0 — LAYER 1 FOUNDATION</p>
+        <p class="menu-footnote">v0.4.0 — LAYER 4 COMBAT</p>
       </section>
 
       <section id="howto-screen" class="screen howto-screen" aria-label="How To Play">
@@ -63,70 +63,43 @@
           <div class="howto-content">
             <section class="briefing-section">
               <h3 class="section-heading">SITUATION</h3>
-              <p class="section-body">Cyber threats are emerging across the globe in real time. As a THREATGRID analyst, your mission is to identify, investigate, and neutralize each threat before it propagates.</p>
+              <p class="section-body">Eight active threats are live on the globe. Click one to deploy a four-program security party and enter turn-based combat.</p>
             </section>
 
             <section class="briefing-section">
-              <h3 class="section-heading">CONTROLS</h3>
+              <h3 class="section-heading">COMBAT LOOP</h3>
               <ul class="section-list">
-                <li>Click and drag to rotate the globe</li>
-                <li>Click a threat node to open the threat panel</li>
-                <li>Threats pulse faster as severity increases</li>
-                <li>Critical threats <span style="color:#ff2233;">[RED]</span> require immediate action</li>
+                <li>Programs act in SPD order</li>
+                <li>Use abilities on your turn to damage the threat and build response gauge</li>
+                <li>Combo actions unlock when the gauge is high enough</li>
+                <li>Win by defeating the threat and collecting XP</li>
               </ul>
             </section>
 
             <section class="briefing-section">
-              <h3 class="section-heading">THREAT TYPES</h3>
+              <h3 class="section-heading">PROGRAM TYPES</h3>
               <div class="legend-list">
-                <div class="legend-item"><span class="legend-dot ransomware" aria-hidden="true"></span><span class="legend-label">RANSOMWARE</span></div>
-                <div class="legend-item"><span class="legend-dot phishing" aria-hidden="true"></span><span class="legend-label">PHISHING</span></div>
-                <div class="legend-item"><span class="legend-dot ddos" aria-hidden="true"></span><span class="legend-label">DDOS</span></div>
-                <div class="legend-item"><span class="legend-dot botnet" aria-hidden="true"></span><span class="legend-label">BOTNET</span></div>
-                <div class="legend-item"><span class="legend-dot zero-day" aria-hidden="true"></span><span class="legend-label">ZERO-DAY</span></div>
-                <div class="legend-item"><span class="legend-dot trojan" aria-hidden="true"></span><span class="legend-label">TROJAN</span></div>
+                <div class="legend-item"><span class="legend-dot" style="color:#00ccff;background:#00ccff;" aria-hidden="true"></span><span class="legend-label">FIREWALL</span></div>
+                <div class="legend-item"><span class="legend-dot" style="color:#00ff88;background:#00ff88;" aria-hidden="true"></span><span class="legend-label">IDS</span></div>
+                <div class="legend-item"><span class="legend-dot" style="color:#ffcc00;background:#ffcc00;" aria-hidden="true"></span><span class="legend-label">HONEYPOT</span></div>
+                <div class="legend-item"><span class="legend-dot" style="color:#ff2233;background:#ff2233;" aria-hidden="true"></span><span class="legend-label">ANTIVIRUS</span></div>
               </div>
             </section>
 
             <section class="briefing-section">
-              <h3 class="section-heading">SEVERITY LEVELS</h3>
+              <h3 class="section-heading">THREAT COLORS</h3>
               <div class="severity-list">
-                <div class="severity-item"><span class="severity-dot critical" aria-hidden="true"></span><span class="severity-label">CRITICAL</span><span class="severity-desc">Immediate neutralization required</span></div>
-                <div class="severity-item"><span class="severity-dot high" aria-hidden="true"></span><span class="severity-label">HIGH</span><span class="severity-desc">Escalating, respond within the hour</span></div>
-                <div class="severity-item"><span class="severity-dot medium" aria-hidden="true"></span><span class="severity-label">MEDIUM</span><span class="severity-desc">Contained but active, monitor closely</span></div>
-                <div class="severity-item"><span class="severity-dot low" aria-hidden="true"></span><span class="severity-label">LOW</span><span class="severity-desc">Early stage, log and observe</span></div>
+                <div class="severity-item"><span class="severity-dot critical" aria-hidden="true"></span><span class="severity-label">CRITICAL</span><span class="severity-desc">Most dangerous targets</span></div>
+                <div class="severity-item"><span class="severity-dot high" aria-hidden="true"></span><span class="severity-label">HIGH</span><span class="severity-desc">Heavy damage potential</span></div>
+                <div class="severity-item"><span class="severity-dot medium" aria-hidden="true"></span><span class="severity-label">MEDIUM</span><span class="severity-desc">Balanced threat pressure</span></div>
+                <div class="severity-item"><span class="severity-dot low" aria-hidden="true"></span><span class="severity-label">LOW</span><span class="severity-desc">Early-stage intrusion</span></div>
               </div>
-            </section>
-
-            <section class="briefing-section">
-              <h3 class="section-heading">COMING SOON</h3>
-              <p class="section-body">Investigation panel, AI analyst deployment, neutralization protocols, and mission debrief reports.</p>
             </section>
           </div>
           <div class="howto-footer">
             <button id="return-button" class="back-button" type="button">RETURN TO MENU</button>
           </div>
         </div>
-      </section>
-
-      <section id="onboarding-screen" class="screen onboarding-screen" aria-label="Intern Onboarding">
-        <div class="terminal-shell onboarding-shell">
-          <div class="terminal-headline">NEXUS SECURITY - THREAT OPERATIONS CENTER</div>
-          <div class="terminal-rule" aria-hidden="true"></div>
-          <p class="terminal-copy">WELCOME, INTERN.</p>
-          <p class="terminal-copy">YOU'VE BEEN BROUGHT IN TO HANDLE AN ACTIVE THREAT SURGE.</p>
-          <p class="terminal-copy">8 THREATS ARE LIVE ON THE NETWORK RIGHT NOW.</p>
-          <p class="terminal-copy">YOUR MISSION: NEUTRALIZE ALL OF THEM.</p>
-          <p class="terminal-copy">YOUR DEADLINE: 12 MINUTES.</p>
-          <p class="terminal-copy">FAIL TO CLEAR THEM IN TIME, AND THE COMPANY FALLS.</p>
-          <p class="terminal-copy">YOU GET FIRED. THE HACKERS WIN.</p>
-          <p class="terminal-copy">READY?</p>
-          <button id="onboarding-start-button" class="menu-button" type="button">[ START MISSION ]</button>
-        </div>
-      </section>
-
-      <section id="game-state-screen" class="screen game-state-screen" aria-label="Mission Status">
-        <div id="game-state-content" class="game-state-content"></div>
       </section>
     </div>
     <!-- The side panel stays mounted so it can slide in quickly without rebuilding the outer shell each time. -->

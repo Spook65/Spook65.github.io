@@ -19,7 +19,21 @@ const threats = [
       "Electronic health record servers",
       "Active Directory domain controllers"
     ],
-    status: "active"
+    status: "active",
+    combatType: "offense",
+    level: 4,
+    hp: 160,
+    maxHp: 160,
+    atk: 7,
+    def: 4,
+    spd: 5,
+    weakType: "defense",
+    weakPoint: "isolate",
+    abilities: [
+      { name: "Encrypt Files", cost: 0, baseDamage: 20, effect: "status_encrypted" },
+      { name: "Spread Network", cost: 1, baseDamage: 12, effect: "damage_all" },
+      { name: "Escalate", cost: 2, baseDamage: 0, effect: "self_level_up" }
+    ]
   },
   {
     id: "tg-002",
@@ -40,7 +54,21 @@ const threats = [
       "Single sign-on portals",
       "Finance department endpoints"
     ],
-    status: "active"
+    status: "active",
+    combatType: "deception",
+    level: 2,
+    hp: 120,
+    maxHp: 120,
+    atk: 5,
+    def: 3,
+    spd: 8,
+    weakType: "offense",
+    weakPoint: "revoke",
+    abilities: [
+      { name: "Harvest Credentials", cost: 0, baseDamage: 14, effect: "status_detected" },
+      { name: "Spoof Tenant", cost: 1, baseDamage: 10, effect: "damage_all" },
+      { name: "Escalate", cost: 2, baseDamage: 0, effect: "self_level_up" }
+    ]
   },
   {
     id: "tg-003",
@@ -61,7 +89,21 @@ const threats = [
       "Transit gateway load balancers",
       "Customer-facing edge links"
     ],
-    status: "active"
+    status: "active",
+    combatType: "offense",
+    level: 3,
+    hp: 140,
+    maxHp: 140,
+    atk: 6,
+    def: 4,
+    spd: 6,
+    weakType: "purge",
+    weakPoint: "reroute",
+    abilities: [
+      { name: "Amplify Flood", cost: 0, baseDamage: 18, effect: "damage_all" },
+      { name: "Fragment Route", cost: 1, baseDamage: 14, effect: "status_isolated" },
+      { name: "Escalate", cost: 2, baseDamage: 0, effect: "self_level_up" }
+    ]
   },
   {
     id: "tg-004",
@@ -82,7 +124,21 @@ const threats = [
       "DVR appliances",
       "Small-office edge gateways"
     ],
-    status: "active"
+    status: "active",
+    combatType: "deception",
+    level: 1,
+    hp: 95,
+    maxHp: 95,
+    atk: 4,
+    def: 2,
+    spd: 9,
+    weakType: "purge",
+    weakPoint: "sinkhole",
+    abilities: [
+      { name: "Beacon C2", cost: 0, baseDamage: 12, effect: "status_detected" },
+      { name: "Multiply Nodes", cost: 1, baseDamage: 10, effect: "damage_all" },
+      { name: "Reinfect", cost: 2, baseDamage: 0, effect: "self_level_up" }
+    ]
   },
   {
     id: "tg-005",
@@ -103,7 +159,21 @@ const threats = [
       "Market data collectors",
       "Privileged jump hosts"
     ],
-    status: "active"
+    status: "active",
+    combatType: "purge",
+    level: 6,
+    hp: 205,
+    maxHp: 205,
+    atk: 8,
+    def: 5,
+    spd: 7,
+    weakType: "offense",
+    weakPoint: "patch",
+    abilities: [
+      { name: "Privilege Escalate", cost: 0, baseDamage: 22, effect: "status_encrypted" },
+      { name: "Disable EDR", cost: 1, baseDamage: 18, effect: "damage_all" },
+      { name: "Kernel Chain", cost: 2, baseDamage: 0, effect: "self_level_up" }
+    ]
   },
   {
     id: "tg-006",
@@ -124,7 +194,21 @@ const threats = [
       "Customer service desktops",
       "Shared browser session hosts"
     ],
-    status: "active"
+    status: "active",
+    combatType: "offense",
+    level: 3,
+    hp: 130,
+    maxHp: 130,
+    atk: 6,
+    def: 3,
+    spd: 6,
+    weakType: "purge",
+    weakPoint: "isolate",
+    abilities: [
+      { name: "Inject Form", cost: 0, baseDamage: 15, effect: "status_detected" },
+      { name: "Steal Sessions", cost: 1, baseDamage: 13, effect: "damage_all" },
+      { name: "Reconnect", cost: 2, baseDamage: 0, effect: "self_level_up" }
+    ]
   },
   {
     id: "tg-007",
@@ -145,7 +229,21 @@ const threats = [
       "Aggregation switches",
       "International transit circuits"
     ],
-    status: "active"
+    status: "active",
+    combatType: "offense",
+    level: 5,
+    hp: 180,
+    maxHp: 180,
+    atk: 8,
+    def: 4,
+    spd: 6,
+    weakType: "defense",
+    weakPoint: "divert",
+    abilities: [
+      { name: "Saturate Peering", cost: 0, baseDamage: 19, effect: "damage_all" },
+      { name: "GRE Spray", cost: 1, baseDamage: 15, effect: "status_isolated" },
+      { name: "Escalate", cost: 2, baseDamage: 0, effect: "self_level_up" }
+    ]
   },
   {
     id: "tg-008",
@@ -166,6 +264,20 @@ const threats = [
       "User identity portals",
       "Shared webmail access terminals"
     ],
-    status: "active"
+    status: "active",
+    combatType: "deception",
+    level: 1,
+    hp: 100,
+    maxHp: 100,
+    atk: 3,
+    def: 2,
+    spd: 7,
+    weakType: "offense",
+    weakPoint: "inspect",
+    abilities: [
+      { name: "Reset Request", cost: 0, baseDamage: 11, effect: "status_detected" },
+      { name: "Redirect Chain", cost: 1, baseDamage: 9, effect: "damage_all" },
+      { name: "Escalate", cost: 2, baseDamage: 0, effect: "self_level_up" }
+    ]
   }
 ];

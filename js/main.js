@@ -35,6 +35,153 @@ let missionEnded = false;
 let pendingGameOverOutcome = null;
 let playerPath = null;
 
+// The party roster persists across battles so the run keeps its roguelike progression state.
+const programs = [
+  {
+    id: "firewall-7",
+    name: "Firewall-7",
+    type: "defense",
+    level: 1,
+    hp: 100,
+    maxHp: 100,
+    atk: 3,
+    def: 7,
+    spd: 6,
+    color: "#00ccff",
+    xp: 0,
+    statusEffects: [],
+    abilities: [
+      {
+        name: "Block Network",
+        cost: 0,
+        baseDamage: 0,
+        effect: "reduce_next_damage"
+      },
+      {
+        name: "Harden Ports",
+        cost: 1,
+        baseDamage: 15,
+        effect: "boost_def"
+      },
+      {
+        name: "Allocate Bandwidth",
+        cost: 2,
+        baseDamage: 25,
+        effect: "shared_ability"
+      }
+    ]
+  },
+  {
+    id: "ids-4",
+    name: "IDS",
+    type: "offense",
+    level: 1,
+    hp: 92,
+    maxHp: 92,
+    atk: 6,
+    def: 4,
+    spd: 8,
+    color: "#00ff88",
+    xp: 0,
+    statusEffects: [],
+    abilities: [
+      {
+        name: "Deep Packet Scan",
+        cost: 0,
+        baseDamage: 16,
+        effect: "status_detected"
+      },
+      {
+        name: "Signature Burst",
+        cost: 1,
+        baseDamage: 22,
+        effect: "status_detected"
+      },
+      {
+        name: "Quarantine Relay",
+        cost: 2,
+        baseDamage: 28,
+        effect: "shared_ability"
+      }
+    ]
+  },
+  {
+    id: "honeypot-3",
+    name: "Honeypot",
+    type: "deception",
+    level: 1,
+    hp: 96,
+    maxHp: 96,
+    atk: 4,
+    def: 5,
+    spd: 7,
+    color: "#ffcc00",
+    xp: 0,
+    statusEffects: [],
+    abilities: [
+      {
+        name: "Lure Traffic",
+        cost: 0,
+        baseDamage: 14,
+        effect: "status_isolated"
+      },
+      {
+        name: "Decoy Mesh",
+        cost: 1,
+        baseDamage: 20,
+        effect: "boost_def"
+      },
+      {
+        name: "Sandtrap",
+        cost: 2,
+        baseDamage: 26,
+        effect: "status_isolated"
+      }
+    ]
+  },
+  {
+    id: "antivirus-9",
+    name: "Antivirus",
+    type: "purge",
+    level: 1,
+    hp: 108,
+    maxHp: 108,
+    atk: 5,
+    def: 6,
+    spd: 5,
+    color: "#ff2233",
+    xp: 0,
+    statusEffects: [],
+    abilities: [
+      {
+        name: "Signature Sweep",
+        cost: 0,
+        baseDamage: 16,
+        effect: "cleanse"
+      },
+      {
+        name: "Rapid Scan",
+        cost: 1,
+        baseDamage: 22,
+        effect: "status_detected"
+      },
+      {
+        name: "Kernel Purge",
+        cost: 2,
+        baseDamage: 30,
+        effect: "cleanse"
+      }
+    ]
+  }
+];
+
+// The default roster snapshot lets the run reset cleanly when the player returns to the menu.
+const defaultPrograms = JSON.parse(JSON.stringify(programs));
+
+// combatState stays global so DevTools can inspect the active battle without digging through closures.
+let combatState = null;
+let combatEngine = null;
+
 // Escalation state is tracked outside globe.js because these are game rules, while globe.js only renders state.
 const escalationStateByThreatId = {};
 
@@ -45,6 +192,7 @@ const threatPanelClose = document.getElementById("threat-panel-close");
 const scoreDisplay = document.getElementById("score-display");
 const accuracyDisplay = document.getElementById("accuracy-display");
 const deadlineDisplay = document.getElementById("deadline-display");
+const expeditionFlagButton = document.getElementById("expedition-flag-button");
 const gameStateContent = document.getElementById("game-state-content");
 
 // Severity colors are reused in the panel so the text UI matches the node colors on the globe.
@@ -1478,7 +1626,1071 @@ function openThreatPanel(threat) {
   });
 }
 
-// wireThreatResponses() connects globe clicks to the panel and starts long-running game systems once the globe exists.
+// The threat map below converts the narrative threat categories into combat stance for turn resolution.
+const threatCombatTypeLookup = {
+  ransomware: "offense",
+  phishing: "deception",
+  ddos: "offense",
+  botnet: "purge",
+  "zero-day": "purge",
+  trojan: "offense"
+};
+
+// getRandomInt() keeps the level scaling and damage ranges compact and readable.
+function getRandomInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+// getActorCombatType() normalizes attacker types so the type-advantage rules can stay simple.
+function getActorCombatType(actor, asDefender = false) {
+  if (!actor) {
+    return "";
+  }
+
+  if (asDefender && actor.weakType) {
+    return actor.weakType;
+  }
+
+  if (actor.combatType) {
+    return actor.combatType;
+  }
+
+  if (actor.type && ["defense", "offense", "deception", "purge"].includes(actor.type)) {
+    return actor.type;
+  }
+
+  return threatCombatTypeLookup[actor.type] || actor.type || "";
+}
+
+// resetProgramRoster() restores the party to its default run-start values without re-creating the array.
+function resetProgramRoster() {
+  defaultPrograms.forEach((template, index) => {
+    Object.assign(programs[index], JSON.parse(JSON.stringify(template)));
+  });
+}
+
+// healProgramRoster() fully restores the party between battles when the expedition flag is used.
+function healProgramRoster() {
+  programs.forEach((program) => {
+    program.hp = program.maxHp;
+    program.statusEffects = [];
+  });
+}
+
+// resetRunState() returns the game to a clean starting point for a fresh run.
+function resetRunState() {
+  stopMissionSystems();
+  closeCombatOverlay(true);
+  restoreThreatRoster();
+  resetProgramRoster();
+
+  playerScore = 0;
+  playerAccuracy = 100;
+  threatsNeutralized = 0;
+  totalCommandAttempts = 0;
+  correctCommandAttempts = 0;
+  stepHintState = {};
+  panelNeutralizing = false;
+  panelOpenedAt = 0;
+  currentOperatorSession = null;
+  playerDeadlineExpired = false;
+  missionEnded = false;
+  pendingGameOverOutcome = null;
+  combatState = null;
+  combatEngine = null;
+
+  updateScoreDisplay();
+  globe.syncThreatNodes();
+  globe.updateActiveCount();
+}
+
+// getThreatLevel() scales the encounter around the current party average so the run ramps naturally.
+function getThreatLevel() {
+  const avgPartyLevel = Math.floor(programs.reduce((sum, program) => sum + program.level, 0) / 4);
+  return Math.min(10, Math.max(1, avgPartyLevel + getRandomInt(0, 2)));
+}
+
+// buildScaledThreat() clones the source threat and adjusts its combat stats to the requested level.
+function buildScaledThreat(sourceThreat, targetLevel) {
+  const encounter = cloneThreatBlueprint(sourceThreat);
+  const baseLevel = encounter.level || 1;
+  const levelDelta = targetLevel - baseLevel;
+  const hpScale = Math.max(0.6, 1 + (levelDelta * 0.16));
+  const statScale = Math.max(0.7, 1 + (levelDelta * 0.08));
+
+  encounter.level = targetLevel;
+  encounter.maxHp = Math.max(40, Math.round((encounter.maxHp || 100) * hpScale));
+  encounter.hp = encounter.maxHp;
+  encounter.atk = Math.max(1, Math.round((encounter.atk || 1) * statScale));
+  encounter.def = Math.max(1, Math.round((encounter.def || 1) * statScale));
+  encounter.spd = Math.max(1, Math.round((encounter.spd || 1) * Math.max(0.7, 1 + (levelDelta * 0.04))));
+  encounter.statusEffects = [];
+
+  return encounter;
+}
+
+// buildTurnOrder() sorts the party and the threat by SPD so the fastest actor starts the cycle.
+function buildTurnOrder(playerParty, threat) {
+  return [
+    ...playerParty.map((program) => ({
+      kind: "program",
+      ref: program
+    })),
+    {
+      kind: "threat",
+      ref: threat
+    }
+  ].sort((left, right) => {
+    const speedDelta = (right.ref.spd || 0) - (left.ref.spd || 0);
+    if (speedDelta !== 0) {
+      return speedDelta;
+    }
+
+    if (left.kind === right.kind) {
+      return 0;
+    }
+
+    return left.kind === "program" ? -1 : 1;
+  });
+}
+
+// getTypeAdvantage() applies the four-way combat triangle used across the battle layer.
+function getTypeAdvantage(attackerType, defenderType) {
+  const beats = {
+    defense: "offense",
+    offense: "deception",
+    deception: "purge",
+    purge: "defense"
+  };
+
+  if (beats[attackerType] === defenderType) {
+    return {
+      state: "super-effective",
+      multiplier: 1.5
+    };
+  }
+
+  if (beats[defenderType] === attackerType) {
+    return {
+      state: "weak",
+      multiplier: 0.5
+    };
+  }
+
+  return {
+    state: "neutral",
+    multiplier: 1
+  };
+}
+
+// calculateDamage() computes final damage based on stats, level difference, and ability scaling.
+// Level difference: attacker.level - defender.level.
+// Every level difference = +/-10% damage.
+// Example: lvl 5 vs lvl 3 = 1.2x damage (20% bonus)
+function calculateDamage(attacker, defender, ability) {
+  const baseDamage = ((attacker.atk || 1) * (ability.baseDamage || 0)) / ((defender.def || 0) + 10);
+  const levelDiff = (attacker.level || 1) - (defender.level || 1);
+  const levelMultiplier = 1 + (levelDiff * 0.1);
+  const attackerType = getActorCombatType(attacker);
+  const defenderType = getActorCombatType(defender, true);
+  const typeInfo = getTypeAdvantage(attackerType, defenderType);
+
+  let finalMultiplier = levelMultiplier * typeInfo.multiplier;
+
+  if (Array.isArray(attacker.statusEffects) && attacker.statusEffects.includes("encrypted")) {
+    finalMultiplier *= 0.8;
+  }
+
+  if (Array.isArray(attacker.statusEffects) && attacker.statusEffects.includes("isolated")) {
+    finalMultiplier *= 0.5;
+  }
+
+  if (Array.isArray(defender.statusEffects) && defender.statusEffects.includes("detected")) {
+    finalMultiplier *= 1.15;
+  }
+
+  const finalDamage = Math.max(1, Math.round(baseDamage * finalMultiplier));
+
+  return {
+    damage: finalDamage,
+    levelMultiplier,
+    typeMultiplier: typeInfo.multiplier,
+    typeState: typeInfo.state,
+    isSuperEffective: typeInfo.state === "super-effective"
+  };
+}
+
+// buildCombatState() seeds the live battle state using the clicked threat and the current party.
+function buildCombatState(sourceThreat) {
+  const encounterLevel = getThreatLevel();
+  const threat = buildScaledThreat(sourceThreat, encounterLevel);
+  const playerParty = programs;
+  const turnOrder = buildTurnOrder(playerParty, threat);
+
+  return {
+    sourceThreat,
+    threat,
+    playerParty,
+    turnOrder,
+    currentTurnIndex: 0,
+    responseGauge: 0,
+    battleLog: [],
+    outcome: "ongoing",
+    phase: "battle",
+    nextDamageReduction: 0,
+    nextCounterDamage: 0,
+    encounterLevel
+  };
+}
+
+// addBattleLog() stores each action so the panel can render the last six turns cleanly.
+function addBattleLog(message, variant = "") {
+  if (!combatState) {
+    return;
+  }
+
+  combatState.battleLog.push({
+    message,
+    variant
+  });
+}
+
+// renderStatusPills() keeps the status-effect labels compact and color-coded.
+function renderStatusPills(statusEffects = []) {
+  if (!statusEffects.length) {
+    return "";
+  }
+
+  return `
+    <div class="status-pill-row">
+      ${statusEffects.map((status) => {
+        const className = status === "detected" ? "is-cyan" : status === "isolated" ? "is-alert" : "";
+        const label = status.replace(/_/g, " ").toUpperCase();
+        return `<span class="status-pill ${className}">${label}</span>`;
+      }).join("")}
+    </div>
+  `;
+}
+
+// renderBar() draws the same bar structure for HP, XP, and the shared response gauge.
+function renderBar(current, max, fillClass) {
+  const safeMax = Math.max(1, max);
+  const pct = Math.max(0, Math.min(100, Math.round((current / safeMax) * 100)));
+
+  return `
+    <div class="combat-bar" aria-hidden="true">
+      <div class="combat-bar-fill ${fillClass}" style="width: ${pct}%;"></div>
+    </div>
+  `;
+}
+
+// buildProgramCardMarkup() renders one program with its level, HP, XP, and current status effects.
+function buildProgramCardMarkup(program, isCurrentTurn) {
+  const statusMarkup = renderStatusPills(program.statusEffects);
+
+  return `
+    <article class="combat-program-card ${program.hp <= 0 ? "is-down" : ""} ${isCurrentTurn ? "is-current" : ""}" style="color: ${program.color};">
+      <div class="program-sprite" aria-hidden="true" style="color: ${program.color};"></div>
+      <div class="program-info">
+        <div class="combat-name-row">
+          <span class="combat-name">${program.name}</span>
+          <span class="combat-lvl">LVL ${program.level}</span>
+        </div>
+        <div class="combat-subline">HP ${program.hp}/${program.maxHp}</div>
+        ${renderBar(program.hp, program.maxHp, "is-hp")}
+        <div class="combat-subline">XP ${program.xp}/${program.level * 100}</div>
+        ${renderBar(program.xp, program.level * 100, "is-xp")}
+        ${statusMarkup}
+        ${isCurrentTurn ? '<div class="combat-subline">CURRENT TURN</div>' : ""}
+      </div>
+    </article>
+  `;
+}
+
+// buildThreatVisualMarkup() keeps the enemy card compact but readable in the battle room.
+function buildThreatVisualMarkup(threat) {
+  const statusMarkup = renderStatusPills(threat.statusEffects);
+
+  return `
+    <div class="threat-visual">
+      <div class="threat-visual-sprite" aria-hidden="true"></div>
+      <div class="combat-name-row">
+        <span class="combat-name">${threat.title}</span>
+        <span class="combat-lvl">LVL ${threat.level}</span>
+      </div>
+      <div class="combat-subline">${getThreatTypeLabel(threat.type)}</div>
+      <div class="combat-subline">HP ${threat.hp}/${threat.maxHp}</div>
+      ${renderBar(threat.hp, threat.maxHp, "is-hp")}
+      <div class="combat-subline">WEAK POINT: ${String(threat.weakPoint || "UNKNOWN").toUpperCase()}</div>
+      <div class="threat-weakness">TYPE ADVANTAGE: ${String(threat.weakType || "UNKNOWN").toUpperCase()}</div>
+      ${statusMarkup}
+    </div>
+  `;
+}
+
+// buildTurnOrderMarkup() shows the next actors so the player can read the cadence at a glance.
+function buildTurnOrderMarkup(state) {
+  return state.turnOrder.map((entry, index) => {
+    const actor = entry.ref;
+    const isCurrent = index === state.currentTurnIndex;
+    const actorLabel = entry.kind === "program"
+      ? `${actor.name} (LVL ${actor.level})`
+      : `${actor.title} (LVL ${actor.level})`;
+    const actorType = entry.kind === "program" ? "[YOUR PROGRAM]" : "[THREAT]";
+
+    return `<div class="combat-turn-chip ${isCurrent ? "is-current" : ""} ${entry.kind === "threat" ? "is-threat" : ""}">${actorLabel} ${actorType}</div>`;
+  }).join("");
+}
+
+// buildBattleLogMarkup() keeps the last six combat events visible and compact.
+function buildBattleLogMarkup(state) {
+  const entries = state.battleLog.slice(-6);
+
+  if (!entries.length) {
+    return '<div class="combat-log-entry">SYSTEM READY. AWAITING FIRST TURN.</div>';
+  }
+
+  return entries.map((entry) => {
+    const variantClass = entry.variant ? `is-${entry.variant}` : "";
+    return `<div class="combat-log-entry ${variantClass}">${entry.message}</div>`;
+  }).join("");
+}
+
+// buildActionButtonMarkup() renders the active actor's moves and the shared combo actions.
+function buildActionButtonMarkup(state) {
+  const currentActor = state.turnOrder[state.currentTurnIndex];
+
+  if (!currentActor || currentActor.kind !== "program" || currentActor.ref.hp <= 0) {
+    return '<div class="combat-action-note">THREAT TURN IN PROGRESS.</div>';
+  }
+
+  const actor = currentActor.ref;
+  const comboButtons = [];
+  const firewall = programs.find((program) => program.id === "firewall-7" && program.hp > 0);
+  const ids = programs.find((program) => program.id === "ids-4" && program.hp > 0);
+  const honeypot = programs.find((program) => program.id === "honeypot-3" && program.hp > 0);
+  const antivirus = programs.find((program) => program.id === "antivirus-9" && program.hp > 0);
+
+  if (firewall && ids && state.responseGauge >= 3) {
+    comboButtons.push(`
+      <button class="combat-action-button" type="button" data-combat-combo="sync-defense">
+        [ SYNCHRONIZED DEFENSE | COST 3 ]
+      </button>
+    `);
+  }
+
+  if (honeypot && antivirus && state.responseGauge >= 3) {
+    comboButtons.push(`
+      <button class="combat-action-button" type="button" data-combat-combo="containment-protocol">
+        [ CONTAINMENT PROTOCOL | COST 3 ]
+      </button>
+    `);
+  }
+
+  return `
+    <div class="combat-action-note">CURRENT ACTOR: ${actor.name} (LVL ${actor.level})</div>
+    <div class="combat-actions">
+      ${actor.abilities.map((ability, index) => {
+        const disabled = state.responseGauge < ability.cost ? "disabled" : "";
+        return `
+          <button class="combat-action-button" type="button" data-combat-ability="${index}" ${disabled}>
+            [ ${ability.name.toUpperCase()} | COST ${ability.cost} ]
+          </button>
+        `;
+      }).join("")}
+    </div>
+    ${comboButtons.length ? `<div class="combat-ability-row">${comboButtons.join("")}</div><div class="combat-action-note">COMBO AVAILABLE: RESPONSE GATE ${state.responseGauge}/100</div>` : ""}
+  `;
+}
+
+// buildCombatMarkup() assembles the full battle UI in one pass so each state change is easy to reason about.
+function buildCombatMarkup(state) {
+  const currentActor = state.turnOrder[state.currentTurnIndex];
+  const currentProgram = currentActor && currentActor.kind === "program" ? currentActor.ref : null;
+
+  return `
+    <div class="combat-shell">
+      <header class="combat-turn-order">
+        <div class="combat-panel-title">TURN ORDER</div>
+        <div class="turn-order-row">
+          ${buildTurnOrderMarkup(state)}
+        </div>
+      </header>
+
+      <div class="combat-layout">
+        <aside class="combat-log-panel">
+          <div class="combat-panel-title">BATTLE LOG</div>
+          <div id="battle-log" class="combat-log">${buildBattleLogMarkup(state)}</div>
+        </aside>
+
+        <section class="combat-party-panel">
+          <div class="combat-panel-title">SECURITY PROGRAM PARTY</div>
+          <div class="combat-party-list">
+            ${state.playerParty.map((program) => buildProgramCardMarkup(program, currentProgram && currentProgram.id === program.id)).join("")}
+          </div>
+          <div class="combat-gauge-wrap">
+            <div class="combat-gauge-label">RESPONSE GAUGE</div>
+            ${renderBar(state.responseGauge, 100, "is-gauge")}
+            <div class="combat-gauge-text">${state.responseGauge}/100</div>
+          </div>
+        </section>
+
+        <section class="combat-threat-panel">
+          <div class="combat-panel-title">TARGET THREAT</div>
+          ${buildThreatVisualMarkup(state.threat)}
+        </section>
+
+        <aside class="combat-status-panel">
+          <div class="combat-panel-title">THREAT ANALYSIS</div>
+          <div class="status-block">
+            <div class="combat-subline">LEVEL ${state.threat.level}</div>
+            <div class="combat-subline">ATTACK ${state.threat.atk} / DEFENSE ${state.threat.def} / SPD ${state.threat.spd}</div>
+            <div class="combat-subline">WEAK TO ${String(state.threat.weakType || "UNKNOWN").toUpperCase()}</div>
+            <div class="combat-subline">WEAK POINT ${String(state.threat.weakPoint || "UNKNOWN").toUpperCase()}</div>
+          </div>
+          <div class="combat-panel-title">STATUS</div>
+          <div class="status-block">
+            ${renderStatusPills(state.threat.statusEffects)}
+          </div>
+        </aside>
+      </div>
+
+      <footer class="combat-action-panel">
+        <div class="combat-panel-title">ACTIONS</div>
+        ${buildActionButtonMarkup(state)}
+      </footer>
+    </div>
+  `;
+}
+
+// buildRewardMarkup() summarizes the XP payout and keeps the player on the victory overlay until they choose.
+function buildRewardMarkup(state, rewardLines) {
+  const activeThreatCount = threats.filter((threat) => threat.status === "active").length;
+  const continueLabel = activeThreatCount > 0 ? "[ CONTINUE TO NEXT THREAT ]" : "[ RETURN TO MENU ]";
+
+  return `
+    <div class="battle-reward-screen">
+      <div class="battle-end-headline">VICTORY</div>
+      <div class="terminal-rule" aria-hidden="true"></div>
+      <div class="battle-reward-copy">THREAT NEUTRALIZED. XP UPGRADED. PARTY STATUS PRESERVED.</div>
+      <div class="battle-reward-lines">
+        ${rewardLines.map((line) => `<div class="battle-reward-line ${line.levelUp ? "is-levelup" : ""}">${line.text}</div>`).join("")}
+      </div>
+      <div class="battle-reward-actions">
+        <button class="battle-reward-button" type="button" data-combat-next>${continueLabel}</button>
+        <button class="battle-reward-button" type="button" data-combat-menu>BACK TO MENU</button>
+      </div>
+    </div>
+  `;
+}
+
+// buildBattleLostMarkup() keeps the defeat flow stark and brief so the player can restart quickly.
+function buildBattleLostMarkup() {
+  return `
+    <div class="battle-end-screen">
+      <div class="battle-end-headline">BATTLE LOST</div>
+      <div class="terminal-rule" aria-hidden="true"></div>
+      <div class="battle-end-copy">
+        THE PARTY WAS WIPED OUT.
+        <br>
+        THE THREAT REMAINS ACTIVE.
+      </div>
+      <div class="battle-end-actions">
+        <button class="battle-end-button" type="button" data-combat-menu>BACK TO MENU</button>
+      </div>
+    </div>
+  `;
+}
+
+// renderCombatScreen() swaps the panel HTML and rebinds the buttons for the current battle state.
+function renderCombatScreen() {
+  if (!combatState) {
+    return;
+  }
+
+  threatPanelContent.innerHTML = buildCombatMarkup(combatState);
+  threatPanelContent.scrollTop = threatPanelContent.scrollHeight;
+  threatPanel.classList.add("is-open", "is-combat");
+  threatPanel.setAttribute("aria-hidden", "false");
+
+  const battleLog = document.getElementById("battle-log");
+  if (battleLog) {
+    battleLog.scrollTop = battleLog.scrollHeight;
+  }
+
+  bindCombatButtons();
+}
+
+// renderCombatReward() replaces the battle grid with a victory summary and the next-step buttons.
+function renderCombatReward(rewardLines) {
+  threatPanelContent.innerHTML = buildRewardMarkup(combatState, rewardLines);
+  threatPanel.classList.add("is-open", "is-combat");
+  threatPanel.setAttribute("aria-hidden", "false");
+  bindCombatButtons();
+}
+
+// renderBattleLostScreen() shows the failure branch without tearing down the overlay instantly.
+function renderBattleLostScreen() {
+  threatPanelContent.innerHTML = buildBattleLostMarkup();
+  threatPanel.classList.add("is-open", "is-combat");
+  threatPanel.setAttribute("aria-hidden", "false");
+  bindCombatButtons();
+}
+
+// bindCombatButtons() reattaches button listeners after each render because the combat pane is rebuilt often.
+function bindCombatButtons() {
+  const actor = combatState ? combatState.turnOrder[combatState.currentTurnIndex] : null;
+
+  threatPanelContent.querySelectorAll("[data-combat-ability]").forEach((button) => {
+    button.addEventListener("click", () => {
+      if (!combatEngine || !actor || actor.kind !== "program") {
+        return;
+      }
+
+      const abilityIndex = Number(button.getAttribute("data-combat-ability"));
+      const ability = actor.ref.abilities[abilityIndex];
+
+      if (!ability) {
+        return;
+      }
+
+      combatEngine.takeTurn(actor, ability);
+    });
+  });
+
+  threatPanelContent.querySelectorAll("[data-combat-combo]").forEach((button) => {
+    button.addEventListener("click", () => {
+      if (!combatEngine || !actor || actor.kind !== "program") {
+        return;
+      }
+
+      const comboKey = button.getAttribute("data-combat-combo");
+      combatEngine.takeTurn(actor, {
+        name: comboKey === "sync-defense" ? "Synchronized Defense" : "Containment Protocol",
+        cost: 3,
+        baseDamage: comboKey === "sync-defense" ? 15 : 18,
+        effect: comboKey === "sync-defense" ? "combo_sync_defense" : "combo_containment"
+      });
+    });
+  });
+
+  const nextButton = threatPanelContent.querySelector("[data-combat-next]");
+  if (nextButton) {
+    nextButton.addEventListener("click", () => {
+      continueToNextThreat();
+    });
+  }
+
+  const menuButton = threatPanelContent.querySelector("[data-combat-menu]");
+  if (menuButton) {
+    menuButton.addEventListener("click", () => {
+      closeCombatOverlay(true);
+      showMenu();
+    });
+  }
+}
+
+// continueToNextThreat() either starts a fresh battle or sends the player back to the menu if nothing remains.
+function continueToNextThreat() {
+  const nextThreat = getRandomActiveThreat();
+
+  closeCombatOverlay(true);
+
+  if (!nextThreat) {
+    showMenu();
+    return;
+  }
+
+  openThreatPanel(nextThreat);
+}
+
+// getRandomActiveThreat() selects the next live target from the global roster.
+function getRandomActiveThreat() {
+  const activeThreats = threats.filter((threat) => threat.status === "active");
+  if (!activeThreats.length) {
+    return null;
+  }
+
+  return activeThreats[getRandomInt(0, activeThreats.length - 1)];
+}
+
+// showCombatScreen() opens the battle overlay and advances immediately into the first turn.
+function showCombatScreen(state) {
+  combatState = state;
+  combatEngine = new ThreatCombat(combatState);
+  combatEngine.init();
+}
+
+// showCombatReward() keeps the overlay open after victory until the player chooses what comes next.
+function showCombatReward(rewardLines) {
+  if (!combatState) {
+    return;
+  }
+
+  combatState.phase = "reward";
+  renderCombatReward(rewardLines);
+}
+
+// showGameOverScreen() handles the defeat branch and returns the player to the menu when they are ready.
+function showGameOverScreen(outcome) {
+  if (outcome !== "lose") {
+    return;
+  }
+
+  if (combatState) {
+    combatState.phase = "defeat";
+  }
+
+  renderBattleLostScreen();
+}
+
+// closeCombatOverlay() clears the overlay state when a battle ends or the player returns to the menu.
+function closeCombatOverlay(forceClose = false) {
+  if (combatEngine && !forceClose && combatState && combatState.phase === "battle") {
+    return;
+  }
+
+  if (combatEngine) {
+    combatEngine.destroy();
+  }
+
+  combatEngine = null;
+  combatState = null;
+
+  threatPanel.classList.remove("is-open", "is-combat");
+  threatPanel.setAttribute("aria-hidden", "true");
+
+  window.setTimeout(() => {
+    if (!threatPanel.classList.contains("is-open")) {
+      threatPanelContent.innerHTML = "";
+    }
+  }, 180);
+}
+
+// closeThreatPanel() stays as a compatibility alias so the existing menu flow can close combat cleanly.
+function closeThreatPanel(forceClose = false) {
+  closeCombatOverlay(forceClose);
+}
+
+// awardBattleRewards() applies the roguelike XP loop and returns the summary text for the victory screen.
+function awardBattleRewards(defeatedThreat) {
+  const baseXP = 50 * defeatedThreat.level;
+  const rewardLines = [];
+
+  programs.forEach((program) => {
+    const gainedXP = baseXP;
+    program.xp += gainedXP;
+
+    let levelUpCount = 0;
+
+    while (program.level < 10 && program.xp >= (program.level * 100)) {
+      program.xp -= (program.level * 100);
+      program.level = Math.min(10, program.level + 1);
+      program.atk += 1;
+      program.def += 1;
+      program.maxHp += 15;
+      program.hp = program.maxHp;
+      levelUpCount += 1;
+    }
+
+    rewardLines.push({
+      levelUp: levelUpCount > 0,
+      text: levelUpCount > 0
+        ? `${program.name} gained ${gainedXP} XP! NOW LEVEL ${program.level} | MAX HP +15 | ATK +1 | DEF +1`
+        : `${program.name} gained ${gainedXP} XP. CURRENT LEVEL ${program.level}.`
+    });
+  });
+
+  updateScoreDisplay();
+  return rewardLines;
+}
+
+// ThreatCombat owns the battle loop, auto-turns, and battle resolution for the current encounter.
+class ThreatCombat {
+  constructor(state) {
+    this.state = state;
+    this.turnTimeoutId = null;
+  }
+
+  init() {
+    this.state.turnOrder = buildTurnOrder(this.state.playerParty, this.state.threat);
+    this.state.currentTurnIndex = 0;
+    this.state.phase = "battle";
+    screenState = "combat";
+    addBattleLog(`ENGAGING ${this.state.threat.title.toUpperCase()} AT LEVEL ${this.state.threat.level}.`);
+    renderCombatScreen();
+    this.resolveCurrentTurn();
+  }
+
+  destroy() {
+    if (this.turnTimeoutId !== null) {
+      window.clearTimeout(this.turnTimeoutId);
+      this.turnTimeoutId = null;
+    }
+  }
+
+  getCurrentActor() {
+    return this.state.turnOrder[this.state.currentTurnIndex];
+  }
+
+  resolveCurrentTurn() {
+    if (this.state.phase !== "battle") {
+      return;
+    }
+
+    const currentActor = this.getCurrentActor();
+
+    if (!currentActor) {
+      return;
+    }
+
+    if (currentActor.kind === "threat") {
+      this.turnTimeoutId = window.setTimeout(() => {
+        this.turnTimeoutId = null;
+        this.takeTurn(currentActor, null);
+      }, 650);
+      return;
+    }
+
+    renderCombatScreen();
+  }
+
+  advanceTurn() {
+    if (this.state.phase !== "battle") {
+      return;
+    }
+
+    const totalActors = this.state.turnOrder.length;
+    let safety = 0;
+
+    do {
+      this.state.currentTurnIndex = (this.state.currentTurnIndex + 1) % totalActors;
+      safety += 1;
+      const nextActor = this.getCurrentActor();
+
+      if (!nextActor) {
+        break;
+      }
+
+      if (nextActor.kind === "program" && nextActor.ref.hp > 0) {
+        break;
+      }
+
+      if (nextActor.kind === "threat" && nextActor.ref.hp > 0) {
+        break;
+      }
+    } while (safety <= totalActors + 1);
+
+    renderCombatScreen();
+    this.resolveCurrentTurn();
+  }
+
+  applyTypeAdvantage(attackerType, defenderType) {
+    return getTypeAdvantage(attackerType, defenderType);
+  }
+
+  calculateDamage(attacker, defender, ability) {
+    return calculateDamage(attacker, defender, ability);
+  }
+
+  applyStatusEffect(target, effect) {
+    if (!target) {
+      return;
+    }
+
+    target.statusEffects = Array.isArray(target.statusEffects) ? target.statusEffects : [];
+
+    if (effect === "status_detected") {
+      if (!target.statusEffects.includes("detected")) {
+        target.statusEffects.push("detected");
+      }
+      return;
+    }
+
+    if (effect === "status_isolated") {
+      if (!target.statusEffects.includes("isolated")) {
+        target.statusEffects.push("isolated");
+      }
+      return;
+    }
+
+    if (effect === "status_encrypted") {
+      if (!target.statusEffects.includes("encrypted")) {
+        target.statusEffects.push("encrypted");
+      }
+    }
+  }
+
+  clearStatusEffects(target) {
+    if (!target) {
+      return;
+    }
+
+    target.statusEffects = [];
+  }
+
+  applyPlayerEffect(actor, ability, damageResult) {
+    if (ability.effect === "reduce_next_damage") {
+      this.state.nextDamageReduction = 0.5;
+      addBattleLog(`${actor.name.toUpperCase()} BRACED THE NETWORK. NEXT INCOMING DAMAGE HALVED.`, "buff");
+      return;
+    }
+
+    if (ability.effect === "boost_def") {
+      actor.def += 2;
+      addBattleLog(`${actor.name.toUpperCase()} HARDENED PORTS. DEFENSE +2.`, "buff");
+      return;
+    }
+
+    if (ability.effect === "shared_ability") {
+      this.state.responseGauge = Math.min(100, this.state.responseGauge + 5);
+      addBattleLog(`${actor.name.toUpperCase()} SHARED BANDWIDTH ACROSS THE PARTY. GAUGE +5.`, "buff");
+      return;
+    }
+
+    if (ability.effect === "status_detected") {
+      this.applyStatusEffect(this.state.threat, "status_detected");
+      addBattleLog(`${this.state.threat.title.toUpperCase()} WAS TAGGED [DETECTED].`, "buff");
+      return;
+    }
+
+    if (ability.effect === "status_isolated") {
+      this.applyStatusEffect(this.state.threat, "status_isolated");
+      addBattleLog(`${this.state.threat.title.toUpperCase()} WAS TAGGED [ISOLATED].`, "buff");
+      return;
+    }
+
+    if (ability.effect === "cleanse") {
+      programs.forEach((program) => {
+        this.clearStatusEffects(program);
+      });
+      this.clearStatusEffects(this.state.threat);
+      addBattleLog(`${actor.name.toUpperCase()} CLEARED PARTY AND THREAT STATUS EFFECTS.`, "buff");
+      return;
+    }
+
+    if (ability.effect === "combo_sync_defense") {
+      this.state.nextDamageReduction = 0.5;
+      this.state.nextCounterDamage = 15;
+      addBattleLog(`SYNCHRONIZED DEFENSE ONLINE. NEXT HIT REDUCED BY 50% AND COUNTER DAMAGE ARMED.`, "buff");
+      return;
+    }
+
+    if (ability.effect === "combo_containment") {
+      this.clearStatusEffects(this.state.threat);
+      programs.forEach((program) => this.clearStatusEffects(program));
+      addBattleLog(`CONTAINMENT PROTOCOL ENGAGED. STATUS EFFECTS CLEARED.`, "buff");
+    }
+  }
+
+  applyThreatEffect(threat, ability) {
+    if (ability.effect === "self_level_up") {
+      threat.level = Math.min(10, threat.level + 1);
+      threat.atk += 1;
+      threat.def += 1;
+      threat.maxHp += 15;
+      threat.hp = Math.min(threat.maxHp, threat.hp + 15);
+      addBattleLog(`${threat.title.toUpperCase()} ESCALATED TO LEVEL ${threat.level}.`, "buff");
+      return;
+    }
+
+    if (ability.effect === "status_encrypted") {
+      const livingPrograms = programs.filter((program) => program.hp > 0);
+      const target = livingPrograms[getRandomInt(0, livingPrograms.length - 1)];
+      this.applyStatusEffect(target, "status_encrypted");
+      addBattleLog(`${target.name.toUpperCase()} IS ENCRYPTED. DAMAGE OUTPUT REDUCED.`, "damage");
+      return;
+    }
+
+    if (ability.effect === "status_detected") {
+      const livingPrograms = programs.filter((program) => program.hp > 0);
+      const target = livingPrograms[getRandomInt(0, livingPrograms.length - 1)];
+      this.applyStatusEffect(target, "status_detected");
+      addBattleLog(`${target.name.toUpperCase()} WAS TAGGED [DETECTED].`, "damage");
+      return;
+    }
+
+    if (ability.effect === "status_isolated") {
+      const livingPrograms = programs.filter((program) => program.hp > 0);
+      const target = livingPrograms[getRandomInt(0, livingPrograms.length - 1)];
+      this.applyStatusEffect(target, "status_isolated");
+      addBattleLog(`${target.name.toUpperCase()} WAS PULLED INTO AN [ISOLATED] SEGMENT.`, "damage");
+    }
+  }
+
+  resolveDamage(attacker, defender, ability, options = {}) {
+    const damageResult = this.calculateDamage(attacker, defender, ability);
+    let damage = damageResult.damage;
+
+    if (options.isThreatAttack && this.state.nextDamageReduction > 0) {
+      damage = Math.max(1, Math.round(damage * (1 - this.state.nextDamageReduction)));
+      this.state.nextDamageReduction = 0;
+    }
+
+    if (defender === this.state.threat && Array.isArray(defender.statusEffects) && defender.statusEffects.includes("isolated")) {
+      damage = Math.max(1, Math.round(damage * 1.1));
+    }
+
+    if (options.multiplier) {
+      damage = Math.max(1, Math.round(damage * options.multiplier));
+    }
+
+    defender.hp = Math.max(0, defender.hp - damage);
+    return {
+      ...damageResult,
+      damage
+    };
+  }
+
+  takeTurn(actorEntry, ability) {
+    if (this.state.phase !== "battle" || !actorEntry) {
+      return;
+    }
+
+    const currentActor = this.getCurrentActor();
+    if (currentActor !== actorEntry) {
+      return;
+    }
+
+    const actor = actorEntry.ref;
+
+    if (actorEntry.kind === "program") {
+      if (actor.hp <= 0) {
+        this.advanceTurn();
+        return;
+      }
+
+      if (!ability || (actor.abilities.indexOf(ability) === -1 && !String(ability.effect || "").startsWith("combo_"))) {
+        return;
+      }
+
+      if (this.state.responseGauge < ability.cost) {
+        addBattleLog(`${actor.name.toUpperCase()} NEEDS MORE RESPONSE GAUGE.`, "buff");
+        renderCombatScreen();
+        return;
+      }
+
+      this.state.responseGauge = Math.max(0, this.state.responseGauge - ability.cost);
+      const damageResult = this.resolveDamage(actor, this.state.threat, ability);
+      this.state.responseGauge = Math.min(100, this.state.responseGauge + getRandomInt(10, 15));
+
+      if (damageResult.typeState === "super-effective") {
+        addBattleLog(`${actor.name.toUpperCase()} USED ${ability.name.toUpperCase()} - ${damageResult.damage} DAMAGE [SUPER-EFFECTIVE!]`, "damage");
+      } else {
+        addBattleLog(`${actor.name.toUpperCase()} USED ${ability.name.toUpperCase()} - ${damageResult.damage} DAMAGE [${damageResult.levelMultiplier.toFixed(1)}X LEVEL BONUS]`, "damage");
+      }
+
+      this.applyPlayerEffect(actor, ability, damageResult);
+
+      if (this.state.threat.hp <= 0) {
+        this.end("victory");
+        return;
+      }
+
+      this.advanceTurn();
+      return;
+    }
+
+    if (actorEntry.kind === "threat") {
+      const threatAbility = ability || actor.abilities[getRandomInt(0, actor.abilities.length - 1)];
+      const livingPrograms = programs.filter((program) => program.hp > 0);
+
+      if (!livingPrograms.length) {
+        this.end("defeat");
+        return;
+      }
+
+      this.applyThreatEffect(actor, threatAbility);
+
+      if (threatAbility.effect === "self_level_up") {
+        renderCombatScreen();
+        if (this.checkWinCondition()) {
+          return;
+        }
+        this.advanceTurn();
+        return;
+      }
+
+      if (threatAbility.effect === "damage_all") {
+        livingPrograms.forEach((program) => {
+          const damageResult = this.resolveDamage(actor, program, threatAbility, { multiplier: 0.75, isThreatAttack: true });
+          addBattleLog(`${actor.title.toUpperCase()} SPLASHED ${program.name.toUpperCase()} FOR ${damageResult.damage} DAMAGE.`, "damage");
+        });
+      } else {
+        const target = livingPrograms[getRandomInt(0, livingPrograms.length - 1)];
+        const damageResult = this.resolveDamage(actor, target, threatAbility, { isThreatAttack: true });
+        addBattleLog(`${actor.title.toUpperCase()} USED ${threatAbility.name.toUpperCase()} - ${damageResult.damage} DAMAGE ON ${target.name.toUpperCase()}.`, "damage");
+      }
+
+      if (this.state.nextCounterDamage > 0) {
+        this.state.threat.hp = Math.max(0, this.state.threat.hp - this.state.nextCounterDamage);
+        addBattleLog(`COUNTER DAMAGE DEALT ${this.state.nextCounterDamage} TO ${this.state.threat.title.toUpperCase()}.`, "buff");
+        this.state.nextCounterDamage = 0;
+      }
+
+      if (this.checkWinCondition()) {
+        return;
+      }
+
+      this.advanceTurn();
+    }
+  }
+
+  checkWinCondition() {
+    const allProgramsDown = programs.every((program) => program.hp <= 0);
+    if (allProgramsDown) {
+      this.end("defeat");
+      return true;
+    }
+
+    if (this.state.threat.hp <= 0) {
+      this.end("victory");
+      return true;
+    }
+
+    return false;
+  }
+
+  end(outcome) {
+    if (this.state.phase !== "battle") {
+      return;
+    }
+
+    this.destroy();
+    this.state.outcome = outcome;
+
+    if (outcome === "victory") {
+      this.state.phase = "reward";
+      this.state.sourceThreat.status = "neutralized";
+      this.state.sourceThreat.hp = this.state.sourceThreat.maxHp;
+      threatsNeutralized += 1;
+      addScore(100);
+      globe.removeThreatNode(this.state.sourceThreat.id);
+      globe.updateActiveCount();
+      const rewardLines = awardBattleRewards(this.state.threat);
+      addBattleLog(`${this.state.sourceThreat.title.toUpperCase()} NEUTRALIZED. REWARD PACKAGE ISSUED.`, "buff");
+      showCombatReward(rewardLines);
+      return;
+    }
+
+    this.state.phase = "defeat";
+    addBattleLog(`ALL PROGRAMS FAILED. BATTLE LOST.`, "damage");
+    showGameOverScreen("lose");
+  }
+}
+
+// openThreatPanel() now launches a combat encounter instead of the old analyst briefing drawer.
+function openThreatPanel(threat) {
+  if (screenState !== "game" || combatState || !threat || threat.status !== "active") {
+    return;
+  }
+
+  closeCombatOverlay(true);
+  combatState = buildCombatState(threat);
+  showCombatScreen(combatState);
+}
+
+// wireThreatResponses() connects globe clicks to battle encounters and keeps the earlier respawn layer alive.
 function wireThreatResponses() {
   if (threatResponsesWired) {
     return;
@@ -1487,20 +2699,33 @@ function wireThreatResponses() {
   threatResponsesWired = true;
 
   globe.onThreatClick((threat) => {
-    if (threat.status !== "active") {
+    if (screenState !== "game" || threat.status !== "active" || combatState) {
       return;
     }
 
     openThreatPanel(threat);
   });
 
-  startMissionSystems();
+  startRespawnInterval();
 }
 
-// The panel close button resets the view and slides the panel back off screen.
+// The panel close button stays wired for cleanup, even though combat hides the button in CSS.
 threatPanelClose.addEventListener("click", () => {
-  closeThreatPanel();
+  closeCombatOverlay(true);
 });
+
+// The expedition flag fully restores the party between battles.
+if (expeditionFlagButton) {
+  expeditionFlagButton.addEventListener("click", () => {
+    if (screenState !== "game" || combatState) {
+      return;
+    }
+
+    healProgramRoster();
+    addBattleLog("EXPEDITION FLAG DEPLOYED. PARTY RESTORED TO FULL CAPACITY.", "buff");
+    updateScoreDisplay();
+  });
+}
 
 // Start on the main menu so the globe can boot behind it when the player is ready.
 updateScoreDisplay();

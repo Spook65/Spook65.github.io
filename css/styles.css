@@ -1321,3 +1321,495 @@ canvas {
     padding: 0 16px;
   }
 }
+
+/* Combat HUD control positioned above the score block for quick between-battle recovery. */
+.hud-flag-button {
+  position: absolute;
+  right: 18px;
+  bottom: 86px;
+  z-index: 3;
+  pointer-events: auto;
+  appearance: none;
+  border: 1px solid rgba(0, 255, 136, 0.6);
+  border-radius: 0;
+  background: rgba(10, 10, 15, 0.92);
+  color: #00ff88;
+  padding: 10px 14px;
+  cursor: pointer;
+  letter-spacing: 0.18em;
+  font-size: 0.72rem;
+  line-height: 1;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  text-transform: uppercase;
+  box-shadow: inset 0 0 0 1px rgba(0, 255, 136, 0.04);
+  transition: background 150ms ease, border-color 150ms ease, box-shadow 150ms ease, color 150ms ease, text-shadow 150ms ease;
+}
+
+.hud-flag-button:hover,
+.hud-flag-button:focus-visible {
+  background: rgba(0, 255, 136, 0.1);
+  border-color: rgba(0, 255, 136, 1);
+  box-shadow: 0 0 18px rgba(0, 255, 136, 0.16), inset 0 0 0 1px rgba(0, 255, 136, 0.05);
+  text-shadow: 0 0 10px rgba(0, 255, 136, 0.34);
+  outline: none;
+}
+
+/* Combat transforms the old drawer into a full-screen mission room. */
+.threat-panel.is-combat {
+  inset: 0;
+  width: 100%;
+  height: 100vh;
+  transform: none;
+}
+
+.threat-panel.is-combat.is-open {
+  pointer-events: auto;
+}
+
+.threat-panel.is-combat .threat-panel-shell {
+  border-left: 0;
+  border-right: 0;
+  box-shadow: none;
+  background:
+    linear-gradient(180deg, rgba(0, 255, 136, 0.03), transparent 12%),
+    linear-gradient(90deg, rgba(0, 255, 136, 0.03), transparent 12%),
+    rgba(6, 6, 10, 0.98);
+}
+
+.threat-panel-close {
+  display: none;
+}
+
+.threat-panel.is-combat .threat-panel-content {
+  padding: 18px;
+}
+
+.combat-shell {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 14px;
+  padding: 10px;
+  background:
+    linear-gradient(rgba(0, 255, 136, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 136, 0.05) 1px, transparent 1px),
+    rgba(6, 6, 10, 0.96);
+  background-size: 24px 24px;
+}
+
+.combat-shell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 20%, rgba(0, 255, 136, 0.06), transparent 34%);
+  pointer-events: none;
+}
+
+.combat-layout {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr) 360px 300px;
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-areas:
+    "turn turn turn turn"
+    "log party threat status";
+  gap: 14px;
+  min-height: 0;
+}
+
+.combat-turn-order {
+  grid-area: turn;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid rgba(0, 255, 136, 0.22);
+  background: rgba(0, 255, 136, 0.04);
+}
+
+.combat-turn-chip {
+  padding: 6px 8px;
+  border: 1px solid rgba(0, 255, 136, 0.22);
+  border-radius: 0;
+  background: rgba(10, 10, 15, 0.96);
+  color: rgba(0, 255, 136, 0.7);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.combat-turn-chip.is-current {
+  color: #00ff88;
+  border-color: rgba(0, 255, 136, 0.72);
+  box-shadow: 0 0 16px rgba(0, 255, 136, 0.12);
+}
+
+.combat-turn-chip.is-threat {
+  color: #ff2233;
+}
+
+.combat-log-panel,
+.combat-party-panel,
+.combat-threat-panel,
+.combat-status-panel,
+.combat-action-panel {
+  min-height: 0;
+  border: 1px solid rgba(0, 255, 136, 0.16);
+  background: rgba(10, 10, 15, 0.92);
+}
+
+.combat-log-panel {
+  grid-area: log;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+}
+
+.combat-party-panel {
+  grid-area: party;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+}
+
+.combat-threat-panel {
+  grid-area: threat;
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  gap: 12px;
+  padding: 12px;
+}
+
+.combat-status-panel {
+  grid-area: status;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 12px;
+}
+
+.combat-action-panel {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+}
+
+.combat-panel-title {
+  color: #00ff88;
+  font-size: 0.74rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.combat-log {
+  display: grid;
+  gap: 8px;
+  min-height: 0;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.combat-log-entry {
+  color: rgba(0, 255, 136, 0.72);
+  font-size: 0.72rem;
+  line-height: 1.6;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.combat-log-entry.is-damage {
+  color: #ff2233;
+}
+
+.combat-log-entry.is-heal {
+  color: #00ccff;
+}
+
+.combat-log-entry.is-buff {
+  color: #ffcc00;
+}
+
+.combat-party-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.combat-program-card {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid rgba(0, 255, 136, 0.16);
+  background: rgba(0, 255, 136, 0.03);
+}
+
+.combat-program-card.is-down {
+  opacity: 0.48;
+}
+
+.combat-program-card.is-current {
+  border-color: rgba(0, 255, 136, 0.72);
+  box-shadow: 0 0 16px rgba(0, 255, 136, 0.08);
+}
+
+.program-sprite {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  border: 1px solid currentColor;
+  background: rgba(0, 0, 0, 0.4);
+  image-rendering: pixelated;
+}
+
+.program-sprite::before {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  background: currentColor;
+  clip-path: polygon(18% 18%, 82% 18%, 82% 82%, 18% 82%, 35% 50%);
+  opacity: 0.32;
+}
+
+.program-info,
+.threat-info,
+.status-block,
+.combo-hint,
+.battle-reward-lines,
+.battle-end-copy {
+  display: grid;
+  gap: 6px;
+}
+
+.combat-name-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.74rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.combat-name {
+  color: #00ff88;
+}
+
+.combat-lvl {
+  color: rgba(0, 255, 136, 0.56);
+}
+
+.combat-bar {
+  position: relative;
+  height: 10px;
+  border: 1px solid rgba(0, 255, 136, 0.22);
+  background: rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+}
+
+.combat-bar-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 50%;
+  background: #00ff88;
+}
+
+.combat-bar-fill.is-hp {
+  background: linear-gradient(90deg, #00ff88, rgba(0, 255, 136, 0.72));
+}
+
+.combat-bar-fill.is-xp {
+  background: linear-gradient(90deg, #00ccff, rgba(0, 204, 255, 0.72));
+}
+
+.combat-bar-fill.is-gauge {
+  background: linear-gradient(90deg, #ffcc00, rgba(255, 204, 0, 0.72));
+}
+
+.combat-subline {
+  color: rgba(0, 255, 136, 0.58);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+.threat-visual {
+  display: grid;
+  place-items: center;
+  min-height: 220px;
+  border: 1px solid rgba(255, 34, 51, 0.2);
+  background:
+    linear-gradient(135deg, rgba(255, 34, 51, 0.1), transparent 30%),
+    rgba(16, 0, 4, 0.8);
+  color: #ff2233;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+}
+
+.threat-visual-sprite {
+  width: 120px;
+  height: 120px;
+  border: 1px solid rgba(255, 34, 51, 0.45);
+  background:
+    repeating-linear-gradient(135deg, rgba(255, 34, 51, 0.22) 0 8px, rgba(0, 0, 0, 0.16) 8px 16px),
+    rgba(48, 0, 10, 0.95);
+  image-rendering: pixelated;
+  box-shadow: inset 0 0 0 8px rgba(255, 34, 51, 0.08);
+}
+
+.threat-weakness {
+  color: rgba(0, 255, 136, 0.72);
+}
+
+.status-pill-row,
+.turn-order-row,
+.combat-ability-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.status-pill {
+  border: 1px solid rgba(0, 255, 136, 0.22);
+  padding: 4px 8px;
+  color: #00ff88;
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.status-pill.is-alert {
+  border-color: rgba(255, 204, 0, 0.4);
+  color: #ffcc00;
+}
+
+.status-pill.is-cyan {
+  color: #00ccff;
+  border-color: rgba(0, 204, 255, 0.35);
+}
+
+.combat-actions,
+.battle-reward-actions,
+.battle-end-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.combat-action-button,
+.battle-reward-button,
+.battle-end-button {
+  appearance: none;
+  border: 1px solid rgba(0, 255, 136, 0.55);
+  border-radius: 0;
+  background: rgba(10, 10, 15, 0.94);
+  color: #00ff88;
+  padding: 12px 14px;
+  cursor: pointer;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  line-height: 1;
+  text-transform: uppercase;
+  transition: background 150ms ease, border-color 150ms ease, box-shadow 150ms ease, text-shadow 150ms ease;
+}
+
+.combat-action-button:hover,
+.combat-action-button:focus-visible,
+.battle-reward-button:hover,
+.battle-reward-button:focus-visible,
+.battle-end-button:hover,
+.battle-end-button:focus-visible {
+  background: rgba(0, 255, 136, 0.08);
+  border-color: rgba(0, 255, 136, 1);
+  box-shadow: 0 0 16px rgba(0, 255, 136, 0.12);
+  text-shadow: 0 0 10px rgba(0, 255, 136, 0.28);
+  outline: none;
+}
+
+.combat-action-button:disabled,
+.battle-reward-button:disabled,
+.battle-end-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.combat-action-note {
+  color: rgba(0, 255, 136, 0.54);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.combat-gauge-wrap {
+  display: grid;
+  gap: 6px;
+}
+
+.combat-gauge-label {
+  color: rgba(0, 255, 136, 0.54);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.combat-gauge-text {
+  color: #00ff88;
+  font-size: 0.74rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.battle-reward-screen,
+.battle-end-screen {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+}
+
+.battle-end-screen {
+  min-height: 100%;
+  place-content: center;
+  text-align: center;
+}
+
+.battle-end-headline {
+  color: #00ff88;
+  font-size: 1.6rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.battle-end-copy,
+.battle-reward-copy {
+  color: rgba(0, 255, 136, 0.72);
+  font-size: 0.82rem;
+  line-height: 1.7;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.battle-reward-lines {
+  border: 1px solid rgba(0, 255, 136, 0.18);
+  padding: 12px;
+  background: rgba(0, 255, 136, 0.03);
+}
+
+.battle-reward-line {
+  color: #00ff88;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  line-height: 1.6;
+  text-transform: uppercase;
+}
+
+.battle-reward-line.is-levelup {
+  color: #00ccff;
+}
