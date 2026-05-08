@@ -181,6 +181,8 @@ const defaultPrograms = JSON.parse(JSON.stringify(programs));
 // combatState stays global so DevTools can inspect the active battle without digging through closures.
 let combatState = null;
 let combatEngine = null;
+let encounterTransitionActive = false;
+let encounterTransitionTimerId = null;
 
 // Escalation state is tracked outside globe.js because these are game rules, while globe.js only renders state.
 const escalationStateByThreatId = {};
@@ -193,6 +195,7 @@ const scoreDisplay = document.getElementById("score-display");
 const accuracyDisplay = document.getElementById("accuracy-display");
 const deadlineDisplay = document.getElementById("deadline-display");
 const expeditionFlagButton = document.getElementById("expedition-flag-button");
+const encounterOverlay = document.getElementById("encounter-overlay");
 const gameStateContent = document.getElementById("game-state-content");
 
 // Severity colors are reused in the panel so the text UI matches the node colors on the globe.
@@ -1826,6 +1829,7 @@ function buildCombatState(sourceThreat) {
   const threat = buildScaledThreat(sourceThreat, encounterLevel);
   const playerParty = programs;
   const turnOrder = buildTurnOrder(playerParty, threat);
+  const firstProgram = turnOrder.find((entry) => entry.kind === "program" && entry.ref.hp > 0);
 
   return {
     sourceThreat,
@@ -1833,6 +1837,7 @@ function buildCombatState(sourceThreat) {
     playerParty,
     turnOrder,
     currentTurnIndex: 0,
+    activeProgramId: firstProgram ? firstProgram.ref.id : playerParty[0].id,
     responseGauge: 0,
     battleLog: [],
     outcome: "ongoing",
@@ -1884,67 +1889,61 @@ function renderBar(current, max, fillClass) {
   `;
 }
 
-// buildProgramCardMarkup() renders one program with its level, HP, XP, and current status effects.
-function buildProgramCardMarkup(program, isCurrentTurn) {
-  const statusMarkup = renderStatusPills(program.statusEffects);
-
-  return `
-    <article class="combat-program-card ${program.hp <= 0 ? "is-down" : ""} ${isCurrentTurn ? "is-current" : ""}" style="color: ${program.color};">
-      <div class="program-sprite" aria-hidden="true" style="color: ${program.color};"></div>
-      <div class="program-info">
-        <div class="combat-name-row">
-          <span class="combat-name">${program.name}</span>
-          <span class="combat-lvl">LVL ${program.level}</span>
-        </div>
-        <div class="combat-subline">HP ${program.hp}/${program.maxHp}</div>
-        ${renderBar(program.hp, program.maxHp, "is-hp")}
-        <div class="combat-subline">XP ${program.xp}/${program.level * 100}</div>
-        ${renderBar(program.xp, program.level * 100, "is-xp")}
-        ${statusMarkup}
-        ${isCurrentTurn ? '<div class="combat-subline">CURRENT TURN</div>' : ""}
-      </div>
-    </article>
-  `;
+// getProgramSpriteClass() maps the program id to its matching pixel-sprite class.
+function getProgramSpriteClass(program) {
+  return String(program && program.id ? program.id : "firewall-7").split("-")[0];
 }
 
-// buildThreatVisualMarkup() keeps the enemy card compact but readable in the battle room.
-function buildThreatVisualMarkup(threat) {
-  const statusMarkup = renderStatusPills(threat.statusEffects);
+// getThreatSpriteClass() maps the threat type to a simple pixel-art silhouette class.
+function getThreatSpriteClass(threat) {
+  const threatType = String(threat && threat.type ? threat.type : "ransomware");
+  if (threatType === "ddos") {
+    return "botnet";
+  }
 
-  return `
-    <div class="threat-visual">
-      <div class="threat-visual-sprite" aria-hidden="true"></div>
-      <div class="combat-name-row">
-        <span class="combat-name">${threat.title}</span>
-        <span class="combat-lvl">LVL ${threat.level}</span>
-      </div>
-      <div class="combat-subline">${getThreatTypeLabel(threat.type)}</div>
-      <div class="combat-subline">HP ${threat.hp}/${threat.maxHp}</div>
-      ${renderBar(threat.hp, threat.maxHp, "is-hp")}
-      <div class="combat-subline">WEAK POINT: ${String(threat.weakPoint || "UNKNOWN").toUpperCase()}</div>
-      <div class="threat-weakness">TYPE ADVANTAGE: ${String(threat.weakType || "UNKNOWN").toUpperCase()}</div>
-      ${statusMarkup}
-    </div>
-  `;
+  return threatType;
 }
 
-// buildTurnOrderMarkup() shows the next actors so the player can read the cadence at a glance.
+// getActiveBattleProgram() keeps one program visually centered even when the threat is taking its turn.
+function getActiveBattleProgram(state) {
+  if (!state) {
+    return programs[0];
+  }
+
+  const focusedProgram = state.playerParty.find((program) => program.id === state.activeProgramId && program.hp > 0);
+  if (focusedProgram) {
+    return focusedProgram;
+  }
+
+  const currentActor = state.turnOrder[state.currentTurnIndex];
+  if (currentActor && currentActor.kind === "program" && currentActor.ref.hp > 0) {
+    return currentActor.ref;
+  }
+
+  return state.playerParty.find((program) => program.hp > 0) || state.playerParty[0];
+}
+
+// buildTurnOrderMarkup() keeps the turn queue compact so it reads like a tactical preview instead of a table.
 function buildTurnOrderMarkup(state) {
-  return state.turnOrder.map((entry, index) => {
-    const actor = entry.ref;
-    const isCurrent = index === state.currentTurnIndex;
-    const actorLabel = entry.kind === "program"
-      ? `${actor.name} (LVL ${actor.level})`
-      : `${actor.title} (LVL ${actor.level})`;
-    const actorType = entry.kind === "program" ? "[YOUR PROGRAM]" : "[THREAT]";
+  const previewCount = Math.min(4, state.turnOrder.length);
+  const preview = [];
 
-    return `<div class="combat-turn-chip ${isCurrent ? "is-current" : ""} ${entry.kind === "threat" ? "is-threat" : ""}">${actorLabel} ${actorType}</div>`;
-  }).join("");
+  for (let index = 0; index < previewCount; index += 1) {
+    const turnIndex = (state.currentTurnIndex + index) % state.turnOrder.length;
+    const entry = state.turnOrder[turnIndex];
+    const actor = entry.ref;
+    const label = entry.kind === "program"
+      ? `${actor.name} LVL ${actor.level}`
+      : `${actor.title} LVL ${actor.level}`;
+    preview.push(`<span class="combat-turn-chip ${index === 0 ? "is-current" : ""} ${entry.kind === "threat" ? "is-threat" : ""}">${label}</span>`);
+  }
+
+  return preview.join('<span class="combat-turn-separator" aria-hidden="true">→</span>');
 }
 
-// buildBattleLogMarkup() keeps the last six combat events visible and compact.
+// buildBattleLogMarkup() keeps the last few combat events visible without stealing the whole screen.
 function buildBattleLogMarkup(state) {
-  const entries = state.battleLog.slice(-6);
+  const entries = state.battleLog.slice(-5);
 
   if (!entries.length) {
     return '<div class="combat-log-entry">SYSTEM READY. AWAITING FIRST TURN.</div>';
@@ -1956,12 +1955,85 @@ function buildBattleLogMarkup(state) {
   }).join("");
 }
 
-// buildActionButtonMarkup() renders the active actor's moves and the shared combo actions.
+// buildProgramBattlefieldMarkup() renders the active program as the primary fighter on the left side.
+function buildProgramBattlefieldMarkup(program, isCurrentTurn) {
+  const statusMarkup = renderStatusPills(program.statusEffects);
+
+  return `
+    <article class="battle-figure ${isCurrentTurn ? "is-active" : ""}" style="color: ${program.color};">
+      <div class="battle-figure-body">
+        <div class="battle-sprite ${getProgramSpriteClass(program)}" aria-hidden="true"></div>
+        <div class="battle-figure-meta">
+          <div class="combat-name-row">
+            <span class="combat-name">${program.name}</span>
+            <span class="combat-lvl">LVL ${program.level}</span>
+          </div>
+          <div class="combat-subline">TYPE ${String(program.type).toUpperCase()}</div>
+          <div class="combat-subline">HP ${program.hp}/${program.maxHp}</div>
+          ${renderBar(program.hp, program.maxHp, "is-hp")}
+          <div class="combat-subline">XP ${program.xp}/${program.level * 100}</div>
+          ${renderBar(program.xp, program.level * 100, "is-xp")}
+          ${statusMarkup}
+        </div>
+      </div>
+    </article>
+  `;
+}
+
+// buildProgramBenchMarkup() shows the rest of the party as smaller cards so the active fighter stays readable.
+function buildProgramBenchMarkup(program, isCurrentTurn) {
+  const statusMarkup = renderStatusPills(program.statusEffects);
+
+  return `
+    <article class="battle-bench-card ${program.hp <= 0 ? "is-down" : ""} ${isCurrentTurn ? "is-current" : ""}" style="color: ${program.color};">
+      <div class="battle-bench-name">${program.name}</div>
+      <div class="battle-bench-meta">LVL ${program.level} | HP ${program.hp}/${program.maxHp}</div>
+      ${statusMarkup}
+    </article>
+  `;
+}
+
+// buildThreatVisualMarkup() keeps the enemy side theatrical while still showing the threat's combat stats.
+function buildThreatVisualMarkup(state) {
+  const threat = state.threat;
+  const statusMarkup = renderStatusPills(threat.statusEffects);
+  const activeProgram = getActiveBattleProgram(state);
+  const matchup = getTypeAdvantage(getActorCombatType(activeProgram), getActorCombatType(threat, true));
+  const matchupLabel = matchup.state === "super-effective" ? "SUPER EFFECTIVE" : matchup.state === "weak" ? "NOT VERY EFFECTIVE" : "NEUTRAL";
+
+  return `
+    <div class="battle-figure is-enemy">
+      <div class="battle-figure-body">
+        <div class="battle-figure-meta">
+          <div class="combat-name-row">
+            <span class="combat-name">${threat.title}</span>
+            <span class="combat-lvl">LVL ${threat.level}</span>
+          </div>
+          <div class="combat-subline">${getThreatTypeLabel(threat.type)}</div>
+          <div class="combat-subline">HP ${threat.hp}/${threat.maxHp}</div>
+          ${renderBar(threat.hp, threat.maxHp, "is-hp")}
+          <div class="combat-subline">WEAK: ${String(threat.weakPoint || "UNKNOWN").toUpperCase()}</div>
+          <div class="threat-weakness">WEAK TO: ${String(getActorCombatType(threat, true) || "UNKNOWN").toUpperCase()}</div>
+          <div class="combat-matchup-hint is-${matchup.state}">TYPE MATCHUP: ${String(activeProgram.type || "UNKNOWN").toUpperCase()} → ${String(getActorCombatType(threat, true) || "UNKNOWN").toUpperCase()} [${matchupLabel}]</div>
+          ${statusMarkup}
+        </div>
+        <div class="battle-sprite threat-sprite ${getThreatSpriteClass(threat)}" aria-hidden="true"></div>
+      </div>
+    </div>
+  `;
+}
+
+// buildActionButtonMarkup() renders only the current actor's moves so the bottom bar feels like a battle menu.
 function buildActionButtonMarkup(state) {
   const currentActor = state.turnOrder[state.currentTurnIndex];
+  const activeProgram = getActiveBattleProgram(state);
+  const matchup = activeProgram ? getTypeAdvantage(getActorCombatType(activeProgram), getActorCombatType(state.threat, true)) : { state: "neutral" };
 
   if (!currentActor || currentActor.kind !== "program" || currentActor.ref.hp <= 0) {
-    return '<div class="combat-action-note">THREAT TURN IN PROGRESS.</div>';
+    return `
+      <div class="combat-action-note">THREAT TURN IN PROGRESS.</div>
+      <div class="combat-matchup-hint is-${matchup.state}">TYPE MATCHUP: ${String(activeProgram.type || "UNKNOWN").toUpperCase()} → ${String(getActorCombatType(state.threat, true) || "UNKNOWN").toUpperCase()} [${matchup.state === "super-effective" ? "SUPER EFFECTIVE" : matchup.state === "weak" ? "NOT VERY EFFECTIVE" : "NEUTRAL"}]</div>
+    `;
   }
 
   const actor = currentActor.ref;
@@ -1989,6 +2061,7 @@ function buildActionButtonMarkup(state) {
 
   return `
     <div class="combat-action-note">CURRENT ACTOR: ${actor.name} (LVL ${actor.level})</div>
+    <div class="combat-matchup-hint is-${matchup.state}">TYPE MATCHUP: ${String(actor.type || "UNKNOWN").toUpperCase()} → ${String(getActorCombatType(state.threat, true) || "UNKNOWN").toUpperCase()} [${matchup.state === "super-effective" ? "SUPER EFFECTIVE" : matchup.state === "weak" ? "NOT VERY EFFECTIVE" : "NEUTRAL"}]</div>
     <div class="combat-actions">
       ${actor.abilities.map((ability, index) => {
         const disabled = state.responseGauge < ability.cost ? "disabled" : "";
@@ -1999,85 +2072,85 @@ function buildActionButtonMarkup(state) {
         `;
       }).join("")}
     </div>
-    ${comboButtons.length ? `<div class="combat-ability-row">${comboButtons.join("")}</div><div class="combat-action-note">COMBO AVAILABLE: RESPONSE GATE ${state.responseGauge}/100</div>` : ""}
+    ${comboButtons.length ? `<div class="combat-ability-row">${comboButtons.join("")}</div><div class="combat-action-note">COMBO AVAILABLE: RESPONSE GAUGE ${state.responseGauge}/100</div>` : ""}
   `;
 }
 
-// buildCombatMarkup() assembles the full battle UI in one pass so each state change is easy to reason about.
+// buildCombatMarkup() turns the battle into a battlefield scene with one featured program and one featured threat.
 function buildCombatMarkup(state) {
   const currentActor = state.turnOrder[state.currentTurnIndex];
-  const currentProgram = currentActor && currentActor.kind === "program" ? currentActor.ref : null;
+  const currentProgram = getActiveBattleProgram(state);
+  const benchPrograms = state.playerParty.filter((program) => program.id !== currentProgram.id);
 
   return `
     <div class="combat-shell">
-      <header class="combat-turn-order">
-        <div class="combat-panel-title">TURN ORDER</div>
-        <div class="turn-order-row">
-          ${buildTurnOrderMarkup(state)}
+      <header class="combat-header">
+        <div class="combat-title-block">
+          <div class="combat-panel-title">THREATGRID COMBAT</div>
+          <div class="combat-encounter-name">${state.threat.title} / LEVEL ${state.threat.level}</div>
+        </div>
+        <div class="combat-turn-preview">
+          <div class="combat-panel-title">TURN ORDER</div>
+          <div class="combat-turn-preview-row">
+            ${buildTurnOrderMarkup(state)}
+          </div>
         </div>
       </header>
 
-      <div class="combat-layout">
+      <section class="combat-battlefield">
+        <div class="battle-side battle-side-player">
+          <div class="combat-panel-title">ACTIVE PROGRAM</div>
+          ${buildProgramBattlefieldMarkup(currentProgram, true)}
+          <div class="battle-bench">
+            ${benchPrograms.map((program) => buildProgramBenchMarkup(program, currentActor && currentActor.kind === "program" && currentActor.ref.id === program.id)).join("")}
+          </div>
+        </div>
+
+        <div class="battle-midpoint">
+          <div class="combat-vs">VS</div>
+          <div class="battle-field-note">CYBER RESPONSE ONLINE</div>
+        </div>
+
+        <div class="battle-side battle-side-enemy">
+          <div class="combat-panel-title">THREAT TARGET</div>
+          ${buildThreatVisualMarkup(state)}
+        </div>
+      </section>
+
+      <footer class="battle-footer combat-footer">
         <aside class="combat-log-panel">
           <div class="combat-panel-title">BATTLE LOG</div>
           <div id="battle-log" class="combat-log">${buildBattleLogMarkup(state)}</div>
         </aside>
 
-        <section class="combat-party-panel">
-          <div class="combat-panel-title">SECURITY PROGRAM PARTY</div>
-          <div class="combat-party-list">
-            ${state.playerParty.map((program) => buildProgramCardMarkup(program, currentProgram && currentProgram.id === program.id)).join("")}
-          </div>
+        <section class="combat-action-panel">
+          <div class="combat-panel-title">ACTIONS</div>
           <div class="combat-gauge-wrap">
             <div class="combat-gauge-label">RESPONSE GAUGE</div>
             ${renderBar(state.responseGauge, 100, "is-gauge")}
             <div class="combat-gauge-text">${state.responseGauge}/100</div>
           </div>
-        </section>
-
-        <section class="combat-threat-panel">
-          <div class="combat-panel-title">TARGET THREAT</div>
-          ${buildThreatVisualMarkup(state.threat)}
-        </section>
-
-        <aside class="combat-status-panel">
-          <div class="combat-panel-title">THREAT ANALYSIS</div>
-          <div class="status-block">
-            <div class="combat-subline">LEVEL ${state.threat.level}</div>
-            <div class="combat-subline">ATTACK ${state.threat.atk} / DEFENSE ${state.threat.def} / SPD ${state.threat.spd}</div>
-            <div class="combat-subline">WEAK TO ${String(state.threat.weakType || "UNKNOWN").toUpperCase()}</div>
-            <div class="combat-subline">WEAK POINT ${String(state.threat.weakPoint || "UNKNOWN").toUpperCase()}</div>
+          <div class="combat-action-grid">
+            ${buildActionButtonMarkup(state)}
           </div>
-          <div class="combat-panel-title">STATUS</div>
-          <div class="status-block">
-            ${renderStatusPills(state.threat.statusEffects)}
-          </div>
-        </aside>
-      </div>
-
-      <footer class="combat-action-panel">
-        <div class="combat-panel-title">ACTIONS</div>
-        ${buildActionButtonMarkup(state)}
+        </section>
       </footer>
     </div>
   `;
 }
 
-// buildRewardMarkup() summarizes the XP payout and keeps the player on the victory overlay until they choose.
+// buildRewardMarkup() keeps the player on the victory screen until they decide whether to continue or quit.
 function buildRewardMarkup(state, rewardLines) {
-  const activeThreatCount = threats.filter((threat) => threat.status === "active").length;
-  const continueLabel = activeThreatCount > 0 ? "[ CONTINUE TO NEXT THREAT ]" : "[ RETURN TO MENU ]";
-
   return `
     <div class="battle-reward-screen">
       <div class="battle-end-headline">VICTORY</div>
       <div class="terminal-rule" aria-hidden="true"></div>
-      <div class="battle-reward-copy">THREAT NEUTRALIZED. XP UPGRADED. PARTY STATUS PRESERVED.</div>
+      <div class="battle-reward-copy">THREAT NEUTRALIZED. XP GAINED. PARTY STATUS PRESERVED.</div>
       <div class="battle-reward-lines">
         ${rewardLines.map((line) => `<div class="battle-reward-line ${line.levelUp ? "is-levelup" : ""}">${line.text}</div>`).join("")}
       </div>
       <div class="battle-reward-actions">
-        <button class="battle-reward-button" type="button" data-combat-next>${continueLabel}</button>
+        <button class="battle-reward-button" type="button" data-combat-next>CONTINUE EXPEDITION</button>
         <button class="battle-reward-button" type="button" data-combat-menu>BACK TO MENU</button>
       </div>
     </div>
@@ -2109,7 +2182,7 @@ function renderCombatScreen() {
   }
 
   threatPanelContent.innerHTML = buildCombatMarkup(combatState);
-  threatPanelContent.scrollTop = threatPanelContent.scrollHeight;
+  threatPanelContent.scrollTop = 0;
   threatPanel.classList.add("is-open", "is-combat");
   threatPanel.setAttribute("aria-hidden", "false");
 
@@ -2124,6 +2197,7 @@ function renderCombatScreen() {
 // renderCombatReward() replaces the battle grid with a victory summary and the next-step buttons.
 function renderCombatReward(rewardLines) {
   threatPanelContent.innerHTML = buildRewardMarkup(combatState, rewardLines);
+  threatPanelContent.scrollTop = 0;
   threatPanel.classList.add("is-open", "is-combat");
   threatPanel.setAttribute("aria-hidden", "false");
   bindCombatButtons();
@@ -2132,6 +2206,7 @@ function renderCombatReward(rewardLines) {
 // renderBattleLostScreen() shows the failure branch without tearing down the overlay instantly.
 function renderBattleLostScreen() {
   threatPanelContent.innerHTML = buildBattleLostMarkup();
+  threatPanelContent.scrollTop = 0;
   threatPanel.classList.add("is-open", "is-combat");
   threatPanel.setAttribute("aria-hidden", "false");
   bindCombatButtons();
@@ -2177,7 +2252,7 @@ function bindCombatButtons() {
   const nextButton = threatPanelContent.querySelector("[data-combat-next]");
   if (nextButton) {
     nextButton.addEventListener("click", () => {
-      continueToNextThreat();
+      returnToGlobeFromCombat();
     });
   }
 
@@ -2190,18 +2265,19 @@ function bindCombatButtons() {
   }
 }
 
-// continueToNextThreat() either starts a fresh battle or sends the player back to the menu if nothing remains.
-function continueToNextThreat() {
-  const nextThreat = getRandomActiveThreat();
-
+// returnToGlobeFromCombat() closes the victory overlay and restores the globe for a manual next-click.
+function returnToGlobeFromCombat() {
+  hideEncounterTransition();
   closeCombatOverlay(true);
-
-  if (!nextThreat) {
-    showMenu();
-    return;
+  screenState = "game";
+  if (typeof globe !== "undefined") {
+    globe.autoRotateSpeed = 0.0012;
   }
+}
 
-  openThreatPanel(nextThreat);
+// continueToNextThreat() now preserves the old name as an alias for the post-battle return flow.
+function continueToNextThreat() {
+  returnToGlobeFromCombat();
 }
 
 // getRandomActiveThreat() selects the next live target from the global roster.
@@ -2216,6 +2292,7 @@ function getRandomActiveThreat() {
 
 // showCombatScreen() opens the battle overlay and advances immediately into the first turn.
 function showCombatScreen(state) {
+  hideEncounterTransition();
   combatState = state;
   combatEngine = new ThreatCombat(combatState);
   combatEngine.init();
@@ -2244,11 +2321,63 @@ function showGameOverScreen(outcome) {
   renderBattleLostScreen();
 }
 
+// hideEncounterTransition() clears the short cinematic overlay so a battle can take over cleanly.
+function hideEncounterTransition() {
+  if (encounterTransitionTimerId !== null) {
+    window.clearTimeout(encounterTransitionTimerId);
+    encounterTransitionTimerId = null;
+  }
+
+  encounterTransitionActive = false;
+
+  if (encounterOverlay) {
+    encounterOverlay.classList.remove("is-visible");
+    encounterOverlay.setAttribute("aria-hidden", "true");
+  }
+}
+
+// showEncounterTransition() gives the click a short cinematic beat before the combat screen appears.
+function showEncounterTransition(threat) {
+  if (!threat || threat.status !== "active" || combatState || encounterTransitionActive) {
+    return;
+  }
+
+  closeCombatOverlay(true);
+  hideEncounterTransition();
+  encounterTransitionActive = true;
+
+  if (encounterOverlay) {
+    encounterOverlay.setAttribute("aria-hidden", "false");
+    encounterOverlay.classList.add("is-visible");
+  }
+
+  encounterTransitionTimerId = window.setTimeout(() => {
+    encounterTransitionTimerId = null;
+    if (!encounterTransitionActive) {
+      return;
+    }
+
+    encounterTransitionActive = false;
+    if (encounterOverlay) {
+      encounterOverlay.classList.remove("is-visible");
+      encounterOverlay.setAttribute("aria-hidden", "true");
+    }
+
+    if (screenState !== "game" || combatState || threat.status !== "active") {
+      return;
+    }
+
+    showCombatScreen(buildCombatState(threat));
+  }, 1000);
+}
+
 // closeCombatOverlay() clears the overlay state when a battle ends or the player returns to the menu.
 function closeCombatOverlay(forceClose = false) {
   if (combatEngine && !forceClose && combatState && combatState.phase === "battle") {
     return;
   }
+
+  hideEncounterTransition();
 
   if (combatEngine) {
     combatEngine.destroy();
@@ -2316,6 +2445,7 @@ class ThreatCombat {
     this.state.turnOrder = buildTurnOrder(this.state.playerParty, this.state.threat);
     this.state.currentTurnIndex = 0;
     this.state.phase = "battle";
+    this.state.activeProgramId = this.state.turnOrder.find((entry) => entry.kind === "program" && entry.ref.hp > 0)?.ref.id || this.state.activeProgramId;
     screenState = "combat";
     addBattleLog(`ENGAGING ${this.state.threat.title.toUpperCase()} AT LEVEL ${this.state.threat.level}.`);
     renderCombatScreen();
@@ -2373,6 +2503,7 @@ class ThreatCombat {
       }
 
       if (nextActor.kind === "program" && nextActor.ref.hp > 0) {
+        this.state.activeProgramId = nextActor.ref.id;
         break;
       }
 
@@ -2679,15 +2810,13 @@ class ThreatCombat {
   }
 }
 
-// openThreatPanel() now launches a combat encounter instead of the old analyst briefing drawer.
+// openThreatPanel() now routes the click through the short encounter transition before combat starts.
 function openThreatPanel(threat) {
-  if (screenState !== "game" || combatState || !threat || threat.status !== "active") {
+  if (screenState !== "game" || combatState || encounterTransitionActive || !threat || threat.status !== "active") {
     return;
   }
 
-  closeCombatOverlay(true);
-  combatState = buildCombatState(threat);
-  showCombatScreen(combatState);
+  showEncounterTransition(threat);
 }
 
 // wireThreatResponses() connects globe clicks to battle encounters and keeps the earlier respawn layer alive.
@@ -2699,7 +2828,7 @@ function wireThreatResponses() {
   threatResponsesWired = true;
 
   globe.onThreatClick((threat) => {
-    if (screenState !== "game" || threat.status !== "active" || combatState) {
+    if (screenState !== "game" || threat.status !== "active" || combatState || encounterTransitionActive) {
       return;
     }
 
