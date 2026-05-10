@@ -1178,16 +1178,54 @@ canvas {
   opacity: 0.92;
 }
 
+.menu-stage-shape.is-sigil {
+  left: 46%;
+  top: 53%;
+  width: min(54vw, 760px);
+  height: min(54vw, 760px);
+  transform: translate(-50%, -50%) rotate(-10deg);
+  background:
+    radial-gradient(circle at 50% 50%, rgba(5, 5, 9, 0.98) 0 30%, rgba(23, 17, 29, 0.98) 30% 48%, rgba(16, 13, 24, 0.96) 48% 58%, transparent 58% 100%),
+    linear-gradient(135deg, rgba(242, 184, 75, 0.12), rgba(255, 63, 79, 0.08) 36%, rgba(72, 214, 198, 0.06));
+  clip-path: polygon(50% 0, 84% 10%, 100% 42%, 92% 76%, 64% 100%, 28% 94%, 0 62%, 8% 28%);
+  box-shadow:
+    0 0 0 14px rgba(255, 63, 79, 0.08),
+    0 0 0 1px rgba(242, 184, 75, 0.12) inset;
+  opacity: 0.92;
+}
+
+.menu-stage-shape.is-sigil::before {
+  content: "";
+  position: absolute;
+  inset: 13%;
+  border: 2px solid rgba(244, 239, 227, 0.78);
+  clip-path: polygon(50% 0, 84% 10%, 100% 42%, 92% 76%, 64% 100%, 28% 94%, 0 62%, 8% 28%);
+  opacity: 0.86;
+}
+
+.menu-stage-shape.is-sigil::after {
+  content: "";
+  position: absolute;
+  left: -6%;
+  right: -6%;
+  top: 48%;
+  height: 12%;
+  background:
+    linear-gradient(90deg, transparent 0 12%, rgba(255, 63, 79, 0.96) 12% 46%, rgba(242, 184, 75, 0.34) 46% 56%, transparent 56% 100%);
+  transform: skewX(-28deg) rotate(8deg);
+  opacity: 0.92;
+}
+
 /* The shell now splits the title card from the command stack so the composition feels like a stylized JRPG cover. */
 .menu-shell {
   position: relative;
   z-index: 1;
-  width: min(1540px, calc(100vw - clamp(28px, 3.5vw, 64px)));
-  min-height: 82vh;
+  width: min(1520px, calc(100vw - clamp(22px, 2.8vw, 52px)));
+  min-height: min(88vh, 920px);
   margin: 0 auto;
   display: grid;
-  grid-template-columns: minmax(0, 1.54fr) minmax(300px, 0.46fr);
-  gap: clamp(16px, 3.2vw, 40px);
+  grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
+  gap: clamp(12px, 2.4vw, 30px);
   align-items: stretch;
   align-content: center;
 }
@@ -1195,44 +1233,46 @@ canvas {
 .menu-header-block,
 .menu-command-block {
   position: relative;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .menu-header-block {
-  min-height: clamp(360px, 44vh, 520px);
-  padding: clamp(28px, 3.2vw, 44px) clamp(32px, 4.2vw, 60px) clamp(34px, 4.4vw, 58px);
-  background:
-    linear-gradient(180deg, rgba(31, 24, 39, 0.98), rgba(21, 16, 31, 0.98)),
-    linear-gradient(135deg, rgba(255, 63, 79, 0.08), transparent 34%);
+  min-height: clamp(380px, 48vh, 560px);
+  padding: clamp(28px, 3.4vw, 46px) clamp(20px, 2.6vw, 34px) clamp(32px, 4vw, 54px) 0;
+  background: transparent;
   color: var(--menu-text);
-  border: 1px solid var(--menu-panel-border);
-  box-shadow:
-    0 26px 56px var(--menu-panel-shadow),
-    0 0 0 1px rgba(10, 10, 20, 0.12) inset;
-  clip-path: polygon(0 0, 100% 0, 97% 100%, 1% 100%);
-  transform: translateX(clamp(0px, 1vw, 12px)) rotate(-1.6deg);
+  border: 0;
+  box-shadow: none;
+  clip-path: none;
+  transform: none;
   z-index: 2;
 }
 
 .menu-header-block::before {
   content: "";
   position: absolute;
-  inset: 0;
+  inset: -4% -6% 16% -8%;
   pointer-events: none;
   background:
-    linear-gradient(135deg, transparent 0 50%, rgba(255, 63, 79, 0.15) 50.4% 54%, transparent 54.4% 100%),
-    linear-gradient(165deg, transparent 0 72%, rgba(72, 214, 198, 0.1) 72.4% 77%, transparent 77.4% 100%);
+    linear-gradient(135deg, transparent 0 34%, rgba(5, 5, 9, 0.9) 34.2% 57%, rgba(255, 63, 79, 0.18) 57.2% 59%, transparent 59.2% 100%),
+    linear-gradient(160deg, transparent 0 70%, rgba(242, 184, 75, 0.08) 70.2% 75%, transparent 75.2% 100%);
+  clip-path: polygon(0 0, 100% 6%, 92% 100%, 0 84%);
+  opacity: 0.94;
 }
 
 .menu-header-block::after {
   content: "";
   position: absolute;
-  right: -14px;
-  bottom: -14px;
-  width: 220px;
-  height: 220px;
+  left: 6%;
+  top: 18%;
+  width: 64%;
+  height: 42%;
   pointer-events: none;
-  background: radial-gradient(circle, rgba(255, 63, 79, 0.18) 0 18%, transparent 18% 100%);
+  background:
+    radial-gradient(circle at 20% 38%, rgba(255, 255, 255, 0.16) 0 8%, transparent 8% 100%),
+    linear-gradient(90deg, rgba(255, 63, 79, 0.22), rgba(242, 184, 75, 0.08), transparent 72%);
+  clip-path: polygon(0 42%, 100% 0, 82% 100%, 0 78%);
+  opacity: 0.62;
 }
 
 /* The kicker gives the title card an authored header instead of a bare logo lockup. */
@@ -1253,25 +1293,27 @@ canvas {
 }
 
 /* The title now feels poster-like with a split shadow and offset ghost layer instead of a plain neon wordmark. */
-.menu-title {
+#menu-screen .menu-title {
   position: relative;
   margin: 10px 0 0;
   color: var(--menu-text);
   width: fit-content;
   max-width: 100%;
-  font-size: clamp(3.45rem, 5vw, 5.45rem);
-  line-height: 0.8;
-  letter-spacing: clamp(0.012em, 0.16vw, 0.03em);
-  text-indent: clamp(0.012em, 0.16vw, 0.03em);
+  font-size: clamp(3.8rem, 5.15vw, 5.95rem);
+  line-height: 0.78;
+  letter-spacing: clamp(0.004em, 0.11vw, 0.018em);
+  text-indent: clamp(0.004em, 0.11vw, 0.018em);
   font-weight: 900;
+  white-space: nowrap;
   -webkit-text-stroke: 1px rgba(5, 5, 9, 0.2);
   text-shadow:
-    -8px -5px 0 rgba(242, 184, 75, 0.14),
-    10px 10px 0 rgba(255, 63, 79, 0.7),
-    18px 18px 0 rgba(5, 5, 9, 0.42);
+    -10px -6px 0 rgba(242, 184, 75, 0.18),
+    12px 12px 0 rgba(255, 63, 79, 0.7),
+    20px 20px 0 rgba(5, 5, 9, 0.45);
+  transform: translate3d(0, 0, 0) rotate(-1deg);
 }
 
-.menu-title::before {
+#menu-screen .menu-title::before {
   content: attr(data-title);
   position: absolute;
   left: 0;
@@ -1283,22 +1325,24 @@ canvas {
   clip-path: polygon(0 0, 100% 0, 100% 52%, 0 62%);
 }
 
-.menu-title::after {
+#menu-screen .menu-title::after {
   content: "";
   position: absolute;
   left: 0;
-  bottom: -18px;
-  width: min(440px, 84%);
-  height: 16px;
-  background: linear-gradient(90deg, rgba(5, 5, 9, 0.96), rgba(255, 63, 79, 0.96), rgba(242, 184, 75, 0.28));
-  clip-path: polygon(0 0, 94% 0, 100% 50%, 94% 100%, 0 100%, 5% 50%);
+  bottom: -20px;
+  width: min(540px, 92%);
+  height: 18px;
+  background:
+    linear-gradient(90deg, rgba(5, 5, 9, 0.96), rgba(255, 63, 79, 0.96), rgba(242, 184, 75, 0.34)),
+    linear-gradient(180deg, rgba(244, 239, 227, 0.14), transparent 62%);
+  clip-path: polygon(0 0, 92% 0, 100% 50%, 92% 100%, 0 100%, 4% 50%);
   transform: skewX(-16deg);
-  box-shadow: 0 12px 26px rgba(255, 63, 79, 0.2);
+  box-shadow: 0 14px 28px rgba(255, 63, 79, 0.18);
 }
 
 /* The cursor line becomes a dramatic underline rather than a simple boot cursor. */
-.menu-header-block .cursor-line {
-  width: min(320px, 100%);
+#menu-screen .menu-header-block .cursor-line {
+  width: min(420px, 100%);
   height: 6px;
   margin: 18px 0 14px;
   background: linear-gradient(90deg, rgba(5, 5, 9, 1), rgba(255, 63, 79, 0.92) 52%, rgba(242, 184, 75, 0.38) 76%, transparent 100%);
@@ -1307,16 +1351,16 @@ canvas {
 }
 
 /* Secondary menu text stays dimmer so the title remains the focus. */
-.menu-subtitle {
+#menu-screen .menu-subtitle {
   margin: 0;
-  color: var(--menu-muted);
+  color: rgba(244, 239, 227, 0.72);
   letter-spacing: 0.18em;
   font-size: 0.82rem;
   line-height: 1.8;
 }
 
 /* The mode description becomes a tactile banner with a paper-cut edge and a warm highlight. */
-.menu-mode-description {
+#menu-screen .menu-mode-description {
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -1336,33 +1380,46 @@ canvas {
 .menu-command-block {
   display: flex;
   flex-direction: column;
-  gap: 22px;
-  min-height: clamp(320px, 38vh, 460px);
-  padding: clamp(28px, 3vw, 42px);
-  background:
-    linear-gradient(180deg, rgba(17, 13, 24, 0.98), rgba(11, 10, 18, 0.98)),
-    linear-gradient(135deg, rgba(255, 63, 79, 0.08), transparent 36%);
+  gap: 18px;
+  min-height: clamp(380px, 48vh, 560px);
+  padding: clamp(34px, 4vw, 56px) 0 clamp(28px, 3.2vw, 40px);
+  background: transparent;
   color: var(--menu-text);
-  border: 1px solid rgba(242, 184, 75, 0.14);
-  box-shadow:
-    0 32px 70px var(--menu-panel-shadow),
-    0 0 0 1px rgba(255, 255, 255, 0.04) inset;
-  clip-path: polygon(3% 0, 100% 0, 96% 100%, 0 100%);
-  transform: translateX(clamp(-4px, -0.8vw, -12px)) rotate(1.6deg);
+  border: 0;
+  box-shadow: none;
+  clip-path: none;
+  transform: none;
 }
 
 .menu-command-block::before {
   content: "";
   position: absolute;
-  inset: 0;
+  inset: 0 -8% 4% -2%;
   pointer-events: none;
   background:
-    linear-gradient(140deg, transparent 0 59%, rgba(255, 63, 79, 0.2) 59.2% 63%, transparent 63.2% 100%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 28%);
+    linear-gradient(140deg, transparent 0 50%, rgba(5, 5, 9, 0.94) 50.2% 78%, rgba(255, 63, 79, 0.14) 78.2% 82%, transparent 82.2% 100%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 28%);
+  clip-path: polygon(6% 0, 100% 6%, 94% 100%, 2% 94%);
+  opacity: 0.96;
+}
+
+.menu-command-block::after {
+  content: "";
+  position: absolute;
+  left: 2%;
+  top: 22%;
+  width: 82%;
+  height: 62%;
+  pointer-events: none;
+  background:
+    linear-gradient(135deg, transparent 0 46%, rgba(255, 63, 79, 0.18) 46.2% 50%, transparent 50.2% 100%),
+    linear-gradient(180deg, rgba(244, 239, 227, 0.05), transparent 34%);
+  clip-path: polygon(0 10%, 96% 0, 100% 100%, 4% 92%);
+  opacity: 0.72;
 }
 
 /* The command label anchors the action column with a deliberate title-screen prompt. */
-.menu-command-label {
+#menu-screen .menu-command-label {
   margin: 0;
   color: var(--menu-text);
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
@@ -1384,26 +1441,28 @@ canvas {
   display: flex;
   flex-direction: column;
   gap: 18px;
+  position: relative;
+  z-index: 1;
 }
 
 #menu-screen .menu-actions-primary {
-  width: min(100%, 540px);
-  align-self: stretch;
-  transform: none;
+  width: min(100%, 560px);
+  align-self: flex-start;
+  transform: translateX(1.5vw);
 }
 
 #menu-screen .menu-actions-dual {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 14px;
+  gap: 16px;
   width: 100%;
   transform: none;
 }
 
 #menu-screen .menu-actions-secondary {
-  width: min(100%, 540px);
-  align-self: stretch;
-  transform: none;
+  width: min(100%, 500px);
+  align-self: flex-start;
+  transform: translateX(2.6vw);
 }
 
 #menu-screen .menu-button {
@@ -1413,11 +1472,11 @@ canvas {
   justify-content: flex-start;
   gap: 12px;
   width: 100%;
-  min-height: 66px;
+  min-height: 70px;
   appearance: none;
-  border: 0;
-  padding: 18px 26px 18px 34px;
-  background: transparent;
+  border: 1px solid rgba(242, 239, 227, 0.18);
+  padding: 18px 30px 18px 40px;
+  background: linear-gradient(180deg, rgba(8, 8, 15, 0.95), rgba(17, 13, 24, 0.95));
   color: var(--menu-text);
   font-weight: 700;
   cursor: pointer;
@@ -1426,7 +1485,7 @@ canvas {
   text-align: left;
   white-space: nowrap;
   overflow: hidden;
-  box-shadow: none;
+  box-shadow: 10px 10px 0 rgba(5, 5, 9, 0.22);
   transform: translate3d(0, 0, 0);
   transition:
     transform 180ms ease,
@@ -1443,10 +1502,10 @@ canvas {
   inset: 0 0 0 0;
   pointer-events: none;
   background:
-    linear-gradient(120deg, transparent 0 32%, rgba(255, 255, 255, 0.24) 42%, transparent 52%),
-    linear-gradient(90deg, var(--menu-button-accent, var(--menu-teal)) 0 8%, transparent 8% 100%);
-  opacity: 0.92;
-  transform: translate3d(-10%, 0, 0) skewX(-18deg);
+    linear-gradient(120deg, transparent 0 34%, rgba(255, 255, 255, 0.18) 42%, transparent 52%),
+    linear-gradient(90deg, var(--menu-button-accent, var(--menu-teal)) 0 7%, transparent 7% 100%);
+  opacity: 0.98;
+  transform: translate3d(-4%, 0, 0) skewX(-18deg);
   transition: transform 160ms ease, opacity 160ms ease, background 160ms ease;
   z-index: 0;
 }
@@ -1456,7 +1515,7 @@ canvas {
   position: absolute;
   right: 2px;
   top: 0;
-  width: 22px;
+  width: 28px;
   height: 100%;
   pointer-events: none;
   background:
@@ -1494,7 +1553,7 @@ canvas {
 #menu-screen .menu-button:hover,
 #menu-screen .menu-button:focus-visible {
   color: var(--menu-text);
-  background: linear-gradient(180deg, rgba(30, 22, 41, 0.92), rgba(17, 13, 24, 0.94));
+  background: linear-gradient(180deg, rgba(30, 22, 41, 0.98), rgba(17, 13, 24, 0.96));
   outline: none;
   transform: translate3d(8px, -2px, 0) scale(1.02);
 }
@@ -2014,6 +2073,13 @@ canvas {
     top: 12vh;
   }
 
+  .menu-stage-shape.is-sigil {
+    left: 54%;
+    top: 46%;
+    width: 78vw;
+    height: 78vw;
+  }
+
   .menu-stage-shape.is-ribbon {
     width: 108vw;
     left: -8vw;
@@ -2026,35 +2092,35 @@ canvas {
   }
 }
 
-/* Wider desktops can afford a slightly smaller hero title so the full word never clips in fullscreen layouts. */
+/* Wider desktops can afford a slightly different title scale so the full word stays visible while keeping the poster impact. */
 @media (min-width: 1400px) {
   .menu-shell {
-    min-height: 84vh;
-    grid-template-columns: minmax(0, 1.6fr) minmax(280px, 0.4fr);
+    min-height: min(90vh, 980px);
+    grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr);
   }
 
   .menu-header-block {
-    padding-right: clamp(66px, 5.2vw, 96px);
+    padding-right: clamp(34px, 3.2vw, 52px);
   }
 
-  .menu-title {
-    font-size: clamp(3.3rem, 4.6vw, 5.15rem);
-    letter-spacing: clamp(0.01em, 0.14vw, 0.025em);
-    text-indent: clamp(0.01em, 0.14vw, 0.025em);
+  #menu-screen .menu-title {
+    font-size: clamp(4rem, 5vw, 6.1rem);
+    letter-spacing: clamp(0.004em, 0.1vw, 0.018em);
+    text-indent: clamp(0.004em, 0.1vw, 0.018em);
   }
 }
 
 /* Small phones get tighter spacing so the menu stays dramatic without feeling crowded. */
 @media (max-width: 640px) {
   .menu-kicker,
-  .menu-command-label {
+  #menu-screen .menu-command-label {
     letter-spacing: 0.18em;
   }
 
-  .menu-title {
+  #menu-screen .menu-title {
     letter-spacing: 0.012em;
     text-indent: 0.012em;
-    font-size: clamp(2.8rem, 10.5vw, 4rem);
+    font-size: clamp(3rem, 11vw, 4.25rem);
   }
 
   .menu-header-block .cursor-line {
@@ -2084,7 +2150,7 @@ canvas {
   #menu-screen .menu-title {
     letter-spacing: 0.012em;
     text-indent: 0.012em;
-    font-size: clamp(2.7rem, 8.8vw, 4rem);
+    font-size: clamp(2.9rem, 8.8vw, 4rem);
   }
 
   #menu-screen .menu-footnote {
