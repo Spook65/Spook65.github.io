@@ -998,15 +998,16 @@ canvas {
   position: relative;
   overflow: hidden;
   min-height: 100vh;
+  display: flex;
   align-items: stretch;
   justify-content: center;
   padding: clamp(20px, 4vh, 44px) clamp(18px, 4vw, 56px);
-  text-align: left;
+  text-align: center;
   background:
-    radial-gradient(circle at 14% 18%, rgba(255, 110, 74, 0.24), transparent 22%),
-    radial-gradient(circle at 84% 16%, rgba(141, 119, 255, 0.2), transparent 24%),
-    radial-gradient(circle at 70% 82%, rgba(0, 216, 190, 0.14), transparent 22%),
-    linear-gradient(135deg, #05060d 0%, #10111a 38%, #080912 100%);
+    radial-gradient(circle at 50% 26%, rgba(255, 255, 255, 0.08), transparent 14%),
+    radial-gradient(circle at 50% 30%, rgba(255, 110, 74, 0.12), transparent 24%),
+    radial-gradient(circle at 50% 50%, rgba(141, 119, 255, 0.08), transparent 34%),
+    linear-gradient(180deg, #04050a 0%, #090b13 48%, #04050a 100%);
   --menu-cream: #f4eddc;
   --menu-text: #f4efe3;
   --menu-muted: #b7aebf;
@@ -1026,14 +1027,13 @@ canvas {
 #menu-screen::before {
   content: "";
   position: absolute;
-  inset: -18%;
+  inset: 0;
   pointer-events: none;
   background:
-    radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.12), transparent 10%),
-    linear-gradient(128deg, transparent 0 39%, rgba(17, 17, 26, 0.4) 39.4%, rgba(17, 17, 26, 0.4) 43%, transparent 43.4% 100%),
-    linear-gradient(152deg, transparent 0 66%, rgba(255, 110, 74, 0.1) 66.2%, rgba(255, 110, 74, 0.1) 70%, transparent 70.2% 100%),
-    linear-gradient(180deg, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.62));
-  opacity: 0.96;
+    radial-gradient(circle at 50% 26%, rgba(255, 255, 255, 0.09), transparent 13%),
+    radial-gradient(circle at 50% 29%, rgba(255, 110, 74, 0.12), transparent 20%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.6));
+  opacity: 0.9;
 }
 
 #menu-screen::after {
@@ -1042,12 +1042,12 @@ canvas {
   inset: 0;
   pointer-events: none;
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-    linear-gradient(142deg, transparent 0 47%, rgba(255, 255, 255, 0.05) 47.2%, transparent 47.6% 100%);
-  background-size: 100% 48px, 48px 100%;
-  mask-image: radial-gradient(circle at 48% 30%, rgba(0, 0, 0, 0.98), transparent 74%);
-  opacity: 0.26;
+    radial-gradient(circle at 50% 30%, rgba(255, 255, 255, 0.08) 0 1px, transparent 2px 100%);
+  background-size: 96px 96px, 96px 96px, 100% 100%;
+  mask-image: radial-gradient(circle at 50% 28%, rgba(0, 0, 0, 0.98), transparent 78%);
+  opacity: 0.22;
   mix-blend-mode: screen;
 }
 
@@ -1062,17 +1062,18 @@ canvas {
 .menu-stage::before {
   content: "";
   position: absolute;
-  width: 80vw;
-  height: 80vw;
-  left: -28vw;
-  top: -30vw;
+  left: 50%;
+  top: 28%;
+  width: min(72vw, 820px);
+  height: min(72vw, 820px);
   border-radius: 50%;
   background:
-    radial-gradient(circle, rgba(255, 110, 74, 0.22) 0 15%, rgba(255, 110, 74, 0.1) 15% 20%, transparent 20% 100%),
-    radial-gradient(circle, rgba(141, 119, 255, 0.12) 0 8%, transparent 8% 100%);
-  opacity: 0.95;
+    radial-gradient(circle, rgba(255, 110, 74, 0.18) 0 16%, rgba(255, 110, 74, 0.08) 16% 22%, transparent 22% 100%),
+    radial-gradient(circle, rgba(244, 239, 227, 0.08) 0 10%, transparent 10% 100%);
+  opacity: 0.84;
   will-change: transform, opacity;
-  transform: translate3d(0, 0, 0);
+  transform: translate3d(-50%, -50%, 0) scale(1);
+  animation: menuGlowBreath 12s ease-in-out infinite;
 }
 
 .menu-stage::after {
@@ -1080,10 +1081,23 @@ canvas {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(152deg, transparent 0 43%, rgba(244, 237, 220, 0.14) 43.1% 46%, transparent 46.1% 100%),
-    linear-gradient(330deg, transparent 0 61%, rgba(141, 119, 255, 0.12) 61.2% 66%, transparent 66.2% 100%),
-    linear-gradient(180deg, transparent 0 58%, rgba(5, 6, 13, 0.2) 72%, rgba(5, 6, 13, 0.82) 100%);
-  opacity: 0.78;
+    radial-gradient(circle at 50% 32%, rgba(244, 239, 227, 0.08) 0 1px, transparent 2px 100%),
+    radial-gradient(circle at 24% 24%, rgba(255, 110, 74, 0.08) 0 1px, transparent 2px 100%),
+    radial-gradient(circle at 76% 28%, rgba(141, 119, 255, 0.06) 0 1px, transparent 2px 100%),
+    linear-gradient(180deg, rgba(5, 6, 13, 0.02), rgba(5, 6, 13, 0.44));
+  opacity: 0.18;
+  background-size: 260px 260px, 320px 320px, 360px 360px, 100% 100%;
+}
+
+@keyframes menuGlowBreath {
+  0%, 100% {
+    transform: translate3d(-50%, -50%, 0) scale(1);
+    opacity: 0.72;
+  }
+  50% {
+    transform: translate3d(-50%, -50%, 0) scale(1.03);
+    opacity: 0.88;
+  }
 }
 
 .menu-stage-shape {
@@ -1216,29 +1230,32 @@ canvas {
   opacity: 0.92;
 }
 
-/* The shell now splits the title card from the command stack so the composition feels like a stylized JRPG cover. */
+/* The shell now centers the title and command list as one atmospheric scene instead of splitting them into cards. */
 .menu-shell {
   position: relative;
   z-index: 1;
-  width: min(1520px, calc(100vw - clamp(22px, 2.8vw, 52px)));
+  width: min(840px, calc(100vw - clamp(28px, 4vw, 64px)));
   min-height: min(88vh, 920px);
   margin: 0 auto;
-  display: grid;
-  grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
-  gap: clamp(12px, 2.4vw, 30px);
-  align-items: stretch;
-  align-content: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(18px, 3vh, 28px);
 }
 
 .menu-header-block,
 .menu-command-block {
   position: relative;
   overflow: visible;
+  width: 100%;
+  max-width: 680px;
+  text-align: center;
 }
 
 .menu-header-block {
-  min-height: clamp(380px, 48vh, 560px);
-  padding: clamp(28px, 3.4vw, 46px) clamp(20px, 2.6vw, 34px) clamp(32px, 4vw, 54px) 0;
+  min-height: 0;
+  padding: 0;
   background: transparent;
   color: var(--menu-text);
   border: 0;
@@ -1246,33 +1263,34 @@ canvas {
   clip-path: none;
   transform: none;
   z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
 }
 
 .menu-header-block::before {
   content: "";
   position: absolute;
-  inset: -4% -6% 16% -8%;
+  inset: 8% 10% 18%;
   pointer-events: none;
   background:
-    linear-gradient(135deg, transparent 0 34%, rgba(5, 5, 9, 0.9) 34.2% 57%, rgba(255, 63, 79, 0.18) 57.2% 59%, transparent 59.2% 100%),
-    linear-gradient(160deg, transparent 0 70%, rgba(242, 184, 75, 0.08) 70.2% 75%, transparent 75.2% 100%);
-  clip-path: polygon(0 0, 100% 6%, 92% 100%, 0 84%);
-  opacity: 0.94;
+    radial-gradient(circle at 50% 38%, rgba(255, 110, 74, 0.1) 0 18%, transparent 58%),
+    radial-gradient(circle at 50% 38%, rgba(244, 239, 227, 0.05) 0 10%, transparent 44%);
+  opacity: 0.6;
 }
 
 .menu-header-block::after {
   content: "";
   position: absolute;
-  left: 6%;
-  top: 18%;
-  width: 64%;
-  height: 42%;
+  left: 50%;
+  top: calc(100% - 12px);
+  width: min(260px, 70%);
+  height: 1px;
   pointer-events: none;
-  background:
-    radial-gradient(circle at 20% 38%, rgba(255, 255, 255, 0.16) 0 8%, transparent 8% 100%),
-    linear-gradient(90deg, rgba(255, 63, 79, 0.22), rgba(242, 184, 75, 0.08), transparent 72%);
-  clip-path: polygon(0 42%, 100% 0, 82% 100%, 0 78%);
-  opacity: 0.62;
+  transform: translateX(-50%);
+  background: linear-gradient(90deg, transparent, rgba(244, 239, 227, 0.34), rgba(255, 110, 74, 0.18), transparent);
+  opacity: 0.78;
 }
 
 /* The kicker gives the title card an authored header instead of a bare logo lockup. */
@@ -1295,62 +1313,59 @@ canvas {
 /* The title now feels poster-like with a split shadow and offset ghost layer instead of a plain neon wordmark. */
 #menu-screen .menu-title {
   position: relative;
-  margin: 10px 0 0;
+  margin: 0;
   color: var(--menu-text);
   width: fit-content;
   max-width: 100%;
-  font-size: clamp(3.8rem, 5.15vw, 5.95rem);
-  line-height: 0.78;
-  letter-spacing: clamp(0.004em, 0.11vw, 0.018em);
-  text-indent: clamp(0.004em, 0.11vw, 0.018em);
-  font-weight: 900;
+  font-size: clamp(4.4rem, 6.8vw, 7rem);
+  line-height: 0.88;
+  letter-spacing: clamp(0.02em, 0.24vw, 0.06em);
+  text-indent: clamp(0.02em, 0.24vw, 0.06em);
+  font-weight: 800;
   white-space: nowrap;
-  -webkit-text-stroke: 1px rgba(5, 5, 9, 0.2);
+  -webkit-text-stroke: 1px rgba(5, 5, 9, 0.18);
   text-shadow:
-    -10px -6px 0 rgba(242, 184, 75, 0.18),
-    12px 12px 0 rgba(255, 63, 79, 0.7),
-    20px 20px 0 rgba(5, 5, 9, 0.45);
-  transform: translate3d(0, 0, 0) rotate(-1deg);
+    0 0 18px rgba(255, 255, 255, 0.06),
+    0 0 28px rgba(255, 110, 74, 0.08),
+    0 12px 0 rgba(5, 5, 9, 0.34);
+  transform: translate3d(0, 0, 0);
 }
 
 #menu-screen .menu-title::before {
   content: attr(data-title);
   position: absolute;
-  left: 0;
+  left: 50%;
   top: 0;
-  transform: translate(0.14em, -0.12em);
-  color: rgba(255, 255, 255, 0.42);
-  opacity: 0.2;
+  transform: translate(-50%, -0.08em);
+  color: rgba(244, 239, 227, 0.12);
+  opacity: 0.5;
   mix-blend-mode: screen;
-  clip-path: polygon(0 0, 100% 0, 100% 52%, 0 62%);
+  clip-path: none;
 }
 
 #menu-screen .menu-title::after {
   content: "";
   position: absolute;
   left: 0;
-  bottom: -20px;
-  width: min(540px, 92%);
-  height: 18px;
-  background:
-    linear-gradient(90deg, rgba(5, 5, 9, 0.96), rgba(255, 63, 79, 0.96), rgba(242, 184, 75, 0.34)),
-    linear-gradient(180deg, rgba(244, 239, 227, 0.14), transparent 62%);
-  clip-path: polygon(0 0, 92% 0, 100% 50%, 92% 100%, 0 100%, 4% 50%);
-  transform: skewX(-16deg);
-  box-shadow: 0 14px 28px rgba(255, 63, 79, 0.18);
+  bottom: -14px;
+  width: min(240px, 62%);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(244, 239, 227, 0.42), transparent);
+  transform: translateX(0);
+  box-shadow: none;
 }
 
 /* The cursor line becomes a dramatic underline rather than a simple boot cursor. */
 #menu-screen .menu-header-block .cursor-line {
-  width: min(420px, 100%);
-  height: 6px;
-  margin: 18px 0 14px;
-  background: linear-gradient(90deg, rgba(5, 5, 9, 1), rgba(255, 63, 79, 0.92) 52%, rgba(242, 184, 75, 0.38) 76%, transparent 100%);
-  box-shadow: 0 0 0 1px rgba(5, 5, 9, 0.16);
-  opacity: 0.92;
+  width: min(220px, 62%);
+  height: 1px;
+  margin: 16px 0 10px;
+  background: linear-gradient(90deg, transparent, rgba(244, 239, 227, 0.44), rgba(255, 110, 74, 0.18), transparent);
+  box-shadow: none;
+  opacity: 0.82;
 }
 
-/* Secondary menu text stays dimmer so the title remains the focus. */
+/* The mode description stays subtle so hover text remains informative without taking over the scene. */
 #menu-screen .menu-subtitle {
   margin: 0;
   color: rgba(244, 239, 227, 0.72);
@@ -1359,72 +1374,69 @@ canvas {
   line-height: 1.8;
 }
 
-/* The mode description becomes a tactile banner with a paper-cut edge and a warm highlight. */
 #menu-screen .menu-mode-description {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  margin: 8px 0 0;
+  margin: 0;
   max-width: 100%;
-  padding: 10px 14px;
-  background: rgba(16, 13, 24, 0.92);
-  border: 1px solid rgba(242, 184, 75, 0.16);
-  color: var(--menu-muted);
-  font-size: 0.7rem;
-  letter-spacing: 0.18em;
-  line-height: 1.5;
-  clip-path: polygon(0 0, 96% 0, 100% 50%, 96% 100%, 0 100%, 2% 50%);
-  box-shadow: 8px 10px 0 rgba(5, 5, 9, 0.28);
+  padding: 0;
+  background: transparent;
+  border: 0;
+  color: rgba(244, 239, 227, 0.52);
+  font-size: 0.66rem;
+  letter-spacing: 0.22em;
+  line-height: 1.8;
+  text-transform: uppercase;
+  box-shadow: none;
 }
 
 .menu-command-block {
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  min-height: clamp(380px, 48vh, 560px);
-  padding: clamp(34px, 4vw, 56px) 0 clamp(28px, 3.2vw, 40px);
+  gap: 14px;
+  min-height: 0;
+  padding: 0;
   background: transparent;
   color: var(--menu-text);
   border: 0;
   box-shadow: none;
   clip-path: none;
   transform: none;
+  align-items: center;
 }
 
 .menu-command-block::before {
   content: "";
   position: absolute;
-  inset: 0 -8% 4% -2%;
+  inset: 12% 12% 18%;
   pointer-events: none;
   background:
-    linear-gradient(140deg, transparent 0 50%, rgba(5, 5, 9, 0.94) 50.2% 78%, rgba(255, 63, 79, 0.14) 78.2% 82%, transparent 82.2% 100%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 28%);
-  clip-path: polygon(6% 0, 100% 6%, 94% 100%, 2% 94%);
-  opacity: 0.96;
+    radial-gradient(circle at 50% 40%, rgba(255, 110, 74, 0.05) 0 16%, transparent 54%),
+    radial-gradient(circle at 50% 40%, rgba(244, 239, 227, 0.04) 0 10%, transparent 42%);
+  opacity: 0.5;
 }
 
 .menu-command-block::after {
   content: "";
   position: absolute;
-  left: 2%;
-  top: 22%;
-  width: 82%;
-  height: 62%;
+  left: 50%;
+  bottom: 10px;
+  width: min(220px, 52%);
+  height: 1px;
   pointer-events: none;
-  background:
-    linear-gradient(135deg, transparent 0 46%, rgba(255, 63, 79, 0.18) 46.2% 50%, transparent 50.2% 100%),
-    linear-gradient(180deg, rgba(244, 239, 227, 0.05), transparent 34%);
-  clip-path: polygon(0 10%, 96% 0, 100% 100%, 4% 92%);
-  opacity: 0.72;
+  transform: translateX(-50%);
+  background: linear-gradient(90deg, transparent, rgba(244, 239, 227, 0.32), transparent);
+  opacity: 0.7;
 }
 
 /* The command label anchors the action column with a deliberate title-screen prompt. */
 #menu-screen .menu-command-label {
   margin: 0;
-  color: var(--menu-text);
+  color: rgba(244, 239, 227, 0.52);
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-  font-size: 0.74rem;
-  letter-spacing: 0.24em;
+  font-size: 0.68rem;
+  letter-spacing: 0.28em;
   text-transform: uppercase;
 }
 
@@ -1440,29 +1452,31 @@ canvas {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 12px;
   position: relative;
   z-index: 1;
+  align-items: center;
 }
 
 #menu-screen .menu-actions-primary {
-  width: min(100%, 560px);
-  align-self: flex-start;
-  transform: translateX(1.5vw);
-}
-
-#menu-screen .menu-actions-dual {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 16px;
-  width: 100%;
+  width: min(100%, 440px);
+  align-self: center;
   transform: none;
 }
 
+#menu-screen .menu-actions-dual {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  transform: none;
+  align-items: center;
+}
+
 #menu-screen .menu-actions-secondary {
-  width: min(100%, 500px);
-  align-self: flex-start;
-  transform: translateX(2.6vw);
+  width: min(100%, 420px);
+  align-self: center;
+  transform: none;
 }
 
 #menu-screen .menu-button {
@@ -1470,67 +1484,67 @@ canvas {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 12px;
+  justify-content: center;
+  gap: 10px;
   width: 100%;
-  min-height: 70px;
+  min-height: 54px;
   appearance: none;
-  border: 1px solid rgba(242, 239, 227, 0.18);
-  padding: 18px 30px 18px 40px;
-  background: linear-gradient(180deg, rgba(8, 8, 15, 0.95), rgba(17, 13, 24, 0.95));
+  border: 1px solid rgba(242, 239, 227, 0.12);
+  padding: 14px 22px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.012));
   color: var(--menu-text);
   font-weight: 700;
   cursor: pointer;
-  letter-spacing: 0.16em;
-  font-size: clamp(0.76rem, 1.05vw, 0.86rem);
-  text-align: left;
+  letter-spacing: 0.2em;
+  font-size: clamp(0.78rem, 1vw, 0.92rem);
+  text-align: center;
   white-space: nowrap;
   overflow: hidden;
-  box-shadow: 10px 10px 0 rgba(5, 5, 9, 0.22);
+  box-shadow: 0 10px 22px rgba(5, 5, 9, 0.18);
   transform: translate3d(0, 0, 0);
   transition:
-    transform 180ms ease,
-    background 180ms ease,
-    color 180ms ease,
-    border-color 180ms ease,
-    opacity 180ms ease;
+    transform 150ms ease,
+    background 150ms ease,
+    color 150ms ease,
+    border-color 150ms ease,
+    opacity 150ms ease;
   isolation: isolate;
+  clip-path: polygon(0 0, 100% 0, 98% 100%, 2% 100%);
 }
 
 #menu-screen .menu-button::before {
   content: "";
   position: absolute;
-  inset: 0 0 0 0;
+  inset: 0;
   pointer-events: none;
   background:
-    linear-gradient(120deg, transparent 0 34%, rgba(255, 255, 255, 0.18) 42%, transparent 52%),
-    linear-gradient(90deg, var(--menu-button-accent, var(--menu-teal)) 0 7%, transparent 7% 100%);
-  opacity: 0.98;
-  transform: translate3d(-4%, 0, 0) skewX(-18deg);
-  transition: transform 160ms ease, opacity 160ms ease, background 160ms ease;
+    linear-gradient(90deg, var(--menu-button-accent, rgba(255, 255, 255, 0.14)) 0 3px, transparent 3px 100%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 60%);
+  opacity: 0.78;
+  transform: translate3d(0, 0, 0);
+  transition: transform 150ms ease, opacity 150ms ease, background 150ms ease;
   z-index: 0;
 }
 
 #menu-screen .menu-button::after {
   content: "";
   position: absolute;
-  right: 2px;
-  top: 0;
-  width: 28px;
-  height: 100%;
+  left: 50%;
+  bottom: 10px;
+  width: 24%;
+  height: 1px;
   pointer-events: none;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.02)),
-    linear-gradient(180deg, rgba(255, 63, 79, 0.22), rgba(255, 63, 79, 0.06));
-  clip-path: polygon(40% 0, 100% 0, 100% 100%, 0 100%);
+  background: linear-gradient(90deg, transparent, rgba(244, 239, 227, 0.28), transparent);
+  transform: translateX(-50%);
   opacity: 0.6;
-  z-index: 1;
-  transition: transform 160ms ease, opacity 160ms ease;
+  z-index: 0;
+  transition: opacity 150ms ease, transform 150ms ease;
 }
 
 #menu-screen .menu-button-label {
   position: relative;
-  z-index: 2;
-  display: inline-block;
+  z-index: 1;
+  display: block;
   max-width: 100%;
 }
 
@@ -1553,43 +1567,44 @@ canvas {
 #menu-screen .menu-button:hover,
 #menu-screen .menu-button:focus-visible {
   color: var(--menu-text);
-  background: linear-gradient(180deg, rgba(30, 22, 41, 0.98), rgba(17, 13, 24, 0.96));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.02));
   outline: none;
-  transform: translate3d(8px, -2px, 0) scale(1.02);
+  transform: translate3d(0, -2px, 0) scale(1.01);
 }
 
 #menu-screen .menu-button:hover::before,
 #menu-screen .menu-button:focus-visible::before {
   opacity: 1;
-  transform: translate3d(0, 0, 0) skewX(-18deg);
+  transform: translate3d(4px, 0, 0);
 }
 
 #menu-screen .menu-button:hover::after,
 #menu-screen .menu-button:focus-visible::after {
-  opacity: 0.92;
-  transform: translate3d(4px, 0, 0);
+  opacity: 0.82;
+  transform: translateX(-50%) scaleX(1.08);
 }
 
 #menu-screen .menu-button:active {
-  transform: translate3d(7px, 0, 0) scale(0.995);
+  transform: translate3d(0, 0, 0) scale(0.995);
 }
 
 /* The bottom footnote becomes a label strip so the menu feels anchored like a poster instead of centered like a launcher. */
 #menu-screen .menu-footnote {
   position: absolute;
-  left: clamp(20px, 4vw, 54px);
-  bottom: clamp(18px, 3vw, 32px);
+  left: 50%;
+  bottom: clamp(16px, 3vh, 28px);
   margin: 0;
-  padding: 10px 12px;
-  background: rgba(17, 17, 26, 0.82);
-  border: 1px solid rgba(244, 237, 220, 0.16);
-  color: rgba(244, 237, 220, 0.76);
+  padding: 0;
+  background: transparent;
+  border: 0;
+  color: rgba(244, 237, 220, 0.36);
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
   font-size: 0.7rem;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.2em;
   white-space: nowrap;
-  clip-path: polygon(0 0, 100% 0, 96% 100%, 0 100%);
-  box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.18);
+  clip-path: none;
+  box-shadow: none;
+  transform: translateX(-50%);
 }
 
 @keyframes menu-pulse {
@@ -2096,17 +2111,17 @@ canvas {
 @media (min-width: 1400px) {
   .menu-shell {
     min-height: min(90vh, 980px);
-    grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr);
+    width: min(900px, calc(100vw - clamp(36px, 5vw, 88px)));
   }
 
   .menu-header-block {
-    padding-right: clamp(34px, 3.2vw, 52px);
+    max-width: 720px;
   }
 
   #menu-screen .menu-title {
-    font-size: clamp(4rem, 5vw, 6.1rem);
-    letter-spacing: clamp(0.004em, 0.1vw, 0.018em);
-    text-indent: clamp(0.004em, 0.1vw, 0.018em);
+    font-size: clamp(4.8rem, 6.2vw, 7.4rem);
+    letter-spacing: clamp(0.02em, 0.16vw, 0.06em);
+    text-indent: clamp(0.02em, 0.16vw, 0.06em);
   }
 }
 
