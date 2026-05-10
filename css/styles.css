@@ -1182,11 +1182,11 @@ canvas {
 .menu-shell {
   position: relative;
   z-index: 1;
-  width: min(1480px, calc(100vw - clamp(32px, 4vw, 72px)));
+  width: min(1540px, calc(100vw - clamp(28px, 3.5vw, 64px)));
   min-height: 82vh;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: minmax(0, 1.38fr) minmax(340px, 0.62fr);
+  grid-template-columns: minmax(0, 1.54fr) minmax(300px, 0.46fr);
   gap: clamp(16px, 3.2vw, 40px);
   align-items: stretch;
   align-content: center;
@@ -1199,8 +1199,8 @@ canvas {
 }
 
 .menu-header-block {
-  min-height: clamp(340px, 42vh, 500px);
-  padding: clamp(24px, 3vw, 40px) clamp(30px, 4vw, 56px) clamp(32px, 4vw, 54px);
+  min-height: clamp(360px, 44vh, 520px);
+  padding: clamp(28px, 3.2vw, 44px) clamp(32px, 4.2vw, 60px) clamp(34px, 4.4vw, 58px);
   background:
     linear-gradient(180deg, rgba(31, 24, 39, 0.98), rgba(21, 16, 31, 0.98)),
     linear-gradient(135deg, rgba(255, 63, 79, 0.08), transparent 34%);
@@ -1257,10 +1257,12 @@ canvas {
   position: relative;
   margin: 10px 0 0;
   color: var(--menu-text);
-  font-size: clamp(3rem, 4.15vw, 4.55rem);
-  line-height: 0.84;
-  letter-spacing: clamp(0.02em, 0.22vw, 0.04em);
-  text-indent: clamp(0.02em, 0.22vw, 0.04em);
+  width: fit-content;
+  max-width: 100%;
+  font-size: clamp(3.45rem, 5vw, 5.45rem);
+  line-height: 0.8;
+  letter-spacing: clamp(0.012em, 0.16vw, 0.03em);
+  text-indent: clamp(0.012em, 0.16vw, 0.03em);
   font-weight: 900;
   -webkit-text-stroke: 1px rgba(5, 5, 9, 0.2);
   text-shadow:
@@ -1286,7 +1288,7 @@ canvas {
   position: absolute;
   left: 0;
   bottom: -18px;
-  width: min(380px, 80%);
+  width: min(440px, 84%);
   height: 16px;
   background: linear-gradient(90deg, rgba(5, 5, 9, 0.96), rgba(255, 63, 79, 0.96), rgba(242, 184, 75, 0.28));
   clip-path: polygon(0 0, 94% 0, 100% 50%, 94% 100%, 0 100%, 5% 50%);
@@ -1334,9 +1336,9 @@ canvas {
 .menu-command-block {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 22px;
   min-height: clamp(320px, 38vh, 460px);
-  padding: clamp(24px, 3vw, 40px);
+  padding: clamp(28px, 3vw, 42px);
   background:
     linear-gradient(180deg, rgba(17, 13, 24, 0.98), rgba(11, 10, 18, 0.98)),
     linear-gradient(135deg, rgba(255, 63, 79, 0.08), transparent 36%);
@@ -1381,27 +1383,27 @@ canvas {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 18px;
 }
 
 #menu-screen .menu-actions-primary {
-  width: min(100%, 460px);
-  align-self: flex-start;
-  transform: translateX(-8px);
+  width: min(100%, 540px);
+  align-self: stretch;
+  transform: none;
 }
 
 #menu-screen .menu-actions-dual {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  grid-template-columns: 1fr;
+  gap: 14px;
   width: 100%;
-  transform: translateX(20px);
+  transform: none;
 }
 
 #menu-screen .menu-actions-secondary {
-  width: min(100%, 420px);
-  align-self: flex-start;
-  transform: translateX(22px);
+  width: min(100%, 540px);
+  align-self: stretch;
+  transform: none;
 }
 
 #menu-screen .menu-button {
@@ -1411,10 +1413,10 @@ canvas {
   justify-content: flex-start;
   gap: 12px;
   width: 100%;
-  min-height: 64px;
+  min-height: 66px;
   appearance: none;
   border: 0;
-  padding: 18px 24px 18px 34px;
+  padding: 18px 26px 18px 34px;
   background: transparent;
   color: var(--menu-text);
   font-weight: 700;
@@ -1423,7 +1425,7 @@ canvas {
   font-size: clamp(0.76rem, 1.05vw, 0.86rem);
   text-align: left;
   white-space: nowrap;
-  overflow: visible;
+  overflow: hidden;
   box-shadow: none;
   transform: translate3d(0, 0, 0);
   transition:
@@ -1442,9 +1444,9 @@ canvas {
   pointer-events: none;
   background:
     linear-gradient(120deg, transparent 0 32%, rgba(255, 255, 255, 0.24) 42%, transparent 52%),
-    linear-gradient(90deg, var(--menu-button-accent, var(--menu-teal)) 0 10%, transparent 10% 100%);
+    linear-gradient(90deg, var(--menu-button-accent, var(--menu-teal)) 0 8%, transparent 8% 100%);
   opacity: 0.92;
-  transform: translate3d(-18%, 0, 0) skewX(-18deg);
+  transform: translate3d(-10%, 0, 0) skewX(-18deg);
   transition: transform 160ms ease, opacity 160ms ease, background 160ms ease;
   z-index: 0;
 }
@@ -1452,9 +1454,9 @@ canvas {
 #menu-screen .menu-button::after {
   content: "";
   position: absolute;
-  right: 4px;
+  right: 2px;
   top: 0;
-  width: 26px;
+  width: 22px;
   height: 100%;
   pointer-events: none;
   background:
@@ -1494,7 +1496,7 @@ canvas {
   color: var(--menu-text);
   background: linear-gradient(180deg, rgba(30, 22, 41, 0.92), rgba(17, 13, 24, 0.94));
   outline: none;
-  transform: translate3d(10px, -2px, 0) scale(1.02);
+  transform: translate3d(8px, -2px, 0) scale(1.02);
 }
 
 #menu-screen .menu-button:hover::before,
@@ -2028,17 +2030,17 @@ canvas {
 @media (min-width: 1400px) {
   .menu-shell {
     min-height: 84vh;
-    grid-template-columns: minmax(0, 1.42fr) minmax(320px, 0.58fr);
+    grid-template-columns: minmax(0, 1.6fr) minmax(280px, 0.4fr);
   }
 
   .menu-header-block {
-    padding-right: clamp(62px, 5vw, 92px);
+    padding-right: clamp(66px, 5.2vw, 96px);
   }
 
   .menu-title {
-    font-size: clamp(2.9rem, 3.65vw, 4.25rem);
-    letter-spacing: clamp(0.018em, 0.18vw, 0.03em);
-    text-indent: clamp(0.018em, 0.18vw, 0.03em);
+    font-size: clamp(3.3rem, 4.6vw, 5.15rem);
+    letter-spacing: clamp(0.01em, 0.14vw, 0.025em);
+    text-indent: clamp(0.01em, 0.14vw, 0.025em);
   }
 }
 
@@ -2050,9 +2052,9 @@ canvas {
   }
 
   .menu-title {
-    letter-spacing: 0.02em;
-    text-indent: 0.02em;
-    font-size: clamp(2.55rem, 10vw, 3.6rem);
+    letter-spacing: 0.012em;
+    text-indent: 0.012em;
+    font-size: clamp(2.8rem, 10.5vw, 4rem);
   }
 
   .menu-header-block .cursor-line {
@@ -2060,8 +2062,8 @@ canvas {
   }
 
   #menu-screen .menu-button {
-    min-height: 58px;
-    padding: 14px 16px 14px 20px;
+    min-height: 60px;
+    padding: 14px 18px 14px 22px;
     font-size: 0.72rem;
     letter-spacing: 0.12em;
     white-space: normal;
@@ -2080,9 +2082,9 @@ canvas {
   }
 
   #menu-screen .menu-title {
-    letter-spacing: 0.02em;
-    text-indent: 0.02em;
-    font-size: clamp(2.55rem, 9vw, 3.4rem);
+    letter-spacing: 0.012em;
+    text-indent: 0.012em;
+    font-size: clamp(2.7rem, 8.8vw, 4rem);
   }
 
   #menu-screen .menu-footnote {
