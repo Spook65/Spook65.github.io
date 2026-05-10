@@ -1182,12 +1182,12 @@ canvas {
 .menu-shell {
   position: relative;
   z-index: 1;
-  width: min(1280px, 100%);
-  min-height: 80vh;
+  width: min(1480px, calc(100vw - clamp(32px, 4vw, 72px)));
+  min-height: 82vh;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: minmax(0, 1.18fr) minmax(380px, 0.82fr);
-  gap: clamp(18px, 4vw, 44px);
+  grid-template-columns: minmax(0, 1.38fr) minmax(340px, 0.62fr);
+  gap: clamp(16px, 3.2vw, 40px);
   align-items: stretch;
   align-content: center;
 }
@@ -1200,7 +1200,7 @@ canvas {
 
 .menu-header-block {
   min-height: clamp(340px, 42vh, 500px);
-  padding: clamp(24px, 3vw, 40px) clamp(24px, 3.2vw, 46px) clamp(32px, 4vw, 54px);
+  padding: clamp(24px, 3vw, 40px) clamp(30px, 4vw, 56px) clamp(32px, 4vw, 54px);
   background:
     linear-gradient(180deg, rgba(31, 24, 39, 0.98), rgba(21, 16, 31, 0.98)),
     linear-gradient(135deg, rgba(255, 63, 79, 0.08), transparent 34%);
@@ -1209,7 +1209,7 @@ canvas {
   box-shadow:
     0 26px 56px var(--menu-panel-shadow),
     0 0 0 1px rgba(10, 10, 20, 0.12) inset;
-  clip-path: polygon(0 0, 100% 0, 94% 100%, 1% 100%);
+  clip-path: polygon(0 0, 100% 0, 97% 100%, 1% 100%);
   transform: translateX(clamp(0px, 1vw, 12px)) rotate(-1.6deg);
   z-index: 2;
 }
@@ -1257,10 +1257,10 @@ canvas {
   position: relative;
   margin: 10px 0 0;
   color: var(--menu-text);
-  font-size: clamp(4.2rem, 7.4vw, 8rem);
+  font-size: clamp(3rem, 4.15vw, 4.55rem);
   line-height: 0.84;
-  letter-spacing: 0.1em;
-  text-indent: 0.1em;
+  letter-spacing: clamp(0.02em, 0.22vw, 0.04em);
+  text-indent: clamp(0.02em, 0.22vw, 0.04em);
   font-weight: 900;
   -webkit-text-stroke: 1px rgba(5, 5, 9, 0.2);
   text-shadow:
@@ -1286,7 +1286,7 @@ canvas {
   position: absolute;
   left: 0;
   bottom: -18px;
-  width: min(460px, 86%);
+  width: min(380px, 80%);
   height: 16px;
   background: linear-gradient(90deg, rgba(5, 5, 9, 0.96), rgba(255, 63, 79, 0.96), rgba(242, 184, 75, 0.28));
   clip-path: polygon(0 0, 94% 0, 100% 50%, 94% 100%, 0 100%, 5% 50%);
@@ -2024,6 +2024,24 @@ canvas {
   }
 }
 
+/* Wider desktops can afford a slightly smaller hero title so the full word never clips in fullscreen layouts. */
+@media (min-width: 1400px) {
+  .menu-shell {
+    min-height: 84vh;
+    grid-template-columns: minmax(0, 1.42fr) minmax(320px, 0.58fr);
+  }
+
+  .menu-header-block {
+    padding-right: clamp(62px, 5vw, 92px);
+  }
+
+  .menu-title {
+    font-size: clamp(2.9rem, 3.65vw, 4.25rem);
+    letter-spacing: clamp(0.018em, 0.18vw, 0.03em);
+    text-indent: clamp(0.018em, 0.18vw, 0.03em);
+  }
+}
+
 /* Small phones get tighter spacing so the menu stays dramatic without feeling crowded. */
 @media (max-width: 640px) {
   .menu-kicker,
@@ -2032,9 +2050,9 @@ canvas {
   }
 
   .menu-title {
-    letter-spacing: 0.12em;
-    text-indent: 0.12em;
-    font-size: clamp(3.2rem, 12vw, 5rem);
+    letter-spacing: 0.02em;
+    text-indent: 0.02em;
+    font-size: clamp(2.55rem, 10vw, 3.6rem);
   }
 
   .menu-header-block .cursor-line {
@@ -2061,8 +2079,10 @@ canvas {
     grid-template-columns: 1fr;
   }
 
-  .menu-title {
-    letter-spacing: 0.16em;
+  #menu-screen .menu-title {
+    letter-spacing: 0.02em;
+    text-indent: 0.02em;
+    font-size: clamp(2.55rem, 9vw, 3.4rem);
   }
 
   #menu-screen .menu-footnote {
