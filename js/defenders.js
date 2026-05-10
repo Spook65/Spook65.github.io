@@ -567,8 +567,8 @@ let defenderSaveState = null;
 // defenderSelectionDraft tracks the starter party the player is editing before they lock it in.
 let defenderSelectionDraft = [];
 
-// defenderScreenContent is the dynamic container for the starter-selection screen.
-const defenderScreen = document.getElementById("defender-screen");
+// defenderSelectionScreenRoot is the dynamic container for the starter-selection screen.
+const defenderSelectionScreenRoot = document.getElementById("defender-screen");
 const defenderScreenContent = document.getElementById("defender-screen-content");
 const defenderSetupButton = document.getElementById("defender-setup-button");
 
