@@ -1033,6 +1033,9 @@ canvas {
     radial-gradient(circle at 50% 34%, rgba(244, 239, 227, 0.08), transparent 14%),
     radial-gradient(circle at 50% 34%, rgba(72, 214, 198, 0.05), transparent 23%),
     radial-gradient(circle at 50% 36%, rgba(255, 63, 79, 0.07), transparent 36%),
+    radial-gradient(circle at 50% 67%, transparent 0 24%, rgba(244, 239, 227, 0.045) 24% 24.4%, transparent 24.4% 100%),
+    linear-gradient(126deg, transparent 0 47%, rgba(72, 214, 198, 0.035) 47.15% 47.32%, transparent 47.5% 100%),
+    linear-gradient(154deg, transparent 0 62%, rgba(255, 110, 74, 0.03) 62.15% 62.32%, transparent 62.5% 100%),
     linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.62));
   opacity: 0.88;
 }
@@ -1048,8 +1051,10 @@ canvas {
     linear-gradient(118deg, transparent 0 47%, rgba(72, 214, 198, 0.05) 47.2% 47.45%, transparent 47.6% 100%),
     linear-gradient(142deg, transparent 0 58%, rgba(255, 110, 74, 0.05) 58.2% 58.45%, transparent 58.6% 100%),
     linear-gradient(176deg, transparent 0 71%, rgba(244, 239, 227, 0.04) 71.2% 71.45%, transparent 71.6% 100%),
+    linear-gradient(126deg, transparent 0 41%, rgba(72, 214, 198, 0.04) 41.15% 41.3%, transparent 41.45% 100%),
+    linear-gradient(154deg, transparent 0 63%, rgba(255, 110, 74, 0.035) 63.15% 63.3%, transparent 63.45% 100%),
     linear-gradient(180deg, rgba(5, 6, 13, 0.02), rgba(5, 6, 13, 0.5));
-  background-size: 104px 104px, 104px 104px, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+  background-size: 104px 104px, 104px 104px, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
   mask-image: radial-gradient(circle at 50% 32%, rgba(0, 0, 0, 0.98), transparent 78%);
   opacity: 0.18;
   mix-blend-mode: screen;
