@@ -2054,9 +2054,11 @@ function buildReserveStripMarkup(state, activeProgramId) {
 function buildProgramBattlefieldMarkup(program, state, isCurrentTurn) {
   const statusMarkup = renderStatusPills(program.statusEffects);
   const effect = state.visualEffect || {};
+  const programClass = `program-${getProgramSpriteClass(program)}`;
   const figureClass = [
     "combat-battler",
     "combat-battler-player",
+    programClass,
     isCurrentTurn ? "is-current" : "",
     effect.attackerKind === "program" && effect.attackerId === program.id ? `is-${effect.phase || "windup"}` : "",
     effect.targetKind === "program" && effect.targetId === program.id ? "is-hit" : "",
@@ -2105,9 +2107,11 @@ function buildThreatVisualMarkup(state) {
   const threat = state.threat;
   const statusMarkup = renderStatusPills(threat.statusEffects);
   const effect = state.visualEffect || {};
+  const threatClass = `threat-${getThreatSpriteClass(threat)}`;
   const figureClass = [
     "combat-battler",
     "combat-battler-enemy",
+    threatClass,
     effect.attackerKind === "threat" && effect.attackerId === threat.id ? `is-${effect.phase || "windup"}` : "",
     effect.targetKind === "threat" && effect.targetId === threat.id ? "is-hit" : "",
     threat.hp <= 0 ? "is-fainted" : ""
