@@ -1072,12 +1072,18 @@ canvas {
   height: min(72vw, 820px);
   border-radius: 50%;
   background:
-    radial-gradient(circle at 50% 50%, transparent 0 33%, rgba(244, 239, 227, 0.08) 33% 33.8%, transparent 33.8% 46%, rgba(72, 214, 198, 0.06) 46% 46.6%, transparent 46.6% 60%, rgba(255, 110, 74, 0.05) 60% 60.6%, transparent 60.6% 100%),
-    conic-gradient(from 208deg, rgba(255, 110, 74, 0.06), rgba(242, 184, 75, 0.05), rgba(72, 214, 198, 0.05), rgba(255, 110, 74, 0.06));
-  opacity: 0.62;
+    radial-gradient(circle at 50% 50%, transparent 0 33%, rgba(244, 239, 227, 0.08) 33% 33.7%, transparent 33.7% 46%, rgba(72, 214, 198, 0.06) 46% 46.6%, transparent 46.6% 60%, rgba(255, 110, 74, 0.05) 60% 60.6%, transparent 60.6% 100%),
+    conic-gradient(from 210deg,
+      transparent 0 8deg,
+      rgba(244, 239, 227, 0.02) 8deg 22deg,
+      rgba(244, 239, 227, 0.22) 22deg 34deg,
+      rgba(255, 255, 255, 0.32) 34deg 38deg,
+      rgba(244, 239, 227, 0.1) 38deg 46deg,
+      transparent 46deg 360deg);
+  opacity: 0.56;
   will-change: transform, opacity;
   transform: translate3d(-50%, -50%, 0) scale(1);
-  animation: menuGlowBreath 18s ease-in-out infinite;
+  animation: menuRingSweep 20s linear infinite;
   mix-blend-mode: screen;
 }
 
@@ -1094,14 +1100,14 @@ canvas {
   background-size: 100% 100%;
 }
 
-@keyframes menuGlowBreath {
+@keyframes menuRingSweep {
   0%, 100% {
-    transform: translate3d(-50%, -50%, 0) scale(1);
-    opacity: 0.72;
+    transform: translate3d(-50%, -50%, 0) rotate(0deg) scale(1);
+    opacity: 0.52;
   }
   50% {
-    transform: translate3d(-50%, -50%, 0) scale(1.03);
-    opacity: 0.88;
+    transform: translate3d(-50%, -50%, 0) rotate(180deg) scale(1.01);
+    opacity: 0.68;
   }
 }
 
