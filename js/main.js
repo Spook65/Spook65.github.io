@@ -1845,6 +1845,7 @@ function buildCombatState(sourceThreat) {
     battleSubmessage: "",
     visualEffect: null,
     actionLocked: false,
+    commandMode: "main",
     outcome: "ongoing",
     phase: "battle",
     nextDamageReduction: 0,
@@ -1972,6 +1973,18 @@ function getBattleMessageText(state) {
   }
 
   if (currentActor.kind === "program") {
+    if (state.commandMode === "attack") {
+      return `CHOOSE AN ACTION FOR ${currentActor.ref.name.toUpperCase()}.`;
+    }
+
+    if (state.commandMode === "programs") {
+      return "PROGRAM SWITCHING COMING SOON.";
+    }
+
+    if (state.commandMode === "items") {
+      return "NO RECOVERY ITEMS AVAILABLE.";
+    }
+
     return `WHAT WILL ${currentActor.ref.name.toUpperCase()} DO?`;
   }
 
@@ -1982,6 +1995,18 @@ function getBattleMessageText(state) {
 function getBattleSubmessageText(state) {
   if (state.battleSubmessage) {
     return state.battleSubmessage;
+  }
+
+  if (state.commandMode === "attack") {
+    return "SELECT A PROGRAM ATTACK OR BACK OUT.";
+  }
+
+  if (state.commandMode === "programs") {
+    return "ACTIVE PARTY VIEW. SWITCHING COMING SOON.";
+  }
+
+  if (state.commandMode === "items") {
+    return "ITEMS MENU EMPTY.";
   }
 
   return "RESPONSE GATE ONLINE.";
@@ -2126,41 +2151,101 @@ function buildActionButtonMarkup(state) {
   }
 
   const actor = currentActor.ref;
-  const comboButtons = [];
+  const commandMode = state.commandMode || "main";
   const firewall = programs.find((program) => program.id === "firewall-7" && program.hp > 0);
   const ids = programs.find((program) => program.id === "ids-4" && program.hp > 0);
   const honeypot = programs.find((program) => program.id === "honeypot-3" && program.hp > 0);
   const antivirus = programs.find((program) => program.id === "antivirus-9" && program.hp > 0);
 
-  if (firewall && ids && state.responseGauge >= 3) {
-    comboButtons.push(`
-      <button class="combat-action-button" type="button" data-combat-combo="sync-defense">
-        [ SYNCHRONIZED DEFENSE | COST 3 ]
-      </button>
-    `);
+  if (commandMode === "programs") {
+    return `
+      <div class="combat-command-subtitle">ACTIVE PARTY</div>
+      <div class="combat-party-grid">
+        ${state.playerParty.map((program) => `
+          <div class="combat-party-card ${program.id === actor.id ? "is-active" : ""} ${program.hp <= 0 ? "is-down" : ""}">
+            <div class="combat-party-name">${program.name}</div>
+            <div class="combat-party-meta">HP ${program.hp}/${program.maxHp}</div>
+            <div class="combat-party-meta">LVL ${program.level}</div>
+            ${program.id === actor.id ? '<div class="combat-party-tag">ACTIVE</div>' : ""}
+          </div>
+        `).join("")}
+      </div>
+      <div class="combat-action-note">SWITCHING COMING SOON.</div>
+      <div class="combat-command-back-row">
+        <button class="combat-action-button is-secondary" type="button" data-combat-command="back">BACK</button>
+      </div>
+    `;
   }
 
-  if (honeypot && antivirus && state.responseGauge >= 3) {
-    comboButtons.push(`
-      <button class="combat-action-button" type="button" data-combat-combo="containment-protocol">
-        [ CONTAINMENT PROTOCOL | COST 3 ]
-      </button>
-    `);
+  if (commandMode === "items") {
+    return `
+      <div class="combat-command-subtitle">ITEMS</div>
+      <div class="combat-command-empty">NO RECOVERY ITEMS AVAILABLE.</div>
+      <div class="combat-command-back-row">
+        <button class="combat-action-button is-secondary" type="button" data-combat-command="back">BACK</button>
+      </div>
+    `;
+  }
+
+  if (commandMode === "attack") {
+    const comboButtons = [];
+
+    if (firewall && ids && state.responseGauge >= 3) {
+      comboButtons.push(`
+        <button class="combat-action-button is-secondary" type="button" data-combat-combo="sync-defense">
+          <span class="combat-command-name">SYNCHRONIZED DEFENSE</span>
+          <span class="combat-command-cost">COST 3</span>
+        </button>
+      `);
+    }
+
+    if (honeypot && antivirus && state.responseGauge >= 3) {
+      comboButtons.push(`
+        <button class="combat-action-button is-secondary" type="button" data-combat-combo="containment-protocol">
+          <span class="combat-command-name">CONTAINMENT PROTOCOL</span>
+          <span class="combat-command-cost">COST 3</span>
+        </button>
+      `);
+    }
+
+    return `
+      <div class="combat-command-subtitle">CHOOSE AN ACTION FOR ${actor.name.toUpperCase()}</div>
+      <div class="combat-command-grid is-ability-grid">
+        ${actor.abilities.map((ability, index) => {
+          const canUse = state.responseGauge >= ability.cost;
+          const disabledClass = canUse ? "" : "is-disabled";
+          return `
+            <button class="combat-action-button ${disabledClass}" type="button" data-combat-ability="${index}" data-ability-cost="${ability.cost}">
+              <span class="combat-command-name">${ability.name.toUpperCase()}</span>
+              <span class="combat-command-cost">COST ${ability.cost}${canUse ? "" : " / NO GAUGE"}</span>
+            </button>
+          `;
+        }).join("")}
+        <button class="combat-action-button is-secondary" type="button" data-combat-command="back">BACK</button>
+      </div>
+      ${comboButtons.length ? `<div class="combat-command-subtitle is-secondary">COMBO OPTIONS</div><div class="combat-ability-row">${comboButtons.join("")}</div><div class="combat-action-note">RESPONSE GAUGE ${state.responseGauge}/100</div>` : ""}
+    `;
   }
 
   return `
-    <div class="combat-actions">
-      ${actor.abilities.map((ability, index) => {
-        const disabled = state.responseGauge < ability.cost || state.actionLocked ? "disabled" : "";
-        return `
-          <button class="combat-action-button" type="button" data-combat-ability="${index}" ${disabled}>
-            <span class="combat-command-name">${ability.name.toUpperCase()}</span>
-            <span class="combat-command-cost">COST ${ability.cost}</span>
-          </button>
-        `;
-      }).join("")}
+    <div class="combat-command-grid is-main-grid">
+      <button class="combat-action-button is-primary" type="button" data-combat-command="attack">
+        <span class="combat-command-name">ATTACK</span>
+        <span class="combat-command-cost">OPEN MOVES</span>
+      </button>
+      <button class="combat-action-button is-primary" type="button" data-combat-command="programs">
+        <span class="combat-command-name">PROGRAMS</span>
+        <span class="combat-command-cost">PARTY</span>
+      </button>
+      <button class="combat-action-button is-primary" type="button" data-combat-command="items">
+        <span class="combat-command-name">ITEMS</span>
+        <span class="combat-command-cost">SUPPLIES</span>
+      </button>
+      <button class="combat-action-button is-primary" type="button" data-combat-command="run">
+        <span class="combat-command-name">RUN</span>
+        <span class="combat-command-cost">FLEE</span>
+      </button>
     </div>
-    ${comboButtons.length ? `<div class="combat-ability-row">${comboButtons.join("")}</div><div class="combat-action-note">COMBO AVAILABLE: RESPONSE GAUGE ${state.responseGauge}/100</div>` : ""}
   `;
 }
 
@@ -2308,6 +2393,54 @@ function renderBattleLostScreen() {
 function bindCombatButtons() {
   const actor = combatState ? combatState.turnOrder[combatState.currentTurnIndex] : null;
 
+  threatPanelContent.querySelectorAll("[data-combat-command]").forEach((button) => {
+    button.addEventListener("click", () => {
+      if (!combatState || !actor || actor.kind !== "program" || combatState.actionLocked) {
+        return;
+      }
+
+      const command = button.getAttribute("data-combat-command");
+
+      if (command === "back") {
+        combatState.commandMode = "main";
+        combatState.battleMessage = "";
+        combatState.battleSubmessage = "";
+        renderCombatScreen();
+        return;
+      }
+
+      if (command === "attack") {
+        combatState.commandMode = "attack";
+        combatState.battleMessage = "";
+        combatState.battleSubmessage = "";
+        renderCombatScreen();
+        return;
+      }
+
+      if (command === "programs") {
+        combatState.commandMode = "programs";
+        combatState.battleMessage = "";
+        combatState.battleSubmessage = "";
+        renderCombatScreen();
+        return;
+      }
+
+      if (command === "items") {
+        combatState.commandMode = "items";
+        combatState.battleMessage = "";
+        combatState.battleSubmessage = "";
+        renderCombatScreen();
+        return;
+      }
+
+      if (command === "run") {
+        combatState.battleMessage = "CANNOT FLEE FROM AN ACTIVE THREAT.";
+        combatState.battleSubmessage = "THREAT LOCK ENGAGED.";
+        renderCombatScreen();
+      }
+    });
+  });
+
   threatPanelContent.querySelectorAll("[data-combat-ability]").forEach((button) => {
     button.addEventListener("click", () => {
       if (!combatEngine || !actor || actor.kind !== "program" || combatState.actionLocked) {
@@ -2318,6 +2451,14 @@ function bindCombatButtons() {
       const ability = actor.ref.abilities[abilityIndex];
 
       if (!ability) {
+        return;
+      }
+
+      const requiredGauge = Number(button.getAttribute("data-ability-cost") || ability.cost || 0);
+      if (combatState.responseGauge < requiredGauge) {
+        combatState.battleMessage = "NOT ENOUGH RESPONSE GAUGE.";
+        combatState.battleSubmessage = "BUILD GAUGE OR CHOOSE ANOTHER COMMAND.";
+        renderCombatScreen();
         return;
       }
 
@@ -2539,6 +2680,7 @@ class ThreatCombat {
     this.state.currentTurnIndex = 0;
     this.state.phase = "battle";
     this.state.activeProgramId = this.state.turnOrder.find((entry) => entry.kind === "program" && entry.ref.hp > 0)?.ref.id || this.state.activeProgramId;
+    this.state.commandMode = "main";
     this.state.battleMessage = "";
     this.state.battleSubmessage = "";
     this.state.visualEffect = null;
@@ -2653,6 +2795,7 @@ class ThreatCombat {
 
       if (nextActor.kind === "program" && nextActor.ref.hp > 0) {
         this.state.activeProgramId = nextActor.ref.id;
+        this.state.commandMode = "main";
         break;
       }
 

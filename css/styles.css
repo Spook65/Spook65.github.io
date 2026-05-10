@@ -3522,3 +3522,266 @@ canvas {
 .combat-gauge-text {
   color: rgba(0, 255, 136, 0.64);
 }
+
+/* Layer 4.9 gives the command bar a JRPG menu structure and keeps decorative battle layers out of the click path. */
+.combat-stage,
+.combat-stage-enemy,
+.combat-stage-player,
+.combat-battler,
+.combat-battler-sprite-wrap,
+.combat-battler .battle-sprite,
+.combat-floor-grid,
+.combat-stage-glow,
+.combat-beam,
+.combat-aura,
+.combat-hit-spark,
+.combat-damage-pop {
+  pointer-events: none;
+}
+
+.combat-footer,
+.combat-footer-left,
+.combat-voice-box,
+.combat-command-box {
+  position: relative;
+  z-index: 10;
+  pointer-events: auto;
+}
+
+.combat-footer {
+  min-height: 240px;
+}
+
+.combat-command-box {
+  padding: 14px 14px 16px;
+}
+
+.combat-command-subtitle {
+  color: rgba(0, 255, 136, 0.82);
+  font-size: 0.56rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.combat-command-subtitle.is-secondary {
+  color: rgba(0, 204, 255, 0.68);
+}
+
+.combat-command-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.combat-command-grid.is-main-grid,
+.combat-command-grid.is-ability-grid,
+.combat-party-grid,
+.combat-ability-row {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.combat-command-grid.is-main-grid,
+.combat-command-grid.is-ability-grid {
+  margin-top: 4px;
+}
+
+.combat-action-button {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  min-height: 74px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 8px;
+  border: 1px solid rgba(0, 255, 136, 0.5);
+  border-radius: 14px;
+  background:
+    linear-gradient(180deg, rgba(18, 22, 30, 0.98), rgba(7, 8, 12, 0.96));
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.03),
+    0 12px 24px rgba(0, 0, 0, 0.16);
+  overflow: hidden;
+  transform: translateY(0) scale(1);
+  transition:
+    transform 140ms ease,
+    background 140ms ease,
+    border-color 140ms ease,
+    box-shadow 140ms ease,
+    color 140ms ease,
+    text-shadow 140ms ease;
+}
+
+.combat-action-button::after {
+  content: "›";
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  transform: translateY(-50%);
+  color: rgba(0, 255, 136, 0.42);
+  font-size: 1rem;
+  opacity: 0;
+  transition: opacity 140ms ease, transform 140ms ease;
+}
+
+.combat-action-button.is-primary {
+  min-height: 80px;
+}
+
+.combat-action-button.is-secondary {
+  border-color: rgba(0, 204, 255, 0.34);
+  color: #00ccff;
+}
+
+.combat-action-button.is-secondary .combat-command-name,
+.combat-action-button.is-secondary .combat-command-cost {
+  color: #00ccff;
+}
+
+.combat-action-button.is-disabled {
+  opacity: 0.48;
+  border-color: rgba(0, 255, 136, 0.18);
+  color: rgba(0, 255, 136, 0.42);
+}
+
+.combat-action-button.is-disabled:hover,
+.combat-action-button.is-disabled:focus-visible {
+  transform: none;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.16);
+  background:
+    linear-gradient(180deg, rgba(18, 22, 30, 0.98), rgba(7, 8, 12, 0.96));
+}
+
+.combat-action-button:hover,
+.combat-action-button:focus-visible {
+  transform: translateY(-2px) scale(1.05);
+  border-color: rgba(0, 255, 136, 0.95);
+  background:
+    linear-gradient(180deg, rgba(0, 255, 136, 0.16), rgba(12, 14, 20, 0.96));
+  box-shadow:
+    0 0 0 1px rgba(0, 255, 136, 0.18),
+    0 14px 30px rgba(0, 0, 0, 0.2),
+    0 0 24px rgba(0, 255, 136, 0.12);
+  text-shadow: 0 0 10px rgba(0, 255, 136, 0.22);
+}
+
+.combat-action-button:hover::after,
+.combat-action-button:focus-visible::after {
+  opacity: 1;
+  transform: translate(2px, -50%);
+}
+
+.combat-action-button:active {
+  transform: translateY(1px) scale(0.96);
+}
+
+.combat-command-name {
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+}
+
+.combat-command-cost {
+  font-size: 0.54rem;
+  letter-spacing: 0.16em;
+  opacity: 0.78;
+}
+
+.combat-command-empty {
+  padding: 14px 12px;
+  border: 1px solid rgba(0, 255, 136, 0.14);
+  background: rgba(0, 255, 136, 0.03);
+  color: rgba(0, 255, 136, 0.68);
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  line-height: 1.6;
+  text-transform: uppercase;
+}
+
+.combat-command-back-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.combat-party-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.combat-party-card {
+  display: grid;
+  gap: 4px;
+  padding: 12px 13px;
+  border: 1px solid rgba(0, 255, 136, 0.14);
+  border-radius: 12px;
+  background: rgba(0, 255, 136, 0.03);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.combat-party-card.is-active {
+  border-color: rgba(0, 255, 136, 0.5);
+  background: rgba(0, 255, 136, 0.08);
+}
+
+.combat-party-card.is-down {
+  opacity: 0.45;
+}
+
+.combat-party-name {
+  color: #00ff88;
+  font-size: 0.66rem;
+}
+
+.combat-party-meta,
+.combat-party-tag {
+  color: rgba(0, 255, 136, 0.62);
+  font-size: 0.52rem;
+}
+
+.combat-party-tag {
+  color: #00ccff;
+}
+
+.combat-command-box .combat-ability-row {
+  display: grid;
+  gap: 10px;
+}
+
+.combat-command-box .combat-ability-row .combat-action-button {
+  min-height: 64px;
+}
+
+.combat-reserve-row {
+  pointer-events: none;
+}
+
+.combat-reserve-card {
+  pointer-events: auto;
+}
+
+.combat-stage-player {
+  width: min(44vw, 620px);
+  left: 3%;
+  bottom: 7%;
+}
+
+.combat-stage-enemy {
+  width: min(36vw, 500px);
+  right: 5%;
+  top: 7%;
+}
+
+.combat-battler-player .battle-sprite {
+  width: clamp(220px, 20vw, 300px);
+  height: clamp(240px, 22vw, 340px);
+}
+
+.combat-battler-enemy .battle-sprite {
+  width: clamp(210px, 18vw, 300px);
+  height: clamp(210px, 18vw, 300px);
+}
+
+.combat-reserve-strip {
+  bottom: 12px;
+}
