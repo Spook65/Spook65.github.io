@@ -3067,3 +3067,458 @@ canvas {
     opacity: 0;
   }
 }
+
+/* Layer 4.8 polishes the combat room into a wider, cleaner JRPG-style arena with softer glass and stronger silhouettes. */
+.combat-shell {
+  position: relative;
+  overflow: hidden;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 14px;
+  padding: 16px;
+  background:
+    radial-gradient(circle at 50% 18%, rgba(0, 255, 136, 0.12), transparent 26%),
+    radial-gradient(circle at 18% 20%, rgba(0, 204, 255, 0.08), transparent 20%),
+    radial-gradient(circle at 84% 16%, rgba(255, 34, 51, 0.08), transparent 18%),
+    linear-gradient(180deg, rgba(2, 8, 15, 0.98), rgba(4, 4, 8, 0.99));
+}
+
+.combat-shell::before {
+  background:
+    linear-gradient(180deg, rgba(0, 255, 136, 0.06), transparent 18%),
+    radial-gradient(circle at 50% 22%, rgba(0, 255, 136, 0.08), transparent 30%);
+  opacity: 1;
+}
+
+.combat-shell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 42%, transparent 0 34%, rgba(0, 0, 0, 0.2) 74%, rgba(0, 0, 0, 0.38) 100%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 18%, transparent 82%, rgba(0, 0, 0, 0.2));
+  mix-blend-mode: screen;
+}
+
+.combat-header {
+  padding: 12px 14px;
+  border-color: rgba(0, 255, 136, 0.12);
+  background: linear-gradient(180deg, rgba(8, 11, 16, 0.88), rgba(6, 8, 12, 0.75));
+  box-shadow:
+    0 0 0 1px rgba(0, 255, 136, 0.05),
+    0 16px 36px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(10px) saturate(125%);
+}
+
+.combat-panel-title {
+  color: rgba(0, 255, 136, 0.82);
+  font-size: 0.7rem;
+  letter-spacing: 0.22em;
+}
+
+.combat-encounter-name {
+  color: rgba(0, 255, 136, 0.58);
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+}
+
+.combat-turn-preview .combat-turn-chip {
+  padding: 5px 7px;
+  font-size: 0.52rem;
+  letter-spacing: 0.14em;
+}
+
+.combat-turn-separator {
+  color: rgba(0, 255, 136, 0.24);
+}
+
+.combat-stage {
+  min-height: clamp(560px, 70vh, 900px);
+  border-color: rgba(0, 255, 136, 0.1);
+  background:
+    radial-gradient(circle at 50% 36%, rgba(0, 255, 136, 0.08), transparent 24%),
+    radial-gradient(circle at 48% 54%, rgba(0, 204, 255, 0.05), transparent 20%),
+    linear-gradient(180deg, rgba(3, 10, 18, 0.98), rgba(4, 4, 10, 0.99));
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.02),
+    inset 0 -40px 90px rgba(0, 0, 0, 0.36);
+}
+
+.combat-stage::before,
+.combat-stage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.combat-stage::before {
+  background:
+    linear-gradient(180deg, transparent 0 54%, rgba(0, 255, 136, 0.05) 54% 55%, transparent 55%),
+    linear-gradient(90deg, rgba(0, 255, 136, 0.04) 1px, transparent 1px);
+  background-size: 100% 100%, 96px 96px;
+  background-position: center bottom, center;
+  transform: perspective(1100px) rotateX(72deg) translateY(14%);
+  transform-origin: bottom center;
+  opacity: 0.34;
+}
+
+.combat-stage::after {
+  background:
+    radial-gradient(circle at 28% 80%, rgba(0, 255, 136, 0.12), transparent 18%),
+    radial-gradient(circle at 80% 18%, rgba(255, 34, 51, 0.1), transparent 16%),
+    linear-gradient(90deg, transparent 0 28%, rgba(255, 255, 255, 0.02) 49%, transparent 72%);
+  opacity: 0.88;
+}
+
+.combat-stage-enemy {
+  top: 5%;
+  right: 3%;
+  width: min(40vw, 580px);
+}
+
+.combat-stage-player {
+  left: 2%;
+  bottom: 3%;
+  width: min(58vw, 780px);
+}
+
+.combat-battler {
+  gap: 12px;
+}
+
+.combat-battler-player {
+  transform-origin: left bottom;
+}
+
+.combat-battler-enemy {
+  transform-origin: right top;
+}
+
+.combat-status-box {
+  position: relative;
+  padding: 11px 13px;
+  border-color: rgba(0, 255, 136, 0.12);
+  background:
+    linear-gradient(180deg, rgba(9, 12, 18, 0.96), rgba(6, 8, 12, 0.92));
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.02),
+    0 20px 30px rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(8px) saturate(120%);
+}
+
+.combat-status-box::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.06), transparent 24%);
+  opacity: 0.35;
+}
+
+.combat-status-box-enemy {
+  border-color: rgba(255, 34, 51, 0.16);
+  background:
+    linear-gradient(180deg, rgba(18, 2, 6, 0.96), rgba(9, 0, 3, 0.92));
+}
+
+.combat-status-box-player {
+  border-color: rgba(0, 204, 255, 0.14);
+  background:
+    linear-gradient(180deg, rgba(2, 12, 18, 0.96), rgba(4, 8, 12, 0.92));
+}
+
+.combat-status-box .combat-name {
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+}
+
+.combat-status-box .combat-lvl,
+.combat-status-box .combat-subline {
+  font-size: 0.56rem;
+  letter-spacing: 0.12em;
+}
+
+.combat-status-box-player .combat-subline,
+.combat-status-box-player .combat-matchup-hint {
+  color: rgba(0, 204, 255, 0.7);
+}
+
+.combat-status-box-enemy .combat-lvl,
+.combat-status-box-enemy .combat-subline,
+.combat-status-box-enemy .combat-matchup-hint {
+  color: rgba(255, 34, 51, 0.78);
+}
+
+.combat-battler-sprite-wrap {
+  min-height: 320px;
+}
+
+.combat-battler-player .combat-battler-sprite-wrap {
+  min-height: 370px;
+}
+
+.combat-battler-enemy .combat-battler-sprite-wrap {
+  min-height: 340px;
+}
+
+.combat-battler .battle-sprite {
+  transform: translateZ(0);
+  filter: drop-shadow(0 0 18px rgba(0, 255, 136, 0.1));
+}
+
+.combat-battler-player .battle-sprite {
+  width: clamp(280px, 26vw, 390px);
+  height: clamp(300px, 28vw, 440px);
+  filter:
+    drop-shadow(0 0 20px rgba(0, 255, 136, 0.18))
+    drop-shadow(0 0 42px rgba(0, 255, 136, 0.06));
+}
+
+.combat-battler-enemy .battle-sprite {
+  width: clamp(240px, 22vw, 330px);
+  height: clamp(240px, 22vw, 330px);
+  filter:
+    drop-shadow(0 0 20px rgba(255, 34, 51, 0.18))
+    drop-shadow(0 0 40px rgba(255, 34, 51, 0.06));
+}
+
+.battle-sprite.firewall::before {
+  inset: 16px 28px 18px;
+  border: 2px solid rgba(0, 204, 255, 0.88);
+  background:
+    linear-gradient(135deg, rgba(0, 204, 255, 0.36), rgba(0, 204, 255, 0.12)),
+    linear-gradient(90deg, rgba(0, 204, 255, 0.24) 50%, transparent 0),
+    linear-gradient(rgba(0, 204, 255, 0.24) 50%, transparent 0);
+  background-size: 100% 100%, 16px 16px, 16px 16px;
+  box-shadow:
+    inset 0 0 0 8px rgba(0, 204, 255, 0.08),
+    0 0 24px rgba(0, 204, 255, 0.12);
+}
+
+.battle-sprite.firewall::after {
+  inset: 44px 34px 44px;
+  background:
+    linear-gradient(180deg, rgba(0, 204, 255, 0.98), rgba(0, 204, 255, 0.78));
+  clip-path: polygon(0 10%, 80% 0, 100% 26%, 100% 74%, 80% 100%, 0 90%, 12% 50%);
+  box-shadow: 0 0 22px rgba(0, 204, 255, 0.12);
+}
+
+.battle-sprite.ids::before {
+  inset: 20px;
+  border: 2px solid rgba(0, 255, 136, 0.98);
+  border-radius: 50%;
+  box-shadow:
+    inset 0 0 0 10px rgba(0, 255, 136, 0.14),
+    0 0 0 1px rgba(0, 255, 136, 0.18),
+    0 0 24px rgba(0, 255, 136, 0.14);
+}
+
+.battle-sprite.ids::after {
+  inset: 52px 18px auto 18px;
+  height: 6px;
+  background: linear-gradient(90deg, transparent, rgba(0, 255, 136, 0.95), transparent);
+  box-shadow:
+    0 -28px 0 rgba(0, 255, 136, 0.95),
+    0 28px 0 rgba(0, 255, 136, 0.95);
+}
+
+.battle-sprite.honeypot::before {
+  inset: 18px;
+  background:
+    linear-gradient(60deg, transparent 46%, rgba(255, 204, 0, 0.98) 46% 54%, transparent 54%),
+    linear-gradient(-60deg, transparent 46%, rgba(255, 122, 0, 0.98) 46% 54%, transparent 54%),
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.08), transparent 48%);
+  clip-path: polygon(50% 0, 92% 22%, 92% 78%, 50% 100%, 8% 78%, 8% 22%);
+  box-shadow: 0 0 26px rgba(255, 204, 0, 0.12);
+}
+
+.battle-sprite.honeypot::after {
+  inset: 42px;
+  border: 2px solid rgba(255, 204, 0, 0.96);
+  box-shadow: 0 0 0 9px rgba(255, 122, 0, 0.12);
+}
+
+.battle-sprite.antivirus::before {
+  inset: 20px 26px 22px;
+  border: 2px solid rgba(255, 204, 0, 0.98);
+  clip-path: polygon(50% 0, 100% 20%, 84% 100%, 16% 100%, 0 20%);
+  box-shadow:
+    inset 0 0 0 10px rgba(255, 204, 0, 0.08),
+    0 0 26px rgba(255, 204, 0, 0.12);
+}
+
+.battle-sprite.antivirus::after {
+  inset: 52px 52px 32px;
+  background: rgba(255, 204, 0, 0.98);
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+}
+
+.threat-sprite.ransomware::before,
+.threat-sprite.phishing::before,
+.threat-sprite.botnet::before,
+.threat-sprite.trojan::before,
+.threat-sprite.zero-day::before {
+  filter: drop-shadow(0 0 16px rgba(255, 34, 51, 0.24));
+}
+
+.threat-sprite.ransomware::after {
+  inset: 54px 52px 52px;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.threat-sprite.phishing::before {
+  background:
+    linear-gradient(180deg, rgba(255, 204, 0, 0.98), rgba(255, 34, 51, 0.92)),
+    radial-gradient(circle at 50% 30%, rgba(255, 255, 255, 0.18), transparent 40%);
+}
+
+.threat-sprite.botnet::before {
+  background:
+    radial-gradient(circle at 20% 20%, rgba(255, 34, 51, 0.98) 0 13%, transparent 15%),
+    radial-gradient(circle at 80% 20%, rgba(255, 34, 51, 0.98) 0 13%, transparent 15%),
+    radial-gradient(circle at 50% 50%, rgba(255, 34, 51, 0.98) 0 13%, transparent 15%),
+    radial-gradient(circle at 20% 80%, rgba(255, 34, 51, 0.98) 0 13%, transparent 15%),
+    radial-gradient(circle at 80% 80%, rgba(255, 34, 51, 0.98) 0 13%, transparent 15%),
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.08), transparent 48%);
+}
+
+.threat-sprite.trojan::before {
+  background:
+    linear-gradient(135deg, rgba(255, 34, 51, 0.98), rgba(139, 73, 255, 0.94)),
+    radial-gradient(circle at 50% 28%, rgba(255, 255, 255, 0.12), transparent 42%);
+}
+
+.threat-sprite.zero-day::before {
+  background:
+    linear-gradient(135deg, rgba(255, 102, 0, 0.98), rgba(255, 34, 51, 0.9)),
+    radial-gradient(circle at 50% 30%, rgba(255, 255, 255, 0.12), transparent 40%);
+}
+
+.combat-reserve-strip {
+  bottom: 8px;
+  left: 12px;
+  right: 12px;
+}
+
+.combat-reserve-card {
+  position: relative;
+  min-width: 116px;
+  padding: 7px 9px;
+  border-color: rgba(0, 255, 136, 0.12);
+  background:
+    linear-gradient(180deg, rgba(8, 10, 14, 0.96), rgba(5, 7, 10, 0.92));
+  box-shadow: 0 14px 24px rgba(0, 0, 0, 0.12);
+}
+
+.combat-reserve-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 2px;
+  background: currentColor;
+  opacity: 0.8;
+}
+
+.combat-reserve-card.is-active {
+  border-color: rgba(0, 255, 136, 0.38);
+  background:
+    linear-gradient(180deg, rgba(0, 255, 136, 0.12), rgba(0, 255, 136, 0.04));
+  box-shadow: 0 0 18px rgba(0, 255, 136, 0.08);
+}
+
+.combat-reserve-card.is-targeted {
+  border-color: rgba(255, 34, 51, 0.38);
+  box-shadow: 0 0 18px rgba(255, 34, 51, 0.1);
+}
+
+.combat-reserve-name {
+  font-size: 0.52rem;
+  letter-spacing: 0.1em;
+}
+
+.combat-reserve-meta {
+  color: rgba(0, 255, 136, 0.64);
+  font-size: 0.5rem;
+}
+
+.combat-footer {
+  gap: 12px;
+}
+
+.combat-voice-box,
+.combat-command-box {
+  border-color: rgba(0, 255, 136, 0.12);
+  background:
+    linear-gradient(180deg, rgba(8, 10, 14, 0.94), rgba(4, 6, 9, 0.94));
+  box-shadow: 0 20px 30px rgba(0, 0, 0, 0.16);
+}
+
+.combat-voice-box {
+  gap: 4px;
+  padding: 10px 12px;
+}
+
+.combat-voice-text {
+  min-height: 1.8em;
+  font-size: 0.7rem;
+  line-height: 1.32;
+  letter-spacing: 0.08em;
+}
+
+.combat-history-strip {
+  gap: 6px;
+  color: rgba(0, 255, 136, 0.42);
+}
+
+.combat-history-entry {
+  padding-right: 8px;
+}
+
+.combat-command-box {
+  gap: 8px;
+  padding: 10px 12px 12px;
+}
+
+.combat-actions,
+.combat-command-box .combat-actions {
+  gap: 6px;
+}
+
+.combat-action-button {
+  padding: 12px 14px;
+  border-color: rgba(0, 255, 136, 0.38);
+  background:
+    linear-gradient(180deg, rgba(12, 14, 20, 0.98), rgba(7, 8, 12, 0.96));
+  box-shadow: 0 12px 22px rgba(0, 0, 0, 0.14);
+}
+
+.combat-action-button:hover,
+.combat-action-button:focus-visible {
+  transform: translateY(-1px);
+  background: linear-gradient(180deg, rgba(0, 255, 136, 0.1), rgba(0, 255, 136, 0.04));
+}
+
+.combat-command-name {
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+}
+
+.combat-command-cost {
+  font-size: 0.55rem;
+  letter-spacing: 0.14em;
+}
+
+.combat-gauge-wrap {
+  gap: 4px;
+}
+
+.combat-gauge-label {
+  color: rgba(0, 255, 136, 0.58);
+  font-size: 0.53rem;
+  letter-spacing: 0.16em;
+}
+
+.combat-gauge-text {
+  color: rgba(0, 255, 136, 0.64);
+}

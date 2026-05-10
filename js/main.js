@@ -1718,8 +1718,9 @@ function buildScaledThreat(sourceThreat, targetLevel) {
   const encounter = cloneThreatBlueprint(sourceThreat);
   const baseLevel = encounter.level || 1;
   const levelDelta = targetLevel - baseLevel;
-  const hpScale = Math.max(0.6, 1 + (levelDelta * 0.16));
-  const statScale = Math.max(0.7, 1 + (levelDelta * 0.08));
+  // HP and stat scaling stay deliberately lighter here so regular battles resolve in a few strong turns.
+  const hpScale = Math.max(0.42, Math.min(1.08, 0.74 + (levelDelta * 0.09)));
+  const statScale = Math.max(0.7, Math.min(1.08, 0.9 + (levelDelta * 0.04)));
 
   encounter.level = targetLevel;
   encounter.maxHp = Math.max(40, Math.round((encounter.maxHp || 100) * hpScale));
@@ -1929,7 +1930,7 @@ function getActiveBattleProgram(state) {
 
 // buildTurnOrderMarkup() keeps the turn queue compact so it reads like a tactical preview instead of a table.
 function buildTurnOrderMarkup(state) {
-  const previewCount = Math.min(4, state.turnOrder.length);
+  const previewCount = Math.min(3, state.turnOrder.length);
   const preview = [];
 
   for (let index = 0; index < previewCount; index += 1) {
@@ -1945,13 +1946,13 @@ function buildTurnOrderMarkup(state) {
 
 // buildBattleLogMarkup() keeps a tiny history summary available without turning the screen back into a dashboard.
 function buildBattleLogMarkup(state) {
-  const entries = state.battleLog.slice(-4);
+  const entries = state.battleLog.slice(-3);
 
   if (!entries.length) {
     return '<div class="combat-history-entry">SYSTEM READY. AWAITING FIRST TURN.</div>';
   }
 
-  const summary = entries.slice(-2);
+  const summary = entries.slice(-1);
 
   return summary.map((entry) => {
     const variantClass = entry.variant ? `is-${entry.variant}` : "";
