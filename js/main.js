@@ -2050,6 +2050,121 @@ function buildReserveStripMarkup(state, activeProgramId) {
   }).join("");
 }
 
+// renderCombatantSprite() builds each fighter from layered HTML parts so the silhouettes read like original characters.
+function renderCombatantSprite(combatant, side) {
+  const isProgram = side === "program";
+  const spriteKey = isProgram ? getProgramSpriteClass(combatant) : getThreatSpriteClass(combatant);
+  const roleClass = isProgram ? "combatant-program" : "combatant-threat";
+  const typeClass = `is-${spriteKey}`;
+  const detailLayers = isProgram
+    ? renderProgramCombatantDetails(spriteKey)
+    : renderThreatCombatantDetails(spriteKey);
+
+  return `
+    <div class="battle-sprite combatant-sprite ${roleClass} ${typeClass}" aria-hidden="true" data-combatant-key="${spriteKey}">
+      <div class="combatant-shadow"></div>
+      <div class="combatant-aura"></div>
+      <div class="combatant-rim"></div>
+      <div class="combatant-body"></div>
+      <div class="combatant-core"></div>
+      <div class="combatant-head"></div>
+      <div class="combatant-shoulder is-left"></div>
+      <div class="combatant-shoulder is-right"></div>
+      ${detailLayers}
+    </div>
+  `;
+}
+
+// renderProgramCombatantDetails() gives each security program its own layered silhouette identity.
+function renderProgramCombatantDetails(spriteKey) {
+  switch (spriteKey) {
+    case "firewall":
+      return `
+        <div class="combatant-detail combatant-shield"></div>
+        <div class="combatant-detail combatant-armor is-left"></div>
+        <div class="combatant-detail combatant-armor is-right"></div>
+        <div class="combatant-detail combatant-plume"></div>
+        <div class="combatant-detail combatant-sigil"></div>
+      `;
+    case "ids":
+      return `
+        <div class="combatant-detail combatant-ring is-main"></div>
+        <div class="combatant-detail combatant-ring is-secondary"></div>
+        <div class="combatant-detail combatant-sensor is-left"></div>
+        <div class="combatant-detail combatant-sensor is-right"></div>
+        <div class="combatant-detail combatant-scanline"></div>
+        <div class="combatant-detail combatant-node is-upper"></div>
+        <div class="combatant-detail combatant-node is-lower"></div>
+      `;
+    case "honeypot":
+      return `
+        <div class="combatant-detail combatant-mask"></div>
+        <div class="combatant-detail combatant-lure-orb"></div>
+        <div class="combatant-detail combatant-fragment is-left"></div>
+        <div class="combatant-detail combatant-fragment is-right"></div>
+        <div class="combatant-detail combatant-afterimage is-one"></div>
+        <div class="combatant-detail combatant-afterimage is-two"></div>
+      `;
+    case "antivirus":
+      return `
+        <div class="combatant-detail combatant-halo"></div>
+        <div class="combatant-detail combatant-lance"></div>
+        <div class="combatant-detail combatant-crest"></div>
+        <div class="combatant-detail combatant-wing is-left"></div>
+        <div class="combatant-detail combatant-wing is-right"></div>
+        <div class="combatant-detail combatant-blade"></div>
+      `;
+    default:
+      return "";
+  }
+}
+
+// renderThreatCombatantDetails() turns each hostile into a layered corrupted entity with readable weak cores.
+function renderThreatCombatantDetails(spriteKey) {
+  switch (spriteKey) {
+    case "ransomware":
+      return `
+        <div class="combatant-detail combatant-lock-core"></div>
+        <div class="combatant-detail combatant-shell"></div>
+        <div class="combatant-detail combatant-shard is-left"></div>
+        <div class="combatant-detail combatant-shard is-right"></div>
+        <div class="combatant-detail combatant-chain"></div>
+        <div class="combatant-detail combatant-fracture"></div>
+      `;
+    case "phishing":
+      return `
+        <div class="combatant-detail combatant-mask-core"></div>
+        <div class="combatant-detail combatant-eye is-left"></div>
+        <div class="combatant-detail combatant-eye is-right"></div>
+        <div class="combatant-detail combatant-tendril is-left"></div>
+        <div class="combatant-detail combatant-tendril is-right"></div>
+        <div class="combatant-detail combatant-lure"></div>
+      `;
+    case "botnet":
+      return `
+        <div class="combatant-detail combatant-swarm-core"></div>
+        <div class="combatant-detail combatant-node is-a"></div>
+        <div class="combatant-detail combatant-node is-b"></div>
+        <div class="combatant-detail combatant-node is-c"></div>
+        <div class="combatant-detail combatant-link is-one"></div>
+        <div class="combatant-detail combatant-link is-two"></div>
+        <div class="combatant-detail combatant-link is-three"></div>
+      `;
+    case "trojan":
+    case "zero-day":
+      return `
+        <div class="combatant-detail combatant-anomaly-core"></div>
+        <div class="combatant-detail combatant-edge is-left"></div>
+        <div class="combatant-detail combatant-edge is-right"></div>
+        <div class="combatant-detail combatant-glitch is-one"></div>
+        <div class="combatant-detail combatant-glitch is-two"></div>
+        <div class="combatant-detail combatant-blade"></div>
+      `;
+    default:
+      return "";
+  }
+}
+
 // buildProgramBattlefieldMarkup() renders the active program as the foreground fighter on the left side.
 function buildProgramBattlefieldMarkup(program, state, isCurrentTurn) {
   const statusMarkup = renderStatusPills(program.statusEffects);
@@ -2079,7 +2194,7 @@ function buildProgramBattlefieldMarkup(program, state, isCurrentTurn) {
         ${statusMarkup}
       </div>
       <div class="combat-battler-sprite-wrap">
-        <div class="battle-sprite ${getProgramSpriteClass(program)}" aria-hidden="true"></div>
+        ${renderCombatantSprite(program, "program")}
         ${effect.phase === "impact" && effect.targetKind === "program" && effect.targetId === program.id ? `
           <div class="combat-hit-spark"></div>
           <div class="combat-damage-pop">-${effect.damage || 0}</div>
@@ -2120,7 +2235,7 @@ function buildThreatVisualMarkup(state) {
   return `
     <article class="${figureClass}" style="color: #ff2233;">
       <div class="combat-battler-sprite-wrap">
-        <div class="battle-sprite threat-sprite ${getThreatSpriteClass(threat)}" aria-hidden="true"></div>
+        ${renderCombatantSprite(threat, "threat")}
         ${effect.phase === "impact" && effect.targetKind === "threat" && effect.targetId === threat.id ? `
           <div class="combat-hit-spark"></div>
           <div class="combat-damage-pop">-${effect.damage || 0}</div>

@@ -4717,6 +4717,728 @@ body {
   background: radial-gradient(circle, rgba(255, 102, 121, 0.1), transparent 66%);
 }
 
+/* Layer 4.11 swaps the single-shape combat icons for structured HTML combatant figures. */
+.combatant-sprite {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  background: none !important;
+  overflow: visible;
+  isolation: isolate;
+}
+
+.combatant-sprite::before,
+.combatant-sprite::after {
+  content: none !important;
+  display: none !important;
+}
+
+.combatant-shadow,
+.combatant-aura,
+.combatant-rim,
+.combatant-body,
+.combatant-core,
+.combatant-head,
+.combatant-shoulder,
+.combatant-detail {
+  position: absolute;
+  pointer-events: none;
+}
+
+.combatant-shadow {
+  left: 8%;
+  right: 8%;
+  bottom: 2%;
+  height: 13%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0, 0, 0, 0.42), transparent 72%);
+  filter: blur(10px);
+  opacity: 0.82;
+}
+
+.combatant-aura {
+  inset: 8% 10% 14%;
+  border-radius: 40%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.08), transparent 58%);
+  opacity: 0.55;
+  filter: blur(4px);
+}
+
+.combatant-rim {
+  inset: 12% 14% 14%;
+  border-radius: 32% 32% 38% 38%;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+}
+
+.combatant-body {
+  left: 24%;
+  right: 24%;
+  bottom: 14%;
+  top: 24%;
+  border-radius: 28% 28% 22% 22%;
+  background: linear-gradient(180deg, rgba(22, 28, 40, 0.96), rgba(8, 10, 14, 0.94));
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 0 28px rgba(0, 0, 0, 0.1);
+}
+
+.combatant-core {
+  left: 38%;
+  right: 38%;
+  top: 34%;
+  bottom: 32%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.95), rgba(135, 228, 255, 0.34) 45%, transparent 72%);
+  box-shadow: 0 0 24px currentColor;
+}
+
+.combatant-head {
+  left: 32%;
+  right: 32%;
+  top: 12%;
+  height: 20%;
+  border-radius: 26% 26% 44% 44%;
+  background: linear-gradient(180deg, rgba(38, 44, 58, 0.96), rgba(12, 14, 20, 0.92));
+  box-shadow: 0 0 18px rgba(0, 0, 0, 0.16);
+}
+
+.combatant-shoulder {
+  top: 30%;
+  width: 18%;
+  height: 28%;
+  border-radius: 22% 22% 34% 34%;
+  background: linear-gradient(180deg, rgba(28, 34, 46, 0.96), rgba(8, 10, 14, 0.94));
+}
+
+.combatant-shoulder.is-left {
+  left: 10%;
+  transform: rotate(-8deg);
+}
+
+.combatant-shoulder.is-right {
+  right: 10%;
+  transform: rotate(8deg);
+}
+
+.combatant-detail {
+  transition: transform 160ms ease, opacity 160ms ease, filter 160ms ease;
+}
+
+.combatant-sprite.is-program .combatant-aura {
+  background: radial-gradient(circle, rgba(135, 228, 255, 0.16), transparent 60%);
+}
+
+.combatant-sprite.is-threat .combatant-aura {
+  background: radial-gradient(circle, rgba(255, 102, 121, 0.16), transparent 60%);
+}
+
+.combatant-sprite.is-program .combatant-body,
+.combatant-sprite.is-program .combatant-head,
+.combatant-sprite.is-program .combatant-shoulder {
+  background: linear-gradient(180deg, rgba(34, 44, 62, 0.98), rgba(8, 10, 14, 0.94));
+}
+
+.combatant-sprite.is-threat .combatant-body,
+.combatant-sprite.is-threat .combatant-head,
+.combatant-sprite.is-threat .combatant-shoulder {
+  background: linear-gradient(180deg, rgba(32, 12, 22, 0.98), rgba(6, 4, 8, 0.94));
+}
+
+.combatant-sprite.is-firewall .combatant-body {
+  left: 18%;
+  right: 18%;
+  top: 22%;
+  bottom: 18%;
+  border-radius: 26% 26% 20% 20%;
+  background:
+    linear-gradient(180deg, rgba(24, 40, 54, 0.98), rgba(12, 16, 24, 0.98)),
+    linear-gradient(135deg, rgba(135, 228, 255, 0.18), rgba(240, 210, 139, 0.08));
+}
+
+.combatant-sprite.is-firewall .combatant-head {
+  left: 34%;
+  right: 34%;
+  top: 10%;
+  height: 18%;
+  border-radius: 22% 22% 38% 38%;
+}
+
+.combatant-sprite.is-firewall .combatant-core {
+  top: 38%;
+  bottom: 34%;
+}
+
+.combatant-sprite.is-firewall .combatant-shield {
+  left: 10%;
+  right: 10%;
+  top: 26%;
+  bottom: 14%;
+  clip-path: polygon(14% 0, 86% 0, 100% 18%, 92% 82%, 50% 100%, 8% 82%, 0 18%);
+  background:
+    linear-gradient(180deg, rgba(135, 228, 255, 0.28), rgba(135, 228, 255, 0.06)),
+    linear-gradient(135deg, rgba(240, 210, 139, 0.1), transparent 48%);
+  box-shadow:
+    inset 0 0 0 1px rgba(135, 228, 255, 0.22),
+    0 0 24px rgba(135, 228, 255, 0.1);
+}
+
+.combatant-sprite.is-firewall .combatant-armor.is-left,
+.combatant-sprite.is-firewall .combatant-armor.is-right {
+  top: 34%;
+  width: 16%;
+  height: 26%;
+  background: linear-gradient(180deg, rgba(135, 228, 255, 0.24), rgba(135, 228, 255, 0.06));
+}
+
+.combatant-sprite.is-firewall .combatant-armor.is-left {
+  left: 8%;
+  clip-path: polygon(0 0, 100% 16%, 82% 100%, 8% 86%);
+}
+
+.combatant-sprite.is-firewall .combatant-armor.is-right {
+  right: 8%;
+  clip-path: polygon(0 16%, 100% 0, 92% 86%, 18% 100%);
+}
+
+.combatant-sprite.is-firewall .combatant-plume {
+  left: 42%;
+  right: 42%;
+  top: 4%;
+  height: 16%;
+  background: linear-gradient(180deg, rgba(240, 210, 139, 0.9), transparent);
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  filter: blur(1px);
+  opacity: 0.95;
+}
+
+.combatant-sprite.is-firewall .combatant-sigil {
+  left: 36%;
+  right: 36%;
+  top: 42%;
+  bottom: 38%;
+  border-radius: 50%;
+  border: 1px solid rgba(240, 210, 139, 0.7);
+  box-shadow: 0 0 18px rgba(240, 210, 139, 0.14);
+}
+
+.combatant-sprite.is-ids .combatant-body {
+  left: 34%;
+  right: 34%;
+  top: 24%;
+  bottom: 20%;
+  border-radius: 40% 40% 32% 32%;
+}
+
+.combatant-sprite.is-ids .combatant-head {
+  left: 38%;
+  right: 38%;
+  top: 14%;
+  height: 16%;
+}
+
+.combatant-sprite.is-ids .combat-core {
+  top: 34%;
+  bottom: 38%;
+}
+
+.combatant-sprite.is-ids .combatant-ring.is-main,
+.combatant-sprite.is-ids .combatant-ring.is-secondary {
+  left: 18%;
+  right: 18%;
+  border-radius: 50%;
+  border: 1px solid rgba(135, 228, 255, 0.8);
+}
+
+.combatant-sprite.is-ids .combatant-ring.is-main {
+  top: 20%;
+  bottom: 20%;
+  box-shadow: 0 0 22px rgba(135, 228, 255, 0.12);
+}
+
+.combatant-sprite.is-ids .combatant-ring.is-secondary {
+  top: 28%;
+  bottom: 28%;
+  opacity: 0.72;
+}
+
+.combatant-sprite.is-ids .combatant-sensor {
+  top: 32%;
+  width: 14%;
+  height: 16%;
+  background: linear-gradient(180deg, rgba(135, 228, 255, 0.38), transparent);
+}
+
+.combatant-sprite.is-ids .combatant-sensor.is-left {
+  left: 8%;
+  clip-path: polygon(0 0, 100% 14%, 76% 100%, 0 74%);
+}
+
+.combatant-sprite.is-ids .combatant-sensor.is-right {
+  right: 8%;
+  clip-path: polygon(0 14%, 100% 0, 100% 74%, 24% 100%);
+}
+
+.combatant-sprite.is-ids .combatant-scanline {
+  left: 18%;
+  right: 18%;
+  top: 50%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(135, 228, 255, 0.96), transparent);
+  box-shadow: 0 0 12px rgba(135, 228, 255, 0.18);
+}
+
+.combatant-sprite.is-ids .combatant-node {
+  width: 8%;
+  height: 8%;
+  border-radius: 50%;
+  background: rgba(240, 210, 139, 0.92);
+  box-shadow: 0 0 14px rgba(240, 210, 139, 0.14);
+}
+
+.combatant-sprite.is-ids .combatant-node.is-upper {
+  left: 24%;
+  top: 20%;
+}
+
+.combatant-sprite.is-ids .combatant-node.is-lower {
+  right: 24%;
+  top: 62%;
+}
+
+.combatant-sprite.is-honeypot .combatant-body {
+  left: 28%;
+  right: 26%;
+  top: 24%;
+  bottom: 20%;
+  border-radius: 22% 38% 30% 26%;
+}
+
+.combatant-sprite.is-honeypot .combatant-mask {
+  left: 30%;
+  right: 30%;
+  top: 14%;
+  height: 24%;
+  background:
+    linear-gradient(160deg, rgba(240, 210, 139, 0.82), rgba(141, 116, 255, 0.66)),
+    radial-gradient(circle at 50% 26%, rgba(255, 255, 255, 0.16), transparent 44%);
+  clip-path: polygon(12% 18%, 52% 0, 88% 22%, 74% 100%, 28% 100%, 0 58%);
+  box-shadow: 0 0 24px rgba(141, 116, 255, 0.12);
+}
+
+.combatant-sprite.is-honeypot .combatant-lure-orb {
+  left: 42%;
+  right: 42%;
+  top: 44%;
+  bottom: 30%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.96), rgba(240, 210, 139, 0.2) 48%, transparent 72%);
+  box-shadow: 0 0 26px rgba(240, 210, 139, 0.14);
+}
+
+.combatant-sprite.is-honeypot .combatant-fragment,
+.combatant-sprite.is-honeypot .combatant-afterimage {
+  background: linear-gradient(180deg, rgba(141, 116, 255, 0.34), rgba(240, 210, 139, 0.08));
+  opacity: 0.86;
+}
+
+.combatant-sprite.is-honeypot .combatant-fragment.is-left {
+  left: 12%;
+  top: 30%;
+  width: 16%;
+  height: 26%;
+  clip-path: polygon(0 0, 100% 18%, 68% 100%, 14% 76%);
+}
+
+.combatant-sprite.is-honeypot .combatant-fragment.is-right {
+  right: 10%;
+  top: 22%;
+  width: 14%;
+  height: 30%;
+  clip-path: polygon(32% 0, 100% 20%, 84% 100%, 0 78%);
+}
+
+.combatant-sprite.is-honeypot .combatant-afterimage.is-one {
+  left: 18%;
+  top: 20%;
+  width: 18%;
+  height: 22%;
+  opacity: 0.42;
+  transform: rotate(-8deg);
+}
+
+.combatant-sprite.is-honeypot .combatant-afterimage.is-two {
+  right: 16%;
+  top: 18%;
+  width: 16%;
+  height: 24%;
+  opacity: 0.34;
+  transform: rotate(10deg);
+}
+
+.combatant-sprite.is-antivirus .combatant-body {
+  left: 30%;
+  right: 30%;
+  top: 22%;
+  bottom: 16%;
+  border-radius: 26% 26% 18% 18%;
+}
+
+.combatant-sprite.is-antivirus .combatant-head {
+  left: 36%;
+  right: 36%;
+  top: 12%;
+  height: 18%;
+}
+
+.combatant-sprite.is-antivirus .combatant-halo {
+  left: 18%;
+  right: 18%;
+  top: 8%;
+  bottom: 28%;
+  border-radius: 50%;
+  border: 1px solid rgba(240, 210, 139, 0.84);
+  box-shadow: 0 0 20px rgba(240, 210, 139, 0.12);
+}
+
+.combatant-sprite.is-antivirus .combatant-lance {
+  left: 54%;
+  top: 16%;
+  width: 8%;
+  height: 66%;
+  background: linear-gradient(180deg, rgba(240, 210, 139, 0.96), rgba(135, 228, 255, 0.84));
+  clip-path: polygon(40% 0, 100% 18%, 62% 100%, 0 82%);
+  box-shadow: 0 0 24px rgba(240, 210, 139, 0.14);
+}
+
+.combatant-sprite.is-antivirus .combatant-crest {
+  left: 38%;
+  right: 38%;
+  top: 8%;
+  height: 12%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), transparent);
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+
+.combatant-sprite.is-antivirus .combatant-wing.is-left,
+.combatant-sprite.is-antivirus .combatant-wing.is-right {
+  top: 30%;
+  width: 18%;
+  height: 22%;
+  background: linear-gradient(180deg, rgba(135, 228, 255, 0.16), rgba(240, 210, 139, 0.1));
+}
+
+.combatant-sprite.is-antivirus .combatant-wing.is-left {
+  left: 8%;
+  clip-path: polygon(100% 0, 0 22%, 70% 100%, 100% 60%);
+}
+
+.combatant-sprite.is-antivirus .combatant-wing.is-right {
+  right: 8%;
+  clip-path: polygon(0 0, 100% 22%, 30% 100%, 0 60%);
+}
+
+.combatant-sprite.is-antivirus .combatant-blade {
+  left: 44%;
+  right: 44%;
+  top: 36%;
+  bottom: 26%;
+  background: linear-gradient(180deg, rgba(240, 210, 139, 0.9), rgba(135, 228, 255, 0.4));
+  clip-path: polygon(50% 0, 100% 28%, 50% 100%, 0 28%);
+}
+
+.combatant-sprite.is-ransomware .combatant-body {
+  left: 26%;
+  right: 26%;
+  top: 22%;
+  bottom: 18%;
+  border-radius: 22% 22% 28% 28%;
+}
+
+.combatant-sprite.is-ransomware .combatant-shell {
+  left: 14%;
+  right: 14%;
+  top: 18%;
+  bottom: 12%;
+  clip-path: polygon(12% 18%, 34% 0, 70% 10%, 100% 36%, 84% 100%, 36% 100%, 10% 78%, 0 42%);
+  background:
+    linear-gradient(145deg, rgba(255, 102, 121, 0.92), rgba(141, 116, 255, 0.88)),
+    radial-gradient(circle at 50% 40%, rgba(255, 255, 255, 0.08), transparent 50%);
+  box-shadow: 0 0 26px rgba(255, 102, 121, 0.14);
+}
+
+.combatant-sprite.is-ransomware .combatant-lock-core {
+  left: 38%;
+  right: 38%;
+  top: 34%;
+  bottom: 34%;
+  border-radius: 22%;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(255, 102, 121, 0.18)),
+    radial-gradient(circle at 50% 50%, rgba(255, 102, 121, 0.24), transparent 60%);
+  box-shadow: 0 0 24px rgba(255, 102, 121, 0.18);
+}
+
+.combatant-sprite.is-ransomware .combatant-shard.is-left,
+.combatant-sprite.is-ransomware .combatant-shard.is-right {
+  top: 18%;
+  width: 18%;
+  height: 26%;
+  background: linear-gradient(180deg, rgba(255, 102, 121, 0.82), rgba(141, 116, 255, 0.14));
+}
+
+.combatant-sprite.is-ransomware .combatant-shard.is-left {
+  left: 8%;
+  clip-path: polygon(0 0, 100% 12%, 72% 100%, 0 76%);
+}
+
+.combatant-sprite.is-ransomware .combatant-shard.is-right {
+  right: 8%;
+  clip-path: polygon(28% 0, 100% 0, 100% 76%, 28% 100%);
+}
+
+.combatant-sprite.is-ransomware .combatant-chain {
+  left: 42%;
+  right: 42%;
+  top: 18%;
+  bottom: 18%;
+  border-left: 1px dashed rgba(240, 210, 139, 0.52);
+  border-right: 1px dashed rgba(240, 210, 139, 0.52);
+  opacity: 0.72;
+}
+
+.combatant-sprite.is-ransomware .combatant-fracture {
+  inset: 22% 24% 16% 24%;
+  background:
+    linear-gradient(135deg, transparent 0 32%, rgba(255, 255, 255, 0.18) 32% 36%, transparent 36% 100%),
+    linear-gradient(225deg, transparent 0 28%, rgba(255, 255, 255, 0.12) 28% 30%, transparent 30% 100%);
+  clip-path: polygon(0 0, 100% 0, 78% 100%, 22% 100%);
+  opacity: 0.84;
+}
+
+.combatant-sprite.is-phishing .combatant-body {
+  left: 30%;
+  right: 30%;
+  top: 24%;
+  bottom: 18%;
+  border-radius: 24% 34% 24% 26%;
+}
+
+.combatant-sprite.is-phishing .combatant-mask-core {
+  left: 34%;
+  right: 34%;
+  top: 18%;
+  height: 24%;
+  background:
+    linear-gradient(160deg, rgba(240, 210, 139, 0.92), rgba(255, 102, 121, 0.68)),
+    radial-gradient(circle at 50% 34%, rgba(255, 255, 255, 0.16), transparent 42%);
+  clip-path: polygon(50% 0, 86% 16%, 100% 44%, 80% 100%, 20% 100%, 0 44%, 14% 16%);
+}
+
+.combatant-sprite.is-phishing .combatant-eye.is-left,
+.combatant-sprite.is-phishing .combatant-eye.is-right {
+  top: 32%;
+  width: 10%;
+  height: 8%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.96), rgba(240, 210, 139, 0.14) 58%, transparent 72%);
+}
+
+.combatant-sprite.is-phishing .combatant-eye.is-left { left: 32%; }
+.combatant-sprite.is-phishing .combatant-eye.is-right { right: 32%; }
+
+.combatant-sprite.is-phishing .combatant-tendril.is-left,
+.combatant-sprite.is-phishing .combatant-tendril.is-right {
+  top: 40%;
+  width: 14%;
+  height: 34%;
+  background: linear-gradient(180deg, rgba(141, 116, 255, 0.74), transparent);
+}
+
+.combatant-sprite.is-phishing .combatant-tendril.is-left {
+  left: 10%;
+  clip-path: polygon(100% 0, 18% 8%, 0 100%, 56% 84%);
+}
+
+.combatant-sprite.is-phishing .combatant-tendril.is-right {
+  right: 10%;
+  clip-path: polygon(0 0, 82% 8%, 100% 100%, 44% 84%);
+}
+
+.combatant-sprite.is-phishing .combatant-lure {
+  left: 42%;
+  right: 42%;
+  top: 52%;
+  bottom: 24%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.98), rgba(240, 210, 139, 0.18) 48%, transparent 72%);
+  box-shadow: 0 0 20px rgba(240, 210, 139, 0.12);
+}
+
+.combatant-sprite.is-botnet .combatant-body {
+  left: 18%;
+  right: 18%;
+  top: 26%;
+  bottom: 14%;
+  border-radius: 30%;
+}
+
+.combatant-sprite.is-botnet .combatant-swarm-core {
+  left: 38%;
+  right: 38%;
+  top: 36%;
+  bottom: 34%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.96), rgba(255, 102, 121, 0.2) 48%, transparent 74%);
+}
+
+.combatant-sprite.is-botnet .combatant-node.is-a,
+.combatant-sprite.is-botnet .combatant-node.is-b,
+.combatant-sprite.is-botnet .combatant-node.is-c {
+  width: 10%;
+  height: 10%;
+  border-radius: 50%;
+  background: rgba(255, 102, 121, 0.96);
+  box-shadow: 0 0 16px rgba(255, 102, 121, 0.16);
+}
+
+.combatant-sprite.is-botnet .combatant-node.is-a { left: 18%; top: 22%; }
+.combatant-sprite.is-botnet .combatant-node.is-b { left: 46%; top: 12%; }
+.combatant-sprite.is-botnet .combatant-node.is-c { right: 18%; top: 24%; }
+
+.combatant-sprite.is-botnet .combatant-link.is-one,
+.combatant-sprite.is-botnet .combatant-link.is-two,
+.combatant-sprite.is-botnet .combatant-link.is-three {
+  height: 2px;
+  background: linear-gradient(90deg, rgba(255, 102, 121, 0.1), rgba(255, 102, 121, 0.92), rgba(141, 116, 255, 0.1));
+}
+
+.combatant-sprite.is-botnet .combatant-link.is-one {
+  left: 24%;
+  right: 24%;
+  top: 24%;
+}
+
+.combatant-sprite.is-botnet .combatant-link.is-two {
+  left: 22%;
+  right: 26%;
+  top: 46%;
+}
+
+.combatant-sprite.is-botnet .combatant-link.is-three {
+  left: 24%;
+  right: 22%;
+  top: 68%;
+}
+
+.combatant-sprite.is-trojan .combatant-anomaly-core,
+.combatant-sprite.is-zero-day .combatant-anomaly-core {
+  left: 34%;
+  right: 34%;
+  top: 28%;
+  bottom: 28%;
+  border-radius: 38%;
+  background:
+    radial-gradient(circle at 50% 40%, rgba(255, 255, 255, 0.98), rgba(141, 116, 255, 0.22) 44%, transparent 74%),
+    linear-gradient(135deg, rgba(255, 102, 121, 0.7), rgba(141, 116, 255, 0.8));
+  box-shadow: 0 0 24px rgba(255, 102, 121, 0.14);
+}
+
+.combatant-sprite.is-trojan .combatant-edge.is-left,
+.combatant-sprite.is-trojan .combatant-edge.is-right,
+.combatant-sprite.is-zero-day .combatant-edge.is-left,
+.combatant-sprite.is-zero-day .combatant-edge.is-right {
+  top: 18%;
+  width: 16%;
+  height: 38%;
+  background: linear-gradient(180deg, rgba(141, 116, 255, 0.8), rgba(255, 102, 121, 0.08));
+}
+
+.combatant-sprite.is-trojan .combatant-edge.is-left,
+.combatant-sprite.is-zero-day .combatant-edge.is-left {
+  left: 10%;
+  clip-path: polygon(100% 0, 18% 20%, 78% 100%, 100% 68%);
+}
+
+.combatant-sprite.is-trojan .combatant-edge.is-right,
+.combatant-sprite.is-zero-day .combatant-edge.is-right {
+  right: 10%;
+  clip-path: polygon(0 0, 82% 20%, 22% 100%, 0 68%);
+}
+
+.combatant-sprite.is-trojan .combatant-glitch.is-one,
+.combatant-sprite.is-trojan .combatant-glitch.is-two,
+.combatant-sprite.is-zero-day .combatant-glitch.is-one,
+.combatant-sprite.is-zero-day .combatant-glitch.is-two {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.04), rgba(135, 228, 255, 0.24), rgba(255, 102, 121, 0.04));
+}
+
+.combatant-sprite.is-trojan .combatant-glitch.is-one,
+.combatant-sprite.is-zero-day .combatant-glitch.is-one {
+  left: 22%;
+  right: 26%;
+  top: 22%;
+  height: 3px;
+}
+
+.combatant-sprite.is-trojan .combatant-glitch.is-two,
+.combatant-sprite.is-zero-day .combatant-glitch.is-two {
+  left: 26%;
+  right: 22%;
+  top: 60%;
+  height: 4px;
+}
+
+.combatant-sprite.is-trojan .combatant-blade,
+.combatant-sprite.is-zero-day .combatant-blade {
+  left: 46%;
+  right: 46%;
+  top: 18%;
+  bottom: 16%;
+  background: linear-gradient(180deg, rgba(240, 210, 139, 0.82), rgba(135, 228, 255, 0.3));
+  clip-path: polygon(50% 0, 100% 24%, 62% 100%, 0 24%);
+}
+
+.combatant-sprite.is-firewall,
+.combatant-sprite.is-ids,
+.combatant-sprite.is-honeypot,
+.combatant-sprite.is-antivirus {
+  transform: translateY(-2px);
+}
+
+.combatant-sprite.is-threat {
+  transform: translateY(2px);
+}
+
+.combatant-sprite.is-program {
+  filter: drop-shadow(0 0 18px rgba(135, 228, 255, 0.08));
+}
+
+.combatant-sprite.is-threat {
+  filter: drop-shadow(0 0 18px rgba(255, 102, 121, 0.1));
+}
+
+.combatant-sprite.is-hit .combatant-detail,
+.combatant-sprite.is-hit .combatant-core,
+.combatant-sprite.is-hit .combatant-body,
+.combatant-sprite.is-hit .combatant-head {
+  filter: brightness(1.18) saturate(1.1);
+}
+
+.combatant-sprite.is-current .combatant-aura {
+  opacity: 0.78;
+}
+
+.combatant-sprite.is-program {
+  transform: scaleX(-1) translateY(-2px) !important;
+}
+
+.combatant-sprite.is-threat {
+  transform: translateY(2px) !important;
+}
+
 /* Layer 4.10 pushes the battler silhouettes closer to original cyber-fantasy character shapes. */
 .combat-stage {
   min-height: clamp(660px, 78vh, 1000px);
