@@ -1536,6 +1536,10 @@ function resetRunState() {
   stopMissionSystems();
   closeCombatOverlay(true);
   restoreThreatRoster();
+  // The starter roster is re-applied here so saved defender choices always carry into a fresh run.
+  if (typeof applySelectedDefenderRoster === "function") {
+    applySelectedDefenderRoster();
+  }
   resetProgramRoster();
 
   playerScore = 0;

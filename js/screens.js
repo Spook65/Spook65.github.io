@@ -1,6 +1,6 @@
 /* Screen-state and mode-selection behavior for THREATGRID's menu, briefing, and gameplay transitions. */
-// screenState controls which overlay is visible: menu, briefing, gameplay, combat, or the end-state branch.
-let screenState = "menu"; // 'menu' | 'howtoplay' | 'game' | 'combat' | 'game-over'
+// screenState controls which overlay is visible: menu, briefing, defender setup, gameplay, combat, or the end-state branch.
+let screenState = "menu"; // 'menu' | 'howtoplay' | 'defenders' | 'game' | 'combat' | 'game-over'
 let globeStarted = false;
 
 // gameMode is chosen before the game starts so later UI logic knows whether to show passive or typed actions.
@@ -10,8 +10,10 @@ let gameMode = "analyst"; // 'analyst' | 'operator'
 const bootOverlay = document.getElementById("boot-overlay");
 const menuScreen = document.getElementById("menu-screen");
 const howtoScreen = document.getElementById("howto-screen");
+const defenderScreen = document.getElementById("defender-screen");
 const analystModeButton = document.getElementById("analyst-mode-button");
 const operatorModeButton = document.getElementById("operator-mode-button");
+const defenderSetupButton = document.getElementById("defender-setup-button");
 const howtoButton = document.getElementById("howto-button");
 const backButton = document.getElementById("back-button");
 const returnButton = document.getElementById("return-button");
@@ -59,6 +61,9 @@ function setScreen(nextScreen) {
   screenState = nextScreen;
   menuScreen.classList.toggle("is-active", nextScreen === "menu");
   howtoScreen.classList.toggle("is-active", nextScreen === "howtoplay");
+  if (defenderScreen) {
+    defenderScreen.classList.toggle("is-active", nextScreen === "defenders");
+  }
 }
 
 // showMenu() restores the main menu and keeps the overlay visible.
@@ -66,6 +71,9 @@ function showMenu() {
   bootOverlay.style.display = "block";
   bootOverlay.classList.remove("is-hiding");
   setScreen("menu");
+  if (typeof markDefenderRunEnded === "function") {
+    markDefenderRunEnded();
+  }
   if (typeof closeThreatPanel === "function") {
     closeThreatPanel(true);
   }
@@ -79,8 +87,22 @@ function showHowToPlay() {
   setScreen("howtoplay");
 }
 
+// showDefenderSelection() opens the starter lineup editor without starting a run yet.
+function showDefenderSelection() {
+  bootOverlay.style.display = "block";
+  bootOverlay.classList.remove("is-hiding");
+  setScreen("defenders");
+  if (typeof renderDefenderSelectionScreen === "function") {
+    renderDefenderSelectionScreen();
+  }
+}
+
 // startGame() resets the run, fades the overlay out, and boots the globe exactly once.
 function startGame() {
+  if (typeof markDefenderRunStarted === "function") {
+    markDefenderRunStarted();
+  }
+
   if (typeof resetRunState === "function") {
     resetRunState();
   }
@@ -139,6 +161,7 @@ operatorModeButton.addEventListener("mouseleave", () => updateModeDescription(ga
 
 // The remaining buttons switch between the informational screens, and the HUD exit button returns to the menu.
 howtoButton.addEventListener("click", showHowToPlay);
+defenderSetupButton.addEventListener("click", showDefenderSelection);
 backButton.addEventListener("click", showMenu);
 returnButton.addEventListener("click", showMenu);
 hudMenuButton.addEventListener("click", requestReturnToMenu);

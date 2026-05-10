@@ -11,11 +11,11 @@
 <body>
   <div id="app">
     <div id="globe-root"></div>
-    <div class="hud">
-      <div class="hud-block hud-title corner-bracket">
-        <h1>THREATGRID</h1>
-        <p>Cyber-Fantasy Defense Theatre</p>
-      </div>
+      <div class="hud">
+        <div class="hud-block hud-title corner-bracket">
+          <h1>THREATGRID</h1>
+          <p>Cyber-Fantasy Roguelike Arena</p>
+        </div>
       <div class="hud-block hud-stats corner-bracket">
         <strong id="active-count">0</strong>
         <p>Active Threats</p>
@@ -38,8 +38,11 @@
         <div class="menu-shell">
           <h1 class="menu-title">THREATGRID</h1>
           <div class="cursor-line" aria-hidden="true"></div>
-          <p class="menu-subtitle">CYBER-FANTASY DEFENSE RPG</p>
+          <p class="menu-subtitle">CYBER-FANTASY ROGUELIKE JRPG</p>
           <div class="menu-rule" aria-hidden="true"></div>
+          <div class="menu-actions">
+            <button id="defender-setup-button" class="menu-button" type="button">STARTER SETUP</button>
+          </div>
           <div class="menu-actions">
             <button id="analyst-mode-button" class="menu-button" type="button">ANALYST MODE</button>
             <button id="operator-mode-button" class="menu-button" type="button">OPERATOR MODE</button>
@@ -63,7 +66,7 @@
           <div class="howto-content">
             <section class="briefing-section">
               <h3 class="section-heading">SITUATION</h3>
-              <p class="section-body">Eight active threats are live on the globe. Click one to deploy a four-program security party and enter turn-based combat.</p>
+              <p class="section-body">Eight active threats are live on the globe. Choose a starter defender lineup, then click one to deploy your party into turn-based combat.</p>
             </section>
 
             <section class="briefing-section">
@@ -101,6 +104,10 @@
           </div>
         </div>
       </section>
+
+      <section id="defender-screen" class="screen defender-screen" aria-label="Starter Defenders">
+        <div id="defender-screen-content" class="defender-screen-content"></div>
+      </section>
     </div>
     <div id="encounter-overlay" class="encounter-overlay" aria-hidden="true">
       <div class="encounter-overlay-shell">
@@ -120,8 +127,9 @@
 
   <script src="js/threats.js"></script>
   <script src="js/globe.js"></script>
-  <script src="js/screens.js"></script>
   <script src="js/combat/combat-state.js"></script>
+  <script src="js/defenders.js"></script>
+  <script src="js/screens.js"></script>
   <script src="js/combat/combat-animations.js"></script>
   <script src="js/combat/combat-render.js"></script>
   <script src="js/combat/combat-actions.js"></script>

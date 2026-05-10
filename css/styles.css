@@ -1293,6 +1293,242 @@ canvas {
   padding-bottom: 2px;
 }
 
+/* The defender setup screen uses the same boot-shell rhythm but shifts into a roster-selection layout. */
+.defender-screen {
+  justify-content: flex-start;
+  align-items: stretch;
+  padding: 22px 22px 26px;
+}
+
+/* The selection content fills the screen so the starter lineup can breathe on wider displays. */
+.defender-screen-content {
+  width: 100%;
+  height: 100%;
+}
+
+/* The shell keeps the loadout editor centered and gives the roster room to spread out. */
+.defender-shell {
+  width: min(1120px, 100%);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-height: 100%;
+}
+
+/* The header ties the section title and exit button into one readable row. */
+.defender-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 10px;
+}
+
+/* The setup copy stays intentionally short so the card grid remains the focus. */
+.defender-copy {
+  max-width: 760px;
+}
+
+/* A thin rule separates the title block from the editable roster. */
+.defender-rule {
+  height: 1px;
+  background: linear-gradient(90deg, rgba(0, 255, 136, 0.08), rgba(0, 204, 255, 0.28), rgba(255, 204, 0, 0.08));
+}
+
+/* The status row tells the player how many defenders are currently locked in. */
+.defender-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: rgba(0, 255, 136, 0.62);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-size: 0.76rem;
+}
+
+/* The selected count uses a brighter accent so the party size is visible at a glance. */
+.defender-selection-count {
+  color: #00ccff;
+}
+
+/* The helper line softens the screen copy while the player is choosing a roster. */
+.defender-selection-status {
+  text-align: right;
+  color: rgba(0, 255, 136, 0.52);
+}
+
+/* The defender grid spaces out the roster cards while keeping the center open for future art. */
+.defender-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  overflow: auto;
+  padding-right: 4px;
+  flex: 1;
+}
+
+/* Each roster card feels like a premium selection tile instead of a plain list item. */
+.defender-card {
+  appearance: none;
+  border: 1px solid rgba(0, 255, 136, 0.16);
+  border-radius: 0;
+  background:
+    linear-gradient(180deg, rgba(7, 12, 24, 0.98), rgba(7, 9, 16, 0.96));
+  color: #dffcf2;
+  padding: 16px 16px 14px;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.03),
+    0 10px 24px rgba(0, 0, 0, 0.24);
+  transition: transform 150ms ease, border-color 150ms ease, box-shadow 150ms ease, background 150ms ease, opacity 150ms ease;
+}
+
+/* Hover states lift the card slightly so the selection feels tactile. */
+.defender-card:hover,
+.defender-card:focus-visible {
+  transform: translateY(-2px);
+  border-color: rgba(0, 204, 255, 0.72);
+  box-shadow:
+    0 0 18px rgba(0, 204, 255, 0.12),
+    0 12px 30px rgba(0, 0, 0, 0.28);
+  outline: none;
+}
+
+/* Selected cards glow cyan to make the active roster easy to read. */
+.defender-card.is-selected {
+  border-color: rgba(0, 204, 255, 0.92);
+  background:
+    linear-gradient(180deg, rgba(8, 20, 28, 0.98), rgba(7, 9, 16, 0.96));
+  box-shadow:
+    0 0 0 1px rgba(0, 204, 255, 0.22),
+    0 0 22px rgba(0, 204, 255, 0.14),
+    0 12px 34px rgba(0, 0, 0, 0.3);
+}
+
+/* Locked cards remain visible but are not interactive yet. */
+.defender-card.is-locked {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+/* Card headers place the name and rarity at opposite ends for quick scanning. */
+.defender-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* Defender names use a brighter accent to read like unit designations. */
+.defender-card-name {
+  color: #00ff88;
+  letter-spacing: 0.12em;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+}
+
+/* The domain line acts like a small class tag without overwhelming the card. */
+.defender-card-domain,
+.defender-card-rarity,
+.defender-card-summary,
+.defender-card-meta,
+.defender-card-stats,
+.defender-card-moves,
+.defender-card-foot {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.72rem;
+}
+
+/* Rarity is color coded to hint at future collection layers. */
+.defender-card-rarity {
+  color: #ffcc00;
+  white-space: nowrap;
+}
+
+/* The summary gives each defender a short identity line without adding clutter. */
+.defender-card-summary {
+  color: rgba(223, 252, 242, 0.72);
+  line-height: 1.5;
+}
+
+/* Metadata rows keep the future-ready stats visible without dominating the card. */
+.defender-card-meta,
+.defender-card-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  color: rgba(0, 255, 136, 0.62);
+}
+
+/* Move previews are stacked as compact chips so the selection screen remains readable. */
+.defender-card-moves {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Each move chip is small and slightly brighter to keep the card balanced. */
+.defender-move {
+  padding: 4px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.18);
+  color: #dffcf2;
+}
+
+/* The card footer separates selection guidance from the metadata above it. */
+.defender-card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: rgba(0, 255, 136, 0.52);
+}
+
+/* The footer keeps the reset and confirm actions aligned to the right edge. */
+.defender-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 2px;
+}
+
+/* The confirm button dims when fewer than four defenders are chosen so the gate is obvious. */
+.defender-footer .menu-button:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+  box-shadow: inset 0 0 0 1px rgba(0, 255, 136, 0.02);
+}
+
+/* Narrow viewports collapse the starter grid into a single column so the cards remain legible. */
+@media (max-width: 860px) {
+  .defender-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .defender-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .defender-status-row,
+  .defender-card-foot,
+  .defender-footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .defender-selection-status {
+    text-align: left;
+  }
+}
+
 /* Cursor blink for the menu title line. */
 @keyframes blink {
   0%, 49% { opacity: 1; }
