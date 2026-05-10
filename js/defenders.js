@@ -570,7 +570,6 @@ let defenderSelectionDraft = [];
 // defenderScreenContent is the dynamic container for the starter-selection screen.
 const defenderSelectionScreenRoot = document.getElementById("defender-screen");
 const defenderScreenContent = document.getElementById("defender-screen-content");
-const defenderSetupButton = document.getElementById("defender-setup-button");
 
 // getDefaultStarterDefenderIds() returns the canonical four-defender loadout used when no save exists yet.
 function getDefaultStarterDefenderIds() {

@@ -176,3 +176,6 @@ operatorModeButton.addEventListener("click", () => {
 // Initialize the HUD exit button label and menu mode description so the boot screen starts fully populated.
 updateHudMenuButton();
 updateModeDescription(gameMode);
+
+// Exposes showMenu for older non-module game flow code that calls it from main.js.
+window.showMenu = showMenu;
