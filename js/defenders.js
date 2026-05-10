@@ -568,7 +568,7 @@ let defenderSaveState = null;
 let defenderSelectionDraft = [];
 
 // defenderScreenContent is the dynamic container for the starter-selection screen.
-const defenderScreen = document.getElementById("defender-screen");
+const defenderSelectionScreenRoot = document.getElementById("defender-screen");
 const defenderScreenContent = document.getElementById("defender-screen-content");
 const defenderSetupButton = document.getElementById("defender-setup-button");
 

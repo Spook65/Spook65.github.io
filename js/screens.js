@@ -71,9 +71,6 @@ function showMenu() {
   bootOverlay.style.display = "block";
   bootOverlay.classList.remove("is-hiding");
   setScreen("menu");
-  if (typeof markDefenderRunEnded === "function") {
-    markDefenderRunEnded();
-  }
   if (typeof closeThreatPanel === "function") {
     closeThreatPanel(true);
   }
@@ -102,10 +99,6 @@ function showDefenderSelection() {
 
 // startGame() resets the run, fades the overlay out, and boots the globe exactly once.
 function startGame() {
-  if (typeof markDefenderRunStarted === "function") {
-    markDefenderRunStarted();
-  }
-
   if (typeof resetRunState === "function") {
     resetRunState();
   }
