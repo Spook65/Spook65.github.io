@@ -2259,11 +2259,11 @@ function buildCombatMarkup(state) {
     <div class="combat-shell">
       <header class="combat-header">
         <div class="combat-title-block">
-          <div class="combat-panel-title">THREATGRID COMBAT</div>
+          <div class="combat-panel-title">THREATGRID ARENA</div>
           <div class="combat-encounter-name">${state.threat.title} / LVL ${state.threat.level}</div>
         </div>
         <div class="combat-turn-preview">
-          <div class="combat-panel-title">NEXT</div>
+          <div class="combat-panel-title">TURN ORDER</div>
           <div class="combat-turn-preview-row">
             ${buildTurnOrderMarkup(state)}
           </div>
@@ -2295,17 +2295,17 @@ function buildCombatMarkup(state) {
       <footer class="combat-footer">
         <div class="combat-footer-left">
           <div class="combat-voice-box">
-            <div class="combat-panel-title">BATTLE MESSAGE</div>
+            <div class="combat-panel-title">TACTICAL BRIEF</div>
             <div id="battle-message" class="combat-voice-text">${getBattleMessageText(state)}</div>
             <div id="battle-submessage" class="combat-voice-subtext">${getBattleSubmessageText(state)}</div>
             <div id="battle-log" class="combat-history-strip">${buildBattleLogMarkup(state)}</div>
           </div>
 
           <div class="combat-command-box">
-            <div class="combat-panel-title">COMMANDS</div>
+            <div class="combat-panel-title">COMMAND DECK</div>
             ${buildActionButtonMarkup(state)}
             <div class="combat-gauge-wrap">
-              <div class="combat-gauge-label">RESPONSE GAUGE</div>
+              <div class="combat-gauge-label">TACTICAL GAUGE</div>
               ${renderBar(state.responseGauge, 100, "is-gauge")}
               <div class="combat-gauge-text">${state.responseGauge}/100</div>
             </div>

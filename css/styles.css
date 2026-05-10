@@ -3523,6 +3523,478 @@ canvas {
   color: rgba(0, 255, 136, 0.64);
 }
 
+/* Layer 5-prep visual pivot: the UI shifts from a terminal palette into a cyber-fantasy JRPG skin. */
+:root {
+  --bg: #05070f;
+  --hud: #d6ecff;
+  --hud-dim: rgba(214, 236, 255, 0.66);
+  --grid: rgba(112, 138, 255, 0.08);
+  --glow: rgba(112, 138, 255, 0.2);
+  --cyan: #87e4ff;
+  --gold: #f0d28b;
+  --silver: #dce6f4;
+  --crimson: #ff6679;
+  --violet: #8d74ff;
+  --navy: #070c19;
+  --ink: #03050a;
+}
+
+html, body {
+  color: var(--silver);
+  background: var(--bg);
+}
+
+body {
+  background:
+    radial-gradient(circle at 18% 16%, rgba(125, 92, 255, 0.18), transparent 24%),
+    radial-gradient(circle at 78% 12%, rgba(135, 228, 255, 0.14), transparent 22%),
+    radial-gradient(circle at 52% 82%, rgba(255, 102, 121, 0.12), transparent 28%),
+    linear-gradient(180deg, #04050a 0%, #070b16 48%, #04050a 100%);
+}
+
+.hud-block {
+  text-shadow: 0 0 14px rgba(135, 228, 255, 0.18);
+}
+
+.hud-title h1,
+.menu-title,
+.briefing-title,
+.terminal-headline,
+.battle-end-headline,
+.battle-reward-copy,
+.battle-reward-line.is-levelup,
+.panel-section-label,
+.panel-step-label,
+.panel-action-button,
+.debrief-title {
+  color: var(--cyan);
+  text-shadow: 0 0 18px rgba(135, 228, 255, 0.14);
+}
+
+.hud-title p,
+.hud-stats p,
+.menu-subtitle,
+.menu-footnote,
+.briefing-copy,
+.section-body,
+.section-list,
+.legend-label,
+.severity-desc,
+.back-button,
+.menu-button,
+.terminal-copy,
+.panel-body-copy,
+.panel-list-copy,
+.panel-debrief-copy,
+.panel-bullet-list,
+.panel-debrief-time,
+.panel-mission-timer,
+.panel-mission-timer.is-warning,
+.panel-mission-timer.is-danger {
+  color: rgba(214, 236, 255, 0.72);
+}
+
+.hud-menu-button,
+.hud-flag-button,
+.menu-button,
+.back-button,
+.panel-action-button,
+.debrief-close-button,
+.combat-action-button,
+.battle-reward-button,
+.battle-end-button,
+.threat-panel-close,
+.operator-hint-button {
+  border-color: rgba(135, 228, 255, 0.42);
+  background: linear-gradient(180deg, rgba(12, 16, 30, 0.96), rgba(6, 8, 15, 0.96));
+  color: var(--cyan);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 10px 24px rgba(0, 0, 0, 0.16);
+}
+
+.hud-menu-button:hover,
+.hud-menu-button:focus-visible,
+.hud-flag-button:hover,
+.hud-flag-button:focus-visible,
+.menu-button:hover,
+.menu-button:focus-visible,
+.back-button:hover,
+.back-button:focus-visible,
+.panel-action-button:hover,
+.panel-action-button:focus-visible,
+.debrief-close-button:hover,
+.debrief-close-button:focus-visible,
+.combat-action-button:hover,
+.combat-action-button:focus-visible,
+.battle-reward-button:hover,
+.battle-reward-button:focus-visible,
+.battle-end-button:hover,
+.battle-end-button:focus-visible,
+.threat-panel-close:hover,
+.threat-panel-close:focus-visible,
+.operator-hint-button:hover,
+.operator-hint-button:focus-visible {
+  background: linear-gradient(180deg, rgba(135, 228, 255, 0.16), rgba(10, 12, 20, 0.96));
+  border-color: rgba(135, 228, 255, 0.96);
+  box-shadow:
+    0 0 18px rgba(135, 228, 255, 0.18),
+    0 10px 22px rgba(0, 0, 0, 0.18),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+  text-shadow: 0 0 10px rgba(135, 228, 255, 0.28);
+}
+
+.menu-title,
+.hud-title h1 {
+  color: var(--silver);
+  text-shadow: 0 0 20px rgba(135, 228, 255, 0.12);
+}
+
+.menu-subtitle,
+.menu-mode-description,
+.briefing-copy,
+.section-body,
+.section-list,
+.legend-label,
+.severity-desc,
+.threat-type-label,
+.threat-location,
+.threat-meta-label,
+.threat-meta-value,
+.threat-panel-title,
+.combat-encounter-name,
+.combat-voice-subtext,
+.combat-history-strip,
+.combat-reserve-card,
+.combat-reserve-meta,
+.combat-gauge-label,
+.combat-gauge-text,
+.combat-command-cost,
+.combat-party-meta,
+.combat-party-tag,
+.combat-action-note {
+  color: rgba(214, 236, 255, 0.68);
+}
+
+.cursor-line,
+.menu-rule,
+.briefing-rule,
+.terminal-rule,
+.threat-panel-rule,
+.combat-stage,
+.combat-panel-title,
+.combat-status-box,
+.combat-voice-box,
+.combat-command-box,
+.combat-reserve-card,
+.combat-status-box-player,
+.combat-status-box-enemy {
+  border-color: rgba(135, 228, 255, 0.16);
+}
+
+.threat-panel-shell,
+.threat-panel.is-combat .threat-panel-shell,
+.combat-shell {
+  background:
+    radial-gradient(circle at 24% 16%, rgba(141, 116, 255, 0.12), transparent 22%),
+    radial-gradient(circle at 78% 22%, rgba(135, 228, 255, 0.1), transparent 20%),
+    linear-gradient(180deg, rgba(4, 8, 16, 0.98), rgba(2, 3, 8, 0.99));
+}
+
+.threat-panel-shell,
+.threat-panel.is-combat .threat-panel-shell {
+  border-left-color: rgba(135, 228, 255, 0.12);
+  border-right-color: rgba(135, 228, 255, 0.12);
+}
+
+.combat-stage {
+  background:
+    radial-gradient(circle at 50% 18%, rgba(135, 228, 255, 0.12), transparent 22%),
+    radial-gradient(circle at 34% 72%, rgba(141, 116, 255, 0.12), transparent 22%),
+    linear-gradient(180deg, rgba(4, 8, 16, 0.98), rgba(3, 4, 9, 0.99));
+}
+
+.combat-floor-grid {
+  background:
+    linear-gradient(180deg, transparent 0 58%, rgba(135, 228, 255, 0.04) 58% 59%, transparent 59%),
+    linear-gradient(90deg, rgba(135, 228, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(rgba(135, 228, 255, 0.035) 1px, transparent 1px);
+}
+
+.combat-stage-glow {
+  background:
+    radial-gradient(circle at 50% 65%, rgba(135, 228, 255, 0.1), transparent 28%),
+    radial-gradient(circle at 80% 20%, rgba(255, 102, 121, 0.08), transparent 22%);
+}
+
+.combat-stage::before {
+  background:
+    linear-gradient(180deg, transparent 0 54%, rgba(135, 228, 255, 0.06) 54% 55%, transparent 55%),
+    linear-gradient(90deg, rgba(135, 228, 255, 0.035) 1px, transparent 1px);
+  opacity: 0.3;
+}
+
+.combat-stage::after {
+  background:
+    radial-gradient(circle at 24% 80%, rgba(135, 228, 255, 0.12), transparent 16%),
+    radial-gradient(circle at 78% 18%, rgba(255, 102, 121, 0.12), transparent 16%),
+    radial-gradient(circle at 50% 52%, rgba(141, 116, 255, 0.08), transparent 28%);
+}
+
+.combat-panel-title,
+.combat-turn-chip.is-current,
+.combat-action-button.is-primary .combat-command-name,
+.combat-action-button.is-secondary .combat-command-name,
+.combat-party-name,
+.combat-reserve-name,
+.combat-name,
+.combat-lvl,
+.combat-subline,
+.combat-voice-text {
+  color: var(--silver);
+}
+
+.combat-turn-chip.is-current,
+.combat-action-button.is-primary,
+.combat-action-button.is-secondary,
+.combat-party-card.is-active,
+.combat-reserve-card.is-active,
+.combat-status-box-player,
+.combat-status-box-enemy {
+  box-shadow:
+    0 0 18px rgba(135, 228, 255, 0.08),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+}
+
+.combat-status-box-player {
+  border-color: rgba(135, 228, 255, 0.18);
+  background:
+    linear-gradient(180deg, rgba(8, 12, 24, 0.96), rgba(3, 5, 10, 0.92));
+}
+
+.combat-status-box-enemy {
+  border-color: rgba(255, 102, 121, 0.18);
+  background:
+    linear-gradient(180deg, rgba(22, 7, 18, 0.96), rgba(6, 2, 6, 0.92));
+}
+
+.combat-status-box-player .combat-lvl,
+.combat-status-box-player .combat-subline,
+.combat-status-box-player .combat-matchup-hint,
+.combat-command-subtitle.is-secondary {
+  color: rgba(135, 228, 255, 0.76);
+}
+
+.combat-status-box-enemy .combat-lvl,
+.combat-status-box-enemy .combat-subline,
+.combat-status-box-enemy .combat-matchup-hint,
+.combat-matchup-hint.is-weak {
+  color: rgba(255, 102, 121, 0.8);
+}
+
+.combat-matchup-hint.is-super-effective {
+  color: var(--gold);
+}
+
+.combat-reserve-card.is-targeted {
+  border-color: rgba(255, 102, 121, 0.34);
+}
+
+.combat-reserve-card.is-down,
+.combat-party-card.is-down {
+  opacity: 0.45;
+}
+
+.combat-action-button.is-disabled {
+  color: rgba(214, 236, 255, 0.34);
+  border-color: rgba(135, 228, 255, 0.12);
+}
+
+.combat-action-button::after {
+  color: rgba(135, 228, 255, 0.46);
+}
+
+.combat-bar-fill.is-hp {
+  background: linear-gradient(90deg, rgba(135, 228, 255, 0.9), rgba(240, 210, 139, 0.92));
+}
+
+.combat-bar-fill.is-xp,
+.combat-bar-fill.is-gauge {
+  background: linear-gradient(90deg, rgba(135, 228, 255, 0.94), rgba(141, 116, 255, 0.9));
+}
+
+.battle-sprite.firewall::before,
+.battle-sprite.ids::before,
+.battle-sprite.honeypot::before,
+.battle-sprite.antivirus::before {
+  box-shadow:
+    0 0 24px rgba(135, 228, 255, 0.12),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.battle-sprite.firewall::before {
+  background:
+    linear-gradient(135deg, rgba(135, 228, 255, 0.42), rgba(135, 228, 255, 0.16)),
+    linear-gradient(90deg, rgba(135, 228, 255, 0.24) 50%, transparent 0),
+    linear-gradient(rgba(135, 228, 255, 0.24) 50%, transparent 0);
+}
+
+.battle-sprite.firewall::after {
+  background: linear-gradient(180deg, rgba(189, 226, 255, 0.98), rgba(135, 228, 255, 0.76));
+}
+
+.battle-sprite.ids::before {
+  border-color: rgba(135, 228, 255, 0.96);
+  box-shadow:
+    inset 0 0 0 10px rgba(135, 228, 255, 0.12),
+    0 0 0 1px rgba(135, 228, 255, 0.18),
+    0 0 22px rgba(135, 228, 255, 0.14);
+}
+
+.battle-sprite.ids::after {
+  background: linear-gradient(90deg, transparent, rgba(135, 228, 255, 0.95), transparent);
+  box-shadow:
+    0 -28px 0 rgba(135, 228, 255, 0.9),
+    0 28px 0 rgba(135, 228, 255, 0.9);
+}
+
+.battle-sprite.honeypot::before {
+  background:
+    linear-gradient(60deg, transparent 46%, rgba(240, 210, 139, 0.98) 46% 54%, transparent 54%),
+    linear-gradient(-60deg, transparent 46%, rgba(141, 116, 255, 0.92) 46% 54%, transparent 54%),
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.08), transparent 48%);
+}
+
+.battle-sprite.antivirus::before {
+  border-color: rgba(240, 210, 139, 0.98);
+  box-shadow:
+    inset 0 0 0 10px rgba(240, 210, 139, 0.08),
+    0 0 26px rgba(240, 210, 139, 0.12);
+}
+
+.battle-sprite.antivirus::after {
+  background: linear-gradient(180deg, rgba(255, 236, 173, 0.98), rgba(240, 210, 139, 0.86));
+}
+
+.threat-sprite.ransomware::before,
+.threat-sprite.phishing::before,
+.threat-sprite.botnet::before,
+.threat-sprite.trojan::before,
+.threat-sprite.zero-day::before {
+  filter: drop-shadow(0 0 18px rgba(255, 102, 121, 0.16));
+}
+
+.threat-sprite.ransomware::before {
+  background:
+    linear-gradient(135deg, rgba(255, 102, 121, 0.94), rgba(141, 116, 255, 0.86)),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.16), transparent 28%, rgba(255, 255, 255, 0.12));
+}
+
+.threat-sprite.phishing::before {
+  background:
+    linear-gradient(180deg, rgba(240, 210, 139, 0.95), rgba(255, 102, 121, 0.9)),
+    radial-gradient(circle at 50% 30%, rgba(255, 255, 255, 0.16), transparent 40%);
+}
+
+.threat-sprite.botnet::before {
+  background:
+    radial-gradient(circle at 20% 20%, rgba(255, 102, 121, 0.96) 0 13%, transparent 15%),
+    radial-gradient(circle at 80% 20%, rgba(141, 116, 255, 0.92) 0 13%, transparent 15%),
+    radial-gradient(circle at 50% 50%, rgba(255, 102, 121, 0.96) 0 13%, transparent 15%),
+    radial-gradient(circle at 20% 80%, rgba(141, 116, 255, 0.92) 0 13%, transparent 15%),
+    radial-gradient(circle at 80% 80%, rgba(255, 102, 121, 0.96) 0 13%, transparent 15%),
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.08), transparent 48%);
+}
+
+.threat-sprite.trojan::before {
+  background:
+    linear-gradient(135deg, rgba(255, 102, 121, 0.96), rgba(141, 116, 255, 0.92)),
+    radial-gradient(circle at 50% 28%, rgba(255, 255, 255, 0.12), transparent 42%);
+}
+
+.threat-sprite.zero-day::before {
+  background:
+    linear-gradient(135deg, rgba(240, 210, 139, 0.98), rgba(255, 102, 121, 0.92)),
+    radial-gradient(circle at 50% 30%, rgba(255, 255, 255, 0.14), transparent 40%);
+}
+
+.threat-sprite.ransomware::after,
+.threat-sprite.phishing::after,
+.threat-sprite.botnet::after,
+.threat-sprite.trojan::after,
+.threat-sprite.zero-day::after {
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.boot-scanlines {
+  background:
+    linear-gradient(to bottom, rgba(135, 228, 255, 0.04), transparent 18%),
+    repeating-linear-gradient(
+      to bottom,
+      rgba(135, 228, 255, 0.06) 0,
+      rgba(135, 228, 255, 0.06) 1px,
+      transparent 1px,
+      transparent 7px
+    );
+  mix-blend-mode: screen;
+  opacity: 0.26;
+}
+
+.scan-overlay {
+  background:
+    linear-gradient(to top, rgba(135, 228, 255, 0.08), transparent 70%),
+    repeating-linear-gradient(
+      to bottom,
+      rgba(135, 228, 255, 0.08) 0,
+      rgba(135, 228, 255, 0.08) 1px,
+      transparent 1px,
+      transparent 10px
+    );
+  border-top-color: rgba(135, 228, 255, 0.14);
+}
+
+.grid-vignette {
+  background:
+    linear-gradient(rgba(135, 228, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(135, 228, 255, 0.025) 1px, transparent 1px);
+  opacity: 0.18;
+}
+
+.encounter-overlay {
+  background:
+    radial-gradient(circle at 50% 30%, rgba(141, 116, 255, 0.12), transparent 28%),
+    radial-gradient(circle at 50% 72%, rgba(135, 228, 255, 0.08), transparent 22%),
+    rgba(4, 4, 8, 0.98);
+}
+
+.encounter-overlay-shell {
+  border-color: rgba(135, 228, 255, 0.22);
+  background: rgba(6, 8, 14, 0.92);
+  box-shadow: 0 0 24px rgba(135, 228, 255, 0.08);
+}
+
+.encounter-overlay-title {
+  color: var(--gold);
+  text-shadow: 0 0 18px rgba(240, 210, 139, 0.14);
+}
+
+.encounter-overlay-rule {
+  background: rgba(240, 210, 139, 0.22);
+}
+
+.encounter-overlay-copy {
+  color: rgba(214, 236, 255, 0.72);
+}
+
+.threat-panel-content::-webkit-scrollbar-thumb {
+  background: rgba(135, 228, 255, 0.34);
+  border-color: rgba(135, 228, 255, 0.14);
+}
+
+.threat-panel-content {
+  scrollbar-color: rgba(135, 228, 255, 0.42) rgba(135, 228, 255, 0.06);
+}
+
 /* Layer 4.9 gives the command bar a JRPG menu structure and keeps decorative battle layers out of the click path. */
 .combat-stage,
 .combat-stage-enemy,
