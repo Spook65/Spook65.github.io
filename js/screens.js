@@ -92,6 +92,9 @@ function showDefenderSelection() {
   bootOverlay.style.display = "block";
   bootOverlay.classList.remove("is-hiding");
   setScreen("defenders");
+  if (typeof getSelectedDefenderIds === "function") {
+    defenderSelectionDraft = getSelectedDefenderIds();
+  }
   if (typeof renderDefenderSelectionScreen === "function") {
     renderDefenderSelectionScreen();
   }
@@ -166,15 +169,15 @@ backButton.addEventListener("click", showMenu);
 returnButton.addEventListener("click", showMenu);
 hudMenuButton.addEventListener("click", requestReturnToMenu);
 
-// Mode selection now starts the run immediately; the combat layer takes over once a threat is clicked.
+// Mode selection now opens the starter lineup screen before the run begins.
 analystModeButton.addEventListener("click", () => {
   setGameMode("analyst");
-  startGame();
+  showDefenderSelection();
 });
 
 operatorModeButton.addEventListener("click", () => {
   setGameMode("operator");
-  startGame();
+  showDefenderSelection();
 });
 
 // Initialize the HUD exit button label and menu mode description so the boot screen starts fully populated.

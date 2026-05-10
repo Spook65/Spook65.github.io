@@ -7,32 +7,374 @@ const defenderCatalog = [
   {
     id: "firewall-7",
     name: "Firewall-7",
+    role: "Shield Guardian",
     domain: "Bastion",
     affinity: "Defense",
-    temperament: "Stoic",
-    rarity: "Common",
-    variant: "Standard",
-    coreTrait: "Bulwark Array",
-    passiveModule: "Shell Resonance",
-    stats: { hp: 100, atk: 3, def: 7, spd: 6 },
+    level: 1,
     hp: 100,
     maxHp: 100,
-    atk: 3,
-    def: 7,
-    spd: 6,
+    atk: 4,
+    def: 8,
+    spAtk: 3,
+    spDef: 8,
+    spd: 4,
+    temperament: "Steadfast",
+    coreTrait: {
+      name: "Bulwark Array",
+      description: "Reduces incoming damage from the first hit each battle."
+    },
+    passiveModule: {
+      name: "Shell Resonance",
+      description: "Slightly increases defense when HP is above 50%."
+    },
+    rarity: "standard",
+    variant: "normal",
+    unlocked: true,
+    selected: false,
+    starter: true,
     color: "#00ccff",
     statusEffects: [],
     summary: "A shield guardian built to absorb direct intrusion.",
-    moveList: [
-      { name: "Block Network", power: 0, accuracy: 100, uses: "∞", effect: "reduce_next_damage" },
-      { name: "Harden Ports", power: 15, accuracy: 100, uses: "∞", effect: "boost_def" },
-      { name: "Allocate Bandwidth", power: 25, accuracy: 95, uses: "∞", effect: "shared_ability" }
+    moves: [
+      {
+        id: "block-network",
+        name: "Block Network",
+        domain: "Defense",
+        category: "support",
+        charges: 15,
+        maxCharges: 15,
+        power: 0,
+        accuracy: 100,
+        cost: 0,
+        effect: "reduce_next_damage",
+        description: "Raises defensive posture and reduces incoming damage."
+      },
+      {
+        id: "harden-ports",
+        name: "Harden Ports",
+        domain: "Defense",
+        category: "support",
+        charges: 10,
+        maxCharges: 10,
+        power: 12,
+        accuracy: 100,
+        cost: 1,
+        effect: "boost_def",
+        description: "Fortifies the chassis and raises defense for the next exchange."
+      },
+      {
+        id: "allocate-bandwidth",
+        name: "Allocate Bandwidth",
+        domain: "Defense",
+        category: "support",
+        charges: 6,
+        maxCharges: 6,
+        power: 20,
+        accuracy: 95,
+        cost: 2,
+        effect: "shared_ability",
+        description: "Redirects reinforcement bandwidth into a sturdy team-wide shield."
+      }
     ],
-    abilities: [
-      { name: "Block Network", cost: 0, baseDamage: 0, effect: "reduce_next_damage" },
-      { name: "Harden Ports", cost: 1, baseDamage: 15, effect: "boost_def" },
-      { name: "Allocate Bandwidth", cost: 2, baseDamage: 25, effect: "shared_ability" }
-    ]
+    abilities: buildCombatAbilities([
+      {
+        name: "Block Network",
+        cost: 0,
+        baseDamage: 0,
+        effect: "reduce_next_damage"
+      },
+      {
+        name: "Harden Ports",
+        cost: 1,
+        baseDamage: 12,
+        effect: "boost_def"
+      },
+      {
+        name: "Allocate Bandwidth",
+        cost: 2,
+        baseDamage: 20,
+        effect: "shared_ability"
+      }
+    ])
+  },
+  {
+    id: "ids-4",
+    name: "IDS",
+    role: "Scanner Scout",
+    domain: "Detection",
+    affinity: "Offense",
+    level: 1,
+    hp: 92,
+    maxHp: 92,
+    atk: 6,
+    def: 4,
+    spAtk: 8,
+    spDef: 5,
+    spd: 10,
+    temperament: "Analytical",
+    coreTrait: {
+      name: "Signal Scan",
+      description: "Marks weak points and increases damage against detected threats."
+    },
+    passiveModule: {
+      name: "Trace Pulse",
+      description: "Raises speed when the battlefield has been mapped."
+    },
+    rarity: "standard",
+    variant: "normal",
+    unlocked: true,
+    selected: false,
+    starter: true,
+    color: "#00ff88",
+    statusEffects: [],
+    summary: "A precision scout that spots exploits before they bloom.",
+    moves: [
+      {
+        id: "deep-packet-scan",
+        name: "Deep Packet Scan",
+        domain: "Detection",
+        category: "special",
+        charges: 15,
+        maxCharges: 15,
+        power: 16,
+        accuracy: 100,
+        cost: 0,
+        effect: "status_detected",
+        description: "Scans the target for weak signals and exposes hidden errors."
+      },
+      {
+        id: "signature-burst",
+        name: "Signature Burst",
+        domain: "Detection",
+        category: "special",
+        charges: 10,
+        maxCharges: 10,
+        power: 24,
+        accuracy: 95,
+        cost: 1,
+        effect: "status_detected",
+        description: "Launches a focused signature strike at the target's core."
+      },
+      {
+        id: "quarantine-relay",
+        name: "Quarantine Relay",
+        domain: "Detection",
+        category: "support",
+        charges: 6,
+        maxCharges: 6,
+        power: 28,
+        accuracy: 90,
+        cost: 2,
+        effect: "shared_ability",
+        description: "Relays threat data into a temporary containment grid."
+      }
+    ],
+    abilities: buildCombatAbilities([
+      {
+        name: "Deep Packet Scan",
+        cost: 0,
+        baseDamage: 16,
+        effect: "status_detected"
+      },
+      {
+        name: "Signature Burst",
+        cost: 1,
+        baseDamage: 24,
+        effect: "status_detected"
+      },
+      {
+        name: "Quarantine Relay",
+        cost: 2,
+        baseDamage: 28,
+        effect: "shared_ability"
+      }
+    ])
+  },
+  {
+    id: "honeypot-3",
+    name: "Honeypot",
+    role: "Trickster Decoy",
+    domain: "Illusion",
+    affinity: "Deception",
+    level: 1,
+    hp: 96,
+    maxHp: 96,
+    atk: 5,
+    def: 5,
+    spAtk: 6,
+    spDef: 6,
+    spd: 8,
+    temperament: "Cunning",
+    coreTrait: {
+      name: "False Signal",
+      description: "Turns hostile attention into exposed openings."
+    },
+    passiveModule: {
+      name: "Lure Bloom",
+      description: "Improves evasion after a successful decoy action."
+    },
+    rarity: "standard",
+    variant: "normal",
+    unlocked: true,
+    selected: false,
+    starter: true,
+    color: "#ffcc00",
+    statusEffects: [],
+    summary: "A decoy construct that tempts threats into exposed positions.",
+    moves: [
+      {
+        id: "lure-traffic",
+        name: "Lure Traffic",
+        domain: "Illusion",
+        category: "support",
+        charges: 15,
+        maxCharges: 15,
+        power: 12,
+        accuracy: 100,
+        cost: 0,
+        effect: "status_isolated",
+        description: "Baits threats into a false route and isolates their focus."
+      },
+      {
+        id: "decoy-mesh",
+        name: "Decoy Mesh",
+        domain: "Illusion",
+        category: "support",
+        charges: 10,
+        maxCharges: 10,
+        power: 18,
+        accuracy: 95,
+        cost: 1,
+        effect: "boost_def",
+        description: "Projects layered decoys that make targeting uncertain."
+      },
+      {
+        id: "sandtrap",
+        name: "Sandtrap",
+        domain: "Illusion",
+        category: "special",
+        charges: 6,
+        maxCharges: 6,
+        power: 24,
+        accuracy: 90,
+        cost: 2,
+        effect: "status_isolated",
+        description: "Snaps the target into a false position and punishes movement."
+      }
+    ],
+    abilities: buildCombatAbilities([
+      {
+        name: "Lure Traffic",
+        cost: 0,
+        baseDamage: 12,
+        effect: "status_isolated"
+      },
+      {
+        name: "Decoy Mesh",
+        cost: 1,
+        baseDamage: 18,
+        effect: "boost_def"
+      },
+      {
+        name: "Sandtrap",
+        cost: 2,
+        baseDamage: 24,
+        effect: "status_isolated"
+      }
+    ])
+  },
+  {
+    id: "antivirus-9",
+    name: "Antivirus",
+    role: "Purifier Lancer",
+    domain: "Purity",
+    affinity: "Purge",
+    level: 1,
+    hp: 108,
+    maxHp: 108,
+    atk: 7,
+    def: 5,
+    spAtk: 7,
+    spDef: 6,
+    spd: 6,
+    temperament: "Zealous",
+    coreTrait: {
+      name: "Purge Lance",
+      description: "Pierces corruption and weakens hostile code."
+    },
+    passiveModule: {
+      name: "Cleanse Circuit",
+      description: "Sustains cleansing pressure after a successful purge."
+    },
+    rarity: "standard",
+    variant: "normal",
+    unlocked: true,
+    selected: false,
+    starter: true,
+    color: "#ff2233",
+    statusEffects: [],
+    summary: "A cleansing warrior that burns corruption out of the frame.",
+    moves: [
+      {
+        id: "signature-sweep",
+        name: "Signature Sweep",
+        domain: "Purity",
+        category: "physical",
+        charges: 15,
+        maxCharges: 15,
+        power: 16,
+        accuracy: 100,
+        cost: 0,
+        effect: "cleanse",
+        description: "Sweeps the target for hostile traces and clears minor corruption."
+      },
+      {
+        id: "rapid-scan",
+        name: "Rapid Scan",
+        domain: "Purity",
+        category: "special",
+        charges: 10,
+        maxCharges: 10,
+        power: 22,
+        accuracy: 95,
+        cost: 1,
+        effect: "status_detected",
+        description: "Rapidly identifies anomalies and forces them into the light."
+      },
+      {
+        id: "kernel-purge",
+        name: "Kernel Purge",
+        domain: "Purity",
+        category: "physical",
+        charges: 6,
+        maxCharges: 6,
+        power: 30,
+        accuracy: 90,
+        cost: 2,
+        effect: "cleanse",
+        description: "Delivers a decisive purge that strips corruption from the core."
+      }
+    ],
+    abilities: buildCombatAbilities([
+      {
+        name: "Signature Sweep",
+        cost: 0,
+        baseDamage: 16,
+        effect: "cleanse"
+      },
+      {
+        name: "Rapid Scan",
+        cost: 1,
+        baseDamage: 22,
+        effect: "status_detected"
+      },
+      {
+        name: "Kernel Purge",
+        cost: 2,
+        baseDamage: 30,
+        effect: "cleanse"
+      }
+    ])
   },
   {
     id: "firewall-12",
@@ -52,6 +394,7 @@ const defenderCatalog = [
     spd: 5,
     color: "#74e6ff",
     statusEffects: [],
+    starter: false,
     summary: "A heavier shield unit forged for frontline containment.",
     moveList: [
       { name: "Block Network", power: 0, accuracy: 100, uses: "∞", effect: "reduce_next_damage" },
@@ -62,36 +405,6 @@ const defenderCatalog = [
       { name: "Block Network", cost: 0, baseDamage: 0, effect: "reduce_next_damage" },
       { name: "Harden Ports", cost: 1, baseDamage: 15, effect: "boost_def" },
       { name: "Allocate Bandwidth", cost: 2, baseDamage: 25, effect: "shared_ability" }
-    ]
-  },
-  {
-    id: "ids-4",
-    name: "IDS",
-    domain: "Detection",
-    affinity: "Offense",
-    temperament: "Analytical",
-    rarity: "Common",
-    variant: "Standard",
-    coreTrait: "Signal Scan",
-    passiveModule: "Trace Pulse",
-    stats: { hp: 92, atk: 6, def: 4, spd: 8 },
-    hp: 92,
-    maxHp: 92,
-    atk: 6,
-    def: 4,
-    spd: 8,
-    color: "#00ff88",
-    statusEffects: [],
-    summary: "A precision scout that spots exploits before they bloom.",
-    moveList: [
-      { name: "Deep Packet Scan", power: 16, accuracy: 100, uses: "∞", effect: "status_detected" },
-      { name: "Signature Burst", power: 22, accuracy: 95, uses: "∞", effect: "status_detected" },
-      { name: "Quarantine Relay", power: 28, accuracy: 90, uses: "∞", effect: "shared_ability" }
-    ],
-    abilities: [
-      { name: "Deep Packet Scan", cost: 0, baseDamage: 16, effect: "status_detected" },
-      { name: "Signature Burst", cost: 1, baseDamage: 22, effect: "status_detected" },
-      { name: "Quarantine Relay", cost: 2, baseDamage: 28, effect: "shared_ability" }
     ]
   },
   {
@@ -112,6 +425,7 @@ const defenderCatalog = [
     spd: 9,
     color: "#7effc2",
     statusEffects: [],
+    starter: false,
     summary: "A faster analyzer tuned to expose hidden weaknesses.",
     moveList: [
       { name: "Deep Packet Scan", power: 17, accuracy: 100, uses: "∞", effect: "status_detected" },
@@ -122,36 +436,6 @@ const defenderCatalog = [
       { name: "Deep Packet Scan", cost: 0, baseDamage: 16, effect: "status_detected" },
       { name: "Signature Burst", cost: 1, baseDamage: 22, effect: "status_detected" },
       { name: "Quarantine Relay", cost: 2, baseDamage: 28, effect: "shared_ability" }
-    ]
-  },
-  {
-    id: "honeypot-3",
-    name: "Honeypot",
-    domain: "Illusion",
-    affinity: "Deception",
-    temperament: "Cunning",
-    rarity: "Common",
-    variant: "Standard",
-    coreTrait: "False Signal",
-    passiveModule: "Lure Bloom",
-    stats: { hp: 96, atk: 4, def: 5, spd: 7 },
-    hp: 96,
-    maxHp: 96,
-    atk: 4,
-    def: 5,
-    spd: 7,
-    color: "#ffcc00",
-    statusEffects: [],
-    summary: "A decoy construct that tempts threats into exposed positions.",
-    moveList: [
-      { name: "Lure Traffic", power: 14, accuracy: 100, uses: "∞", effect: "status_isolated" },
-      { name: "Decoy Mesh", power: 20, accuracy: 95, uses: "∞", effect: "boost_def" },
-      { name: "Sandtrap", power: 26, accuracy: 90, uses: "∞", effect: "status_isolated" }
-    ],
-    abilities: [
-      { name: "Lure Traffic", cost: 0, baseDamage: 14, effect: "status_isolated" },
-      { name: "Decoy Mesh", cost: 1, baseDamage: 20, effect: "boost_def" },
-      { name: "Sandtrap", cost: 2, baseDamage: 26, effect: "status_isolated" }
     ]
   },
   {
@@ -172,6 +456,7 @@ const defenderCatalog = [
     spd: 8,
     color: "#ffd966",
     statusEffects: [],
+    starter: false,
     summary: "A more elusive trickster that leaves false trails behind.",
     moveList: [
       { name: "Lure Traffic", power: 15, accuracy: 100, uses: "∞", effect: "status_isolated" },
@@ -182,36 +467,6 @@ const defenderCatalog = [
       { name: "Lure Traffic", cost: 0, baseDamage: 14, effect: "status_isolated" },
       { name: "Decoy Mesh", cost: 1, baseDamage: 20, effect: "boost_def" },
       { name: "Sandtrap", cost: 2, baseDamage: 26, effect: "status_isolated" }
-    ]
-  },
-  {
-    id: "antivirus-9",
-    name: "Antivirus",
-    domain: "Purity",
-    affinity: "Purge",
-    temperament: "Zealous",
-    rarity: "Common",
-    variant: "Standard",
-    coreTrait: "Purge Lance",
-    passiveModule: "Cleanse Circuit",
-    stats: { hp: 108, atk: 5, def: 6, spd: 5 },
-    hp: 108,
-    maxHp: 108,
-    atk: 5,
-    def: 6,
-    spd: 5,
-    color: "#ff2233",
-    statusEffects: [],
-    summary: "A cleansing warrior that burns corruption out of the frame.",
-    moveList: [
-      { name: "Signature Sweep", power: 16, accuracy: 100, uses: "∞", effect: "cleanse" },
-      { name: "Rapid Scan", power: 22, accuracy: 95, uses: "∞", effect: "status_detected" },
-      { name: "Kernel Purge", power: 30, accuracy: 90, uses: "∞", effect: "cleanse" }
-    ],
-    abilities: [
-      { name: "Signature Sweep", cost: 0, baseDamage: 16, effect: "cleanse" },
-      { name: "Rapid Scan", cost: 1, baseDamage: 22, effect: "status_detected" },
-      { name: "Kernel Purge", cost: 2, baseDamage: 30, effect: "cleanse" }
     ]
   },
   {
@@ -232,6 +487,7 @@ const defenderCatalog = [
     spd: 6,
     color: "#ff6677",
     statusEffects: [],
+    starter: false,
     summary: "A brighter purifier that cuts deeper into hostile code.",
     moveList: [
       { name: "Signature Sweep", power: 17, accuracy: 100, uses: "∞", effect: "cleanse" },
@@ -246,6 +502,65 @@ const defenderCatalog = [
   }
 ];
 
+// getStarterDefenderCatalog() narrows the roster to the four launch defenders used in the Phase 1 setup screen.
+function getStarterDefenderCatalog() {
+  return defenderCatalog.filter((defender) => defender.starter !== false);
+}
+
+// buildCombatAbilities() converts the defender move model into the combat engine's lightweight ability shape.
+function buildCombatAbilities(moves = []) {
+  return moves.map((move) => ({
+    name: move.name,
+    cost: move.cost,
+    baseDamage: move.power,
+    effect: move.effect
+  }));
+}
+
+// buildCombatProgramFromDefender() maps the new defender save model into the legacy combat roster format.
+function buildCombatProgramFromDefender(defender) {
+  const affinity = String(defender && defender.affinity ? defender.affinity : "offense").toLowerCase();
+  const moves = Array.isArray(defender.moves) ? defender.moves : [];
+
+  return {
+    id: defender.id,
+    name: defender.name,
+    type: affinity,
+    combatType: affinity,
+    level: defender.level || 1,
+    hp: defender.hp || defender.maxHp || 100,
+    maxHp: defender.maxHp || defender.hp || 100,
+    atk: defender.atk || 1,
+    def: defender.def || 1,
+    spAtk: defender.spAtk || defender.atk || 1,
+    spDef: defender.spDef || defender.def || 1,
+    spd: defender.spd || 1,
+    color: defender.color || "#00ff88",
+    xp: defender.xp || 0,
+    statusEffects: Array.isArray(defender.statusEffects) ? defender.statusEffects.slice() : [],
+    abilities: buildCombatAbilities(moves),
+    moves: JSON.parse(JSON.stringify(moves)),
+    role: defender.role,
+    domain: defender.domain,
+    affinity: defender.affinity,
+    temperament: defender.temperament,
+    rarity: defender.rarity,
+    variant: defender.variant,
+    coreTrait: defender.coreTrait,
+    passiveModule: defender.passiveModule,
+    unlocked: defender.unlocked,
+    selected: defender.selected
+  };
+}
+
+// buildSavedDefenderParty() stores a snapshot of the current starters in the save file when a run begins.
+function buildSavedDefenderParty(defenderIds = []) {
+  return normalizeStarterSelection(defenderIds).map((defenderId) => {
+    const template = getDefenderTemplate(defenderId);
+    return template ? cloneDefenderBlueprint(template) : null;
+  }).filter(Boolean);
+}
+
 // defenderSaveState stores the long-term roster data that should survive refreshes and future phases.
 let defenderSaveState = null;
 
@@ -259,7 +574,7 @@ const defenderSetupButton = document.getElementById("defender-setup-button");
 
 // getDefaultStarterDefenderIds() returns the canonical four-defender loadout used when no save exists yet.
 function getDefaultStarterDefenderIds() {
-  return ["firewall-7", "ids-4", "honeypot-3", "antivirus-9"];
+  return getStarterDefenderCatalog().map((defender) => defender.id);
 }
 
 // cloneDefenderBlueprint() creates a deep copy so roster edits never mutate the catalog entries.
@@ -267,36 +582,59 @@ function cloneDefenderBlueprint(defender) {
   return JSON.parse(JSON.stringify(defender));
 }
 
-// createDefaultDefenderSave() builds the initial localStorage payload for the new progression layer.
-function createDefaultDefenderSave() {
+// createDefaultSave() builds the initial localStorage payload for the new progression layer.
+function createDefaultSave() {
+  const starterIds = getDefaultStarterDefenderIds();
+
   return {
     version: 1,
-    selectedStarterIds: getDefaultStarterDefenderIds(),
-    unlockedDefenderIds: defenderCatalog.map((defender) => defender.id),
-    capturedThreatIds: [],
-    discoveredVariants: [],
+    playerProfile: {
+      operatorName: "Operator",
+      createdAt: Date.now()
+    },
+    unlockedDefenders: starterIds.slice(),
+    unlockedDefenderIds: starterIds.slice(),
+    selectedDefenders: starterIds.slice(),
+    selectedStarterIds: starterIds.slice(),
     currentRun: {
       active: false,
+      runStartedAt: null,
       startedAt: null,
+      runEndedAt: null,
       endedAt: null,
-      starterLoadoutIds: [],
+      party: [],
+      defeatedThreats: [],
+      currentZone: 1,
+      starterLoadoutIds: starterIds.slice(),
       clearedThreatIds: [],
       capturedThreatIds: [],
       discoveredVariants: []
-    }
+    },
+    collection: {
+      recruitedThreats: [],
+      discoveredVariants: []
+    },
+    settings: {}
   };
+}
+
+// createDefaultDefenderSave() keeps the older helper name available for the existing combat wiring.
+function createDefaultDefenderSave() {
+  return createDefaultSave();
 }
 
 // normalizeStarterSelection() filters, de-duplicates, and pads a starter selection to four defenders.
 function normalizeStarterSelection(defenderIds = []) {
   const uniqueIds = [];
+  const starterIds = getStarterDefenderCatalog().map((defender) => defender.id);
+
   defenderIds.forEach((defenderId) => {
-    if (!uniqueIds.includes(defenderId) && defenderCatalog.some((defender) => defender.id === defenderId)) {
+    if (!uniqueIds.includes(defenderId) && starterIds.includes(defenderId)) {
       uniqueIds.push(defenderId);
     }
   });
 
-  getDefaultStarterDefenderIds().forEach((fallbackId) => {
+  starterIds.forEach((fallbackId) => {
     if (uniqueIds.length < 4 && !uniqueIds.includes(fallbackId)) {
       uniqueIds.push(fallbackId);
     }
@@ -307,31 +645,57 @@ function normalizeStarterSelection(defenderIds = []) {
 
 // normalizeDefenderSave() guards against old or malformed save payloads before they reach the menu.
 function normalizeDefenderSave(saveData) {
-  const fallback = createDefaultDefenderSave();
+  const fallback = createDefaultSave();
   const source = saveData && typeof saveData === "object" ? saveData : {};
   const currentRunSource = source.currentRun && typeof source.currentRun === "object" ? source.currentRun : {};
+  const collectionSource = source.collection && typeof source.collection === "object" ? source.collection : {};
+  const starterIds = normalizeStarterSelection(Array.isArray(source.selectedDefenders)
+    ? source.selectedDefenders
+    : Array.isArray(source.selectedStarterIds)
+      ? source.selectedStarterIds
+      : fallback.selectedDefenders);
+  const unlockedIds = Array.isArray(source.unlockedDefenders)
+    ? source.unlockedDefenders
+    : Array.isArray(source.unlockedDefenderIds)
+      ? source.unlockedDefenderIds
+      : fallback.unlockedDefenders;
 
   return {
     version: fallback.version,
-    selectedStarterIds: normalizeStarterSelection(Array.isArray(source.selectedStarterIds) ? source.selectedStarterIds : fallback.selectedStarterIds),
-    unlockedDefenderIds: Array.isArray(source.unlockedDefenderIds) && source.unlockedDefenderIds.length
-      ? source.unlockedDefenderIds.filter((defenderId) => defenderCatalog.some((defender) => defender.id === defenderId))
-      : fallback.unlockedDefenderIds.slice(),
-    capturedThreatIds: Array.isArray(source.capturedThreatIds) ? source.capturedThreatIds.slice() : [],
-    discoveredVariants: Array.isArray(source.discoveredVariants) ? source.discoveredVariants.slice() : [],
+    playerProfile: {
+      operatorName: typeof source.playerProfile?.operatorName === "string" ? source.playerProfile.operatorName : fallback.playerProfile.operatorName,
+      createdAt: Number.isFinite(source.playerProfile?.createdAt) ? source.playerProfile.createdAt : fallback.playerProfile.createdAt
+    },
+    unlockedDefenders: unlockedIds.filter((defenderId) => getStarterDefenderCatalog().some((defender) => defender.id === defenderId)),
+    unlockedDefenderIds: unlockedIds.filter((defenderId) => getStarterDefenderCatalog().some((defender) => defender.id === defenderId)),
+    selectedDefenders: starterIds.slice(),
+    selectedStarterIds: starterIds.slice(),
     currentRun: {
       ...fallback.currentRun,
       ...currentRunSource,
-      starterLoadoutIds: Array.isArray(currentRunSource.starterLoadoutIds) ? currentRunSource.starterLoadoutIds.slice() : fallback.currentRun.starterLoadoutIds.slice(),
+      active: Boolean(currentRunSource.active),
+      runStartedAt: Number.isFinite(currentRunSource.runStartedAt) ? currentRunSource.runStartedAt : (Number.isFinite(currentRunSource.startedAt) ? currentRunSource.startedAt : null),
+      startedAt: Number.isFinite(currentRunSource.startedAt) ? currentRunSource.startedAt : (Number.isFinite(currentRunSource.runStartedAt) ? currentRunSource.runStartedAt : null),
+      runEndedAt: Number.isFinite(currentRunSource.runEndedAt) ? currentRunSource.runEndedAt : (Number.isFinite(currentRunSource.endedAt) ? currentRunSource.endedAt : null),
+      endedAt: Number.isFinite(currentRunSource.endedAt) ? currentRunSource.endedAt : (Number.isFinite(currentRunSource.runEndedAt) ? currentRunSource.runEndedAt : null),
+      party: Array.isArray(currentRunSource.party) ? currentRunSource.party.map((member) => cloneDefenderBlueprint(member)) : fallback.currentRun.party.slice(),
+      defeatedThreats: Array.isArray(currentRunSource.defeatedThreats) ? currentRunSource.defeatedThreats.slice() : fallback.currentRun.defeatedThreats.slice(),
+      currentZone: Number.isFinite(currentRunSource.currentZone) ? currentRunSource.currentZone : fallback.currentRun.currentZone,
+      starterLoadoutIds: Array.isArray(currentRunSource.starterLoadoutIds) ? currentRunSource.starterLoadoutIds.slice() : starterIds.slice(),
       clearedThreatIds: Array.isArray(currentRunSource.clearedThreatIds) ? currentRunSource.clearedThreatIds.slice() : fallback.currentRun.clearedThreatIds.slice(),
       capturedThreatIds: Array.isArray(currentRunSource.capturedThreatIds) ? currentRunSource.capturedThreatIds.slice() : fallback.currentRun.capturedThreatIds.slice(),
       discoveredVariants: Array.isArray(currentRunSource.discoveredVariants) ? currentRunSource.discoveredVariants.slice() : fallback.currentRun.discoveredVariants.slice()
-    }
+    },
+    collection: {
+      recruitedThreats: Array.isArray(collectionSource.recruitedThreats) ? collectionSource.recruitedThreats.slice() : fallback.collection.recruitedThreats.slice(),
+      discoveredVariants: Array.isArray(collectionSource.discoveredVariants) ? collectionSource.discoveredVariants.slice() : fallback.collection.discoveredVariants.slice()
+    },
+    settings: source.settings && typeof source.settings === "object" ? { ...source.settings } : {}
   };
 }
 
-// loadDefenderSave() reads the saved roster state from localStorage and falls back to defaults when needed.
-function loadDefenderSave() {
+// loadSave() reads the saved roster state from localStorage and falls back to defaults when needed.
+function loadSave() {
   let parsedSave = null;
 
   try {
@@ -345,10 +709,15 @@ function loadDefenderSave() {
   return defenderSaveState;
 }
 
-// persistDefenderSave() writes the current defender save payload back to localStorage.
-function persistDefenderSave() {
+// loadDefenderSave() keeps the older helper name available for the existing combat wiring.
+function loadDefenderSave() {
+  return loadSave();
+}
+
+// saveGame() writes the current defender save payload back to localStorage.
+function saveGame() {
   if (!defenderSaveState) {
-    defenderSaveState = createDefaultDefenderSave();
+    defenderSaveState = createDefaultSave();
   }
 
   try {
@@ -358,90 +727,177 @@ function persistDefenderSave() {
   }
 }
 
+// persistDefenderSave() keeps the older helper name available for the existing combat wiring.
+function persistDefenderSave() {
+  saveGame();
+}
+
+// resetSave() clears local progress and restores the default starter lineup.
+function resetSave() {
+  defenderSaveState = createDefaultSave();
+  defenderSelectionDraft = defenderSaveState.selectedDefenders.slice();
+  saveGame();
+  applySelectedDefenderRoster();
+  if (screenState === "defenders" && typeof renderDefenderSelectionScreen === "function") {
+    renderDefenderSelectionScreen();
+  }
+  return defenderSaveState;
+}
+
 // getDefenderTemplate() looks up a catalog entry by id so the selected party can be cloned later.
 function getDefenderTemplate(defenderId) {
   return defenderCatalog.find((defender) => defender.id === defenderId) || null;
 }
 
-// getSelectedStarterIds() returns the active four-defender starter set from the current save state.
-function getSelectedStarterIds() {
+// getSelectedDefenderIds() returns the active four-defender starter set from the current save state.
+function getSelectedDefenderIds() {
   if (!defenderSaveState) {
-    loadDefenderSave();
+    loadSave();
   }
 
-  return defenderSaveState.selectedStarterIds.slice();
+  return defenderSaveState.selectedDefenders.slice();
+}
+
+// getSelectedStarterIds() keeps the previous helper name available for the combat bootstrap.
+function getSelectedStarterIds() {
+  return getSelectedDefenderIds();
+}
+
+// updateSelectedDefenders() stores the chosen starter lineup and keeps the save state in sync with the selection screen.
+function updateSelectedDefenders(nextSelection = [], options = {}) {
+  const normalizedSelection = normalizeStarterSelection(nextSelection);
+
+  if (!defenderSaveState) {
+    loadSave();
+  }
+
+  defenderSelectionDraft = normalizedSelection.slice();
+  defenderSaveState.selectedDefenders = normalizedSelection.slice();
+  defenderSaveState.selectedStarterIds = normalizedSelection.slice();
+  defenderSaveState.unlockedDefenders = defenderSaveState.unlockedDefenders.filter((defenderId) => defenderCatalog.some((defender) => defender.id === defenderId));
+  defenderSaveState.unlockedDefenderIds = defenderSaveState.unlockedDefenders.slice();
+  if (options.persist !== false) {
+    saveGame();
+  }
+
+  if (options.render !== false && screenState === "defenders" && typeof renderDefenderSelectionScreen === "function") {
+    renderDefenderSelectionScreen();
+  }
+
+  return normalizedSelection;
+}
+
+// setDefenderSelectionDraft() keeps the older helper name available for the selection UI.
+function setDefenderSelectionDraft(nextDraft) {
+  return updateSelectedDefenders(nextDraft);
 }
 
 // applySelectedDefenderRoster() copies the saved starter selection into the live party and reset templates.
 function applySelectedDefenderRoster() {
   if (!defenderSaveState) {
-    loadDefenderSave();
+    loadSave();
   }
 
-  const selectedIds = normalizeStarterSelection(defenderSaveState.selectedStarterIds);
+  const selectedIds = normalizeStarterSelection(defenderSaveState.selectedDefenders || defenderSaveState.selectedStarterIds || []);
   const selectedTemplates = selectedIds.map((defenderId) => cloneDefenderBlueprint(getDefenderTemplate(defenderId) || getDefenderTemplate(getDefaultStarterDefenderIds()[0])));
+  const combatTemplates = selectedTemplates.map((template) => buildCombatProgramFromDefender(template));
 
-  selectedTemplates.forEach((template, index) => {
-    Object.assign(programs[index], cloneDefenderBlueprint(template));
-    Object.assign(defaultPrograms[index], cloneDefenderBlueprint(template));
+  combatTemplates.forEach((template, index) => {
+    Object.assign(programs[index], JSON.parse(JSON.stringify(template)));
+    Object.assign(defaultPrograms[index], JSON.parse(JSON.stringify(template)));
   });
 
   defenderSelectionDraft = selectedIds.slice();
+  defenderSaveState.selectedDefenders = selectedIds.slice();
   defenderSaveState.selectedStarterIds = selectedIds.slice();
-  persistDefenderSave();
+  defenderSaveState.currentRun.starterLoadoutIds = selectedIds.slice();
+  defenderSaveState.currentRun.party = selectedTemplates.map((template) => cloneDefenderBlueprint(template));
+  saveGame();
   return selectedIds;
 }
 
 // markDefenderRunStarted() stores a minimal run header so the save knows a deployment is in progress.
 function markDefenderRunStarted() {
   if (!defenderSaveState) {
-    loadDefenderSave();
+    loadSave();
   }
 
+  const starterIds = normalizeStarterSelection(defenderSaveState.selectedDefenders || defenderSaveState.selectedStarterIds || []);
+
   defenderSaveState.currentRun = {
-    ...createDefaultDefenderSave().currentRun,
+    ...defenderSaveState.currentRun,
     active: true,
+    runStartedAt: Date.now(),
     startedAt: Date.now(),
+    runEndedAt: null,
     endedAt: null,
-    starterLoadoutIds: defenderSaveState.selectedStarterIds.slice()
+    starterLoadoutIds: starterIds.slice(),
+    party: buildSavedDefenderParty(starterIds),
+    defeatedThreats: Array.isArray(defenderSaveState.currentRun?.defeatedThreats) ? defenderSaveState.currentRun.defeatedThreats.slice() : [],
+    currentZone: Number.isFinite(defenderSaveState.currentRun?.currentZone) ? defenderSaveState.currentRun.currentZone : 1,
+    clearedThreatIds: Array.isArray(defenderSaveState.currentRun?.clearedThreatIds) ? defenderSaveState.currentRun.clearedThreatIds.slice() : [],
+    capturedThreatIds: Array.isArray(defenderSaveState.currentRun?.capturedThreatIds) ? defenderSaveState.currentRun.capturedThreatIds.slice() : [],
+    discoveredVariants: Array.isArray(defenderSaveState.currentRun?.discoveredVariants) ? defenderSaveState.currentRun.discoveredVariants.slice() : []
   };
-  persistDefenderSave();
+  saveGame();
 }
 
 // markDefenderRunEnded() clears the active flag so the save returns to a menu-safe state.
 function markDefenderRunEnded() {
   if (!defenderSaveState) {
-    loadDefenderSave();
+    loadSave();
   }
 
   defenderSaveState.currentRun = {
-    ...createDefaultDefenderSave().currentRun,
+    ...defenderSaveState.currentRun,
     active: false,
+    runEndedAt: Date.now(),
     endedAt: Date.now(),
-    starterLoadoutIds: defenderSaveState.selectedStarterIds.slice()
+    starterLoadoutIds: defenderSaveState.selectedDefenders.slice(),
+    party: Array.isArray(defenderSaveState.currentRun?.party) ? defenderSaveState.currentRun.party.map((member) => cloneDefenderBlueprint(member)) : buildSavedDefenderParty(defenderSaveState.selectedDefenders),
+    currentZone: Number.isFinite(defenderSaveState.currentRun?.currentZone) ? defenderSaveState.currentRun.currentZone : 1
   };
-  persistDefenderSave();
+  saveGame();
 }
 
-// setDefenderSelectionDraft() replaces the in-progress starter lineup without auto-padding it back to four.
-function setDefenderSelectionDraft(nextDraft) {
-  defenderSelectionDraft = [];
-  nextDraft.forEach((defenderId) => {
-    if (
-      defenderCatalog.some((defender) => defender.id === defenderId) &&
-      !defenderSelectionDraft.includes(defenderId) &&
-      defenderSelectionDraft.length < 4
-    ) {
-      defenderSelectionDraft.push(defenderId);
+// startRunWithSelectedDefenders() locks the current starter lineup into the save and then boots the existing game flow.
+function startRunWithSelectedDefenders() {
+  const selectedIds = updateSelectedDefenders(defenderSelectionDraft);
+  if (selectedIds.length !== 4) {
+    const statusNode = document.getElementById("defender-selection-status");
+    if (statusNode) {
+      statusNode.textContent = "LOCK IN FOUR DEFENDERS BEFORE STARTING THE RUN.";
     }
-  });
-  renderDefenderSelectionScreen();
+    return;
+  }
+
+  if (!defenderSaveState) {
+    loadSave();
+  }
+
+  defenderSaveState.currentRun = {
+    ...defenderSaveState.currentRun,
+    active: true,
+    runStartedAt: Date.now(),
+    startedAt: Date.now(),
+    runEndedAt: null,
+    endedAt: null,
+    starterLoadoutIds: selectedIds.slice(),
+    party: buildSavedDefenderParty(selectedIds),
+    defeatedThreats: [],
+    currentZone: 1
+  };
+  saveGame();
+
+  if (typeof startGame === "function") {
+    startGame();
+  }
 }
 
 // toggleDefenderSelection() adds or removes a defender from the in-progress four-slot starter lineup.
 function toggleDefenderSelection(defenderId) {
   if (!defenderSaveState) {
-    loadDefenderSave();
+    loadSave();
   }
 
   const nextDraft = defenderSelectionDraft.slice();
@@ -449,7 +905,7 @@ function toggleDefenderSelection(defenderId) {
 
   if (existingIndex !== -1) {
     nextDraft.splice(existingIndex, 1);
-    setDefenderSelectionDraft(nextDraft);
+    updateSelectedDefenders(nextDraft);
     return;
   }
 
@@ -462,12 +918,14 @@ function toggleDefenderSelection(defenderId) {
   }
 
   nextDraft.push(defenderId);
-  setDefenderSelectionDraft(nextDraft);
+  updateSelectedDefenders(nextDraft);
 }
 
 // buildDefenderCardMarkup() renders one selection card with its identity, stats, and starter metadata.
 function buildDefenderCardMarkup(defender, isSelected, isLocked) {
-  const movePreview = defender.moveList.slice(0, 2).map((move) => `<span class="defender-move">${move.name}</span>`).join("");
+  const movePreview = defender.moves.slice(0, 2).map((move) => `<span class="defender-move">${move.name} • ${move.category.toUpperCase()} • ${move.power} PWR</span>`).join("");
+  const coreTrait = defender.coreTrait && typeof defender.coreTrait === "object" ? defender.coreTrait.name : defender.coreTrait;
+  const passiveModule = defender.passiveModule && typeof defender.passiveModule === "object" ? defender.passiveModule.name : defender.passiveModule;
 
   return `
     <button
@@ -480,26 +938,29 @@ function buildDefenderCardMarkup(defender, isSelected, isLocked) {
       <div class="defender-card-head">
         <div>
           <div class="defender-card-name">${defender.name}</div>
-          <div class="defender-card-domain">${defender.domain} / ${defender.affinity}</div>
+          <div class="defender-card-domain">${defender.role} / ${defender.domain} / ${defender.affinity}</div>
         </div>
         <div class="defender-card-rarity">${defender.rarity}</div>
       </div>
       <div class="defender-card-summary">${defender.summary}</div>
       <div class="defender-card-meta">
-        <span>CORE TRAIT: ${defender.coreTrait}</span>
-        <span>PASSIVE: ${defender.passiveModule}</span>
+        <span>CORE TRAIT: ${coreTrait}</span>
+        <span>PASSIVE: ${passiveModule}</span>
         <span>TEMPERAMENT: ${defender.temperament}</span>
+        <span>VARIANT: ${defender.variant}</span>
       </div>
       <div class="defender-card-stats">
         <span>HP ${defender.hp}</span>
         <span>ATK ${defender.atk}</span>
         <span>DEF ${defender.def}</span>
+        <span>SP ATK ${defender.spAtk}</span>
+        <span>SP DEF ${defender.spDef}</span>
         <span>SPD ${defender.spd}</span>
       </div>
       <div class="defender-card-moves">${movePreview}</div>
       <div class="defender-card-foot">
         <span>${isSelected ? "LOCKED INTO LOADOUT" : "TAP TO ADD TO LOADOUT"}</span>
-        <span>${defender.variant} / LVL 1</span>
+        <span>LVL ${defender.level}</span>
       </div>
     </button>
   `;
@@ -508,6 +969,7 @@ function buildDefenderCardMarkup(defender, isSelected, isLocked) {
 // buildDefenderSelectionMarkup() assembles the starter lineup screen and the current draft loadout summary.
 function buildDefenderSelectionMarkup() {
   const selectedIds = defenderSelectionDraft.slice();
+  const starterCards = getStarterDefenderCatalog();
 
   return `
     <div class="defender-shell">
@@ -527,16 +989,16 @@ function buildDefenderSelectionMarkup() {
       </div>
 
       <div class="defender-grid">
-        ${defenderCatalog.map((defender) => {
+        ${starterCards.map((defender) => {
           const isSelected = selectedIds.includes(defender.id);
-          const isLocked = !defenderSaveState.unlockedDefenderIds.includes(defender.id);
+          const isLocked = !defenderSaveState.unlockedDefenders.includes(defender.id);
           return buildDefenderCardMarkup(defender, isSelected, isLocked);
         }).join("")}
       </div>
 
       <div class="defender-footer">
         <button id="defender-screen-reset" class="menu-button" type="button">RESET LOADOUT</button>
-        <button id="defender-screen-confirm" class="menu-button" type="button" ${selectedIds.length === 4 ? "" : "disabled"}>LOCK IN LOADOUT</button>
+        <button id="defender-screen-confirm" class="menu-button" type="button" ${selectedIds.length === 4 ? "" : "disabled"}>BEGIN RUN</button>
       </div>
     </div>
   `;
@@ -544,8 +1006,6 @@ function buildDefenderSelectionMarkup() {
 
 // bindDefenderSelectionControls() wires the selection cards and footer buttons after the screen is rendered.
 function bindDefenderSelectionControls() {
-  const defenderSelectionCount = document.getElementById("defender-selection-count");
-  const defenderSelectionStatus = document.getElementById("defender-selection-status");
   const defenderScreenConfirm = document.getElementById("defender-screen-confirm");
   const defenderScreenReset = document.getElementById("defender-screen-reset");
   const defenderScreenBack = document.getElementById("defender-screen-back");
@@ -565,7 +1025,7 @@ function bindDefenderSelectionControls() {
 
   if (defenderScreenReset) {
     defenderScreenReset.addEventListener("click", () => {
-      setDefenderSelectionDraft(getDefaultStarterDefenderIds());
+      updateSelectedDefenders(getDefaultStarterDefenderIds());
       const statusNode = document.getElementById("defender-selection-status");
       if (statusNode) {
         statusNode.textContent = "DEFAULT PARTY RESTORED.";
@@ -578,15 +1038,12 @@ function bindDefenderSelectionControls() {
       if (defenderSelectionDraft.length !== 4) {
         const statusNode = document.getElementById("defender-selection-status");
         if (statusNode) {
-          statusNode.textContent = "LOCK IN FOUR DEFENDERS BEFORE RETURNING TO THE MENU.";
+          statusNode.textContent = "LOCK IN FOUR DEFENDERS BEFORE STARTING THE RUN.";
         }
         return;
       }
 
-      defenderSaveState.selectedStarterIds = defenderSelectionDraft.slice(0, 4);
-      persistDefenderSave();
-      applySelectedDefenderRoster();
-      showMenu();
+      startRunWithSelectedDefenders();
     });
   }
 }
@@ -607,8 +1064,8 @@ function renderDefenderSelectionScreen() {
 
   if (defenderSelectionStatus) {
     defenderSelectionStatus.textContent = defenderSelectionDraft.length === 4
-    ? "LOADOUT READY. LOCK IT IN OR RETURN TO MENU."
-    : "SELECT A PARTY OF FOUR.";
+      ? "LOADOUT READY. BEGIN THE RUN WHEN YOU ARE READY."
+      : "SELECT A PARTY OF FOUR.";
   }
 
   bindDefenderSelectionControls();
@@ -617,19 +1074,19 @@ function renderDefenderSelectionScreen() {
 // showDefenderSelectionScreen() opens the starter setup screen inside the shared boot overlay.
 function showDefenderSelectionScreen() {
   if (!defenderSaveState) {
-    loadDefenderSave();
+    loadSave();
   }
 
   bootOverlay.style.display = "block";
   bootOverlay.classList.remove("is-hiding");
   setScreen("defenders");
-  defenderSelectionDraft = defenderSaveState.selectedStarterIds.slice();
+  defenderSelectionDraft = getSelectedDefenderIds();
   renderDefenderSelectionScreen();
 }
 
 // initDefenderSystem() loads save data immediately so the selected loadout is active before the first run.
 function initDefenderSystem() {
-  loadDefenderSave();
+  loadSave();
   applySelectedDefenderRoster();
 }
 
