@@ -1004,9 +1004,9 @@ canvas {
   padding: clamp(20px, 4vh, 44px) clamp(18px, 4vw, 56px);
   text-align: center;
   background:
-    radial-gradient(circle at 50% 26%, rgba(255, 255, 255, 0.08), transparent 14%),
-    radial-gradient(circle at 50% 30%, rgba(255, 110, 74, 0.12), transparent 24%),
-    radial-gradient(circle at 50% 50%, rgba(141, 119, 255, 0.08), transparent 34%),
+    radial-gradient(circle at 50% 34%, rgba(255, 255, 255, 0.05), transparent 12%),
+    radial-gradient(circle at 50% 36%, rgba(72, 214, 198, 0.06), transparent 20%),
+    radial-gradient(circle at 50% 38%, rgba(255, 110, 74, 0.08), transparent 30%),
     linear-gradient(180deg, #04050a 0%, #090b13 48%, #04050a 100%);
   --menu-cream: #f4eddc;
   --menu-text: #f4efe3;
@@ -1030,10 +1030,11 @@ canvas {
   inset: 0;
   pointer-events: none;
   background:
-    radial-gradient(circle at 50% 26%, rgba(255, 255, 255, 0.09), transparent 13%),
-    radial-gradient(circle at 50% 29%, rgba(255, 110, 74, 0.12), transparent 20%),
-    linear-gradient(180deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.6));
-  opacity: 0.9;
+    radial-gradient(circle at 50% 34%, rgba(244, 239, 227, 0.08), transparent 14%),
+    radial-gradient(circle at 50% 34%, rgba(72, 214, 198, 0.05), transparent 23%),
+    radial-gradient(circle at 50% 36%, rgba(255, 63, 79, 0.07), transparent 36%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.62));
+  opacity: 0.88;
 }
 
 #menu-screen::after {
@@ -1042,12 +1043,15 @@ canvas {
   inset: 0;
   pointer-events: none;
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-    radial-gradient(circle at 50% 30%, rgba(255, 255, 255, 0.08) 0 1px, transparent 2px 100%);
-  background-size: 96px 96px, 96px 96px, 100% 100%;
-  mask-image: radial-gradient(circle at 50% 28%, rgba(0, 0, 0, 0.98), transparent 78%);
-  opacity: 0.22;
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(118deg, transparent 0 47%, rgba(72, 214, 198, 0.05) 47.2% 47.45%, transparent 47.6% 100%),
+    linear-gradient(142deg, transparent 0 58%, rgba(255, 110, 74, 0.05) 58.2% 58.45%, transparent 58.6% 100%),
+    linear-gradient(176deg, transparent 0 71%, rgba(244, 239, 227, 0.04) 71.2% 71.45%, transparent 71.6% 100%),
+    linear-gradient(180deg, rgba(5, 6, 13, 0.02), rgba(5, 6, 13, 0.5));
+  background-size: 104px 104px, 104px 104px, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+  mask-image: radial-gradient(circle at 50% 32%, rgba(0, 0, 0, 0.98), transparent 78%);
+  opacity: 0.18;
   mix-blend-mode: screen;
 }
 
@@ -1068,12 +1072,13 @@ canvas {
   height: min(72vw, 820px);
   border-radius: 50%;
   background:
-    radial-gradient(circle, rgba(255, 110, 74, 0.18) 0 16%, rgba(255, 110, 74, 0.08) 16% 22%, transparent 22% 100%),
-    radial-gradient(circle, rgba(244, 239, 227, 0.08) 0 10%, transparent 10% 100%);
-  opacity: 0.84;
+    radial-gradient(circle at 50% 50%, transparent 0 33%, rgba(244, 239, 227, 0.08) 33% 33.8%, transparent 33.8% 46%, rgba(72, 214, 198, 0.06) 46% 46.6%, transparent 46.6% 60%, rgba(255, 110, 74, 0.05) 60% 60.6%, transparent 60.6% 100%),
+    conic-gradient(from 208deg, rgba(255, 110, 74, 0.06), rgba(242, 184, 75, 0.05), rgba(72, 214, 198, 0.05), rgba(255, 110, 74, 0.06));
+  opacity: 0.62;
   will-change: transform, opacity;
   transform: translate3d(-50%, -50%, 0) scale(1);
-  animation: menuGlowBreath 12s ease-in-out infinite;
+  animation: menuGlowBreath 18s ease-in-out infinite;
+  mix-blend-mode: screen;
 }
 
 .menu-stage::after {
@@ -1081,12 +1086,12 @@ canvas {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(circle at 50% 32%, rgba(244, 239, 227, 0.08) 0 1px, transparent 2px 100%),
-    radial-gradient(circle at 24% 24%, rgba(255, 110, 74, 0.08) 0 1px, transparent 2px 100%),
-    radial-gradient(circle at 76% 28%, rgba(141, 119, 255, 0.06) 0 1px, transparent 2px 100%),
-    linear-gradient(180deg, rgba(5, 6, 13, 0.02), rgba(5, 6, 13, 0.44));
-  opacity: 0.18;
-  background-size: 260px 260px, 320px 320px, 360px 360px, 100% 100%;
+    linear-gradient(90deg, transparent 0 17%, rgba(244, 239, 227, 0.05) 17.2% 17.5%, transparent 17.7% 39%, rgba(72, 214, 198, 0.04) 39.2% 39.5%, transparent 39.7% 61%, rgba(255, 110, 74, 0.05) 61.2% 61.5%, transparent 61.7% 100%),
+    linear-gradient(128deg, transparent 0 44%, rgba(255, 255, 255, 0.04) 44.2% 44.5%, transparent 44.7% 100%),
+    linear-gradient(152deg, transparent 0 64%, rgba(255, 110, 74, 0.04) 64.2% 64.5%, transparent 64.7% 100%),
+    linear-gradient(180deg, rgba(5, 6, 13, 0.02), rgba(5, 6, 13, 0.46));
+  opacity: 0.2;
+  background-size: 100% 100%;
 }
 
 @keyframes menuGlowBreath {
@@ -1111,20 +1116,22 @@ canvas {
   height: min(52vw, 720px);
   left: -12vw;
   top: -10vw;
-  border: 2px solid rgba(242, 184, 75, 0.16);
+  border: 1px solid rgba(244, 239, 227, 0.08);
   border-radius: 50%;
   transform: rotate(-16deg);
-  box-shadow: 0 0 0 18px rgba(0, 0, 0, 0.06) inset;
+  box-shadow: 0 0 0 18px rgba(0, 0, 0, 0.04) inset;
+  opacity: 0.42;
 }
 
 .menu-stage-shape.is-slice {
   width: min(46vw, 600px);
-  height: 22px;
+  height: 12px;
   right: -6vw;
   top: 17vh;
-  background: linear-gradient(90deg, rgba(255, 63, 79, 0), rgba(255, 63, 79, 0.54), rgba(242, 184, 75, 0.12));
+  background: linear-gradient(90deg, rgba(255, 63, 79, 0), rgba(255, 63, 79, 0.28), rgba(72, 214, 198, 0.1));
   transform: skewX(-36deg) rotate(-6deg);
-  box-shadow: 0 0 20px rgba(255, 63, 79, 0.1);
+  box-shadow: 0 0 16px rgba(255, 63, 79, 0.08);
+  opacity: 0.34;
 }
 
 .menu-stage-shape.is-tag {
@@ -1132,10 +1139,11 @@ canvas {
   height: 54px;
   right: 10vw;
   top: 10vh;
-  background: linear-gradient(135deg, rgba(23, 17, 29, 0.94), rgba(16, 13, 24, 0.9));
-  border: 1px solid rgba(242, 184, 75, 0.12);
+  background: linear-gradient(135deg, rgba(23, 17, 29, 0.88), rgba(16, 13, 24, 0.82));
+  border: 1px solid rgba(242, 239, 227, 0.08);
   clip-path: polygon(0 0, 90% 0, 100% 50%, 90% 100%, 0 100%, 6% 50%);
-  box-shadow: 10px 10px 0 rgba(0, 0, 0, 0.24);
+  box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.18);
+  opacity: 0.3;
 }
 
 .menu-stage-shape.is-spark {
@@ -1143,11 +1151,12 @@ canvas {
   height: 14px;
   left: 72%;
   top: 62%;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.88) 0 20%, rgba(255, 110, 74, 0.85) 20% 44%, transparent 44% 100%);
-  box-shadow: 0 0 14px rgba(255, 63, 79, 0.18);
+  border-radius: 2px;
+  background: radial-gradient(circle at 35% 35%, rgba(244, 239, 227, 0.92) 0 12%, rgba(255, 110, 74, 0.72) 12% 38%, transparent 38% 100%);
+  box-shadow: 0 0 10px rgba(255, 63, 79, 0.08);
   will-change: transform, opacity;
-  animation: menu-pulse 2.6s ease-in-out infinite;
+  opacity: 0.34;
+  transform: rotate(45deg);
 }
 
 .menu-stage-shape.is-spark,
@@ -1162,13 +1171,13 @@ canvas {
   width: 144vw;
   height: 56vh;
   background:
-    linear-gradient(180deg, rgba(5, 5, 9, 0), rgba(5, 5, 9, 0.94)),
-    linear-gradient(135deg, rgba(255, 63, 79, 0.08), rgba(23, 17, 29, 0.96) 30%, rgba(16, 13, 24, 0.98) 66%);
-  border-top: 1px solid rgba(242, 184, 75, 0.08);
-  box-shadow: 0 -22px 46px rgba(0, 0, 0, 0.34);
+    linear-gradient(180deg, rgba(5, 5, 9, 0), rgba(5, 5, 9, 0.92)),
+    linear-gradient(135deg, rgba(255, 63, 79, 0.05), rgba(23, 17, 29, 0.92) 30%, rgba(16, 13, 24, 0.96) 66%);
+  border-top: 1px solid rgba(242, 239, 227, 0.06);
+  box-shadow: 0 -22px 46px rgba(0, 0, 0, 0.28);
   clip-path: polygon(0 26%, 100% 0, 100% 100%, 0 100%);
   transform: rotate(-7deg);
-  opacity: 0.94;
+  opacity: 0.82;
 }
 
 .menu-stage-shape.is-ribbon {
@@ -1176,10 +1185,10 @@ canvas {
   bottom: 14vh;
   width: 96vw;
   height: 18px;
-  background: linear-gradient(90deg, rgba(255, 63, 79, 0), rgba(255, 63, 79, 0.9), rgba(242, 184, 75, 0.16));
+  background: linear-gradient(90deg, rgba(255, 63, 79, 0), rgba(255, 63, 79, 0.58), rgba(72, 214, 198, 0.12));
   transform: skewX(-34deg) rotate(-8deg) translate3d(0, 0, 0);
-  box-shadow: 0 0 24px rgba(255, 63, 79, 0.12);
-  opacity: 0.92;
+  box-shadow: 0 0 18px rgba(255, 63, 79, 0.08);
+  opacity: 0.46;
 }
 
 .menu-stage-shape.is-orb {
@@ -1188,8 +1197,10 @@ canvas {
   width: 36vw;
   height: 36vw;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(16, 13, 24, 0.9) 0 58%, rgba(72, 214, 198, 0.08) 62% 68%, transparent 74% 100%);
-  opacity: 0.92;
+  background:
+    radial-gradient(circle, rgba(16, 13, 24, 0.92) 0 58%, rgba(72, 214, 198, 0.06) 62% 66%, transparent 72% 100%),
+    radial-gradient(circle, transparent 0 63%, rgba(244, 239, 227, 0.05) 63% 63.6%, transparent 63.6% 100%);
+  opacity: 0.64;
 }
 
 .menu-stage-shape.is-sigil {
@@ -1199,22 +1210,22 @@ canvas {
   height: min(54vw, 760px);
   transform: translate(-50%, -50%) rotate(-10deg);
   background:
-    radial-gradient(circle at 50% 50%, rgba(5, 5, 9, 0.98) 0 30%, rgba(23, 17, 29, 0.98) 30% 48%, rgba(16, 13, 24, 0.96) 48% 58%, transparent 58% 100%),
-    linear-gradient(135deg, rgba(242, 184, 75, 0.12), rgba(255, 63, 79, 0.08) 36%, rgba(72, 214, 198, 0.06));
+    radial-gradient(circle at 50% 50%, rgba(5, 5, 9, 0.98) 0 31%, rgba(23, 17, 29, 0.95) 31% 46%, rgba(16, 13, 24, 0.9) 46% 57%, transparent 57% 100%),
+    linear-gradient(135deg, rgba(242, 239, 227, 0.08), rgba(255, 63, 79, 0.06) 36%, rgba(72, 214, 198, 0.04));
   clip-path: polygon(50% 0, 84% 10%, 100% 42%, 92% 76%, 64% 100%, 28% 94%, 0 62%, 8% 28%);
   box-shadow:
-    0 0 0 14px rgba(255, 63, 79, 0.08),
-    0 0 0 1px rgba(242, 184, 75, 0.12) inset;
-  opacity: 0.92;
+    0 0 0 12px rgba(255, 63, 79, 0.05),
+    0 0 0 1px rgba(244, 239, 227, 0.08) inset;
+  opacity: 0.56;
 }
 
 .menu-stage-shape.is-sigil::before {
   content: "";
   position: absolute;
   inset: 13%;
-  border: 2px solid rgba(244, 239, 227, 0.78);
+  border: 1px solid rgba(244, 239, 227, 0.42);
   clip-path: polygon(50% 0, 84% 10%, 100% 42%, 92% 76%, 64% 100%, 28% 94%, 0 62%, 8% 28%);
-  opacity: 0.86;
+  opacity: 0.72;
 }
 
 .menu-stage-shape.is-sigil::after {
@@ -1225,9 +1236,9 @@ canvas {
   top: 48%;
   height: 12%;
   background:
-    linear-gradient(90deg, transparent 0 12%, rgba(255, 63, 79, 0.96) 12% 46%, rgba(242, 184, 75, 0.34) 46% 56%, transparent 56% 100%);
+    linear-gradient(90deg, transparent 0 12%, rgba(255, 63, 79, 0.82) 12% 46%, rgba(72, 214, 198, 0.24) 46% 56%, transparent 56% 100%);
   transform: skewX(-28deg) rotate(8deg);
-  opacity: 0.92;
+  opacity: 0.78;
 }
 
 /* The shell now centers the title and command list as one atmospheric scene instead of splitting them into cards. */
@@ -1301,7 +1312,7 @@ canvas {
   margin: 0;
   padding: 8px 12px;
   background: rgba(8, 8, 15, 0.94);
-  color: var(--menu-text);
+  color: rgba(244, 239, 227, 0.82);
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
   font-size: 0.68rem;
   letter-spacing: 0.24em;
@@ -1383,7 +1394,7 @@ canvas {
   padding: 0;
   background: transparent;
   border: 0;
-  color: rgba(244, 239, 227, 0.52);
+  color: rgba(244, 239, 227, 0.66);
   font-size: 0.66rem;
   letter-spacing: 0.22em;
   line-height: 1.8;
@@ -1433,7 +1444,7 @@ canvas {
 /* The command label anchors the action column with a deliberate title-screen prompt. */
 #menu-screen .menu-command-label {
   margin: 0;
-  color: rgba(244, 239, 227, 0.52);
+  color: rgba(244, 239, 227, 0.64);
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
   font-size: 0.68rem;
   letter-spacing: 0.28em;
@@ -1569,19 +1580,20 @@ canvas {
   color: var(--menu-text);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.02));
   outline: none;
-  transform: translate3d(0, -2px, 0) scale(1.01);
+  transform: translate3d(4px, -2px, 0) scale(1.015);
+  text-shadow: 0 0 10px rgba(244, 239, 227, 0.14);
 }
 
 #menu-screen .menu-button:hover::before,
 #menu-screen .menu-button:focus-visible::before {
   opacity: 1;
-  transform: translate3d(4px, 0, 0);
+  transform: translate3d(6px, 0, 0);
 }
 
 #menu-screen .menu-button:hover::after,
 #menu-screen .menu-button:focus-visible::after {
-  opacity: 0.82;
-  transform: translateX(-50%) scaleX(1.08);
+  opacity: 0.92;
+  transform: translateX(-50%) scaleX(1.14);
 }
 
 #menu-screen .menu-button:active {
@@ -1597,7 +1609,7 @@ canvas {
   padding: 0;
   background: transparent;
   border: 0;
-  color: rgba(244, 237, 220, 0.36);
+  color: rgba(244, 237, 220, 0.5);
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
   font-size: 0.7rem;
   letter-spacing: 0.2em;
@@ -1605,19 +1617,6 @@ canvas {
   clip-path: none;
   box-shadow: none;
   transform: translateX(-50%);
-}
-
-@keyframes menu-pulse {
-  0%,
-  100% {
-    opacity: 0.72;
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-
-  50% {
-    opacity: 1;
-    transform: translate3d(0, -2px, 0) scale(1.12);
-  }
 }
 
 /* The briefing screen starts at the top so its content can scroll if the viewport is short. */
