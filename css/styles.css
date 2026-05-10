@@ -1,4 +1,9 @@
 /* Shared THREATGRID styles for the full-screen HUD, boot overlays, and menu screens. */
+@import url("./combat/combat-layout.css");
+@import url("./combat/combat-ui.css");
+@import url("./combat/combatants.css");
+@import url("./combat/combat-animations.css");
+
 :root {
   --bg: #0a0a0f;
   --hud: #00ff88;
