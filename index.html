@@ -35,22 +35,34 @@
       <div class="boot-scanlines"></div>
 
       <section id="menu-screen" class="screen menu-screen is-active" aria-label="Main Menu">
+        <div class="menu-stage" aria-hidden="true">
+          <span class="menu-stage-shape is-arc"></span>
+          <span class="menu-stage-shape is-slice"></span>
+          <span class="menu-stage-shape is-tag"></span>
+          <span class="menu-stage-shape is-spark"></span>
+        </div>
         <div class="menu-shell">
-          <h1 class="menu-title">THREATGRID</h1>
-          <div class="cursor-line" aria-hidden="true"></div>
-          <p class="menu-subtitle">CYBER-FANTASY ROGUELIKE JRPG</p>
-          <div class="menu-rule" aria-hidden="true"></div>
-          <div class="menu-actions">
-            <button id="defender-setup-button" class="menu-button" type="button">STARTER SETUP</button>
+          <div class="menu-header-block">
+            <p class="menu-kicker">COMMAND BRIEF // LAYER 4</p>
+            <h1 class="menu-title" data-title="THREATGRID">THREATGRID</h1>
+            <div class="cursor-line" aria-hidden="true"></div>
+            <p class="menu-subtitle">CYBER-FANTASY ROGUELIKE JRPG</p>
+            <!-- The mode description swaps on hover so the player sees the rules before committing to a start path. -->
+            <p id="menu-mode-description" class="menu-mode-description">OBSERVE AND DIRECT — NO TYPING REQUIRED</p>
           </div>
-          <div class="menu-actions">
-            <button id="analyst-mode-button" class="menu-button" type="button">ANALYST MODE</button>
-            <button id="operator-mode-button" class="menu-button" type="button">OPERATOR MODE</button>
-          </div>
-          <!-- The mode description swaps on hover so the player sees the rules before committing to a start path. -->
-          <p id="menu-mode-description" class="menu-mode-description">OBSERVE AND DIRECT — NO TYPING REQUIRED</p>
-          <div class="menu-actions">
-            <button id="howto-button" class="menu-button" type="button">HOW TO PLAY</button>
+          <div class="menu-command-block">
+            <p class="menu-command-label">SELECT YOUR START PATH</p>
+            <div class="menu-rule" aria-hidden="true"></div>
+            <div class="menu-actions menu-actions-primary">
+              <button id="defender-setup-button" class="menu-button" type="button">STARTER SETUP</button>
+            </div>
+            <div class="menu-actions menu-actions-dual">
+              <button id="analyst-mode-button" class="menu-button" type="button">ANALYST MODE</button>
+              <button id="operator-mode-button" class="menu-button" type="button">OPERATOR MODE</button>
+            </div>
+            <div class="menu-actions menu-actions-secondary">
+              <button id="howto-button" class="menu-button" type="button">HOW TO PLAY</button>
+            </div>
           </div>
         </div>
         <p class="menu-footnote">v0.4.0 — CYBER-FANTASY COMBAT</p>

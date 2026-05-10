@@ -993,139 +993,486 @@ canvas {
   width: 100%;
 }
 
-/* Menu screen centers the boot controls and copy. */
-.menu-screen {
-  text-align: center;
+/* The main menu gets its own art-directed composition so it reads like a title screen rather than a utility panel. */
+#menu-screen {
+  position: relative;
+  overflow: hidden;
+  align-items: stretch;
+  justify-content: center;
+  padding: clamp(22px, 4vw, 58px);
+  text-align: left;
+  background:
+    radial-gradient(circle at 14% 18%, rgba(255, 110, 74, 0.18), transparent 24%),
+    radial-gradient(circle at 84% 16%, rgba(141, 119, 255, 0.16), transparent 26%),
+    radial-gradient(circle at 70% 82%, rgba(0, 216, 190, 0.12), transparent 24%),
+    linear-gradient(135deg, #07080f 0%, #11111a 38%, #0c0d14 100%);
+  --menu-cream: #f4eddc;
+  --menu-ink: #11111a;
+  --menu-teal: #46d8c8;
+  --menu-coral: #ff6e4a;
+  --menu-violet: #8d77ff;
+  --menu-gold: #d9be73;
 }
 
-/* The shell keeps the menu content aligned and comfortably spaced. */
+#menu-screen::before {
+  content: "";
+  position: absolute;
+  inset: -12%;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 20% 18%, rgba(255, 255, 255, 0.1), transparent 12%),
+    linear-gradient(135deg, transparent 0 42%, rgba(255, 255, 255, 0.06) 42.4%, rgba(255, 255, 255, 0.06) 46%, transparent 46.4% 100%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.5));
+  opacity: 0.92;
+}
+
+#menu-screen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 100% 48px, 48px 100%;
+  mask-image: radial-gradient(circle at 52% 28%, rgba(0, 0, 0, 0.95), transparent 76%);
+  opacity: 0.22;
+  mix-blend-mode: screen;
+}
+
+/* The stage layers abstract shards and slashes behind the interactive menu while staying fully click-through. */
+.menu-stage {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.menu-stage::before {
+  content: "";
+  position: absolute;
+  width: 66vw;
+  height: 66vw;
+  left: -18vw;
+  top: -22vw;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 110, 74, 0.2) 0 16%, rgba(255, 110, 74, 0.08) 16% 20%, transparent 20% 100%);
+  filter: blur(2px);
+  opacity: 0.85;
+  animation: menu-drift 14s ease-in-out infinite alternate;
+}
+
+.menu-stage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(152deg, transparent 0 43%, rgba(244, 237, 220, 0.12) 43.1% 46%, transparent 46.1% 100%),
+    linear-gradient(330deg, transparent 0 63%, rgba(141, 119, 255, 0.1) 63.2% 67%, transparent 67.2% 100%);
+  opacity: 0.7;
+}
+
+.menu-stage-shape {
+  position: absolute;
+  display: block;
+  pointer-events: none;
+}
+
+.menu-stage-shape.is-arc {
+  width: min(52vw, 720px);
+  height: min(52vw, 720px);
+  left: -12vw;
+  top: -10vw;
+  border: 2px solid rgba(244, 237, 220, 0.2);
+  border-radius: 50%;
+  transform: rotate(-16deg);
+  box-shadow: 0 0 0 18px rgba(0, 0, 0, 0.06) inset;
+  animation: menu-drift 18s ease-in-out infinite alternate-reverse;
+}
+
+.menu-stage-shape.is-slice {
+  width: min(46vw, 600px);
+  height: 22px;
+  right: -6vw;
+  top: 16vh;
+  background: linear-gradient(90deg, rgba(255, 110, 74, 0), rgba(255, 110, 74, 0.45), rgba(244, 237, 220, 0.06));
+  transform: skewX(-36deg) rotate(-6deg);
+  box-shadow: 0 0 24px rgba(255, 110, 74, 0.12);
+  animation: menu-glint 12s ease-in-out infinite;
+}
+
+.menu-stage-shape.is-tag {
+  width: 182px;
+  height: 54px;
+  right: 10vw;
+  top: 10vh;
+  background: linear-gradient(135deg, rgba(17, 17, 26, 0.92), rgba(25, 24, 34, 0.88));
+  border: 1px solid rgba(244, 237, 220, 0.2);
+  clip-path: polygon(0 0, 90% 0, 100% 50%, 90% 100%, 0 100%, 6% 50%);
+  box-shadow: 10px 10px 0 rgba(0, 0, 0, 0.24);
+}
+
+.menu-stage-shape.is-spark {
+  width: 14px;
+  height: 14px;
+  left: 72%;
+  top: 62%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.88) 0 20%, rgba(255, 110, 74, 0.85) 20% 44%, transparent 44% 100%);
+  filter: drop-shadow(0 0 14px rgba(255, 110, 74, 0.42));
+}
+
+/* The shell now splits the title card from the command stack so the composition feels like a stylized JRPG cover. */
 .menu-shell {
-  width: min(720px, 100%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 18px;
+  position: relative;
+  z-index: 1;
+  width: min(1180px, 100%);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(340px, 0.84fr);
+  gap: clamp(18px, 4vw, 44px);
+  align-items: stretch;
 }
 
-/* Big title with wide tracking to mimic a command-center boot banner. */
-.menu-title {
-  margin: 0;
-  color: #00ff88;
-  font-size: clamp(3rem, 8vw, 5.8rem);
-  line-height: 0.95;
-  letter-spacing: 0.22em;
-  text-indent: 0.22em;
-  text-shadow: 0 0 28px rgba(0, 255, 136, 0.2);
+.menu-header-block,
+.menu-command-block {
+  position: relative;
+  overflow: hidden;
 }
 
-/* The cursor line blinks so the title feels alive without needing JS. */
-.cursor-line {
+.menu-header-block {
+  padding: clamp(22px, 3vw, 34px);
+  background: linear-gradient(180deg, rgba(246, 239, 226, 0.96), rgba(232, 222, 202, 0.92));
+  color: var(--menu-ink);
+  border: 1px solid rgba(246, 239, 226, 0.55);
+  box-shadow:
+    0 26px 56px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(10, 10, 20, 0.12) inset;
+  clip-path: polygon(0 0, 100% 0, 96% 100%, 2% 100%);
+  transform: translateX(clamp(0px, 1vw, 16px)) rotate(-1.4deg);
+}
+
+.menu-header-block::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(135deg, transparent 0 50%, rgba(255, 110, 74, 0.12) 50.4% 54%, transparent 54.4% 100%),
+    linear-gradient(165deg, transparent 0 72%, rgba(141, 119, 255, 0.1) 72.4% 77%, transparent 77.4% 100%);
+}
+
+.menu-header-block::after {
+  content: "";
+  position: absolute;
+  right: -8px;
+  bottom: -8px;
   width: 160px;
-  height: 1px;
-  background: rgba(0, 255, 136, 0.76);
-  box-shadow: 0 0 16px rgba(0, 255, 136, 0.22);
-  animation: blink 1s steps(2, end) infinite;
+  height: 160px;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(255, 110, 74, 0.18) 0 18%, transparent 18% 100%);
 }
 
-/* Shared monospace, uppercase treatment for all boot-screen labels and copy. */
-.menu-subtitle,
-.menu-footnote,
-.briefing-copy,
-.section-body,
-.section-list,
-.legend-label,
-.severity-desc,
-.back-button,
-.menu-button {
+/* The kicker gives the title card an authored header instead of a bare logo lockup. */
+.menu-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 8px 12px;
+  background: rgba(17, 17, 26, 0.92);
+  color: var(--menu-cream);
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.24em;
   text-transform: uppercase;
+  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.18);
+  clip-path: polygon(0 0, 96% 0, 100% 50%, 96% 100%, 0 100%, 2% 50%);
+}
+
+/* The title now feels poster-like with a split shadow and offset ghost layer instead of a plain neon wordmark. */
+.menu-title {
+  position: relative;
+  margin: 10px 0 0;
+  color: var(--menu-ink);
+  font-size: clamp(3.6rem, 7.9vw, 7.1rem);
+  line-height: 0.88;
+  letter-spacing: 0.18em;
+  text-indent: 0.18em;
+  text-shadow:
+    -4px -3px 0 rgba(244, 237, 220, 0.88),
+    8px 8px 0 rgba(255, 110, 74, 0.52),
+    14px 14px 0 rgba(17, 17, 26, 0.12);
+}
+
+.menu-title::before {
+  content: attr(data-title);
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(0.14em, -0.12em);
+  color: rgba(255, 255, 255, 0.52);
+  opacity: 0.28;
+  mix-blend-mode: screen;
+  clip-path: polygon(0 0, 100% 0, 100% 52%, 0 62%);
+}
+
+.menu-title::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -14px;
+  width: min(420px, 82%);
+  height: 14px;
+  background: linear-gradient(90deg, rgba(17, 17, 26, 0.94), rgba(255, 110, 74, 0.92), rgba(244, 237, 220, 0.18));
+  clip-path: polygon(0 0, 92% 0, 100% 50%, 92% 100%, 0 100%, 4% 50%);
+  transform: skewX(-14deg);
+  box-shadow: 0 10px 26px rgba(255, 110, 74, 0.18);
+}
+
+/* The cursor line becomes a dramatic underline rather than a simple boot cursor. */
+.menu-header-block .cursor-line {
+  width: min(260px, 100%);
+  height: 4px;
+  margin: 16px 0 12px;
+  background: linear-gradient(90deg, var(--menu-ink), var(--menu-coral) 56%, transparent 100%);
+  box-shadow: 0 0 0 1px rgba(17, 17, 26, 0.16);
+  animation: menu-glint 1.4s steps(2, end) infinite;
 }
 
 /* Secondary menu text stays dimmer so the title remains the focus. */
 .menu-subtitle {
   margin: 0;
-  color: rgba(0, 255, 136, 0.52);
+  color: rgba(17, 17, 26, 0.72);
   letter-spacing: 0.18em;
   font-size: 0.82rem;
   line-height: 1.8;
 }
 
-/* The divider line separates the title stack from the action buttons. */
-.menu-rule {
-  width: min(340px, 62vw);
-  height: 1px;
-  background: rgba(0, 255, 136, 0.28);
-  margin: 2px 0 10px;
+/* The mode description becomes a tactile banner with a paper-cut edge and a warm highlight. */
+.menu-mode-description {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0 0;
+  max-width: 100%;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.46);
+  border: 1px solid rgba(17, 17, 26, 0.12);
+  color: rgba(17, 17, 26, 0.78);
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  line-height: 1.5;
+  clip-path: polygon(0 0, 96% 0, 100% 50%, 96% 100%, 0 100%, 2% 50%);
+  box-shadow: 6px 8px 0 rgba(17, 17, 26, 0.12);
 }
 
-/* Stacks the two main menu actions vertically for a boot-menu layout. */
-.menu-actions {
+.menu-command-block {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: clamp(20px, 2.8vw, 32px);
+  background: linear-gradient(180deg, rgba(17, 17, 26, 0.96), rgba(24, 20, 31, 0.96));
+  color: #f6f0e6;
+  border: 1px solid rgba(244, 237, 220, 0.12);
+  box-shadow:
+    0 26px 62px rgba(0, 0, 0, 0.36),
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+  clip-path: polygon(2% 0, 100% 0, 98% 100%, 0 100%);
+  transform: translateX(clamp(-4px, -1vw, -16px)) rotate(1.1deg);
+}
+
+.menu-command-block::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(140deg, transparent 0 60%, rgba(255, 110, 74, 0.12) 60.2% 64%, transparent 64.2% 100%);
+}
+
+/* The command label anchors the action column with a deliberate title-screen prompt. */
+.menu-command-label {
+  margin: 0;
+  color: rgba(244, 237, 220, 0.86);
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.menu-command-block .menu-rule {
+  width: 100%;
+  margin: 0;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(255, 110, 74, 0), rgba(244, 237, 220, 0.32), rgba(0, 216, 190, 0.2));
+}
+
+/* The main menu buttons now feel like bespoke command slabs instead of plain rectangles. */
+#menu-screen .menu-actions {
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  width: min(340px, 72vw);
 }
 
-/* Sharp-cornered buttons reinforce the terminal aesthetic. */
-.menu-button,
-.back-button {
+#menu-screen .menu-actions-primary {
+  width: min(100%, 420px);
+  align-self: flex-start;
+  transform: translateX(-10px);
+}
+
+#menu-screen .menu-actions-dual {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  width: 100%;
+  transform: translateX(16px);
+}
+
+#menu-screen .menu-actions-secondary {
+  width: min(100%, 360px);
+  align-self: flex-end;
+  transform: translateX(-28px);
+}
+
+#menu-screen .menu-button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
   appearance: none;
-  border: 1px solid rgba(0, 255, 136, 0.6);
-  border-radius: 0;
-  background: rgba(10, 10, 15, 0.92);
-  color: #00ff88;
+  border: 0;
   padding: 16px 18px;
+  background: linear-gradient(180deg, rgba(24, 24, 34, 0.98), rgba(13, 13, 21, 0.98));
+  color: var(--menu-cream);
   cursor: pointer;
-  letter-spacing: 0.16em;
-  font-size: 0.82rem;
-  transition: background 150ms ease, border-color 150ms ease, box-shadow 150ms ease, color 150ms ease;
+  letter-spacing: 0.18em;
+  font-size: 0.8rem;
   text-align: center;
-  box-shadow: inset 0 0 0 1px rgba(0, 255, 136, 0.04);
-}
-
-/* The prefix starts hidden and expands on hover to mimic a command prompt. */
-.menu-button::before,
-.back-button::before {
-  content: ">";
-  display: inline-block;
-  width: 0;
-  margin-right: 0;
+  clip-path: polygon(6% 0, 100% 0, 94% 100%, 0 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05),
+    0 12px 24px rgba(0, 0, 0, 0.3);
+  transform: translateX(0) rotate(-0.3deg);
   overflow: hidden;
-  transition: width 150ms ease, margin-right 150ms ease;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    background 180ms ease,
+    color 180ms ease,
+    filter 180ms ease;
 }
 
-/* Hover and focus states brighten the button and add a subtle glow for feedback. */
-.menu-button:hover,
-.menu-button:focus-visible,
-.back-button:hover,
-.back-button:focus-visible {
-  background: rgba(0, 255, 136, 0.1);
-  border-color: rgba(0, 255, 136, 1);
-  box-shadow: 0 0 18px rgba(0, 255, 136, 0.16), inset 0 0 0 1px rgba(0, 255, 136, 0.05);
-  text-shadow: 0 0 10px rgba(0, 255, 136, 0.34);
-  outline: none;
-}
-
-/* The prompt prefix appears only when the button is interactive. */
-.menu-button:hover::before,
-.menu-button:focus-visible::before,
-.back-button:hover::before,
-.back-button:focus-visible::before {
-  width: 1.2em;
-  margin-right: 0.3em;
-}
-
-/* The bottom footnote shows the build/version and stays pinned to the viewport edge. */
-.menu-footnote {
+#menu-screen .menu-button::before {
+  content: "";
   position: absolute;
-  left: 50%;
-  bottom: 18px;
-  transform: translateX(-50%);
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(120deg, transparent 0 34%, rgba(255, 255, 255, 0.34) 42%, transparent 50%),
+    linear-gradient(90deg, var(--menu-button-accent, var(--menu-teal)) 0 8%, transparent 8% 100%);
+  opacity: 0.9;
+  transform: translateX(-28%) skewX(-16deg);
+  transition: transform 180ms ease, opacity 180ms ease;
+}
+
+#menu-screen .menu-button::after {
+  content: "";
+  position: absolute;
+  right: -1px;
+  top: 0;
+  width: 16px;
+  height: 100%;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.02));
+  clip-path: polygon(28% 0, 100% 0, 100% 100%, 0 100%);
+  box-shadow: inset 1px 0 0 rgba(0, 0, 0, 0.18);
+}
+
+#menu-screen #defender-setup-button {
+  --menu-button-accent: var(--menu-coral);
+  --menu-button-glow: rgba(255, 110, 74, 0.22);
+}
+
+#menu-screen #analyst-mode-button {
+  --menu-button-accent: var(--menu-teal);
+  --menu-button-glow: rgba(70, 216, 200, 0.22);
+}
+
+#menu-screen #operator-mode-button {
+  --menu-button-accent: var(--menu-gold);
+  --menu-button-glow: rgba(217, 190, 115, 0.22);
+}
+
+#menu-screen #howto-button {
+  --menu-button-accent: var(--menu-violet);
+  --menu-button-glow: rgba(141, 119, 255, 0.22);
+}
+
+#menu-screen .menu-button:hover,
+#menu-screen .menu-button:focus-visible {
+  color: #fffaf0;
+  background: linear-gradient(180deg, rgba(34, 34, 48, 0.98), rgba(17, 17, 25, 0.98));
+  box-shadow:
+    0 18px 34px rgba(0, 0, 0, 0.36),
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 0 24px var(--menu-button-glow);
+  outline: none;
+  transform: translateX(12px) rotate(-1deg) scale(1.015);
+  filter: saturate(1.08);
+}
+
+#menu-screen .menu-button:hover::before,
+#menu-screen .menu-button:focus-visible::before {
+  opacity: 1;
+  transform: translateX(0) skewX(-16deg);
+}
+
+#menu-screen .menu-button:active {
+  transform: translateX(8px) rotate(-0.4deg) scale(0.99);
+}
+
+/* The bottom footnote becomes a label strip so the menu feels anchored like a poster instead of centered like a launcher. */
+#menu-screen .menu-footnote {
+  position: absolute;
+  left: clamp(20px, 4vw, 54px);
+  bottom: clamp(18px, 3vw, 32px);
   margin: 0;
-  color: rgba(0, 255, 136, 0.48);
+  padding: 10px 12px;
+  background: rgba(17, 17, 26, 0.82);
+  border: 1px solid rgba(244, 237, 220, 0.16);
+  color: rgba(244, 237, 220, 0.76);
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
   font-size: 0.7rem;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.16em;
   white-space: nowrap;
+  clip-path: polygon(0 0, 100% 0, 96% 100%, 0 100%);
+  box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.18);
+}
+
+@keyframes menu-glint {
+  0%,
+  100% {
+    opacity: 0.7;
+    transform: translateX(0);
+  }
+
+  50% {
+    opacity: 1;
+    transform: translateX(14px);
+  }
+}
+
+@keyframes menu-drift {
+  from {
+    transform: translate3d(0, 0, 0) rotate(-16deg);
+  }
+
+  to {
+    transform: translate3d(12px, 10px, 0) rotate(-13deg);
+  }
 }
 
 /* The briefing screen starts at the top so its content can scroll if the viewport is short. */
@@ -1541,6 +1888,73 @@ canvas {
   to { background-position: 0 0, 0 0; }
 }
 
+/* The main menu collapses into a single-column poster layout on narrower screens. */
+@media (max-width: 980px) {
+  #menu-screen {
+    padding: 18px;
+  }
+
+  .menu-shell {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .menu-header-block,
+  .menu-command-block {
+    transform: none;
+  }
+
+  #menu-screen .menu-actions-primary,
+  #menu-screen .menu-actions-dual,
+  #menu-screen .menu-actions-secondary {
+    width: 100%;
+    transform: none;
+    align-self: stretch;
+  }
+
+  #menu-screen .menu-actions-dual {
+    grid-template-columns: 1fr;
+  }
+
+  .menu-stage-shape.is-arc {
+    left: -22vw;
+    top: -18vw;
+  }
+
+  .menu-stage-shape.is-tag {
+    right: 8vw;
+    top: 12vh;
+  }
+
+  #menu-screen .menu-footnote {
+    max-width: calc(100% - 36px);
+    white-space: normal;
+  }
+}
+
+/* Small phones get tighter spacing so the menu stays dramatic without feeling crowded. */
+@media (max-width: 640px) {
+  .menu-kicker,
+  .menu-command-label {
+    letter-spacing: 0.18em;
+  }
+
+  .menu-title {
+    letter-spacing: 0.12em;
+    text-indent: 0.12em;
+  }
+
+  .menu-header-block .cursor-line {
+    width: 72%;
+  }
+
+  #menu-screen .menu-button {
+    padding: 14px 16px;
+    font-size: 0.74rem;
+    letter-spacing: 0.14em;
+  }
+}
+
 /* Narrow viewports collapse the briefing grid into a single column. */
 @media (max-width: 860px) {
   .howto-content {
@@ -1555,11 +1969,14 @@ canvas {
     letter-spacing: 0.16em;
   }
 
-  .menu-footnote {
+  #menu-screen .menu-footnote {
+    left: 18px;
+    right: 18px;
+    width: auto;
+    max-width: none;
     white-space: normal;
     text-align: center;
-    width: 100%;
-    padding: 0 16px;
+    padding: 10px 12px;
   }
 }
 
