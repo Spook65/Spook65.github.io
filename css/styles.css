@@ -1069,45 +1069,54 @@ canvas {
   left: 50%;
   top: 28%;
   width: min(72vw, 820px);
-  height: min(72vw, 820px);
+  aspect-ratio: 1;
   border-radius: 50%;
   background:
-    radial-gradient(circle at 50% 50%, transparent 0 33%, rgba(244, 239, 227, 0.08) 33% 33.7%, transparent 33.7% 46%, rgba(72, 214, 198, 0.06) 46% 46.6%, transparent 46.6% 60%, rgba(255, 110, 74, 0.05) 60% 60.6%, transparent 60.6% 100%),
-    conic-gradient(from 210deg,
-      transparent 0 8deg,
-      rgba(244, 239, 227, 0.02) 8deg 22deg,
-      rgba(244, 239, 227, 0.22) 22deg 34deg,
-      rgba(255, 255, 255, 0.32) 34deg 38deg,
-      rgba(244, 239, 227, 0.1) 38deg 46deg,
-      transparent 46deg 360deg);
-  opacity: 0.56;
-  will-change: transform, opacity;
+    radial-gradient(circle at 50% 50%,
+      transparent calc(50% - 18px),
+      rgba(244, 239, 227, 0.04) calc(50% - 18px) calc(50% - 14px),
+      rgba(244, 239, 227, 0.12) calc(50% - 14px) calc(50% - 11px),
+      rgba(72, 214, 198, 0.06) calc(50% - 11px) calc(50% - 9px),
+      rgba(244, 239, 227, 0.03) calc(50% - 9px) calc(50% - 6px),
+      transparent calc(50% - 6px) 100%);
+  opacity: 0.54;
   transform: translate3d(-50%, -50%, 0) scale(1);
-  animation: menuRingSweep 20s linear infinite;
   mix-blend-mode: screen;
 }
 
 .menu-stage::after {
   content: "";
   position: absolute;
-  inset: 0;
+  left: 50%;
+  top: 28%;
+  width: min(72vw, 820px);
+  aspect-ratio: 1;
+  border-radius: 50%;
   background:
-    linear-gradient(90deg, transparent 0 17%, rgba(244, 239, 227, 0.05) 17.2% 17.5%, transparent 17.7% 39%, rgba(72, 214, 198, 0.04) 39.2% 39.5%, transparent 39.7% 61%, rgba(255, 110, 74, 0.05) 61.2% 61.5%, transparent 61.7% 100%),
-    linear-gradient(128deg, transparent 0 44%, rgba(255, 255, 255, 0.04) 44.2% 44.5%, transparent 44.7% 100%),
-    linear-gradient(152deg, transparent 0 64%, rgba(255, 110, 74, 0.04) 64.2% 64.5%, transparent 64.7% 100%),
-    linear-gradient(180deg, rgba(5, 6, 13, 0.02), rgba(5, 6, 13, 0.46));
-  opacity: 0.2;
-  background-size: 100% 100%;
+    conic-gradient(from 0deg,
+      transparent 0deg 318deg,
+      rgba(244, 239, 227, 0.03) 318deg 326deg,
+      rgba(244, 239, 227, 0.12) 326deg 334deg,
+      rgba(255, 255, 255, 0.65) 334deg 340deg,
+      rgba(244, 239, 227, 0.16) 340deg 348deg,
+      rgba(244, 239, 227, 0.03) 348deg 356deg,
+      transparent 356deg 360deg);
+  -webkit-mask: radial-gradient(circle, transparent calc(50% - 18px), #000 calc(50% - 18px) calc(50% - 8px), transparent calc(50% - 8px));
+  mask: radial-gradient(circle, transparent calc(50% - 18px), #000 calc(50% - 18px) calc(50% - 8px), transparent calc(50% - 8px));
+  opacity: 0.88;
+  will-change: transform, opacity;
+  transform: translate3d(-50%, -50%, 0) rotate(0deg);
+  animation: menuHaloOrbit 20s linear infinite;
+  mix-blend-mode: screen;
+  box-shadow: 0 0 18px rgba(244, 239, 227, 0.04);
 }
 
-@keyframes menuRingSweep {
-  0%, 100% {
-    transform: translate3d(-50%, -50%, 0) rotate(0deg) scale(1);
-    opacity: 0.52;
+@keyframes menuHaloOrbit {
+  from {
+    transform: translate3d(-50%, -50%, 0) rotate(0deg);
   }
-  50% {
-    transform: translate3d(-50%, -50%, 0) rotate(180deg) scale(1.01);
-    opacity: 0.68;
+  to {
+    transform: translate3d(-50%, -50%, 0) rotate(360deg);
   }
 }
 
