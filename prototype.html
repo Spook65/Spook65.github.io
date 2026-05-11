@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<!--
+  THREATGRID Starter Lineup prototype test page.
+  This page is intentionally separate from the live app so the prototype can be tested
+  without touching routing, save logic, combat, or the current working Starter Lineup.
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>THREATGRID Prototype — Starter Lineup</title>
+  <style>
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: #04050a;
+      color: #f4efe3;
+    }
+
+    body {
+      min-height: 100vh;
+    }
+
+    #prototype-root {
+      min-height: 100vh;
+    }
+  </style>
+</head>
+<body>
+  <main id="prototype-root" aria-label="Starter Lineup prototype"></main>
+
+  <script src="js/prototypes/starter-roster-prototype.js"></script>
+  <script>
+    // This page is a manual-only prototype harness; it does not connect to the live app.
+    document.addEventListener("DOMContentLoaded", () => {
+      if (typeof renderStarterRosterPrototype === "function") {
+        renderStarterRosterPrototype("#prototype-root");
+      }
+    });
+  </script>
+</body>
+</html>
