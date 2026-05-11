@@ -922,9 +922,27 @@ function toggleDefenderSelection(defenderId) {
 
 // buildDefenderCardMarkup() renders one selection card with its identity, stats, and starter metadata.
 function buildDefenderCardMarkup(defender, isSelected, isLocked) {
-  const movePreview = defender.moves.slice(0, 2).map((move) => `<span class="defender-move">${move.name} • ${move.category.toUpperCase()} • ${move.power} PWR</span>`).join("");
+  const movePreview = defender.moves.slice(0, 2).map((move) => {
+    const moveAccuracy = Number.isFinite(move.accuracy) ? `${move.accuracy}% ACC` : null;
+    const moveCharges = Number.isFinite(move.charges) && Number.isFinite(move.maxCharges)
+      ? `${move.charges}/${move.maxCharges} CHG`
+      : null;
+    const moveMeta = [move.category.toUpperCase(), `PWR ${move.power}`, moveAccuracy, moveCharges].filter(Boolean).join(" / ");
+
+    return `
+      <div class="defender-move">
+        <div class="defender-move-name">${move.name}</div>
+        <div class="defender-move-meta">${moveMeta}</div>
+      </div>
+    `;
+  }).join("");
   const coreTrait = defender.coreTrait && typeof defender.coreTrait === "object" ? defender.coreTrait.name : defender.coreTrait;
   const passiveModule = defender.passiveModule && typeof defender.passiveModule === "object" ? defender.passiveModule.name : defender.passiveModule;
+  const coreTraitDescription = defender.coreTrait && typeof defender.coreTrait === "object" ? defender.coreTrait.description : "";
+  const passiveModuleDescription = defender.passiveModule && typeof defender.passiveModule === "object" ? defender.passiveModule.description : "";
+  const loadoutStateLabel = isSelected ? "LOCKED IN" : isLocked ? "LOCKED" : "READY";
+  const rarityLabel = String(defender.rarity || "standard").toUpperCase();
+  const cardAccent = defender.color || "#00ccff";
 
   return `
     <button
@@ -932,31 +950,69 @@ function buildDefenderCardMarkup(defender, isSelected, isLocked) {
       type="button"
       data-defender-id="${defender.id}"
       aria-pressed="${isSelected ? "true" : "false"}"
+      style="--defender-accent: ${cardAccent}; --defender-accent-soft: ${cardAccent}22;"
       ${isLocked ? "disabled" : ""}
     >
-      <div class="defender-card-head">
-        <div>
+      <div class="defender-card-topline">
+        <div class="defender-card-titleblock">
+          <div class="defender-card-kicker">STARTER DEFENDER</div>
           <div class="defender-card-name">${defender.name}</div>
           <div class="defender-card-domain">${defender.role} / ${defender.domain} / ${defender.affinity}</div>
         </div>
-        <div class="defender-card-rarity">${defender.rarity}</div>
+        <div class="defender-card-badges">
+          <div class="defender-card-badge">${rarityLabel}</div>
+          <div class="defender-card-badge ${isSelected ? "is-selected" : isLocked ? "is-locked" : "is-ready"}">${loadoutStateLabel}</div>
+        </div>
       </div>
       <div class="defender-card-summary">${defender.summary}</div>
-      <div class="defender-card-meta">
-        <span>CORE TRAIT: ${coreTrait}</span>
-        <span>PASSIVE: ${passiveModule}</span>
-        <span>TEMPERAMENT: ${defender.temperament}</span>
-        <span>VARIANT: ${defender.variant}</span>
+      <div class="defender-card-fields">
+        <div class="defender-card-field">
+          <span class="defender-card-field-label">CORE TRAIT</span>
+          <span class="defender-card-field-value" title="${coreTraitDescription}">${coreTrait}</span>
+        </div>
+        <div class="defender-card-field">
+          <span class="defender-card-field-label">PASSIVE MODULE</span>
+          <span class="defender-card-field-value" title="${passiveModuleDescription}">${passiveModule}</span>
+        </div>
+        <div class="defender-card-field">
+          <span class="defender-card-field-label">TEMPERAMENT</span>
+          <span class="defender-card-field-value">${defender.temperament}</span>
+        </div>
+        <div class="defender-card-field">
+          <span class="defender-card-field-label">VARIANT</span>
+          <span class="defender-card-field-value">${defender.variant}</span>
+        </div>
       </div>
-      <div class="defender-card-stats">
-        <span>HP ${defender.hp}</span>
-        <span>ATK ${defender.atk}</span>
-        <span>DEF ${defender.def}</span>
-        <span>SP ATK ${defender.spAtk}</span>
-        <span>SP DEF ${defender.spDef}</span>
-        <span>SPD ${defender.spd}</span>
+      <div class="defender-card-stats" aria-label="Defender stats">
+        <div class="defender-stat">
+          <span class="defender-stat-label">HP</span>
+          <strong class="defender-stat-value">${defender.hp}</strong>
+        </div>
+        <div class="defender-stat">
+          <span class="defender-stat-label">ATK</span>
+          <strong class="defender-stat-value">${defender.atk}</strong>
+        </div>
+        <div class="defender-stat">
+          <span class="defender-stat-label">DEF</span>
+          <strong class="defender-stat-value">${defender.def}</strong>
+        </div>
+        <div class="defender-stat">
+          <span class="defender-stat-label">SP ATK</span>
+          <strong class="defender-stat-value">${defender.spAtk}</strong>
+        </div>
+        <div class="defender-stat">
+          <span class="defender-stat-label">SP DEF</span>
+          <strong class="defender-stat-value">${defender.spDef}</strong>
+        </div>
+        <div class="defender-stat">
+          <span class="defender-stat-label">SPD</span>
+          <strong class="defender-stat-value">${defender.spd}</strong>
+        </div>
       </div>
-      <div class="defender-card-moves">${movePreview}</div>
+      <div class="defender-card-moves">
+        <div class="defender-section-label">MOVE MODULES</div>
+        <div class="defender-move-grid">${movePreview}</div>
+      </div>
       <div class="defender-card-foot">
         <span>${isSelected ? "LOCKED INTO LOADOUT" : "TAP TO ADD TO LOADOUT"}</span>
         <span>LVL ${defender.level}</span>
@@ -973,9 +1029,14 @@ function buildDefenderSelectionMarkup() {
   return `
     <div class="defender-shell">
       <div class="defender-header">
-        <div>
+        <div class="defender-header-copy">
+          <div class="defender-kicker">OPERATOR LOADOUT / STAGE ONE</div>
           <h2 class="briefing-title">STARTER LINEUP</h2>
           <p class="briefing-copy defender-copy">CHOOSE FOUR ORIGINAL DEFENDERS TO SEED YOUR NEXT RUN. THE LOADOUT SAVES LOCALLY.</p>
+        </div>
+        <div class="defender-header-panel" aria-hidden="true">
+          <div class="defender-header-panel-label">LOADOUT DIRECTIVE</div>
+          <div class="defender-header-panel-value">ASSEMBLE A FOUR-DEFENDER PARTY, LOCK THE LOADOUT, THEN ENTER THREATGRID.</div>
         </div>
         <button id="defender-screen-back" class="back-button" type="button">← RETURN TO MENU</button>
       </div>
