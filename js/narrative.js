@@ -1180,6 +1180,87 @@ function formatPantheonCurseDomainLabel(entity) {
   return labels.length ? labels.join(" / ") : "UNKNOWN CURSE";
 }
 
+// getPantheonEncounterAccentClass() gives each Protocol God a small visual identity hook for the encounter frame.
+function getPantheonEncounterAccentClass(entity) {
+  const entityId = String(entity?.id || "").toLowerCase();
+
+  if (entityId.includes("aegis")) {
+    return "is-aegis";
+  }
+
+  if (entityId.includes("hermes")) {
+    return "is-hermes";
+  }
+
+  if (entityId.includes("oracle")) {
+    return "is-oracle";
+  }
+
+  if (entityId.includes("eris")) {
+    return "is-eris";
+  }
+
+  if (entityId.includes("hephaest")) {
+    return "is-hephaest";
+  }
+
+  if (entityId.includes("nyx")) {
+    return "is-nyx";
+  }
+
+  if (entityId.includes("thanatos")) {
+    return "is-thanatos";
+  }
+
+  if (entityId.includes("mnemosyne")) {
+    return "is-mnemosyne";
+  }
+
+  return "is-pantheon";
+}
+
+// formatPantheonBoonMechanics() converts the boon's raw effect data into readable encounter copy.
+function formatPantheonBoonMechanics(boon) {
+  const effectType = String(boon?.effectType || "");
+  const effectValue = Number.isFinite(boon?.effectValue) ? boon.effectValue : 0;
+  const normalizedDuration = String(boon?.duration || "run").toLowerCase();
+  const hasRisk = Boolean(boon?.costType);
+
+  let effectLine = "Immediate: The Protocol God grants a strange but useful favor.";
+
+  if (effectType === "party_heal") {
+    effectLine = `Immediate: Restore ${effectValue} HP to all Defenders.`;
+  } else if (effectType === "damage_reduction_run") {
+    effectLine = "Run Effect: Party damage taken is reduced slightly.";
+  } else if (effectType === "stat_boost_run") {
+    effectLine = "Run Effect: Active Defenders gain a small stat boost.";
+  } else if (effectType === "charge_restore") {
+    effectLine = `Immediate: Restore ${effectValue} charge${effectValue === 1 ? "" : "s"} to each move.`;
+  } else if (effectType === "accuracy_boost_next") {
+    effectLine = `Next Battle: Move accuracy increases by ${effectValue}.`;
+  } else if (effectType === "start_gauge_bonus_next") {
+    effectLine = `Next Battle: Start with +${effectValue} Tactical Gauge.`;
+  } else if (effectType === "reveal_next_weakness") {
+    effectLine = "Next Battle: Reveal a threat hint before combat begins.";
+  } else if (effectType === "bonus_damage_next") {
+    effectLine = `Next Battle: Opening damage increases by ${effectValue}.`;
+  }
+
+  const durationLine = normalizedDuration === "next_battle"
+    ? "Duration: Next battle."
+    : "Duration: This run.";
+
+  const costLine = hasRisk
+    ? `Cost: ${String(boon.costType).replace(/_/g, " ")}${Number.isFinite(boon.costValue) ? ` ${boon.costValue}` : ""}.`
+    : "";
+
+  return {
+    effectLine,
+    durationLine,
+    costLine
+  };
+}
+
 // choosePantheonEntityForEncounter() selects a cyber-myth entity to speak after victory using run history and the defeated threat.
 function choosePantheonEntityForEncounter(runState, defeatedThreat) {
   const storyState = ensurePantheonStoryState();
@@ -1450,42 +1531,83 @@ function applyPantheonBoon(boon, encounter) {
 function buildPantheonEncounterMarkup(encounter) {
   const resolvedChoice = encounter.resolvedChoice || null;
   const choiceCards = Array.isArray(encounter.boons) ? encounter.boons : [];
+  const accentClass = String(encounter.entityAccentClass || "is-pantheon");
+  const resolvedMechanics = resolvedChoice ? formatPantheonBoonMechanics(resolvedChoice) : null;
 
   if (resolvedChoice) {
     return `
-      <div class="battle-narrative-screen">
-        <div class="battle-narrative-sector">PANTHEON CONTACT / ${encounter.sectorName}</div>
-        <div class="battle-narrative-sector-copy">${encounter.entityDomain} / ${encounter.entityCurseDomainLabel || "UNKNOWN CURSE"} · ${encounter.sectorTheme}</div>
-        <div class="battle-narrative-title">${encounter.entityName}</div>
-        <div class="battle-narrative-fragment">${encounter.entityTitle}</div>
-        <div class="battle-narrative-situation">"${resolvedChoice.flavorLine}"</div>
-        <div class="battle-narrative-response">${resolvedChoice.responseText}</div>
-        <div class="battle-narrative-result">
-          <span class="battle-narrative-result-label">EFFECT</span>
-          <span class="battle-narrative-result-value">${resolvedChoice.effectType.replace(/_/g, " ").toUpperCase()} ${Number.isFinite(resolvedChoice.effectValue) ? `+${resolvedChoice.effectValue}` : ""}</span>
+      <div class="battle-narrative-screen ${accentClass}">
+        <div class="battle-narrative-shell">
+          <div class="battle-narrative-sector">PANTHEON CONTACT / ${encounter.sectorName}</div>
+          <div class="battle-narrative-header-grid">
+            <div class="battle-narrative-identity">
+              <div class="battle-narrative-title">${encounter.entityName}</div>
+              <div class="battle-narrative-fragment">${encounter.entityTitle}</div>
+              <div class="battle-narrative-sector-copy">${encounter.entityDomain} / ${encounter.entityCurseDomainLabel || "UNKNOWN CURSE"}</div>
+            </div>
+            <div class="battle-narrative-motif" aria-hidden="true">
+              <div class="battle-narrative-motif-glyph"></div>
+              <div class="battle-narrative-motif-copy">${encounter.entityMotif}</div>
+              <div class="battle-narrative-motif-subcopy">${encounter.entityPersonality}</div>
+            </div>
+          </div>
+          <div class="battle-narrative-response-panel">
+            <div class="battle-narrative-response-title">BOON ACCEPTED</div>
+            <div class="battle-narrative-response-quote">"${resolvedChoice.flavorLine}"</div>
+            <div class="battle-narrative-response">${resolvedChoice.responseText}</div>
+            <div class="battle-narrative-response-effect">
+              <div class="battle-narrative-result-label">IMMEDIATE EFFECT</div>
+              <div class="battle-narrative-result-value">${resolvedMechanics ? resolvedMechanics.effectLine : ""}</div>
+              <div class="battle-narrative-result-meta">${resolvedMechanics ? resolvedMechanics.durationLine : ""}${resolvedMechanics && resolvedMechanics.costLine ? ` • ${resolvedMechanics.costLine}` : ""}</div>
+            </div>
+          </div>
+          <button class="battle-narrative-button" type="button" data-narrative-continue>CONTINUE EXPEDITION</button>
         </div>
-        <button class="battle-narrative-button" type="button" data-narrative-continue>RETURN TO GLOBE</button>
       </div>
     `;
   }
 
   return `
-    <div class="battle-narrative-screen">
-      <div class="battle-narrative-sector">PANTHEON CONTACT / ${encounter.sectorName}</div>
-      <div class="battle-narrative-sector-copy">${encounter.entityDomain} / ${encounter.entityCurseDomainLabel || "UNKNOWN CURSE"} · ${encounter.sectorTheme}</div>
-      <div class="battle-narrative-title">${encounter.entityName}</div>
-      <div class="battle-narrative-fragment">${encounter.entityTitle}</div>
-      <div class="battle-narrative-situation">${encounter.dialogueLine}</div>
-      <div class="battle-narrative-viewpoint">${encounter.contextLine}</div>
-      <div class="battle-narrative-choice-grid">
-        ${choiceCards.map((boon) => `
-          <button class="battle-narrative-choice" type="button" data-narrative-choice="${boon.id}">
-            <span class="battle-narrative-choice-label">${boon.name} <span class="battle-narrative-choice-rarity">${boon.rarity.toUpperCase()}</span></span>
-            <span class="battle-narrative-choice-desc">${boon.description}</span>
-            <span class="battle-narrative-choice-desc is-flavor">${boon.flavorLine}</span>
-            <span class="battle-narrative-choice-desc">${boon.effectType.replace(/_/g, " ").toUpperCase()} ${Number.isFinite(boon.effectValue) ? `+${boon.effectValue}` : ""} / ${boon.duration.toUpperCase()}${boon.costType ? ` / ${boon.costType.toUpperCase()}${Number.isFinite(boon.costValue) ? ` ${boon.costValue}` : ""}` : ""}</span>
-          </button>
-        `).join("")}
+    <div class="battle-narrative-screen ${accentClass}">
+      <div class="battle-narrative-shell">
+        <div class="battle-narrative-sector">PANTHEON CONTACT / ${encounter.sectorName}</div>
+        <div class="battle-narrative-header-grid">
+          <div class="battle-narrative-identity">
+            <div class="battle-narrative-title">${encounter.entityName}</div>
+            <div class="battle-narrative-fragment">${encounter.entityTitle}</div>
+            <div class="battle-narrative-sector-copy">${encounter.entityDomain} / ${encounter.entityCurseDomainLabel || "UNKNOWN CURSE"} · ${encounter.sectorTheme}</div>
+          </div>
+          <div class="battle-narrative-motif" aria-hidden="true">
+            <div class="battle-narrative-motif-glyph"></div>
+            <div class="battle-narrative-motif-copy">${encounter.entityMotif}</div>
+            <div class="battle-narrative-motif-subcopy">${encounter.entityPersonality}</div>
+          </div>
+        </div>
+        <div class="battle-narrative-dialogue-panel">
+          <div class="battle-narrative-dialogue">${encounter.dialogueLine}</div>
+          <div class="battle-narrative-viewpoint">${encounter.contextLine}</div>
+          <div class="battle-narrative-fragment-panel">
+            <div class="battle-narrative-result-label">RECOVERED FRAGMENT</div>
+            <div class="battle-narrative-fragment-copy">${encounter.recoveredFragment}</div>
+          </div>
+        </div>
+        <div class="battle-narrative-choice-grid">
+          ${choiceCards.map((boon) => {
+            const boonMechanics = formatPantheonBoonMechanics(boon);
+            return `
+              <button class="battle-narrative-choice" type="button" data-narrative-choice="${boon.id}">
+                <span class="battle-narrative-choice-head">
+                  <span class="battle-narrative-choice-label">${boon.name}</span>
+                  <span class="battle-narrative-choice-rarity">${boon.rarity.toUpperCase()}</span>
+                </span>
+                <span class="battle-narrative-choice-desc">${boon.description}</span>
+                <span class="battle-narrative-choice-mechanics">${boonMechanics.effectLine}</span>
+                <span class="battle-narrative-choice-meta">${boonMechanics.durationLine}${boonMechanics.costLine ? ` • ${boonMechanics.costLine}` : ""}</span>
+                <span class="battle-narrative-choice-desc is-flavor">"${boon.flavorLine}"</span>
+              </button>
+            `;
+          }).join("")}
+        </div>
       </div>
     </div>
   `;
@@ -1584,6 +1706,9 @@ function createPantheonEncounter(defeatedThreat) {
   storyState.story.lastPantheonDialogue = dialogueLine;
 
   const boons = generatePantheonBoons(entity, storyState, defeatedThreat);
+  const recoveredFragment = defeatedThreat?.title
+    ? `Recovered Fragment: ${defeatedThreat.title} left behind a broken protocol shard.`
+    : `Recovered Fragment: ${sector.description}`;
   const contextLine = `Recovered from ${sector.name}. The ${defeatedThreat?.title || "threat"} breach cracked open a mythic relay.`;
   const encounter = {
     id: `${entity.id}-${defeatedThreat?.id || "victory"}-${Date.now()}`,
@@ -1600,7 +1725,9 @@ function createPantheonEncounter(defeatedThreat) {
     entityElement: entity.element,
     entityMotif: entity.visualMotif,
     entityPersonality: entity.personality,
+    entityAccentClass: getPantheonEncounterAccentClass(entity),
     dialogueLine,
+    recoveredFragment,
     contextLine,
     boons,
     appearanceCount
