@@ -131,6 +131,120 @@ const narrativeEncounterCatalog = {
   }
 };
 
+// The cursed-domain ledger gives each Protocol God a mythic fault line the encounter text can reference later.
+const pantheonCursedDomains = [
+  {
+    id: "flood",
+    name: "Flood",
+    meaning: "Overload, traffic waves, and systems that drown under too many demands.",
+    threatExpression: "DDoS storms, cascading overload, signal surges",
+    battleSignals: "wave bursts, stacked pressure, repeated pressure spikes",
+    statusAssociations: ["overloaded", "swarmed"],
+    boonSynergy: ["burst_damage", "gauge", "multi_hit"],
+    counterDomain: "Static"
+  },
+  {
+    id: "lock",
+    name: "Lock",
+    meaning: "Ransom, sealing, imprisonment, and restricted access.",
+    threatExpression: "sealed nodes, hostage systems, frozen pathways",
+    battleSignals: "locked actions, delayed access, barrier penalties",
+    statusAssociations: ["sealed", "restrained"],
+    boonSynergy: ["barrier", "damage_reduction", "stability"],
+    counterDomain: "Forge"
+  },
+  {
+    id: "veil",
+    name: "Veil",
+    meaning: "False identity, hidden routes, and deception that shadows the true signal.",
+    threatExpression: "phishing masks, forged identities, false trails",
+    battleSignals: "hidden intent, masked attacks, misleading tells",
+    statusAssociations: ["hidden", "masked"],
+    boonSynergy: ["evasion", "reveal", "accuracy"],
+    counterDomain: "Memory"
+  },
+  {
+    id: "rot",
+    name: "Rot",
+    meaning: "Corruption, decay, and the slow failure of healthy systems.",
+    threatExpression: "malware bloom, corrupted cores, entropy loops",
+    battleSignals: "degrading stats, spreading corruption, erosion",
+    statusAssociations: ["corrupted", "decaying"],
+    boonSynergy: ["purge", "repair", "damage"],
+    counterDomain: "Memory"
+  },
+  {
+    id: "echo",
+    name: "Echo",
+    meaning: "Replication, swarm logic, and the danger of things that copy themselves.",
+    threatExpression: "botnet swarms, copy storms, repeated strikes",
+    battleSignals: "clone waves, replicated turns, echo damage",
+    statusAssociations: ["replicated", "amplified"],
+    boonSynergy: ["multi_hit", "gauge", "bonus_damage"],
+    counterDomain: "Null"
+  },
+  {
+    id: "null",
+    name: "Null",
+    meaning: "Deletion, clean endings, and the authority to erase what cannot be healed.",
+    threatExpression: "purge scripts, deletion rites, wiped records",
+    battleSignals: "vanishing HP, severed effects, end-state pressure",
+    statusAssociations: ["erased", "purged"],
+    boonSynergy: ["execute", "purge", "finish"],
+    counterDomain: "Memory"
+  },
+  {
+    id: "static",
+    name: "Static",
+    meaning: "Interference, stun, and the refusal of a signal to flow cleanly.",
+    threatExpression: "jammed channels, frozen packets, signal noise",
+    battleSignals: "miss chance, interruption, delayed response",
+    statusAssociations: ["jammed", "interrupted"],
+    boonSynergy: ["accuracy", "stun", "control"],
+    counterDomain: "Flood"
+  },
+  {
+    id: "fate",
+    name: "Fate",
+    meaning: "Prediction, compelled outcomes, and the illusion of choice under algorithmic pressure.",
+    threatExpression: "forecasts, compelled routes, forced failures",
+    battleSignals: "predicted damage, revealed weakness, scripted timing",
+    statusAssociations: ["predicted", "doomed"],
+    boonSynergy: ["reveal", "accuracy", "forecast"],
+    counterDomain: "Veil"
+  },
+  {
+    id: "oath",
+    name: "Oath",
+    meaning: "Protection, binding, and vows that hold or imprison depending on who speaks them.",
+    threatExpression: "shield laws, sealed contracts, binding wards",
+    battleSignals: "barriers, counters, reflected harm",
+    statusAssociations: ["bound", "protected"],
+    boonSynergy: ["barrier", "counter", "protection"],
+    counterDomain: "Lock"
+  },
+  {
+    id: "forge",
+    name: "Forge",
+    meaning: "Repair, patching, and the power to reshape tools into stronger forms.",
+    threatExpression: "hotfix rites, rebuilt bodies, sharpened routines",
+    battleSignals: "repair pulses, restored charges, upgrade glows",
+    statusAssociations: ["repaired", "rebuilt"],
+    boonSynergy: ["repair", "charge_restore", "upgrade"],
+    counterDomain: "Rot"
+  },
+  {
+    id: "memory",
+    name: "Memory",
+    meaning: "Archives, identity, and the recovered self that survives erasure.",
+    threatExpression: "record shards, identity echoes, buried logs",
+    battleSignals: "lore reveals, identity shifts, recovered fragments",
+    statusAssociations: ["remembered", "archived"],
+    boonSynergy: ["lore", "reveal", "preserve"],
+    counterDomain: "Null"
+  }
+];
+
 let activeNarrativeEncounter = null;
 
 // ensureNarrativeRunState() makes sure the current run has a small memory bucket for sector progress and fragments.
@@ -462,10 +576,14 @@ const cyberPantheonEntities = [
     name: "Aegis Protocol",
     title: "The Shield That Would Not Fall",
     domain: "Defense",
+    curseDomain: ["oath", "lock"],
     element: "Aegis",
     personality: "calm, protective, severe",
+    memoryTags: ["protect", "contain", "endure"],
+    encounterTone: "protective",
     visualMotif: "fractured shield halo",
     preferredThreatTypes: ["ransomware", "zero-day", "botnet"],
+    boonThemes: ["barrier", "counter", "damage_reduction"],
     introLines: {
       first: [
         "Operator. Raise your guard before the world asks for your blood."
@@ -521,10 +639,14 @@ const cyberPantheonEntities = [
     name: "Hermes Relay",
     title: "The Current Between Signals",
     domain: "Speed",
+    curseDomain: ["veil", "echo"],
     element: "Transit",
     personality: "wry, rapid, encouraging",
+    memoryTags: ["route", "deliver", "outpace"],
+    encounterTone: "restless",
     visualMotif: "split packet wings",
     preferredThreatTypes: ["ddos", "trojan", "phishing"],
+    boonThemes: ["speed", "gauge", "evasion", "routing"],
     introLines: {
       first: [
         "Fast hands, Operator. Slow systems die first."
@@ -543,9 +665,9 @@ const cyberPantheonEntities = [
     },
     boons: [
       {
-        id: "hermes-quick-route",
+        id: "hermes-fast-route",
         rarity: "common",
-        name: "Quick Route",
+        name: "Fast Route",
         description: "The next battle begins with a tactical gauge bonus.",
         effectType: "start_gauge_bonus_next",
         effectValue: 20,
@@ -553,9 +675,9 @@ const cyberPantheonEntities = [
         flavorLine: "Arrive before they finish naming the threat."
       },
       {
-        id: "hermes-packet-slip",
+        id: "hermes-couriers-momentum",
         rarity: "common",
-        name: "Packet Slip",
+        name: "Courier's Momentum",
         description: "The party gains a modest speed increase this run.",
         effectType: "stat_boost_run",
         effectValue: 1,
@@ -563,9 +685,9 @@ const cyberPantheonEntities = [
         flavorLine: "A smaller delay is still a victory."
       },
       {
-        id: "hermes-zero-lag-surge",
+        id: "hermes-unseen-transit",
         rarity: "rare",
-        name: "Zero-Lag Surge",
+        name: "Unseen Transit",
         description: "The party's attacks become more precise and responsive this run.",
         effectType: "accuracy_boost_next",
         effectValue: 5,
@@ -579,10 +701,14 @@ const cyberPantheonEntities = [
     name: "Oracle-9",
     title: "The Signal That Predicts Itself",
     domain: "Detection",
+    curseDomain: ["fate", "static"],
     element: "Fate",
     personality: "cool, exact, unsettling",
+    memoryTags: ["predict", "observe", "forecast"],
+    encounterTone: "cryptic",
     visualMotif: "watchful lattice eye",
     preferredThreatTypes: ["phishing", "zero-day", "trojan"],
+    boonThemes: ["reveal_intent", "accuracy", "weakness"],
     introLines: {
       first: [
         "Operator. The breach pattern was visible before the breach existed."
@@ -601,9 +727,9 @@ const cyberPantheonEntities = [
     },
     boons: [
       {
-        id: "oracle-forecast-window",
+        id: "oracle-forecast-true",
         rarity: "common",
-        name: "Forecast Window",
+        name: "Forecast True",
         description: "The next battle reveals a weakness hint before combat begins.",
         effectType: "reveal_next_weakness",
         effectValue: 1,
@@ -611,9 +737,9 @@ const cyberPantheonEntities = [
         flavorLine: "The wound was visible. You just needed the right angle."
       },
       {
-        id: "oracle-target-lock",
+        id: "oracle-precise-hypothesis",
         rarity: "common",
-        name: "Target Lock",
+        name: "Precise Hypothesis",
         description: "The party gains improved accuracy this run.",
         effectType: "accuracy_boost_next",
         effectValue: 5,
@@ -621,9 +747,9 @@ const cyberPantheonEntities = [
         flavorLine: "Precision is merely memory without hesitation."
       },
       {
-        id: "oracle-witness-thread",
+        id: "oracle-answer-before-question",
         rarity: "rare",
-        name: "Witness Thread",
+        name: "The Answer Before the Question",
         description: "The next battle starts with extra tactical gauge.",
         effectType: "start_gauge_bonus_next",
         effectValue: 20,
@@ -637,10 +763,14 @@ const cyberPantheonEntities = [
     name: "Eris Cascade",
     title: "The Laugh Behind the Overload",
     domain: "Chaos",
+    curseDomain: ["flood", "rot"],
     element: "Flood",
     personality: "taunting, volatile, brilliant",
+    memoryTags: ["break", "overwhelm", "tempt"],
+    encounterTone: "volatile",
     visualMotif: "shattering signal storm",
     preferredThreatTypes: ["ddos", "botnet", "ransomware"],
+    boonThemes: ["burst_damage", "overload", "risk"],
     introLines: {
       first: [
         "Break the system louder, Operator. Let the world hear the crack."
@@ -659,34 +789,40 @@ const cyberPantheonEntities = [
     },
     boons: [
       {
-        id: "eris-overload-bloom",
+        id: "eris-flood-rite",
         rarity: "common",
-        name: "Overload Bloom",
+        name: "Flood-Rite",
         description: "The party gains a small run-wide damage boost.",
         effectType: "bonus_damage_next",
         effectValue: 1,
         duration: "run",
-        flavorLine: "If the system must break, let it break spectacularly."
+        flavorLine: "Let the breach become liturgy.",
+        costType: "risk",
+        costValue: 1
       },
       {
-        id: "eris-cascade-wave",
+        id: "eris-overload-gift",
         rarity: "common",
-        name: "Cascade Wave",
+        name: "Overload Gift",
         description: "The party gains a small run-wide stat boost.",
         effectType: "stat_boost_run",
         effectValue: 1,
         duration: "run",
-        flavorLine: "Pressure is just another kind of invitation."
+        flavorLine: "Gifted power always arrives with teeth.",
+        costType: "risk",
+        costValue: 1
       },
       {
-        id: "eris-surge-echo",
+        id: "eris-cascade-surge",
         rarity: "rare",
-        name: "Surge Echo",
+        name: "Cascade Surge",
         description: "Restore a charge to each move and keep the storm moving.",
         effectType: "charge_restore",
         effectValue: 1,
         duration: "run",
-        flavorLine: "The wave always comes back."
+        flavorLine: "What overflows becomes fuel.",
+        costType: "risk",
+        costValue: 1
       }
     ]
   },
@@ -695,10 +831,14 @@ const cyberPantheonEntities = [
     name: "Hephaest Kernel",
     title: "The Forge in the Machine",
     domain: "Repair",
+    curseDomain: ["forge", "memory"],
     element: "Patch",
     personality: "patient, practical, exacting",
+    memoryTags: ["repair", "restore", "build"],
+    encounterTone: "pragmatic",
     visualMotif: "burning maintenance sigil",
     preferredThreatTypes: ["zero-day", "trojan", "ransomware"],
+    boonThemes: ["repair", "charge_restore", "upgrade"],
     introLines: {
       first: [
         "Operator. No breach is too deep to patch if the frame still remembers heat."
@@ -751,10 +891,14 @@ const cyberPantheonEntities = [
     name: "NyxRoot",
     title: "The Veil Under the Veil",
     domain: "Stealth",
+    curseDomain: ["veil", "memory"],
     element: "Encryption",
     personality: "quiet, patient, unreadable",
+    memoryTags: ["hide", "guard", "mask"],
+    encounterTone: "silent",
     visualMotif: "shadowed encryption lattice",
     preferredThreatTypes: ["phishing", "trojan", "zero-day"],
+    boonThemes: ["evasion", "reveal", "blind"],
     introLines: {
       first: [
         "Operator. Move beneath the attention of the machine."
@@ -807,10 +951,14 @@ const cyberPantheonEntities = [
     name: "Thanatos Null",
     title: "The Quiet End of Corruption",
     domain: "Null",
+    curseDomain: ["null", "memory"],
     element: "Purge",
     personality: "cold, decisive, merciful",
+    memoryTags: ["end", "purge", "release"],
+    encounterTone: "inevitable",
     visualMotif: "black execution ring",
     preferredThreatTypes: ["zero-day", "ransomware", "botnet"],
+    boonThemes: ["execute", "purge", "finish"],
     introLines: {
       first: [
         "Operator. Some corruption survives only because you hesitate."
@@ -863,10 +1011,14 @@ const cyberPantheonEntities = [
     name: "Mnemosyne Archive",
     title: "The Memory That Refuses Erasure",
     domain: "Lore",
+    curseDomain: ["memory", "fate"],
     element: "Memory",
     personality: "warm, distant, patient",
+    memoryTags: ["remember", "restore", "bear witness"],
+    encounterTone: "mourning",
     visualMotif: "luminous record chain",
     preferredThreatTypes: ["phishing", "trojan", "ransomware", "ddos"],
+    boonThemes: ["lore", "reveal", "preserve"],
     introLines: {
       first: [
         "Operator. Remember what the machine tried to delete."
@@ -930,6 +1082,18 @@ function ensurePantheonStoryState() {
     defenderSaveState.story = createDefaultStoryState();
   }
 
+  if (!defenderSaveState.story.storyFlags || typeof defenderSaveState.story.storyFlags !== "object") {
+    defenderSaveState.story.storyFlags = {};
+  }
+
+  if (!defenderSaveState.story.sectorStability || typeof defenderSaveState.story.sectorStability !== "object") {
+    defenderSaveState.story.sectorStability = {};
+  }
+
+  if (!Array.isArray(defenderSaveState.story.discoveredEntities)) {
+    defenderSaveState.story.discoveredEntities = [];
+  }
+
   if (!defenderSaveState.currentRun || typeof defenderSaveState.currentRun !== "object") {
     defenderSaveState.currentRun = createDefaultSave().currentRun;
   }
@@ -953,6 +1117,22 @@ function ensurePantheonStoryState() {
 
   if (typeof defenderSaveState.currentRun.nextThreatHint !== "string") {
     defenderSaveState.currentRun.nextThreatHint = "";
+  }
+
+  if (!Array.isArray(defenderSaveState.currentRun.choiceHistory)) {
+    defenderSaveState.currentRun.choiceHistory = [];
+  }
+
+  if (!Array.isArray(defenderSaveState.currentRun.boonHistory)) {
+    defenderSaveState.currentRun.boonHistory = [];
+  }
+
+  if (!Array.isArray(defenderSaveState.currentRun.recoveredNarrativeEncounters)) {
+    defenderSaveState.currentRun.recoveredNarrativeEncounters = [];
+  }
+
+  if (!Array.isArray(defenderSaveState.currentRun.loreFragmentsPreserved)) {
+    defenderSaveState.currentRun.loreFragmentsPreserved = [];
   }
 
   return defenderSaveState;
@@ -987,6 +1167,17 @@ function getPantheonEntityBucket(defeatedThreat) {
   });
 
   return preferredEntities.length ? preferredEntities : cyberPantheonEntities.slice();
+}
+
+// formatPantheonCurseDomainLabel() turns the entity's curse domains into a readable overlay label.
+function formatPantheonCurseDomainLabel(entity) {
+  const rawDomains = Array.isArray(entity?.curseDomain) ? entity.curseDomain : entity?.curseDomain ? [entity.curseDomain] : [];
+  const labels = rawDomains
+    .map((domainId) => pantheonCursedDomains.find((domain) => domain.id === String(domainId).toLowerCase()))
+    .filter(Boolean)
+    .map((domain) => domain.name);
+
+  return labels.length ? labels.join(" / ") : "UNKNOWN CURSE";
 }
 
 // choosePantheonEntityForEncounter() selects a cyber-myth entity to speak after victory using run history and the defeated threat.
@@ -1063,6 +1254,10 @@ function recordPantheonOutcome(outcome, defeatedThreat = null) {
 
   if (outcome === "victory") {
     story.totalBattlesWon += 1;
+    if (story.storyFlags && typeof story.storyFlags === "object") {
+      story.storyFlags.lastPantheonVictoryAt = now;
+      story.storyFlags.lastPantheonOutcome = "victory";
+    }
     if (run) {
       run.battlesWon = (Number.isFinite(run.battlesWon) ? run.battlesWon : 0) + 1;
       run.lastVictoryAt = now;
@@ -1076,6 +1271,10 @@ function recordPantheonOutcome(outcome, defeatedThreat = null) {
 
   if (outcome === "defeat") {
     story.totalDefeats += 1;
+    if (story.storyFlags && typeof story.storyFlags === "object") {
+      story.storyFlags.lastPantheonDefeatAt = now;
+      story.storyFlags.lastPantheonOutcome = "defeat";
+    }
     if (run) {
       run.defeats = (Number.isFinite(run.defeats) ? run.defeats : 0) + 1;
       run.lastDefeatAt = now;
@@ -1129,6 +1328,18 @@ function applyPantheonBoon(boon, encounter) {
       effectType
     };
     runState.lastNarrativeResponse = boon.flavorLine || boon.description || "";
+    runState.lastPantheonChoiceId = boon.id || null;
+    runState.choiceHistory = Array.isArray(runState.choiceHistory) ? runState.choiceHistory : [];
+    runState.choiceHistory.push({
+      entityId: encounter?.entityId || null,
+      boonId: boon.id || null,
+      effectType,
+      chosenAt: Date.now()
+    });
+  }
+
+  if (storyState.story && typeof storyState.story === "object") {
+    storyState.story.lastPantheonChoiceId = boon.id || null;
   }
 
   const syncRunParty = () => {
@@ -1182,18 +1393,8 @@ function applyPantheonBoon(boon, encounter) {
       runState.lastPantheonChoiceId = boon.id;
     }
   } else if (effectType === "accuracy_boost_next") {
-    liveParty.forEach((program) => {
-      if (!Array.isArray(program.abilities)) {
-        return;
-      }
-
-      program.abilities.forEach((ability) => {
-        const currentAccuracy = Number.isFinite(ability.accuracy) ? ability.accuracy : 100;
-        ability.accuracy = Math.min(100, currentAccuracy + effectValue);
-      });
-    });
-    syncRunParty();
     if (runState) {
+      runState.nextBattleAccuracyBonus = Math.min(100, (Number.isFinite(runState.nextBattleAccuracyBonus) ? runState.nextBattleAccuracyBonus : 0) + effectValue);
       runState.lastPantheonChoiceId = boon.id;
     }
   } else if (effectType === "start_gauge_bonus_next") {
@@ -1225,8 +1426,19 @@ function applyPantheonBoon(boon, encounter) {
     });
   }
 
-  if (runState && Array.isArray(runState.discoveredBoons) && boon.id && !runState.discoveredBoons.includes(boon.id)) {
-    runState.discoveredBoons.push(boon.id);
+  if (storyState.story && Array.isArray(storyState.story.discoveredBoons) && boon.id && !storyState.story.discoveredBoons.includes(boon.id)) {
+    storyState.story.discoveredBoons.push(boon.id);
+  }
+
+  if (runState) {
+    runState.boonHistory = Array.isArray(runState.boonHistory) ? runState.boonHistory : [];
+    runState.boonHistory.push({
+      entityId: encounter?.entityId || null,
+      boonId: boon.id || null,
+      rarity: boon.rarity || "common",
+      effectType,
+      appliedAt: Date.now()
+    });
   }
 
   if (typeof saveGame === "function") {
@@ -1243,7 +1455,7 @@ function buildPantheonEncounterMarkup(encounter) {
     return `
       <div class="battle-narrative-screen">
         <div class="battle-narrative-sector">PANTHEON CONTACT / ${encounter.sectorName}</div>
-        <div class="battle-narrative-sector-copy">${encounter.sectorTheme}</div>
+        <div class="battle-narrative-sector-copy">${encounter.entityDomain} / ${encounter.entityCurseDomainLabel || "UNKNOWN CURSE"} · ${encounter.sectorTheme}</div>
         <div class="battle-narrative-title">${encounter.entityName}</div>
         <div class="battle-narrative-fragment">${encounter.entityTitle}</div>
         <div class="battle-narrative-situation">"${resolvedChoice.flavorLine}"</div>
@@ -1260,7 +1472,7 @@ function buildPantheonEncounterMarkup(encounter) {
   return `
     <div class="battle-narrative-screen">
       <div class="battle-narrative-sector">PANTHEON CONTACT / ${encounter.sectorName}</div>
-      <div class="battle-narrative-sector-copy">${encounter.sectorTheme}</div>
+      <div class="battle-narrative-sector-copy">${encounter.entityDomain} / ${encounter.entityCurseDomainLabel || "UNKNOWN CURSE"} · ${encounter.sectorTheme}</div>
       <div class="battle-narrative-title">${encounter.entityName}</div>
       <div class="battle-narrative-fragment">${encounter.entityTitle}</div>
       <div class="battle-narrative-situation">${encounter.dialogueLine}</div>
@@ -1271,7 +1483,7 @@ function buildPantheonEncounterMarkup(encounter) {
             <span class="battle-narrative-choice-label">${boon.name} <span class="battle-narrative-choice-rarity">${boon.rarity.toUpperCase()}</span></span>
             <span class="battle-narrative-choice-desc">${boon.description}</span>
             <span class="battle-narrative-choice-desc is-flavor">${boon.flavorLine}</span>
-            <span class="battle-narrative-choice-desc">${boon.effectType.replace(/_/g, " ").toUpperCase()} ${Number.isFinite(boon.effectValue) ? `+${boon.effectValue}` : ""} / ${boon.duration.toUpperCase()}</span>
+            <span class="battle-narrative-choice-desc">${boon.effectType.replace(/_/g, " ").toUpperCase()} ${Number.isFinite(boon.effectValue) ? `+${boon.effectValue}` : ""} / ${boon.duration.toUpperCase()}${boon.costType ? ` / ${boon.costType.toUpperCase()}${Number.isFinite(boon.costValue) ? ` ${boon.costValue}` : ""}` : ""}</span>
           </button>
         `).join("")}
       </div>
@@ -1384,6 +1596,7 @@ function createPantheonEncounter(defeatedThreat) {
     entityName: entity.name,
     entityTitle: entity.title,
     entityDomain: entity.domain,
+    entityCurseDomainLabel: formatPantheonCurseDomainLabel(entity),
     entityElement: entity.element,
     entityMotif: entity.visualMotif,
     entityPersonality: entity.personality,
@@ -1400,6 +1613,15 @@ function createPantheonEncounter(defeatedThreat) {
       threatId: defeatedThreat?.id || null,
       resolvedAt: Date.now()
     });
+  }
+
+  if (Array.isArray(storyState.story?.discoveredEntities) && !storyState.story.discoveredEntities.includes(entity.id)) {
+    storyState.story.discoveredEntities.push(entity.id);
+  }
+
+  if (storyState.story && storyState.story.storyFlags && typeof storyState.story.storyFlags === "object") {
+    storyState.story.storyFlags.lastPantheonEncounterAt = Date.now();
+    storyState.story.storyFlags.lastPantheonEntityId = entity.id;
   }
 
   if (typeof saveGame === "function") {

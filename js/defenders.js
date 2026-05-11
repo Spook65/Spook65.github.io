@@ -653,8 +653,11 @@ function createDefaultStoryState() {
     lastPantheonChoiceId: null,
     lastPantheonDialogue: "",
     lastDefeatLine: "",
+    storyFlags: {},
+    sectorStability: {},
     unlockedFragments: [],
-    discoveredBoons: []
+    discoveredBoons: [],
+    discoveredEntities: []
   };
 }
 
@@ -672,8 +675,11 @@ function normalizeStoryState(sourceStory) {
     lastPantheonChoiceId: typeof source.lastPantheonChoiceId === "string" ? source.lastPantheonChoiceId : fallback.lastPantheonChoiceId,
     lastPantheonDialogue: typeof source.lastPantheonDialogue === "string" ? source.lastPantheonDialogue : fallback.lastPantheonDialogue,
     lastDefeatLine: typeof source.lastDefeatLine === "string" ? source.lastDefeatLine : fallback.lastDefeatLine,
+    storyFlags: source.storyFlags && typeof source.storyFlags === "object" ? { ...source.storyFlags } : { ...fallback.storyFlags },
+    sectorStability: source.sectorStability && typeof source.sectorStability === "object" ? { ...source.sectorStability } : { ...fallback.sectorStability },
     unlockedFragments: Array.isArray(source.unlockedFragments) ? source.unlockedFragments.slice() : fallback.unlockedFragments.slice(),
-    discoveredBoons: Array.isArray(source.discoveredBoons) ? source.discoveredBoons.slice() : fallback.discoveredBoons.slice()
+    discoveredBoons: Array.isArray(source.discoveredBoons) ? source.discoveredBoons.slice() : fallback.discoveredBoons.slice(),
+    discoveredEntities: Array.isArray(source.discoveredEntities) ? source.discoveredEntities.slice() : fallback.discoveredEntities.slice()
   };
 }
 
@@ -702,7 +708,23 @@ function createDefaultSave() {
       starterLoadoutIds: starterIds.slice(),
       clearedThreatIds: [],
       capturedThreatIds: [],
-      discoveredVariants: []
+      discoveredVariants: [],
+      pantheonHistory: {
+        entityId: null,
+        choiceId: null,
+        outcome: null,
+        effectType: null
+      },
+      recoveredNarrativeEncounters: [],
+      loreFragmentsPreserved: [],
+      nextBattleGaugeBonus: 0,
+      nextBattleAccuracyBonus: 0,
+      nextThreatHint: "",
+      lastPantheonChoiceId: null,
+      lastPantheonDialogue: "",
+      lastDefeatLine: "",
+      choiceHistory: [],
+      boonHistory: []
     },
     collection: {
       recruitedThreats: [],
@@ -779,7 +801,20 @@ function normalizeDefenderSave(saveData) {
       starterLoadoutIds: Array.isArray(currentRunSource.starterLoadoutIds) ? currentRunSource.starterLoadoutIds.slice() : starterIds.slice(),
       clearedThreatIds: Array.isArray(currentRunSource.clearedThreatIds) ? currentRunSource.clearedThreatIds.slice() : fallback.currentRun.clearedThreatIds.slice(),
       capturedThreatIds: Array.isArray(currentRunSource.capturedThreatIds) ? currentRunSource.capturedThreatIds.slice() : fallback.currentRun.capturedThreatIds.slice(),
-      discoveredVariants: Array.isArray(currentRunSource.discoveredVariants) ? currentRunSource.discoveredVariants.slice() : fallback.currentRun.discoveredVariants.slice()
+      discoveredVariants: Array.isArray(currentRunSource.discoveredVariants) ? currentRunSource.discoveredVariants.slice() : fallback.currentRun.discoveredVariants.slice(),
+      pantheonHistory: currentRunSource.pantheonHistory && typeof currentRunSource.pantheonHistory === "object"
+        ? { ...fallback.currentRun.pantheonHistory, ...currentRunSource.pantheonHistory }
+        : { ...fallback.currentRun.pantheonHistory },
+      recoveredNarrativeEncounters: Array.isArray(currentRunSource.recoveredNarrativeEncounters) ? currentRunSource.recoveredNarrativeEncounters.slice() : fallback.currentRun.recoveredNarrativeEncounters.slice(),
+      loreFragmentsPreserved: Array.isArray(currentRunSource.loreFragmentsPreserved) ? currentRunSource.loreFragmentsPreserved.slice() : fallback.currentRun.loreFragmentsPreserved.slice(),
+      nextBattleGaugeBonus: Number.isFinite(currentRunSource.nextBattleGaugeBonus) ? currentRunSource.nextBattleGaugeBonus : fallback.currentRun.nextBattleGaugeBonus,
+      nextBattleAccuracyBonus: Number.isFinite(currentRunSource.nextBattleAccuracyBonus) ? currentRunSource.nextBattleAccuracyBonus : fallback.currentRun.nextBattleAccuracyBonus,
+      nextThreatHint: typeof currentRunSource.nextThreatHint === "string" ? currentRunSource.nextThreatHint : fallback.currentRun.nextThreatHint,
+      lastPantheonChoiceId: typeof currentRunSource.lastPantheonChoiceId === "string" ? currentRunSource.lastPantheonChoiceId : fallback.currentRun.lastPantheonChoiceId,
+      lastPantheonDialogue: typeof currentRunSource.lastPantheonDialogue === "string" ? currentRunSource.lastPantheonDialogue : fallback.currentRun.lastPantheonDialogue,
+      lastDefeatLine: typeof currentRunSource.lastDefeatLine === "string" ? currentRunSource.lastDefeatLine : fallback.currentRun.lastDefeatLine,
+      choiceHistory: Array.isArray(currentRunSource.choiceHistory) ? currentRunSource.choiceHistory.slice() : fallback.currentRun.choiceHistory.slice(),
+      boonHistory: Array.isArray(currentRunSource.boonHistory) ? currentRunSource.boonHistory.slice() : fallback.currentRun.boonHistory.slice()
     },
     collection: {
       recruitedThreats: Array.isArray(collectionSource.recruitedThreats) ? collectionSource.recruitedThreats.slice() : fallback.collection.recruitedThreats.slice(),
@@ -937,9 +972,22 @@ function markDefenderRunStarted() {
     clearedThreatIds: [],
     capturedThreatIds: [],
     discoveredVariants: [],
+    pantheonHistory: {
+      entityId: null,
+      choiceId: null,
+      outcome: null,
+      effectType: null
+    },
+    recoveredNarrativeEncounters: [],
+    loreFragmentsPreserved: [],
     nextBattleGaugeBonus: 0,
     nextBattleAccuracyBonus: 0,
-    nextThreatHint: ""
+    nextThreatHint: "",
+    lastPantheonChoiceId: null,
+    lastPantheonDialogue: "",
+    lastDefeatLine: "",
+    choiceHistory: [],
+    boonHistory: []
   };
   saveGame();
 }
