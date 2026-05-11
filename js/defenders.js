@@ -43,57 +43,57 @@ const defenderCatalog = [
         category: "support",
         charges: 15,
         maxCharges: 15,
-        power: 0,
+        power: 35,
         accuracy: 100,
         cost: 0,
         effect: "reduce_next_damage",
-        description: "Raises defensive posture and reduces incoming damage."
+        description: "Raises defensive posture and steadies the front line."
       },
       {
         id: "harden-ports",
         name: "Harden Ports",
         domain: "Defense",
         category: "support",
-        charges: 10,
-        maxCharges: 10,
-        power: 12,
-        accuracy: 100,
-        cost: 1,
-        effect: "boost_def",
-        description: "Fortifies the chassis and raises defense for the next exchange."
-      },
-      {
-        id: "allocate-bandwidth",
-        name: "Allocate Bandwidth",
-        domain: "Defense",
-        category: "support",
         charges: 6,
         maxCharges: 6,
-        power: 20,
-        accuracy: 95,
+        power: 65,
+        accuracy: 85,
+        cost: 1,
+        effect: "boost_def",
+        description: "Fortifies the chassis and counter-pressures the next exchange."
+      },
+      {
+        id: "mirror-shell",
+        name: "Mirror Shell",
+        domain: "Defense",
+        category: "special",
+        charges: 1,
+        maxCharges: 1,
+        power: 90,
+        accuracy: 20,
         cost: 2,
-        effect: "shared_ability",
-        description: "Redirects reinforcement bandwidth into a sturdy team-wide shield."
+        effect: "mirror_shell_burst",
+        description: "A desperate reflective burst that can shatter pressure or fizzle out."
       }
     ],
     abilities: buildCombatAbilities([
       {
         name: "Block Network",
         cost: 0,
-        baseDamage: 0,
+        baseDamage: 35,
         effect: "reduce_next_damage"
       },
       {
         name: "Harden Ports",
         cost: 1,
-        baseDamage: 12,
+        baseDamage: 65,
         effect: "boost_def"
       },
       {
-        name: "Allocate Bandwidth",
+        name: "Mirror Shell",
         cost: 2,
-        baseDamage: 20,
-        effect: "shared_ability"
+        baseDamage: 90,
+        effect: "mirror_shell_burst"
       }
     ])
   },
@@ -136,7 +136,7 @@ const defenderCatalog = [
         category: "special",
         charges: 15,
         maxCharges: 15,
-        power: 16,
+        power: 35,
         accuracy: 100,
         cost: 0,
         effect: "status_detected",
@@ -147,46 +147,46 @@ const defenderCatalog = [
         name: "Signature Burst",
         domain: "Detection",
         category: "special",
-        charges: 10,
-        maxCharges: 10,
-        power: 24,
-        accuracy: 95,
+        charges: 6,
+        maxCharges: 6,
+        power: 65,
+        accuracy: 85,
         cost: 1,
         effect: "status_detected",
         description: "Launches a focused signature strike at the target's core."
       },
       {
-        id: "quarantine-relay",
-        name: "Quarantine Relay",
+        id: "trace-route",
+        name: "Trace Route",
         domain: "Detection",
-        category: "support",
-        charges: 6,
-        maxCharges: 6,
-        power: 28,
-        accuracy: 90,
+        category: "special",
+        charges: 1,
+        maxCharges: 1,
+        power: 90,
+        accuracy: 20,
         cost: 2,
-        effect: "shared_ability",
-        description: "Relays threat data into a temporary containment grid."
+        effect: "trace_route_burst",
+        description: "A reckless exploit strike that either lands hard or evaporates."
       }
     ],
     abilities: buildCombatAbilities([
       {
         name: "Deep Packet Scan",
         cost: 0,
-        baseDamage: 16,
+        baseDamage: 35,
         effect: "status_detected"
       },
       {
         name: "Signature Burst",
         cost: 1,
-        baseDamage: 24,
+        baseDamage: 65,
         effect: "status_detected"
       },
       {
-        name: "Quarantine Relay",
+        name: "Trace Route",
         cost: 2,
-        baseDamage: 28,
-        effect: "shared_ability"
+        baseDamage: 90,
+        effect: "trace_route_burst"
       }
     ])
   },
@@ -229,7 +229,7 @@ const defenderCatalog = [
         category: "support",
         charges: 15,
         maxCharges: 15,
-        power: 12,
+        power: 0,
         accuracy: 100,
         cost: 0,
         effect: "status_isolated",
@@ -240,45 +240,45 @@ const defenderCatalog = [
         name: "Decoy Mesh",
         domain: "Illusion",
         category: "support",
-        charges: 10,
-        maxCharges: 10,
-        power: 18,
-        accuracy: 95,
+        charges: 6,
+        maxCharges: 6,
+        power: 65,
+        accuracy: 85,
         cost: 1,
         effect: "boost_def",
         description: "Projects layered decoys that make targeting uncertain."
       },
       {
-        id: "sandtrap",
-        name: "Sandtrap",
+        id: "false-positive",
+        name: "False Positive",
         domain: "Illusion",
         category: "special",
-        charges: 6,
-        maxCharges: 6,
-        power: 24,
-        accuracy: 90,
+        charges: 1,
+        maxCharges: 1,
+        power: 90,
+        accuracy: 20,
         cost: 2,
         effect: "status_isolated",
-        description: "Snaps the target into a false position and punishes movement."
+        description: "A risky trap detonation that can punish a target in one sharp snap."
       }
     ],
     abilities: buildCombatAbilities([
       {
         name: "Lure Traffic",
         cost: 0,
-        baseDamage: 12,
+        baseDamage: 0,
         effect: "status_isolated"
       },
       {
         name: "Decoy Mesh",
         cost: 1,
-        baseDamage: 18,
+        baseDamage: 65,
         effect: "boost_def"
       },
       {
-        name: "Sandtrap",
+        name: "False Positive",
         cost: 2,
-        baseDamage: 24,
+        baseDamage: 90,
         effect: "status_isolated"
       }
     ])
@@ -322,7 +322,7 @@ const defenderCatalog = [
         category: "physical",
         charges: 15,
         maxCharges: 15,
-        power: 16,
+        power: 35,
         accuracy: 100,
         cost: 0,
         effect: "cleanse",
@@ -333,10 +333,10 @@ const defenderCatalog = [
         name: "Rapid Scan",
         domain: "Purity",
         category: "special",
-        charges: 10,
-        maxCharges: 10,
-        power: 22,
-        accuracy: 95,
+        charges: 6,
+        maxCharges: 6,
+        power: 65,
+        accuracy: 85,
         cost: 1,
         effect: "status_detected",
         description: "Rapidly identifies anomalies and forces them into the light."
@@ -346,32 +346,32 @@ const defenderCatalog = [
         name: "Kernel Purge",
         domain: "Purity",
         category: "physical",
-        charges: 6,
-        maxCharges: 6,
-        power: 30,
-        accuracy: 90,
+        charges: 1,
+        maxCharges: 1,
+        power: 90,
+        accuracy: 20,
         cost: 2,
         effect: "cleanse",
-        description: "Delivers a decisive purge that strips corruption from the core."
+        description: "Delivers a desperate purge blast that strips corruption from the core."
       }
     ],
     abilities: buildCombatAbilities([
       {
         name: "Signature Sweep",
         cost: 0,
-        baseDamage: 16,
+        baseDamage: 35,
         effect: "cleanse"
       },
       {
         name: "Rapid Scan",
         cost: 1,
-        baseDamage: 22,
+        baseDamage: 65,
         effect: "status_detected"
       },
       {
         name: "Kernel Purge",
         cost: 2,
-        baseDamage: 30,
+        baseDamage: 90,
         effect: "cleanse"
       }
     ])
