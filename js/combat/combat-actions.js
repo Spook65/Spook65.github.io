@@ -775,16 +775,21 @@ class ThreatCombat {
     this.state.visualEffect = null;
 
     if (outcome === "victory") {
-      this.state.phase = "reward";
+      this.state.phase = "narrative";
       this.state.sourceThreat.status = "neutralized";
       this.state.sourceThreat.hp = this.state.sourceThreat.maxHp;
       threatsNeutralized += 1;
       addScore(100);
       globe.removeThreatNode(this.state.sourceThreat.id);
       globe.updateActiveCount();
-      const rewardLines = awardBattleRewards(this.state.threat);
-      addBattleLog(`${this.state.sourceThreat.title.toUpperCase()} NEUTRALIZED. REWARD PACKAGE ISSUED.`, "buff");
-      showCombatReward(rewardLines);
+      addBattleLog(`${this.state.sourceThreat.title.toUpperCase()} NEUTRALIZED. RECOVERING NARRATIVE FRAGMENT.`, "buff");
+
+      try {
+        showPostBattleNarrativeEncounter(this.state.sourceThreat);
+      } catch (error) {
+        console.error("[Narrative] Unexpected victory overlay failure, returning to globe.", error);
+        returnToGlobeFromCombat();
+      }
       return;
     }
 

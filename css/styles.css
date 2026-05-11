@@ -6929,6 +6929,165 @@ body {
   visibility: visible;
 }
 
+/* Phase 3B replaces the old reward card with a grounded sector narrative overlay. */
+.battle-narrative-screen {
+  display: grid;
+  gap: 12px;
+  padding: 18px 18px 20px;
+  border: 1px solid rgba(0, 204, 255, 0.16);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(242, 239, 227, 0.06), transparent 22%),
+    linear-gradient(180deg, rgba(6, 8, 13, 0.98), rgba(3, 5, 9, 0.98));
+  color: var(--menu-text);
+}
+
+.battle-narrative-sector {
+  color: rgba(0, 204, 255, 0.8);
+  font-size: 0.56rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.battle-narrative-sector-copy {
+  color: rgba(244, 239, 227, 0.65);
+  font-size: 0.54rem;
+  letter-spacing: 0.1em;
+  line-height: 1.45;
+  text-transform: uppercase;
+}
+
+.battle-narrative-title {
+  color: #f4efe3;
+  font-size: clamp(1.05rem, 2vw, 1.5rem);
+  letter-spacing: 0.08em;
+  line-height: 1.15;
+  text-transform: uppercase;
+}
+
+.battle-narrative-fragment {
+  color: #f4efe3;
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+.battle-narrative-situation,
+.battle-narrative-viewpoint {
+  padding: 11px 12px;
+  border: 1px solid rgba(244, 239, 227, 0.1);
+  background: rgba(10, 12, 18, 0.8);
+  color: rgba(244, 239, 227, 0.82);
+  font-size: 0.68rem;
+  line-height: 1.45;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.battle-narrative-viewpoint {
+  border-color: rgba(255, 110, 74, 0.14);
+  color: rgba(255, 110, 74, 0.88);
+}
+
+.battle-narrative-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.battle-narrative-choice {
+  display: grid;
+  gap: 6px;
+  padding: 12px 13px;
+  border: 1px solid rgba(0, 204, 255, 0.15);
+  background: rgba(8, 10, 15, 0.9);
+  color: #f4efe3;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    transform 140ms ease,
+    border-color 140ms ease,
+    background-color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.battle-narrative-choice:hover,
+.battle-narrative-choice:focus-visible {
+  transform: translateY(-1px);
+  border-color: rgba(0, 204, 255, 0.34);
+  background: rgba(12, 15, 22, 0.96);
+  box-shadow: 0 0 0 1px rgba(0, 204, 255, 0.08), 0 0 18px rgba(0, 204, 255, 0.08);
+}
+
+.battle-narrative-choice-label {
+  color: #f4efe3;
+  font-size: 0.66rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.battle-narrative-choice-desc {
+  color: rgba(244, 239, 227, 0.7);
+  font-size: 0.56rem;
+  letter-spacing: 0.08em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.battle-narrative-response {
+  color: #f4efe3;
+  font-size: 0.82rem;
+  line-height: 1.55;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.battle-narrative-result {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 110, 74, 0.14);
+  background: rgba(10, 12, 18, 0.84);
+}
+
+.battle-narrative-result-label {
+  color: rgba(0, 204, 255, 0.74);
+  font-size: 0.52rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.battle-narrative-result-value {
+  color: #f4efe3;
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.battle-narrative-button {
+  justify-self: end;
+  padding: 10px 14px;
+  border: 1px solid rgba(0, 204, 255, 0.22);
+  background: rgba(4, 8, 14, 0.9);
+  color: #f4efe3;
+  font-size: 0.64rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.battle-narrative-button:hover,
+.battle-narrative-button:focus-visible {
+  border-color: rgba(0, 204, 255, 0.42);
+  box-shadow: 0 0 18px rgba(0, 204, 255, 0.1);
+}
+
+@media (max-width: 900px) {
+  .battle-narrative-choice-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Phase 3A keeps the battle command deck hidden until the Defender fully materializes. */
 .combat-shell.is-intro-playing .combat-command-box,
 .combat-command-box.is-intro-hidden {
