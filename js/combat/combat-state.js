@@ -161,6 +161,16 @@ function resetCombatState() {
   }
 }
 
+// resetBattleIntroState() initializes the summon-intro flags so each fresh battle starts with input locked.
+function resetBattleIntroState(state) {
+  return {
+    ...state,
+    battleIntroPlaying: true,
+    battleIntroStage: "deploy",
+    battleIntroComplete: false
+  };
+}
+
 // getThreatLevel() scales the encounter around the current party average so the run ramps naturally.
 function getThreatLevel() {
   const avgPartyLevel = Math.floor(programs.reduce((sum, program) => sum + program.level, 0) / 4);
@@ -286,7 +296,7 @@ function buildCombatState(sourceThreat) {
   const turnOrder = buildTurnOrder(playerParty, threat);
   const firstProgram = turnOrder.find((entry) => entry.kind === "program" && entry.ref.hp > 0);
 
-  return {
+  return resetBattleIntroState({
     sourceThreat,
     threat,
     playerParty,
@@ -301,9 +311,9 @@ function buildCombatState(sourceThreat) {
     actionLocked: false,
     commandMode: "main",
     outcome: "ongoing",
-    phase: "battle",
+    phase: "intro",
     nextDamageReduction: 0,
     nextCounterDamage: 0,
     encounterLevel
-  };
+  });
 }

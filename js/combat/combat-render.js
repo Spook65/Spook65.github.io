@@ -97,6 +97,22 @@ function buildBattleLogMarkup(state) {
 
 // getBattleMessageText() keeps the primary battle prompt readable even while the engine is animating a move.
 function getBattleMessageText(state) {
+  if (state.battleIntroPlaying) {
+    if (state.battleIntroStage === "launch") {
+      return "COMMAND DISC LAUNCHED.";
+    }
+
+    if (state.battleIntroStage === "flash") {
+      return "SUMMON GATE OPENING.";
+    }
+
+    if (state.battleIntroStage === "materialize") {
+      return "DEFENDER MATERIALIZING.";
+    }
+
+    return "DEPLOYING DEFENDER.";
+  }
+
   if (state.battleMessage) {
     return state.battleMessage;
   }
@@ -127,6 +143,22 @@ function getBattleMessageText(state) {
 
 // getBattleSubmessageText() keeps a smaller supporting line available for hit feedback and effect callouts.
 function getBattleSubmessageText(state) {
+  if (state.battleIntroPlaying) {
+    if (state.battleIntroStage === "launch") {
+      return "VECTOR LOCKED ON FIELD.";
+    }
+
+    if (state.battleIntroStage === "flash") {
+      return "LIGHT BURST STABILIZING.";
+    }
+
+    if (state.battleIntroStage === "materialize") {
+      return "BATTLE SYSTEMS ONLINE.";
+    }
+
+    return "COMMAND DISC ONLINE.";
+  }
+
   if (state.battleSubmessage) {
     return state.battleSubmessage;
   }
@@ -304,10 +336,12 @@ function buildProgramBattlefieldMarkup(program, state, isCurrentTurn) {
   const statusMarkup = renderStatusPills(program.statusEffects);
   const effect = state.visualEffect || {};
   const programClass = `program-${getProgramSpriteClass(program)}`;
+  const introClass = state.battleIntroPlaying ? `is-summoning is-stage-${state.battleIntroStage || "deploy"}` : "";
   const figureClass = [
     "combat-battler",
     "combat-battler-player",
     programClass,
+    introClass,
     isCurrentTurn ? "is-current" : "",
     effect.attackerKind === "program" && effect.attackerId === program.id ? `is-${effect.phase || "windup"}` : "",
     effect.targetKind === "program" && effect.targetId === program.id ? "is-hit" : "",
@@ -515,9 +549,12 @@ function buildActionButtonMarkup(state) {
 // buildCombatMarkup() turns the battle into a battlefield scene with one featured program and one featured threat.
 function buildCombatMarkup(state) {
   const currentProgram = getActiveBattleProgram(state);
+  const introStage = state.battleIntroStage || "deploy";
+  const introStageClass = `is-stage-${introStage}`;
+  const commandBoxClass = state.battleIntroPlaying ? "is-intro-hidden" : "is-intro-revealed";
 
   return `
-    <div class="combat-shell">
+    <div class="combat-shell ${state.battleIntroPlaying ? "is-intro-playing" : ""}">
       <header class="combat-header">
         <div class="combat-title-block">
           <div class="combat-panel-title">THREATGRID ARENA</div>
@@ -534,6 +571,15 @@ function buildCombatMarkup(state) {
       <section class="combat-stage">
         <div class="combat-floor-grid" aria-hidden="true"></div>
         <div class="combat-stage-glow" aria-hidden="true"></div>
+        ${state.battleIntroPlaying ? `
+          <div class="combat-summon-overlay ${introStageClass}" aria-hidden="true">
+            <div class="combat-summon-cue"></div>
+            <div class="combat-summon-disc"></div>
+            <div class="combat-summon-ring"></div>
+            <div class="combat-summon-glyph"></div>
+            <div class="combat-summon-flash"></div>
+          </div>
+        ` : ""}
         ${state.visualEffect && state.visualEffect.style === "beam" ? `
           <div class="combat-beam ${state.visualEffect.attackerKind === "program" ? "from-player" : "from-enemy"} ${state.visualEffect.phase === "impact" ? "is-impact" : ""}"></div>
         ` : ""}
@@ -558,11 +604,11 @@ function buildCombatMarkup(state) {
           <div class="combat-voice-box">
             <div class="combat-panel-title">TACTICAL BRIEF</div>
             <div id="battle-message" class="combat-voice-text">${getBattleMessageText(state)}</div>
-            <div id="battle-submessage" class="combat-voice-subtext">${getBattleSubmessageText(state)}</div>
-            <div id="battle-log" class="combat-history-strip">${buildBattleLogMarkup(state)}</div>
-          </div>
+          <div id="battle-submessage" class="combat-voice-subtext">${getBattleSubmessageText(state)}</div>
+          <div id="battle-log" class="combat-history-strip">${buildBattleLogMarkup(state)}</div>
+        </div>
 
-          <div class="combat-command-box">
+          <div class="combat-command-box ${commandBoxClass}">
             <div class="combat-panel-title">COMMAND DECK</div>
             ${buildActionButtonMarkup(state)}
             <div class="combat-gauge-wrap">

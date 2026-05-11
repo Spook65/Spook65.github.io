@@ -68,6 +68,80 @@ function showCombatScreen(state) {
   combatEngine.init();
 }
 
+// playBattleSummonIntro() runs the short Defender deployment sequence before battle input becomes available.
+function playBattleSummonIntro(engine) {
+  if (!engine || !engine.state) {
+    return;
+  }
+
+  const state = engine.state;
+  state.phase = "intro";
+  state.actionLocked = true;
+  state.battleIntroPlaying = true;
+  state.battleIntroComplete = false;
+  state.battleIntroStage = "deploy";
+  state.commandMode = "main";
+  state.battleMessage = "DEPLOYING DEFENDER.";
+  state.battleSubmessage = "COMMAND DISC ONLINE.";
+  state.visualEffect = null;
+  renderCombatScreen();
+
+  scheduleBattleStep(engine, () => {
+    if (!engine.state || engine.state.phase !== "intro") {
+      return;
+    }
+
+    engine.state.battleIntroStage = "launch";
+    engine.state.battleMessage = "COMMAND DISC LAUNCHED.";
+    engine.state.battleSubmessage = "VECTOR LOCKED ON FIELD.";
+    renderCombatScreen();
+  }, 240);
+
+  scheduleBattleStep(engine, () => {
+    if (!engine.state || engine.state.phase !== "intro") {
+      return;
+    }
+
+    engine.state.battleIntroStage = "flash";
+    engine.state.battleMessage = "SUMMON GATE OPENING.";
+    engine.state.battleSubmessage = "LIGHT BURST STABILIZING.";
+    renderCombatScreen();
+  }, 680);
+
+  scheduleBattleStep(engine, () => {
+    if (!engine.state || engine.state.phase !== "intro") {
+      return;
+    }
+
+    engine.state.battleIntroStage = "materialize";
+    engine.state.battleMessage = "DEFENDER MATERIALIZING.";
+    engine.state.battleSubmessage = "BATTLE SYSTEMS ONLINE.";
+    renderCombatScreen();
+  }, 1040);
+
+  scheduleBattleStep(engine, () => {
+    completeBattleSummonIntro(engine);
+  }, 1480);
+}
+
+// completeBattleSummonIntro() clears the intro lock and hands control back to the normal battle turn loop.
+function completeBattleSummonIntro(engine) {
+  if (!engine || !engine.state || engine.state.phase !== "intro") {
+    return;
+  }
+
+  engine.state.battleIntroStage = "complete";
+  engine.state.battleIntroPlaying = false;
+  engine.state.battleIntroComplete = true;
+  engine.state.phase = "battle";
+  engine.state.actionLocked = false;
+  engine.state.battleMessage = "";
+  engine.state.battleSubmessage = "";
+  engine.state.visualEffect = null;
+  renderCombatScreen();
+  engine.resolveCurrentTurn();
+}
+
 // showCombatReward() keeps the overlay open after victory until the player chooses what comes next.
 function showCombatReward(rewardLines) {
   if (!combatState) {
@@ -210,17 +284,16 @@ class ThreatCombat {
   init() {
     this.state.turnOrder = buildTurnOrder(this.state.playerParty, this.state.threat);
     this.state.currentTurnIndex = 0;
-    this.state.phase = "battle";
     this.state.activeProgramId = this.state.turnOrder.find((entry) => entry.kind === "program" && entry.ref.hp > 0)?.ref.id || this.state.activeProgramId;
     this.state.commandMode = "main";
     this.state.battleMessage = "";
     this.state.battleSubmessage = "";
     this.state.visualEffect = null;
-    this.state.actionLocked = false;
+    this.state.actionLocked = true;
     screenState = "combat";
     addBattleLog(`ENGAGING ${this.state.threat.title.toUpperCase()} AT LEVEL ${this.state.threat.level}.`);
     renderCombatScreen();
-    this.resolveCurrentTurn();
+    playBattleSummonIntro(this);
   }
 
   destroy() {

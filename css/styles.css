@@ -6928,3 +6928,236 @@ body {
   opacity: 1;
   visibility: visible;
 }
+
+/* Phase 3A keeps the battle command deck hidden until the Defender fully materializes. */
+.combat-shell.is-intro-playing .combat-command-box,
+.combat-command-box.is-intro-hidden {
+  opacity: 0;
+  transform: translateY(10px) scale(0.985);
+  filter: blur(0.4px);
+  pointer-events: none;
+}
+
+.combat-command-box.is-intro-revealed {
+  animation: combatCommandReveal 280ms ease both;
+}
+
+.combat-shell.is-intro-playing .combat-stage-player .combat-battler-player,
+.combat-battler-player.is-summoning {
+  opacity: 0.22;
+  transform: translateY(18px) scale(0.9);
+  filter: saturate(0.65) brightness(0.7);
+}
+
+.combat-battler-player.is-summoning .battle-sprite {
+  filter: drop-shadow(0 0 16px rgba(0, 255, 255, 0.18)) brightness(0.78);
+}
+
+.combat-stage {
+  isolation: isolate;
+}
+
+.combat-summon-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.combat-summon-cue {
+  position: absolute;
+  left: 6%;
+  bottom: 14%;
+  padding: 7px 10px;
+  border: 1px solid rgba(0, 204, 255, 0.22);
+  background: rgba(4, 8, 14, 0.72);
+  color: rgba(242, 239, 227, 0.84);
+  font-size: 0.52rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  transform: skewX(-12deg);
+  opacity: 0.78;
+}
+
+.combat-summon-cue::after {
+  content: "DEPLOYMENT DISC ONLINE";
+}
+
+.combat-summon-disc,
+.combat-summon-ring,
+.combat-summon-glyph,
+.combat-summon-flash {
+  position: absolute;
+  left: 18%;
+  bottom: 22%;
+  pointer-events: none;
+}
+
+.combat-summon-disc {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 1px solid rgba(244, 239, 227, 0.45);
+  background:
+    radial-gradient(circle at 50% 50%, rgba(244, 239, 227, 0.34), rgba(8, 10, 16, 0.15) 48%, transparent 68%),
+    rgba(0, 204, 255, 0.08);
+  box-shadow: 0 0 22px rgba(0, 204, 255, 0.16);
+}
+
+.combat-summon-ring {
+  width: 96px;
+  height: 96px;
+  margin-left: -22px;
+  margin-bottom: -22px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 204, 255, 0.3);
+  box-shadow: 0 0 24px rgba(0, 204, 255, 0.08);
+  opacity: 0;
+}
+
+.combat-summon-glyph {
+  width: 120px;
+  height: 120px;
+  margin-left: -34px;
+  margin-bottom: -32px;
+  border-radius: 50%;
+  border: 1px solid rgba(242, 239, 227, 0.18);
+  background:
+    radial-gradient(circle, transparent 42%, rgba(242, 239, 227, 0.08) 43%, transparent 56%),
+    conic-gradient(from 120deg, transparent 0 22%, rgba(0, 204, 255, 0.16) 22% 24%, transparent 24% 48%, rgba(255, 110, 74, 0.14) 48% 50%, transparent 50% 100%);
+  mix-blend-mode: screen;
+  opacity: 0;
+}
+
+.combat-summon-flash {
+  left: 50%;
+  bottom: 42%;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(242, 239, 227, 0.95);
+  box-shadow:
+    0 0 28px rgba(242, 239, 227, 0.58),
+    0 0 48px rgba(0, 204, 255, 0.28);
+  opacity: 0;
+}
+
+.combat-summon-overlay.is-stage-deploy .combat-summon-disc {
+  opacity: 0.5;
+  transform: translate3d(-22px, 14px, 0) scale(0.78);
+}
+
+.combat-summon-overlay.is-stage-launch .combat-summon-disc {
+  animation: summonDiscLaunch 260ms ease both;
+}
+
+.combat-summon-overlay.is-stage-launch .combat-summon-ring {
+  opacity: 0.72;
+  animation: summonRingPulse 260ms ease both;
+}
+
+.combat-summon-overlay.is-stage-flash .combat-summon-disc {
+  opacity: 0.24;
+  transform: translate3d(38vw, -12vh, 0) scale(0.36);
+}
+
+.combat-summon-overlay.is-stage-flash .combat-summon-ring {
+  opacity: 0;
+}
+
+.combat-summon-overlay.is-stage-flash .combat-summon-glyph {
+  opacity: 0.9;
+  animation: summonGlyphSpin 320ms ease both;
+}
+
+.combat-summon-overlay.is-stage-flash .combat-summon-flash {
+  opacity: 1;
+  transform: scale(1);
+  animation: summonFlashBurst 240ms ease both;
+}
+
+.combat-summon-overlay.is-stage-materialize .combat-summon-disc {
+  opacity: 0.16;
+  transform: translate3d(40vw, -14vh, 0) scale(0.18);
+}
+
+.combat-summon-overlay.is-stage-materialize .combat-summon-glyph {
+  opacity: 0.58;
+}
+
+.combat-summon-overlay.is-stage-materialize .combat-summon-flash {
+  opacity: 0;
+}
+
+@keyframes combatCommandReveal {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes summonDiscLaunch {
+  from {
+    opacity: 0.24;
+    transform: translate3d(-10vw, 14vh, 0) scale(0.7) rotate(-38deg);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(38vw, -12vh, 0) scale(1.04) rotate(15deg);
+  }
+}
+
+@keyframes summonRingPulse {
+  from {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+
+  45% {
+    opacity: 0.88;
+  }
+
+  to {
+    opacity: 0;
+    transform: scale(1.35);
+  }
+}
+
+@keyframes summonGlyphSpin {
+  from {
+    opacity: 0;
+    transform: rotate(-12deg) scale(0.84);
+  }
+
+  45% {
+    opacity: 0.95;
+  }
+
+  to {
+    opacity: 0.58;
+    transform: rotate(18deg) scale(1.02);
+  }
+}
+
+@keyframes summonFlashBurst {
+  from {
+    opacity: 0;
+    transform: scale(0.35);
+  }
+
+  30% {
+    opacity: 1;
+    transform: scale(1.9);
+  }
+
+  to {
+    opacity: 0;
+    transform: scale(2.7);
+  }
+}
