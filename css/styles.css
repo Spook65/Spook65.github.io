@@ -6608,3 +6608,302 @@ body {
 .combat-command-cost {
   font-size: 0.52rem;
 }
+
+/* The starter lineup keeps its working structure and inherits the menu palette here so the screen family feels consistent without touching routing or visibility. */
+.defender-screen {
+  overflow-x: hidden;
+  overflow-y: auto;
+  background:
+    radial-gradient(circle at 50% 34%, rgba(244, 239, 227, 0.05), transparent 12%),
+    radial-gradient(circle at 50% 36%, rgba(72, 214, 198, 0.045), transparent 20%),
+    radial-gradient(circle at 50% 38%, rgba(255, 110, 74, 0.06), transparent 30%),
+    linear-gradient(180deg, #04050a 0%, #090b13 48%, #04050a 100%);
+  color: var(--menu-text);
+}
+
+.defender-screen .defender-shell {
+  width: min(1160px, 100%);
+  gap: 12px;
+}
+
+.defender-screen .defender-header {
+  gap: 12px;
+  padding-top: 6px;
+}
+
+.defender-screen .briefing-title {
+  color: var(--menu-text);
+  font-size: clamp(1.45rem, 2.8vw, 2.15rem);
+  line-height: 0.95;
+  letter-spacing: 0.18em;
+  text-shadow:
+    0 0 18px rgba(244, 239, 227, 0.06),
+    0 0 28px rgba(255, 110, 74, 0.06);
+}
+
+.defender-screen .briefing-copy {
+  color: rgba(244, 239, 227, 0.64);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  line-height: 1.7;
+}
+
+.defender-screen .defender-status-row {
+  padding: 10px 12px;
+  border-color: rgba(242, 239, 227, 0.08);
+  background: rgba(8, 8, 15, 0.34);
+  color: rgba(244, 239, 227, 0.7);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+}
+
+.defender-screen .defender-selection-count {
+  color: var(--menu-text);
+}
+
+.defender-screen .defender-selection-status {
+  color: rgba(244, 239, 227, 0.58);
+}
+
+.defender-screen .defender-grid {
+  gap: 10px;
+  padding-right: 2px;
+}
+
+.defender-screen .defender-card {
+  border-color: rgba(242, 239, 227, 0.1);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.008)),
+    linear-gradient(180deg, rgba(23, 17, 29, 0.96), rgba(16, 13, 24, 0.96));
+  color: var(--menu-text);
+  padding: 12px 12px 10px 14px;
+  box-shadow:
+    inset 0 0 0 1px rgba(244, 239, 227, 0.02),
+    0 10px 22px rgba(5, 5, 9, 0.22);
+}
+
+.defender-screen .defender-card:hover,
+.defender-screen .defender-card:focus-visible {
+  transform: translateY(-2px);
+  border-color: rgba(244, 239, 227, 0.2);
+  box-shadow:
+    0 0 0 1px rgba(255, 110, 74, 0.08),
+    0 12px 24px rgba(5, 5, 9, 0.28);
+}
+
+.defender-screen .defender-card.is-selected {
+  border-color: rgba(244, 239, 227, 0.22);
+  background:
+    linear-gradient(90deg, rgba(255, 110, 74, 0.12) 0 4px, transparent 4px 100%),
+    linear-gradient(180deg, rgba(23, 17, 29, 0.98), rgba(16, 13, 24, 0.97));
+  box-shadow:
+    0 0 0 1px rgba(255, 110, 74, 0.1),
+    0 0 18px rgba(255, 110, 74, 0.06),
+    0 12px 28px rgba(5, 5, 9, 0.28);
+}
+
+.defender-screen .defender-card.is-locked {
+  opacity: 0.48;
+}
+
+.defender-screen .defender-card-name {
+  color: var(--menu-text);
+  font-size: 0.84rem;
+  text-shadow: 0 0 12px rgba(244, 239, 227, 0.06);
+}
+
+.defender-screen .defender-card-domain,
+.defender-screen .defender-card-summary,
+.defender-screen .defender-card-meta,
+.defender-screen .defender-card-stats,
+.defender-screen .defender-card-moves,
+.defender-screen .defender-card-foot {
+  color: rgba(244, 239, 227, 0.66);
+}
+
+.defender-screen .defender-card-rarity {
+  color: var(--menu-gold);
+}
+
+.defender-screen .defender-card-summary {
+  color: rgba(244, 239, 227, 0.72);
+  line-height: 1.45;
+}
+
+.defender-screen .defender-card-meta,
+.defender-screen .defender-card-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px 10px;
+  color: rgba(244, 239, 227, 0.62);
+  font-variant-numeric: tabular-nums;
+}
+
+.defender-screen .defender-card-meta span,
+.defender-screen .defender-card-stats span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.defender-screen .defender-card-moves {
+  display: grid;
+  gap: 6px;
+}
+
+.defender-screen .defender-move {
+  padding: 8px 8px 7px;
+  border-color: rgba(242, 239, 227, 0.08);
+  background: rgba(8, 8, 15, 0.22);
+}
+
+.defender-screen .defender-move-name {
+  color: var(--menu-text);
+}
+
+.defender-screen .defender-move-meta {
+  color: rgba(244, 239, 227, 0.54);
+}
+
+.defender-screen .defender-card-foot {
+  color: rgba(244, 239, 227, 0.58);
+}
+
+.defender-screen .back-button,
+.defender-screen .menu-button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 50px;
+  padding: 12px 18px;
+  border: 1px solid rgba(242, 239, 227, 0.12);
+  border-radius: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.012));
+  color: var(--menu-text);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  clip-path: polygon(0 0, 100% 0, 98% 100%, 2% 100%);
+  box-shadow: 0 10px 22px rgba(5, 5, 9, 0.18);
+  transition:
+    transform 150ms ease,
+    background 150ms ease,
+    color 150ms ease,
+    border-color 150ms ease,
+    opacity 150ms ease;
+}
+
+.defender-screen .back-button::before,
+.defender-screen .menu-button::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, var(--menu-button-accent, rgba(255, 255, 255, 0.14)) 0 3px, transparent 3px 100%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 60%);
+  opacity: 0.78;
+  z-index: 0;
+}
+
+.defender-screen .back-button::after,
+.defender-screen .menu-button::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 10px;
+  width: 24%;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(244, 239, 227, 0.28), transparent);
+  transform: translateX(-50%);
+  opacity: 0.6;
+  z-index: 0;
+}
+
+.defender-screen .back-button:hover,
+.defender-screen .back-button:focus-visible,
+.defender-screen .menu-button:hover,
+.defender-screen .menu-button:focus-visible {
+  color: var(--menu-text);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.02));
+  outline: none;
+  transform: translate3d(4px, -2px, 0) scale(1.015);
+  text-shadow: 0 0 10px rgba(244, 239, 227, 0.14);
+}
+
+.defender-screen .back-button > *,
+.defender-screen .menu-button > * {
+  position: relative;
+  z-index: 1;
+}
+
+.defender-screen #defender-screen-back {
+  --menu-button-accent: var(--menu-violet);
+}
+
+.defender-screen #defender-screen-reset {
+  --menu-button-accent: var(--menu-teal);
+}
+
+.defender-screen #defender-screen-confirm {
+  --menu-button-accent: var(--menu-coral);
+}
+
+.defender-screen .defender-footer {
+  padding-top: 0;
+}
+
+.defender-screen .defender-footer .menu-button:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+  box-shadow: inset 0 0 0 1px rgba(242, 239, 227, 0.02);
+}
+
+@media (max-width: 980px) {
+  .defender-screen .defender-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .defender-screen .back-button {
+    align-self: flex-start;
+  }
+}
+
+@media (max-width: 860px) {
+  .defender-screen .defender-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .defender-screen .defender-status-row,
+  .defender-screen .defender-card-foot,
+  .defender-screen .defender-footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .defender-screen .defender-selection-status {
+    text-align: left;
+  }
+
+  .defender-screen .defender-card-meta,
+  .defender-screen .defender-card-stats {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .defender-screen {
+    padding: 14px 12px 14px;
+  }
+
+  .defender-screen .defender-card-meta,
+  .defender-screen .defender-card-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .defender-screen .defender-footer .menu-button {
+    width: 100%;
+  }
+}
