@@ -509,55 +509,101 @@ function getStarterDefenderCatalog() {
 
 // buildCombatAbilities() converts the defender move model into the combat engine's lightweight ability shape.
 function buildCombatAbilities(moves = []) {
-  return moves.map((move) => ({
-    id: move.id,
-    name: move.name,
-    domain: move.domain,
-    category: move.category,
-    charges: move.charges,
-    maxCharges: move.maxCharges,
-    power: move.power,
-    accuracy: move.accuracy,
-    cost: move.cost,
-    effect: move.effect,
-    description: move.description,
-    baseDamage: move.power
-  }));
+  return moves.map((move) => {
+    const safeMove = move && typeof move === "object" ? move : {};
+    const chargeCount = getMoveChargeCount(safeMove);
+    const maxCharges = Number.isFinite(safeMove.maxCharges) ? safeMove.maxCharges : chargeCount;
+
+    return {
+      id: safeMove.id,
+      name: safeMove.name,
+      domain: safeMove.domain,
+      category: safeMove.category,
+      charges: chargeCount,
+      maxCharges,
+      power: Number.isFinite(safeMove.power) ? safeMove.power : 0,
+      accuracy: Number.isFinite(safeMove.accuracy) ? safeMove.accuracy : 100,
+      cost: Number.isFinite(safeMove.cost) ? safeMove.cost : 0,
+      effect: safeMove.effect,
+      description: safeMove.description,
+      baseDamage: Number.isFinite(safeMove.power) ? safeMove.power : 0
+    };
+  });
+}
+
+// getMoveChargeCount() safely resolves a move's current charge value without crashing on older save data.
+function getMoveChargeCount(move) {
+  const maxCharges = Number.isFinite(move?.maxCharges)
+    ? move.maxCharges
+    : Number.isFinite(move?.charges)
+      ? move.charges
+      : 0;
+
+  return Number.isFinite(move?.charges) ? move.charges : maxCharges;
+}
+
+// resetMoveChargesForRun() clones a defender so fresh run copies always start with full move charges.
+function resetMoveChargesForRun(defender) {
+  if (!defender || typeof defender !== "object") {
+    return defender;
+  }
+
+  const nextDefender = cloneDefenderBlueprint(defender);
+  nextDefender.moves = Array.isArray(nextDefender.moves)
+    ? nextDefender.moves.map((move) => {
+        const maxCharges = Number.isFinite(move.maxCharges)
+          ? move.maxCharges
+          : Number.isFinite(move.charges)
+            ? move.charges
+            : 0;
+
+        return {
+          ...move,
+          charges: maxCharges,
+          maxCharges,
+          accuracy: Number.isFinite(move.accuracy) ? move.accuracy : 100
+        };
+      })
+    : [];
+
+  return nextDefender;
 }
 
 // buildCombatProgramFromDefender() maps the new defender save model into the legacy combat roster format.
 function buildCombatProgramFromDefender(defender) {
-  const affinity = String(defender && defender.affinity ? defender.affinity : "offense").toLowerCase();
-  const moves = Array.isArray(defender.moves) ? defender.moves : [];
+  // The run copy gets fresh charges here so charge loss only ever mutates live battle state.
+  const battleDefender = resetMoveChargesForRun(defender);
+  const affinity = String(battleDefender && battleDefender.affinity ? battleDefender.affinity : "offense").toLowerCase();
+  const moves = Array.isArray(battleDefender.moves) ? battleDefender.moves : [];
 
   return {
-    id: defender.id,
-    name: defender.name,
+    id: battleDefender.id,
+    name: battleDefender.name,
     type: affinity,
     combatType: affinity,
-    level: defender.level || 1,
-    hp: defender.hp || defender.maxHp || 100,
-    maxHp: defender.maxHp || defender.hp || 100,
-    atk: defender.atk || 1,
-    def: defender.def || 1,
-    spAtk: defender.spAtk || defender.atk || 1,
-    spDef: defender.spDef || defender.def || 1,
-    spd: defender.spd || 1,
-    color: defender.color || "#00ff88",
-    xp: defender.xp || 0,
-    statusEffects: Array.isArray(defender.statusEffects) ? defender.statusEffects.slice() : [],
+    level: battleDefender.level || 1,
+    hp: battleDefender.hp || battleDefender.maxHp || 100,
+    maxHp: battleDefender.maxHp || battleDefender.hp || 100,
+    atk: battleDefender.atk || 1,
+    def: battleDefender.def || 1,
+    spAtk: battleDefender.spAtk || battleDefender.atk || 1,
+    spDef: battleDefender.spDef || battleDefender.def || 1,
+    spd: battleDefender.spd || 1,
+    color: battleDefender.color || "#00ff88",
+    xp: battleDefender.xp || 0,
+    statusEffects: Array.isArray(battleDefender.statusEffects) ? battleDefender.statusEffects.slice() : [],
     abilities: buildCombatAbilities(moves),
     moves: JSON.parse(JSON.stringify(moves)),
-    role: defender.role,
-    domain: defender.domain,
-    affinity: defender.affinity,
-    temperament: defender.temperament,
-    rarity: defender.rarity,
-    variant: defender.variant,
-    coreTrait: defender.coreTrait,
-    passiveModule: defender.passiveModule,
-    unlocked: defender.unlocked,
-    selected: defender.selected
+    role: battleDefender.role,
+    domain: battleDefender.domain,
+    affinity: battleDefender.affinity,
+    temperament: battleDefender.temperament,
+    rarity: battleDefender.rarity,
+    variant: battleDefender.variant,
+    coreTrait: battleDefender.coreTrait,
+    passiveModule: battleDefender.passiveModule,
+    unlocked: battleDefender.unlocked,
+    selected: battleDefender.selected
   };
 }
 
@@ -565,7 +611,7 @@ function buildCombatProgramFromDefender(defender) {
 function buildSavedDefenderParty(defenderIds = []) {
   return normalizeStarterSelection(defenderIds).map((defenderId) => {
     const template = getDefenderTemplate(defenderId);
-    return template ? cloneDefenderBlueprint(template) : null;
+    return template ? resetMoveChargesForRun(template) : null;
   }).filter(Boolean);
 }
 

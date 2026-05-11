@@ -27,6 +27,29 @@ function continueToNextThreat() {
   returnToGlobeFromCombat();
 }
 
+// consumeMoveCharge() reduces a move's current charge total when the player attempts to use it.
+function consumeMoveCharge(move) {
+  if (!move || typeof move !== "object") {
+    return 0;
+  }
+
+  const currentCharges = getMoveChargeCount(move);
+  const nextCharges = Math.max(0, currentCharges - 1);
+  move.charges = nextCharges;
+
+  if (!Number.isFinite(move.maxCharges)) {
+    move.maxCharges = currentCharges;
+  }
+
+  return nextCharges;
+}
+
+// rollMoveAccuracy() resolves a move attempt against its accuracy stat before damage is applied.
+function rollMoveAccuracy(move) {
+  const accuracy = Number.isFinite(move?.accuracy) ? Math.max(0, Math.min(100, move.accuracy)) : 100;
+  return (Math.floor(Math.random() * 100) + 1) <= accuracy;
+}
+
 // getRandomActiveThreat() selects the next live target from the global roster.
 function getRandomActiveThreat() {
   const activeThreats = threats.filter((threat) => threat.status === "active");
@@ -471,12 +494,21 @@ class ThreatCombat {
         return;
       }
 
+      const availableCharges = getMoveChargeCount(ability);
+      if (availableCharges <= 0) {
+        addBattleLog(`${actor.name.toUpperCase()} TRIED ${ability.name.toUpperCase()} BUT HAD NO CHARGES LEFT.`, "buff");
+        this.setBattleCue("NO CHARGES REMAINING.", "SELECT A DIFFERENT MOVE.");
+        return;
+      }
+
       if (this.state.responseGauge < ability.cost) {
         addBattleLog(`${actor.name.toUpperCase()} NEEDS MORE RESPONSE GAUGE.`, "buff");
         renderCombatScreen();
         return;
       }
 
+      consumeMoveCharge(ability);
+      const attackHits = rollMoveAccuracy(ability);
       this.state.actionLocked = true;
       this.setBattleCue(
         `${actor.name.toUpperCase()} USED ${ability.name.toUpperCase()}!`,
@@ -486,6 +518,23 @@ class ThreatCombat {
 
       scheduleBattleStep(this, () => {
         this.state.responseGauge = Math.max(0, this.state.responseGauge - ability.cost);
+        if (!attackHits) {
+          addBattleLog(`${actor.name.toUpperCase()} USED ${ability.name.toUpperCase()}, BUT IT MISSED.`, "damage");
+          this.setBattleCue(
+            `${actor.name.toUpperCase()} USED ${ability.name.toUpperCase()}, BUT IT MISSED.`,
+            "NO DAMAGE DEALT."
+          );
+
+          scheduleBattleStep(this, () => {
+            this.state.battleMessage = "";
+            this.state.battleSubmessage = "";
+            this.state.actionLocked = false;
+            this.clearBattleVisual();
+            this.advanceTurn();
+          }, 420);
+          return;
+        }
+
         const damageResult = this.resolveDamage(actor, this.state.threat, ability);
         this.state.responseGauge = Math.min(100, this.state.responseGauge + getRandomInt(10, 15));
         this.applyPlayerEffect(actor, ability, damageResult);
