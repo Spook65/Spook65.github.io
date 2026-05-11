@@ -523,7 +523,7 @@ function buildActionButtonMarkup(state) {
           const currentCharges = getMoveChargeCount(ability);
           const maxCharges = Number.isFinite(ability.maxCharges) ? ability.maxCharges : currentCharges;
           const outOfCharges = currentCharges <= 0;
-          const disabledClass = canUse ? "" : "is-disabled";
+          const disabledClass = outOfCharges ? "is-disabled" : "";
           const moveAccuracy = Number.isFinite(ability.accuracy) ? `${ability.accuracy}% ACC` : null;
           const moveCharges = `CHG ${currentCharges}/${maxCharges}`;
           const moveMeta = [ability.domain, ability.category]
