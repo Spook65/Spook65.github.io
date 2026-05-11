@@ -570,7 +570,7 @@ let defenderSelectionDraft = [];
 // defenderSelectionFocusId tracks which roster entry is currently driving the preview panel.
 let defenderSelectionFocusId = null;
 
-// defenderRosterSelectEnabled gates the new roster-select layout so we can fall back to the last known-good lineup if needed.
+// defenderRosterSelectEnabled stays false until the roster-select pass is fully stabilized.
 const defenderRosterSelectEnabled = false;
 
 // defenderScreenContent is the dynamic container for the starter-selection screen.
@@ -1212,7 +1212,7 @@ function updateDefenderSelectionFocusDom() {
 
   const activeDefenderId = activeDefender.id;
   const activeIsSelected = defenderSelectionDraft.includes(activeDefenderId);
-  const activeIsLocked = !defenderSaveState.unlockedDefenders.includes(activeDefenderId);
+  const activeIsLocked = !Array.isArray(defenderSaveState?.unlockedDefenders) || !defenderSaveState.unlockedDefenders.includes(activeDefenderId);
   const defenderFocusPanel = document.getElementById("defender-focus-panel");
 
   defenderScreenContent.querySelectorAll("[data-defender-id]").forEach((tile) => {
@@ -1255,6 +1255,7 @@ function buildDefenderSelectionMarkup() {
   const activeFocusId = getDefenderSelectionFocusId();
   const activeDefender = getDefenderTemplate(activeFocusId) || roster[0];
   const selectedDefenders = selectedIds.map((defenderId) => getDefenderTemplate(defenderId)).filter(Boolean);
+  const unlockedIds = Array.isArray(defenderSaveState?.unlockedDefenders) ? defenderSaveState.unlockedDefenders : getDefaultStarterDefenderIds();
 
   return `
     <div class="defender-shell">
@@ -1284,7 +1285,7 @@ function buildDefenderSelectionMarkup() {
           <div class="defender-roster-grid">
             ${roster.map((defender) => {
               const isSelected = selectedIds.includes(defender.id);
-              const isLocked = !defenderSaveState.unlockedDefenders.includes(defender.id);
+              const isLocked = !unlockedIds.includes(defender.id);
               const isFocused = activeDefender && activeDefender.id === defender.id;
               return buildDefenderRosterTileMarkup(defender, isSelected, isLocked, isFocused);
             }).join("")}
@@ -1295,7 +1296,7 @@ function buildDefenderSelectionMarkup() {
           ${activeDefender ? buildDefenderDetailPanelMarkup(
             activeDefender,
             selectedIds.includes(activeDefender.id),
-            !defenderSaveState.unlockedDefenders.includes(activeDefender.id),
+            !unlockedIds.includes(activeDefender.id),
             selectedIds.length
           ) : ""}
         </section>
@@ -1464,41 +1465,79 @@ function bindDefenderSelectionLegacyControls() {
 }
 
 // renderDefenderSelectionScreen() redraws the loadout editor and keeps the counter/status text current.
-function renderDefenderSelectionScreen() {
+function renderStarterRosterSelect() {
   if (!defenderScreenContent) {
     return;
   }
 
+  if (!defenderSaveState) {
+    loadSave();
+  }
+
+  const selectedDefenders = defenderSelectionDraft.map((defenderId) => getDefenderTemplate(defenderId)).filter(Boolean);
+  console.log("[Starter Lineup] Rendering roster select");
+  console.log("[Starter Lineup] Selected defenders:", selectedDefenders);
+
   defenderSelectionFocusId = getDefenderSelectionFocusId(defenderSelectionFocusId);
+  defenderScreenContent.innerHTML = buildDefenderSelectionMarkup();
+
+  const defenderSelectionCount = document.getElementById("defender-selection-count");
+  const defenderSelectionStatus = document.getElementById("defender-selection-status");
+
+  if (defenderSelectionCount) {
+    defenderSelectionCount.textContent = `${defenderSelectionDraft.length} / 4 SELECTED`;
+  }
+
+  if (defenderSelectionStatus) {
+    defenderSelectionStatus.textContent = defenderSelectionDraft.length === 4
+      ? "LOADOUT READY. BEGIN THE RUN WHEN YOU ARE READY."
+      : "SELECT A PARTY OF FOUR.";
+  }
+
+  bindDefenderSelectionControls();
+  updateDefenderSelectionFocusDom();
+}
+
+// renderLegacyStarterLineup() keeps the original four-card layout available as a safety net.
+function renderLegacyStarterLineup() {
+  if (!defenderScreenContent) {
+    return;
+  }
+
+  console.log("[Starter Lineup] Rendering legacy fallback");
+
+  defenderScreenContent.innerHTML = buildDefenderSelectionLegacyMarkup();
+  console.log("[Starter Lineup] legacy content length:", defenderScreenContent.innerHTML.length);
+  console.log("[Starter Lineup] defender screen:", document.getElementById("defender-screen"));
+  console.log("[Starter Lineup] defender content:", defenderScreenContent);
+  const defenderSelectionCount = document.getElementById("defender-selection-count");
+  const defenderSelectionStatus = document.getElementById("defender-selection-status");
+
+  if (defenderSelectionCount) {
+    defenderSelectionCount.textContent = `${defenderSelectionDraft.length} / 4 SELECTED`;
+  }
+
+  if (defenderSelectionStatus) {
+    defenderSelectionStatus.textContent = defenderSelectionDraft.length === 4
+      ? "LOADOUT READY. BEGIN THE RUN WHEN YOU ARE READY."
+      : "SELECT A PARTY OF FOUR.";
+  }
+
+  bindDefenderSelectionLegacyControls();
+}
+
+// renderDefenderSelectionScreen() redraws the loadout editor and keeps the counter/status text current.
+function renderDefenderSelectionScreen() {
   try {
-    defenderScreenContent.innerHTML = defenderRosterSelectEnabled
-      ? buildDefenderSelectionMarkup()
-      : buildDefenderSelectionLegacyMarkup();
-
-    const defenderSelectionCount = document.getElementById("defender-selection-count");
-    const defenderSelectionStatus = document.getElementById("defender-selection-status");
-
-    if (defenderSelectionCount) {
-      defenderSelectionCount.textContent = `${defenderSelectionDraft.length} / 4 SELECTED`;
-    }
-
-    if (defenderSelectionStatus) {
-      defenderSelectionStatus.textContent = defenderSelectionDraft.length === 4
-        ? "LOADOUT READY. BEGIN THE RUN WHEN YOU ARE READY."
-        : "SELECT A PARTY OF FOUR.";
-    }
-
     if (defenderRosterSelectEnabled) {
-      bindDefenderSelectionControls();
-      if (screenState === "defenders") {
-        updateDefenderSelectionFocusDom();
-      }
-    } else {
-      bindDefenderSelectionLegacyControls();
+      renderStarterRosterSelect();
+      return;
     }
+
+    renderLegacyStarterLineup();
   } catch (error) {
-    defenderScreenContent.innerHTML = buildDefenderSelectionLegacyMarkup();
-    bindDefenderSelectionLegacyControls();
+    console.error("[Starter Lineup] Roster render failed, falling back.", error);
+    renderLegacyStarterLineup();
   }
 }
 

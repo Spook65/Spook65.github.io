@@ -6907,3 +6907,24 @@ body {
     width: 100%;
   }
 }
+
+/* Keep the active defender screen visibly above the boot overlay and allow the legacy layout to paint normally. */
+#defender-screen.is-active {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+#defender-screen,
+#defender-screen .defender-screen-content,
+#defender-screen .defender-shell,
+#defender-screen .defender-grid,
+#defender-screen .defender-card {
+  position: relative;
+  z-index: 1;
+  opacity: 1;
+  visibility: visible;
+}
