@@ -510,10 +510,18 @@ function getStarterDefenderCatalog() {
 // buildCombatAbilities() converts the defender move model into the combat engine's lightweight ability shape.
 function buildCombatAbilities(moves = []) {
   return moves.map((move) => ({
+    id: move.id,
     name: move.name,
+    domain: move.domain,
+    category: move.category,
+    charges: move.charges,
+    maxCharges: move.maxCharges,
+    power: move.power,
+    accuracy: move.accuracy,
     cost: move.cost,
-    baseDamage: move.power,
-    effect: move.effect
+    effect: move.effect,
+    description: move.description,
+    baseDamage: move.power
   }));
 }
 
@@ -990,7 +998,11 @@ function buildDefenderCardMarkup(defender, isSelected, isLocked) {
     const moveCharges = Number.isFinite(move.charges) && Number.isFinite(move.maxCharges)
       ? `${move.charges}/${move.maxCharges} CHG`
       : null;
-    const moveMeta = [move.category.toUpperCase(), `PWR ${move.power}`, moveAccuracy, moveCharges].filter(Boolean).join(" / ");
+    const moveMeta = [move.domain, move.category]
+      .filter(Boolean)
+      .map((value) => String(value).toUpperCase())
+      .concat([`PWR ${move.power}`, moveAccuracy, moveCharges].filter(Boolean))
+      .join(" / ");
 
     return `
       <div class="defender-move">
@@ -1099,7 +1111,11 @@ function buildDefenderDetailPanelMarkup(defender, isSelected, isLocked, selected
     const moveCharges = Number.isFinite(move.charges) && Number.isFinite(move.maxCharges)
       ? `${move.charges}/${move.maxCharges} CHG`
       : null;
-    const moveMeta = [move.category.toUpperCase(), `PWR ${move.power}`, moveAccuracy, moveCharges].filter(Boolean).join(" / ");
+    const moveMeta = [move.domain, move.category]
+      .filter(Boolean)
+      .map((value) => String(value).toUpperCase())
+      .concat([`PWR ${move.power}`, moveAccuracy, moveCharges].filter(Boolean))
+      .join(" / ");
 
     return `
       <div class="defender-focus-move">

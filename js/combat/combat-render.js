@@ -467,10 +467,19 @@ function buildActionButtonMarkup(state) {
         ${actor.abilities.map((ability, index) => {
           const canUse = state.responseGauge >= ability.cost;
           const disabledClass = canUse ? "" : "is-disabled";
+          const moveAccuracy = Number.isFinite(ability.accuracy) ? `${ability.accuracy}% ACC` : null;
+          const moveCharges = Number.isFinite(ability.charges) && Number.isFinite(ability.maxCharges)
+            ? `${ability.charges}/${ability.maxCharges} CHG`
+            : null;
+          const moveMeta = [ability.domain, ability.category]
+            .filter(Boolean)
+            .map((value) => String(value).toUpperCase())
+            .concat([`PWR ${ability.power}`, moveAccuracy, moveCharges].filter(Boolean))
+            .join(" / ");
           return `
             <button class="combat-action-button ${disabledClass}" type="button" data-combat-ability="${index}" data-ability-cost="${ability.cost}">
               <span class="combat-command-name">${ability.name.toUpperCase()}</span>
-              <span class="combat-command-cost">COST ${ability.cost}${canUse ? "" : " / NO GAUGE"}</span>
+              <span class="combat-command-cost">${moveMeta}${canUse ? "" : " / NO GAUGE"}</span>
             </button>
           `;
         }).join("")}
