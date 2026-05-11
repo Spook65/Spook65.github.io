@@ -7161,3 +7161,287 @@ body {
     transform: scale(2.7);
   }
 }
+
+/* Phase 3A refinement gives the Operator cue, disc arc, and materialization a clearer send-out cadence. */
+.combat-summon-overlay {
+  overflow: hidden;
+}
+
+.combat-summon-operator {
+  position: absolute;
+  left: 3.5%;
+  bottom: 8%;
+  width: 168px;
+  height: 190px;
+  opacity: 0;
+  transform: translate3d(-18px, 18px, 0) scale(0.9);
+  pointer-events: none;
+}
+
+.combat-summon-operator-body,
+.combat-summon-operator-arm,
+.combat-summon-operator-hand {
+  position: absolute;
+  display: block;
+  pointer-events: none;
+}
+
+.combat-summon-operator-body {
+  left: 44px;
+  bottom: 0;
+  width: 58px;
+  height: 118px;
+  border-radius: 28px 28px 12px 12px;
+  background:
+    linear-gradient(180deg, rgba(242, 239, 227, 0.18), rgba(10, 10, 16, 0.9) 42%, rgba(3, 6, 12, 0.98)),
+    rgba(0, 0, 0, 0.84);
+  box-shadow:
+    0 0 0 1px rgba(0, 204, 255, 0.12) inset,
+    0 0 22px rgba(0, 204, 255, 0.08);
+}
+
+.combat-summon-operator-body::before {
+  content: "";
+  position: absolute;
+  left: 11px;
+  top: -30px;
+  width: 36px;
+  height: 38px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 38%, rgba(242, 239, 227, 0.12), rgba(8, 10, 16, 0.98) 72%);
+  box-shadow: 0 0 14px rgba(0, 204, 255, 0.06);
+}
+
+.combat-summon-operator-arm {
+  left: 70px;
+  bottom: 72px;
+  width: 94px;
+  height: 16px;
+  transform-origin: left center;
+  transform: rotate(-30deg);
+  border-radius: 999px;
+  background:
+    linear-gradient(90deg, rgba(242, 239, 227, 0.06), rgba(0, 204, 255, 0.3) 30%, rgba(242, 239, 227, 0.08) 78%),
+    rgba(8, 10, 16, 0.9);
+  box-shadow: 0 0 14px rgba(0, 204, 255, 0.12);
+}
+
+.combat-summon-operator-hand {
+  right: 0;
+  bottom: 56px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 45% 45%, rgba(242, 239, 227, 0.9), rgba(0, 204, 255, 0.24) 28%, rgba(8, 10, 16, 0.98) 72%);
+  box-shadow:
+    0 0 10px rgba(242, 239, 227, 0.24),
+    0 0 22px rgba(0, 204, 255, 0.18);
+}
+
+.combat-summon-arc {
+  position: absolute;
+  left: 8%;
+  bottom: 18%;
+  width: 44vw;
+  max-width: 520px;
+  height: 1px;
+  border-top: 1px solid rgba(0, 204, 255, 0.2);
+  transform-origin: left center;
+  transform: rotate(-13deg) scaleX(0);
+  opacity: 0;
+  box-shadow: 0 0 10px rgba(0, 204, 255, 0.12);
+}
+
+.combat-summon-cue {
+  left: 4.2%;
+  bottom: 15%;
+  opacity: 0;
+  transform: skewX(-12deg) translate3d(-14px, 10px, 0);
+}
+
+.combat-summon-cue::after {
+  content: "OPERATOR DEPLOYMENT";
+}
+
+.combat-summon-disc {
+  left: 11%;
+  bottom: 13%;
+  width: 58px;
+  height: 58px;
+  opacity: 0;
+  transform: translate3d(-7vw, 16vh, 0) scale(0.28) rotate(-58deg);
+}
+
+.combat-summon-overlay.is-stage-operator .combat-summon-operator {
+  opacity: 1;
+  animation: summonOperatorEnter 240ms ease both;
+}
+
+.combat-summon-overlay.is-stage-launch .combat-summon-operator {
+  opacity: 1;
+  animation: summonOperatorWindup 320ms ease both;
+}
+
+.combat-summon-overlay.is-stage-launch .combat-summon-arc {
+  opacity: 1;
+  transform: rotate(-13deg) scaleX(1);
+  animation: summonArcPulse 620ms ease both;
+}
+
+.combat-summon-overlay.is-stage-launch .combat-summon-cue {
+  opacity: 1;
+  animation: summonCueRise 220ms ease both;
+}
+
+.combat-summon-overlay.is-stage-operator .combat-summon-cue {
+  opacity: 0.9;
+  animation: summonCueRise 220ms ease both;
+}
+
+.combat-summon-overlay.is-stage-launch .combat-summon-disc {
+  opacity: 1;
+  animation: summonDiscLaunch 720ms cubic-bezier(0.18, 0.88, 0.18, 1) both;
+}
+
+.combat-summon-overlay.is-stage-travel .combat-summon-operator {
+  opacity: 0.42;
+  transform: translate3d(-4px, 10px, 0) scale(0.96);
+}
+
+.combat-summon-overlay.is-stage-travel .combat-summon-arc {
+  opacity: 0.72;
+  transform: rotate(-13deg) scaleX(1);
+}
+
+.combat-summon-overlay.is-stage-travel .combat-summon-disc {
+  opacity: 1;
+  transform: translate3d(24vw, -16vh, 0) scale(0.98) rotate(470deg);
+  animation: summonDiscHover 240ms ease-in-out infinite alternate;
+}
+
+.combat-summon-overlay.is-stage-impact .combat-summon-operator {
+  opacity: 0.22;
+}
+
+.combat-summon-overlay.is-stage-impact .combat-summon-arc {
+  opacity: 0.24;
+  transform: rotate(-13deg) scaleX(1.15);
+}
+
+.combat-summon-overlay.is-stage-impact .combat-summon-disc {
+  opacity: 0.22;
+  transform: translate3d(31vw, -18vh, 0) scale(0.78) rotate(620deg);
+}
+
+.combat-summon-overlay.is-stage-materialize .combat-summon-operator {
+  opacity: 0.12;
+}
+
+.combat-summon-overlay.is-stage-materialize .combat-summon-arc {
+  opacity: 0;
+}
+
+.combat-summon-overlay.is-stage-materialize .combat-summon-disc {
+  opacity: 0.14;
+  transform: translate3d(35vw, -18vh, 0) scale(0.22) rotate(720deg);
+}
+
+.combat-summon-overlay.is-stage-materialize .combat-summon-glyph {
+  opacity: 0.74;
+}
+
+.combat-summon-overlay.is-stage-materialize .combat-summon-flash {
+  opacity: 0;
+}
+
+.combat-battler-player.is-summoning.is-stage-materialize .combat-battler-sprite-wrap {
+  animation: summonPlayerMaterialize 420ms ease both;
+}
+
+@keyframes summonOperatorEnter {
+  from {
+    opacity: 0;
+    transform: translate3d(-22px, 22px, 0) scale(0.86);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes summonOperatorWindup {
+  from {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  50% {
+    opacity: 1;
+    transform: translate3d(2px, -4px, 0) scale(1.02);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(8px, 0, 0) scale(0.98);
+  }
+}
+
+@keyframes summonArcPulse {
+  from {
+    opacity: 0;
+    transform: rotate(-13deg) scaleX(0.2);
+  }
+
+  30% {
+    opacity: 0.88;
+  }
+
+  to {
+    opacity: 0.56;
+    transform: rotate(-13deg) scaleX(1);
+  }
+}
+
+@keyframes summonCueRise {
+  from {
+    opacity: 0;
+    transform: skewX(-12deg) translate3d(-16px, 16px, 0);
+  }
+
+  to {
+    opacity: 0.78;
+    transform: skewX(-12deg) translate3d(0, 0, 0);
+  }
+}
+
+@keyframes summonDiscHover {
+  from {
+    transform: translate3d(24vw, -16vh, 0) scale(0.98) rotate(470deg);
+  }
+
+  to {
+    transform: translate3d(25.2vw, -17vh, 0) scale(1.02) rotate(560deg);
+  }
+}
+
+@keyframes summonPlayerMaterialize {
+  from {
+    opacity: 0.18;
+    transform: translate3d(0, 18px, 0) scale(0.9);
+    filter: saturate(0.68) brightness(0.72);
+  }
+
+  60% {
+    opacity: 1;
+    transform: translate3d(0, -4px, 0) scale(1.02);
+    filter: saturate(0.95) brightness(1.08);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: saturate(1) brightness(1);
+  }
+}

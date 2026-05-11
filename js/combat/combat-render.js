@@ -98,11 +98,19 @@ function buildBattleLogMarkup(state) {
 // getBattleMessageText() keeps the primary battle prompt readable even while the engine is animating a move.
 function getBattleMessageText(state) {
   if (state.battleIntroPlaying) {
+    if (state.battleIntroStage === "operator") {
+      return "OPERATOR READIES THE DISC.";
+    }
+
     if (state.battleIntroStage === "launch") {
       return "COMMAND DISC LAUNCHED.";
     }
 
-    if (state.battleIntroStage === "flash") {
+    if (state.battleIntroStage === "travel") {
+      return "DISC IN TRANSIT.";
+    }
+
+    if (state.battleIntroStage === "impact") {
       return "SUMMON GATE OPENING.";
     }
 
@@ -110,7 +118,7 @@ function getBattleMessageText(state) {
       return "DEFENDER MATERIALIZING.";
     }
 
-    return "DEPLOYING DEFENDER.";
+    return "DEPLOYMENT SEQUENCE INITIATED.";
   }
 
   if (state.battleMessage) {
@@ -144,11 +152,19 @@ function getBattleMessageText(state) {
 // getBattleSubmessageText() keeps a smaller supporting line available for hit feedback and effect callouts.
 function getBattleSubmessageText(state) {
   if (state.battleIntroPlaying) {
-    if (state.battleIntroStage === "launch") {
-      return "VECTOR LOCKED ON FIELD.";
+    if (state.battleIntroStage === "operator") {
+      return "COMMAND GAUNTLET ARMED.";
     }
 
-    if (state.battleIntroStage === "flash") {
+    if (state.battleIntroStage === "launch") {
+      return "VECTOR TRACING THE FIELD.";
+    }
+
+    if (state.battleIntroStage === "travel") {
+      return "LOCKING SUMMON VECTOR.";
+    }
+
+    if (state.battleIntroStage === "impact") {
       return "LIGHT BURST STABILIZING.";
     }
 
@@ -156,7 +172,7 @@ function getBattleSubmessageText(state) {
       return "BATTLE SYSTEMS ONLINE.";
     }
 
-    return "COMMAND DISC ONLINE.";
+    return "DEPLOYMENT CHANNEL OPEN.";
   }
 
   if (state.battleSubmessage) {
@@ -336,7 +352,7 @@ function buildProgramBattlefieldMarkup(program, state, isCurrentTurn) {
   const statusMarkup = renderStatusPills(program.statusEffects);
   const effect = state.visualEffect || {};
   const programClass = `program-${getProgramSpriteClass(program)}`;
-  const introClass = state.battleIntroPlaying ? `is-summoning is-stage-${state.battleIntroStage || "deploy"}` : "";
+  const introClass = state.battleIntroPlaying ? `is-summoning is-stage-${state.battleIntroStage || "operator"}` : "";
   const figureClass = [
     "combat-battler",
     "combat-battler-player",
@@ -549,7 +565,7 @@ function buildActionButtonMarkup(state) {
 // buildCombatMarkup() turns the battle into a battlefield scene with one featured program and one featured threat.
 function buildCombatMarkup(state) {
   const currentProgram = getActiveBattleProgram(state);
-  const introStage = state.battleIntroStage || "deploy";
+  const introStage = state.battleIntroStage || "operator";
   const introStageClass = `is-stage-${introStage}`;
   const commandBoxClass = state.battleIntroPlaying ? "is-intro-hidden" : "is-intro-revealed";
 
@@ -573,6 +589,12 @@ function buildCombatMarkup(state) {
         <div class="combat-stage-glow" aria-hidden="true"></div>
         ${state.battleIntroPlaying ? `
           <div class="combat-summon-overlay ${introStageClass}" aria-hidden="true">
+            <div class="combat-summon-operator">
+              <span class="combat-summon-operator-body"></span>
+              <span class="combat-summon-operator-arm"></span>
+              <span class="combat-summon-operator-hand"></span>
+            </div>
+            <div class="combat-summon-arc"></div>
             <div class="combat-summon-cue"></div>
             <div class="combat-summon-disc"></div>
             <div class="combat-summon-ring"></div>

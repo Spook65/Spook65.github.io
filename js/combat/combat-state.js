@@ -166,7 +166,7 @@ function resetBattleIntroState(state) {
   return {
     ...state,
     battleIntroPlaying: true,
-    battleIntroStage: "deploy",
+    battleIntroStage: "operator",
     battleIntroComplete: false
   };
 }

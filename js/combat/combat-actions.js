@@ -79,10 +79,10 @@ function playBattleSummonIntro(engine) {
   state.actionLocked = true;
   state.battleIntroPlaying = true;
   state.battleIntroComplete = false;
-  state.battleIntroStage = "deploy";
+  state.battleIntroStage = "operator";
   state.commandMode = "main";
-  state.battleMessage = "DEPLOYING DEFENDER.";
-  state.battleSubmessage = "COMMAND DISC ONLINE.";
+  state.battleMessage = "OPERATOR READIES THE DISC.";
+  state.battleSubmessage = "COMMAND GAUNTLET ARMED.";
   state.visualEffect = null;
   renderCombatScreen();
 
@@ -93,20 +93,31 @@ function playBattleSummonIntro(engine) {
 
     engine.state.battleIntroStage = "launch";
     engine.state.battleMessage = "COMMAND DISC LAUNCHED.";
-    engine.state.battleSubmessage = "VECTOR LOCKED ON FIELD.";
+    engine.state.battleSubmessage = "VECTOR TRACING THE FIELD.";
     renderCombatScreen();
-  }, 240);
+  }, 280);
 
   scheduleBattleStep(engine, () => {
     if (!engine.state || engine.state.phase !== "intro") {
       return;
     }
 
-    engine.state.battleIntroStage = "flash";
+    engine.state.battleIntroStage = "travel";
+    engine.state.battleMessage = "DISC IN TRANSIT.";
+    engine.state.battleSubmessage = "LOCKING SUMMON VECTOR.";
+    renderCombatScreen();
+  }, 860);
+
+  scheduleBattleStep(engine, () => {
+    if (!engine.state || engine.state.phase !== "intro") {
+      return;
+    }
+
+    engine.state.battleIntroStage = "impact";
     engine.state.battleMessage = "SUMMON GATE OPENING.";
     engine.state.battleSubmessage = "LIGHT BURST STABILIZING.";
     renderCombatScreen();
-  }, 680);
+  }, 1180);
 
   scheduleBattleStep(engine, () => {
     if (!engine.state || engine.state.phase !== "intro") {
@@ -117,11 +128,11 @@ function playBattleSummonIntro(engine) {
     engine.state.battleMessage = "DEFENDER MATERIALIZING.";
     engine.state.battleSubmessage = "BATTLE SYSTEMS ONLINE.";
     renderCombatScreen();
-  }, 1040);
+  }, 1520);
 
   scheduleBattleStep(engine, () => {
     completeBattleSummonIntro(engine);
-  }, 1480);
+  }, 2140);
 }
 
 // completeBattleSummonIntro() clears the intro lock and hands control back to the normal battle turn loop.
