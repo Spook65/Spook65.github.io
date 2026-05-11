@@ -567,6 +567,12 @@ let defenderSaveState = null;
 // defenderSelectionDraft tracks the starter party the player is editing before they lock it in.
 let defenderSelectionDraft = [];
 
+// defenderSelectionFocusId tracks which roster entry is currently driving the preview panel.
+let defenderSelectionFocusId = null;
+
+// defenderRosterSelectEnabled gates the new roster-select layout so we can fall back to the last known-good lineup if needed.
+const defenderRosterSelectEnabled = false;
+
 // defenderScreenContent is the dynamic container for the starter-selection screen.
 const defenderSelectionScreenRoot = document.getElementById("defender-screen");
 const defenderScreenContent = document.getElementById("defender-screen-content");
@@ -920,7 +926,64 @@ function toggleDefenderSelection(defenderId) {
   updateSelectedDefenders(nextDraft);
 }
 
-// buildDefenderCardMarkup() renders one selection card with its identity, stats, and starter metadata.
+// getDefenderSelectionFocusId() keeps the preview pinned to a real defender even if the roster changes or the focus is unset.
+function getDefenderSelectionFocusId(candidateId = defenderSelectionFocusId) {
+  const catalog = getStarterDefenderCatalog();
+  const candidateMatch = catalog.find((defender) => defender.id === candidateId);
+  if (candidateMatch) {
+    return candidateMatch.id;
+  }
+
+  const selectedMatch = catalog.find((defender) => defender.id === defenderSelectionDraft[0]);
+  if (selectedMatch) {
+    return selectedMatch.id;
+  }
+
+  return catalog[0] ? catalog[0].id : null;
+}
+
+// getDefenderMonogram() turns a defender name and role into a compact two-letter glyph for preview art and party slots.
+function getDefenderMonogram(defender) {
+  const source = [defender?.name, defender?.role, defender?.domain].filter(Boolean).join(" ");
+  const letters = source.match(/[A-Z0-9]/gi) || [];
+  const glyph = letters.slice(0, 2).join("").toUpperCase();
+  return glyph || "TG";
+}
+
+// buildDefenderRosterTileMarkup() renders one compact roster tile with selection state, identity, and a tiny stat strip.
+function buildDefenderRosterTileMarkup(defender, isSelected, isLocked, isFocused) {
+  const cardAccent = defender.color || "#87e4ff";
+  const rosterStateLabel = isSelected ? "LOCKED" : isLocked ? "SEALED" : "READY";
+
+  return `
+    <button
+      class="defender-roster-tile ${isSelected ? "is-selected" : ""} ${isLocked ? "is-locked" : ""} ${isFocused ? "is-focused" : ""}"
+      type="button"
+      data-defender-id="${defender.id}"
+      aria-pressed="${isSelected ? "true" : "false"}"
+      aria-current="${isFocused ? "true" : "false"}"
+      style="--defender-accent: ${cardAccent}; --defender-accent-soft: ${cardAccent}24;"
+      ${isLocked ? "disabled" : ""}
+    >
+      <div class="defender-roster-tile-head">
+        <div class="defender-roster-titleblock">
+          <div class="defender-roster-kicker">STARTER DEFENDER</div>
+          <div class="defender-roster-name">${defender.name}</div>
+          <div class="defender-roster-role">${defender.role} / ${defender.domain}</div>
+        </div>
+        <div class="defender-roster-badge ${isSelected ? "is-selected" : isLocked ? "is-locked" : "is-ready"}">${rosterStateLabel}</div>
+      </div>
+      <div class="defender-roster-summary">${defender.summary}</div>
+      <div class="defender-roster-mini" aria-hidden="true">
+        <span>HP ${defender.hp}</span>
+        <span>DEF ${defender.def}</span>
+        <span>SPD ${defender.spd}</span>
+      </div>
+    </button>
+  `;
+}
+
+// buildDefenderCardMarkup() keeps the original four-card selection UI available as a safe fallback.
 function buildDefenderCardMarkup(defender, isSelected, isLocked) {
   const movePreview = defender.moves.slice(0, 2).map((move) => {
     const moveAccuracy = Number.isFinite(move.accuracy) ? `${move.accuracy}% ACC` : null;
@@ -1021,10 +1084,245 @@ function buildDefenderCardMarkup(defender, isSelected, isLocked) {
   `;
 }
 
-// buildDefenderSelectionMarkup() assembles the starter lineup screen and the current draft loadout summary.
+// buildDefenderDetailPanelMarkup() renders the active defender preview, detail fields, and move modules for the right-hand panel.
+function buildDefenderDetailPanelMarkup(defender, isSelected, isLocked, selectedCount) {
+  const cardAccent = defender.color || "#87e4ff";
+  const rarityLabel = String(defender.rarity || "standard").toUpperCase();
+  const coreTrait = defender.coreTrait && typeof defender.coreTrait === "object" ? defender.coreTrait.name : defender.coreTrait;
+  const passiveModule = defender.passiveModule && typeof defender.passiveModule === "object" ? defender.passiveModule.name : defender.passiveModule;
+  const coreTraitDescription = defender.coreTrait && typeof defender.coreTrait === "object" ? defender.coreTrait.description : "";
+  const passiveModuleDescription = defender.passiveModule && typeof defender.passiveModule === "object" ? defender.passiveModule.description : "";
+  const loadoutStateLabel = isSelected ? "LOCKED INTO PARTY" : isLocked ? "SEALED ROSTER" : "AVAILABLE";
+  const readinessLabel = selectedCount === 4 ? "LOADOUT READY" : "PARTY INCOMPLETE";
+  const movePreview = defender.moves.slice(0, 3).map((move) => {
+    const moveAccuracy = Number.isFinite(move.accuracy) ? `${move.accuracy}% ACC` : null;
+    const moveCharges = Number.isFinite(move.charges) && Number.isFinite(move.maxCharges)
+      ? `${move.charges}/${move.maxCharges} CHG`
+      : null;
+    const moveMeta = [move.category.toUpperCase(), `PWR ${move.power}`, moveAccuracy, moveCharges].filter(Boolean).join(" / ");
+
+    return `
+      <div class="defender-focus-move">
+        <div class="defender-focus-move-name">
+          <span>${move.name}</span>
+          <span>${move.category.toUpperCase()}</span>
+        </div>
+        <div class="defender-focus-move-meta">${moveMeta}</div>
+        <div class="defender-focus-move-desc">${move.description}</div>
+      </div>
+    `;
+  }).join("");
+
+  return `
+    <div class="defender-panel-label">ACTIVE DEFENDER PREVIEW</div>
+    <div
+      class="defender-focus-stage"
+      style="--defender-accent: ${cardAccent}; --defender-accent-soft: ${cardAccent}22;"
+    >
+      <div class="defender-focus-watermark" aria-hidden="true">${defender.name}</div>
+      <div class="defender-focus-emblem" aria-hidden="true">${getDefenderMonogram(defender)}</div>
+      <div class="defender-focus-header">
+        <div class="defender-focus-kicker">HOVER / FOCUS</div>
+        <h3 class="defender-focus-name">${defender.name}</h3>
+        <div class="defender-focus-role">${defender.role} / ${defender.domain} / ${defender.affinity}</div>
+      </div>
+      <div class="defender-focus-badges">
+        <span class="defender-focus-badge">${rarityLabel}</span>
+        <span class="defender-focus-badge ${isSelected ? "is-selected" : isLocked ? "is-locked" : "is-ready"}">${loadoutStateLabel}</span>
+        <span class="defender-focus-badge">${readinessLabel}</span>
+      </div>
+      <p class="defender-focus-summary">${defender.summary}</p>
+    </div>
+
+    <div class="defender-focus-meta-grid" aria-label="Defender traits">
+      <div class="defender-focus-chip">
+        <span class="defender-focus-chip-label">CORE TRAIT</span>
+        <span class="defender-focus-chip-value" title="${coreTraitDescription}">${coreTrait}</span>
+      </div>
+      <div class="defender-focus-chip">
+        <span class="defender-focus-chip-label">PASSIVE MODULE</span>
+        <span class="defender-focus-chip-value" title="${passiveModuleDescription}">${passiveModule}</span>
+      </div>
+      <div class="defender-focus-chip">
+        <span class="defender-focus-chip-label">TEMPERAMENT</span>
+        <span class="defender-focus-chip-value">${defender.temperament}</span>
+      </div>
+      <div class="defender-focus-chip">
+        <span class="defender-focus-chip-label">VARIANT</span>
+        <span class="defender-focus-chip-value">${defender.variant}</span>
+      </div>
+    </div>
+
+    <div class="defender-focus-stats" aria-label="Defender stats">
+      <div class="defender-focus-stat"><span class="defender-focus-stat-label">HP</span><span class="defender-focus-stat-value">${defender.hp}</span></div>
+      <div class="defender-focus-stat"><span class="defender-focus-stat-label">ATK</span><span class="defender-focus-stat-value">${defender.atk}</span></div>
+      <div class="defender-focus-stat"><span class="defender-focus-stat-label">DEF</span><span class="defender-focus-stat-value">${defender.def}</span></div>
+      <div class="defender-focus-stat"><span class="defender-focus-stat-label">SP ATK</span><span class="defender-focus-stat-value">${defender.spAtk}</span></div>
+      <div class="defender-focus-stat"><span class="defender-focus-stat-label">SP DEF</span><span class="defender-focus-stat-value">${defender.spDef}</span></div>
+      <div class="defender-focus-stat"><span class="defender-focus-stat-label">SPD</span><span class="defender-focus-stat-value">${defender.spd}</span></div>
+    </div>
+
+    <div class="defender-focus-moves">
+      <div class="defender-panel-label">MOVE MODULES</div>
+      ${movePreview}
+    </div>
+  `;
+}
+
+// buildDefenderPartySlotMarkup() renders one locked-party slot so the chosen squad stays readable at a glance.
+function buildDefenderPartySlotMarkup(defender, slotIndex) {
+  if (!defender) {
+    return `
+      <div class="defender-party-slot is-empty">
+        <div class="defender-party-slot-index">SLOT ${slotIndex + 1}</div>
+        <div class="defender-party-slot-name">EMPTY SLOT</div>
+        <div class="defender-party-slot-role">WAITING FOR DEFENDER</div>
+      </div>
+    `;
+  }
+
+  const cardAccent = defender.color || "#87e4ff";
+
+  return `
+    <div
+      class="defender-party-slot is-filled"
+      style="--defender-accent: ${cardAccent}; --defender-accent-soft: ${cardAccent}24;"
+    >
+      <div class="defender-party-slot-index">SLOT ${slotIndex + 1}</div>
+      <div class="defender-party-slot-glyph" aria-hidden="true">${getDefenderMonogram(defender)}</div>
+      <div class="defender-party-slot-name">${defender.name}</div>
+      <div class="defender-party-slot-role">${defender.role}</div>
+    </div>
+  `;
+}
+
+// updateDefenderSelectionFocusDom() swaps just the preview panel and focus highlight without rebuilding the whole screen.
+function updateDefenderSelectionFocusDom() {
+  if (!defenderScreenContent) {
+    return;
+  }
+
+  const activeFocusId = getDefenderSelectionFocusId();
+  defenderSelectionFocusId = activeFocusId;
+
+  const activeDefender = getDefenderTemplate(activeFocusId);
+  if (!activeDefender) {
+    return;
+  }
+
+  const activeDefenderId = activeDefender.id;
+  const activeIsSelected = defenderSelectionDraft.includes(activeDefenderId);
+  const activeIsLocked = !defenderSaveState.unlockedDefenders.includes(activeDefenderId);
+  const defenderFocusPanel = document.getElementById("defender-focus-panel");
+
+  defenderScreenContent.querySelectorAll("[data-defender-id]").forEach((tile) => {
+    const tileId = tile.getAttribute("data-defender-id");
+    const isFocused = tileId === activeDefenderId;
+    tile.classList.toggle("is-focused", isFocused);
+    tile.setAttribute("aria-current", isFocused ? "true" : "false");
+  });
+
+  if (defenderFocusPanel) {
+    defenderFocusPanel.innerHTML = buildDefenderDetailPanelMarkup(
+      activeDefender,
+      activeIsSelected,
+      activeIsLocked,
+      defenderSelectionDraft.length
+    );
+  }
+}
+
+// setDefenderSelectionFocus() updates the current preview target and refreshes the visible preview when the screen is open.
+function setDefenderSelectionFocus(defenderId) {
+  const nextFocusId = getDefenderSelectionFocusId(defenderId);
+  if (!nextFocusId || nextFocusId === defenderSelectionFocusId) {
+    return nextFocusId;
+  }
+
+  defenderSelectionFocusId = nextFocusId;
+
+  if (screenState === "defenders" && defenderScreenContent) {
+    updateDefenderSelectionFocusDom();
+  }
+
+  return nextFocusId;
+}
+
+// buildDefenderSelectionMarkup() assembles the roster grid, the active preview, the party slots, and the action bar.
 function buildDefenderSelectionMarkup() {
   const selectedIds = defenderSelectionDraft.slice();
+  const roster = getStarterDefenderCatalog();
+  const activeFocusId = getDefenderSelectionFocusId();
+  const activeDefender = getDefenderTemplate(activeFocusId) || roster[0];
+  const selectedDefenders = selectedIds.map((defenderId) => getDefenderTemplate(defenderId)).filter(Boolean);
+
+  return `
+    <div class="defender-shell">
+      <div class="defender-header">
+        <div class="defender-header-copy">
+          <div class="defender-kicker">OPERATOR LOADOUT / STAGE ONE</div>
+          <h2 class="briefing-title">STARTER LINEUP</h2>
+          <p class="briefing-copy defender-copy">ASSEMBLE YOUR FOUR-DEFENDER PARTY, LOCK THE LOADOUT, THEN ENTER THREATGRID.</p>
+        </div>
+        <div class="defender-header-panel" aria-hidden="true">
+          <div class="defender-header-panel-label">LOADOUT DIRECTIVE</div>
+          <div class="defender-header-panel-value">ROSTER VIEW ACTIVE. HOVER A DEFENDER TO INSPECT THE LOADOUT, THEN LOCK FOUR FOR THE RUN.</div>
+        </div>
+        <button id="defender-screen-back" class="back-button" type="button">← RETURN TO MENU</button>
+      </div>
+
+      <div class="defender-rule" aria-hidden="true"></div>
+
+      <div class="defender-status-row">
+        <div id="defender-selection-count" class="defender-selection-count">${selectedIds.length} / 4 SELECTED</div>
+        <div id="defender-selection-status" class="defender-selection-status">${selectedIds.length === 4 ? "LOADOUT READY. BEGIN THE RUN WHEN YOU ARE READY." : "SELECT A PARTY OF FOUR."}</div>
+      </div>
+
+      <div class="defender-workbench">
+        <section class="defender-roster-panel" aria-label="Defender roster">
+          <div class="defender-panel-label">DEFENDER ROSTER</div>
+          <div class="defender-roster-grid">
+            ${roster.map((defender) => {
+              const isSelected = selectedIds.includes(defender.id);
+              const isLocked = !defenderSaveState.unlockedDefenders.includes(defender.id);
+              const isFocused = activeDefender && activeDefender.id === defender.id;
+              return buildDefenderRosterTileMarkup(defender, isSelected, isLocked, isFocused);
+            }).join("")}
+          </div>
+        </section>
+
+        <section id="defender-focus-panel" class="defender-focus-panel" aria-live="polite" aria-label="Active defender details">
+          ${activeDefender ? buildDefenderDetailPanelMarkup(
+            activeDefender,
+            selectedIds.includes(activeDefender.id),
+            !defenderSaveState.unlockedDefenders.includes(activeDefender.id),
+            selectedIds.length
+          ) : ""}
+        </section>
+      </div>
+
+      <div class="defender-lower-row">
+        <section class="defender-party-panel" aria-label="Locked party slots">
+          <div class="defender-panel-label">LOCKED PARTY / 4 SLOTS</div>
+          <div class="defender-party-slots">
+            ${Array.from({ length: 4 }, (_, slotIndex) => buildDefenderPartySlotMarkup(selectedDefenders[slotIndex], slotIndex)).join("")}
+          </div>
+        </section>
+
+        <div class="defender-footer">
+          <button id="defender-screen-reset" class="menu-button" type="button">RESET LOADOUT</button>
+          <button id="defender-screen-confirm" class="menu-button" type="button" ${selectedIds.length === 4 ? "" : "disabled"}>BEGIN RUN</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// buildDefenderSelectionLegacyMarkup() restores the original four-card lineup so we can fall back instantly if the roster screen misbehaves.
+function buildDefenderSelectionLegacyMarkup() {
+  const selectedIds = defenderSelectionDraft.slice();
   const starterCards = getStarterDefenderCatalog();
+  const unlockedIds = Array.isArray(defenderSaveState?.unlockedDefenders) ? defenderSaveState.unlockedDefenders : [];
 
   return `
     <div class="defender-shell">
@@ -1044,14 +1342,14 @@ function buildDefenderSelectionMarkup() {
       <div class="defender-rule" aria-hidden="true"></div>
 
       <div class="defender-status-row">
-        <div id="defender-selection-count" class="defender-selection-count">0 / 4 SELECTED</div>
-        <div id="defender-selection-status" class="defender-selection-status">SELECT A PARTY OF FOUR.</div>
+        <div id="defender-selection-count" class="defender-selection-count">${selectedIds.length} / 4 SELECTED</div>
+        <div id="defender-selection-status" class="defender-selection-status">${selectedIds.length === 4 ? "LOADOUT READY. BEGIN THE RUN WHEN YOU ARE READY." : "SELECT A PARTY OF FOUR."}</div>
       </div>
 
       <div class="defender-grid">
         ${starterCards.map((defender) => {
           const isSelected = selectedIds.includes(defender.id);
-          const isLocked = !defenderSaveState.unlockedDefenders.includes(defender.id);
+          const isLocked = !unlockedIds.includes(defender.id);
           return buildDefenderCardMarkup(defender, isSelected, isLocked);
         }).join("")}
       </div>
@@ -1064,8 +1362,65 @@ function buildDefenderSelectionMarkup() {
   `;
 }
 
-// bindDefenderSelectionControls() wires the selection cards and footer buttons after the screen is rendered.
+// bindDefenderSelectionControls() wires the roster tiles and footer buttons after the screen is rendered.
 function bindDefenderSelectionControls() {
+  const defenderScreenConfirm = document.getElementById("defender-screen-confirm");
+  const defenderScreenReset = document.getElementById("defender-screen-reset");
+  const defenderScreenBack = document.getElementById("defender-screen-back");
+
+  const rosterTiles = defenderScreenContent.querySelectorAll("[data-defender-id]");
+  rosterTiles.forEach((tile) => {
+    const defenderId = tile.getAttribute("data-defender-id");
+
+    tile.addEventListener("mouseenter", () => {
+      setDefenderSelectionFocus(defenderId);
+    });
+
+    tile.addEventListener("focus", () => {
+      setDefenderSelectionFocus(defenderId);
+    });
+
+    tile.addEventListener("click", () => {
+      setDefenderSelectionFocus(defenderId);
+      toggleDefenderSelection(defenderId);
+    });
+  });
+
+  if (defenderScreenBack) {
+    defenderScreenBack.addEventListener("click", () => {
+      showMenu();
+    });
+  }
+
+  if (defenderScreenReset) {
+    defenderScreenReset.addEventListener("click", () => {
+      const defaultStarterIds = getDefaultStarterDefenderIds();
+      defenderSelectionFocusId = defaultStarterIds[0] || null;
+      updateSelectedDefenders(defaultStarterIds);
+      const statusNode = document.getElementById("defender-selection-status");
+      if (statusNode) {
+        statusNode.textContent = "DEFAULT PARTY RESTORED.";
+      }
+    });
+  }
+
+  if (defenderScreenConfirm) {
+    defenderScreenConfirm.addEventListener("click", () => {
+      if (defenderSelectionDraft.length !== 4) {
+        const statusNode = document.getElementById("defender-selection-status");
+        if (statusNode) {
+          statusNode.textContent = "LOCK IN FOUR DEFENDERS BEFORE STARTING THE RUN.";
+        }
+        return;
+      }
+
+      startRunWithSelectedDefenders();
+    });
+  }
+}
+
+// bindDefenderSelectionLegacyControls() wires the original four-card layout when the roster-select screen is disabled.
+function bindDefenderSelectionLegacyControls() {
   const defenderScreenConfirm = document.getElementById("defender-screen-confirm");
   const defenderScreenReset = document.getElementById("defender-screen-reset");
   const defenderScreenBack = document.getElementById("defender-screen-back");
@@ -1114,21 +1469,37 @@ function renderDefenderSelectionScreen() {
     return;
   }
 
-  defenderScreenContent.innerHTML = buildDefenderSelectionMarkup();
-  const defenderSelectionCount = document.getElementById("defender-selection-count");
-  const defenderSelectionStatus = document.getElementById("defender-selection-status");
+  defenderSelectionFocusId = getDefenderSelectionFocusId(defenderSelectionFocusId);
+  try {
+    defenderScreenContent.innerHTML = defenderRosterSelectEnabled
+      ? buildDefenderSelectionMarkup()
+      : buildDefenderSelectionLegacyMarkup();
 
-  if (defenderSelectionCount) {
-    defenderSelectionCount.textContent = `${defenderSelectionDraft.length} / 4 SELECTED`;
+    const defenderSelectionCount = document.getElementById("defender-selection-count");
+    const defenderSelectionStatus = document.getElementById("defender-selection-status");
+
+    if (defenderSelectionCount) {
+      defenderSelectionCount.textContent = `${defenderSelectionDraft.length} / 4 SELECTED`;
+    }
+
+    if (defenderSelectionStatus) {
+      defenderSelectionStatus.textContent = defenderSelectionDraft.length === 4
+        ? "LOADOUT READY. BEGIN THE RUN WHEN YOU ARE READY."
+        : "SELECT A PARTY OF FOUR.";
+    }
+
+    if (defenderRosterSelectEnabled) {
+      bindDefenderSelectionControls();
+      if (screenState === "defenders") {
+        updateDefenderSelectionFocusDom();
+      }
+    } else {
+      bindDefenderSelectionLegacyControls();
+    }
+  } catch (error) {
+    defenderScreenContent.innerHTML = buildDefenderSelectionLegacyMarkup();
+    bindDefenderSelectionLegacyControls();
   }
-
-  if (defenderSelectionStatus) {
-    defenderSelectionStatus.textContent = defenderSelectionDraft.length === 4
-      ? "LOADOUT READY. BEGIN THE RUN WHEN YOU ARE READY."
-      : "SELECT A PARTY OF FOUR.";
-  }
-
-  bindDefenderSelectionControls();
 }
 
 // showDefenderSelectionScreen() opens the starter setup screen inside the shared boot overlay.

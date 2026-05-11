@@ -6903,7 +6903,7 @@ body {
     grid-template-columns: 1fr;
   }
 
-  .defender-screen .defender-footer .menu-button {
+.defender-screen .defender-footer .menu-button {
     width: 100%;
   }
 }
