@@ -179,6 +179,10 @@ function getBattleSubmessageText(state) {
     return state.battleSubmessage;
   }
 
+  if (state.pantheonInsight) {
+    return String(state.pantheonInsight).toUpperCase();
+  }
+
   if (state.commandMode === "attack") {
     return "SELECT A PROGRAM ATTACK OR BACK OUT.";
   }
@@ -665,6 +669,8 @@ function buildRewardMarkup(state, rewardLines) {
 
 // buildBattleLostMarkup() keeps the defeat flow stark and brief so the player can restart quickly.
 function buildBattleLostMarkup() {
+  const defeatLine = typeof getPantheonDefeatLine === "function" ? getPantheonDefeatLine() : "";
+
   return `
     <div class="battle-end-screen">
       <div class="battle-end-headline">BATTLE LOST</div>
@@ -674,6 +680,7 @@ function buildBattleLostMarkup() {
         <br>
         THE THREAT REMAINS ACTIVE.
       </div>
+      ${defeatLine ? `<div class="battle-end-copy is-secondary">${defeatLine}</div>` : ""}
       <div class="battle-end-actions">
         <button class="battle-end-button" type="button" data-combat-menu>BACK TO MENU</button>
       </div>

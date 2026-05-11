@@ -642,6 +642,41 @@ function cloneDefenderBlueprint(defender) {
 }
 
 // createDefaultSave() builds the initial localStorage payload for the new progression layer.
+// createDefaultStoryState() seeds the persistent narrative memory used by the cyber-myth pantheon layer.
+function createDefaultStoryState() {
+  return {
+    totalRunsStarted: 0,
+    totalBattlesWon: 0,
+    totalDefeats: 0,
+    pantheonEntityCounts: {},
+    lastPantheonEntityId: null,
+    lastPantheonChoiceId: null,
+    lastPantheonDialogue: "",
+    lastDefeatLine: "",
+    unlockedFragments: [],
+    discoveredBoons: []
+  };
+}
+
+// normalizeStoryState() shields older save files from missing pantheon memory fields.
+function normalizeStoryState(sourceStory) {
+  const fallback = createDefaultStoryState();
+  const source = sourceStory && typeof sourceStory === "object" ? sourceStory : {};
+
+  return {
+    totalRunsStarted: Number.isFinite(source.totalRunsStarted) ? source.totalRunsStarted : fallback.totalRunsStarted,
+    totalBattlesWon: Number.isFinite(source.totalBattlesWon) ? source.totalBattlesWon : fallback.totalBattlesWon,
+    totalDefeats: Number.isFinite(source.totalDefeats) ? source.totalDefeats : fallback.totalDefeats,
+    pantheonEntityCounts: source.pantheonEntityCounts && typeof source.pantheonEntityCounts === "object" ? { ...source.pantheonEntityCounts } : { ...fallback.pantheonEntityCounts },
+    lastPantheonEntityId: typeof source.lastPantheonEntityId === "string" ? source.lastPantheonEntityId : fallback.lastPantheonEntityId,
+    lastPantheonChoiceId: typeof source.lastPantheonChoiceId === "string" ? source.lastPantheonChoiceId : fallback.lastPantheonChoiceId,
+    lastPantheonDialogue: typeof source.lastPantheonDialogue === "string" ? source.lastPantheonDialogue : fallback.lastPantheonDialogue,
+    lastDefeatLine: typeof source.lastDefeatLine === "string" ? source.lastDefeatLine : fallback.lastDefeatLine,
+    unlockedFragments: Array.isArray(source.unlockedFragments) ? source.unlockedFragments.slice() : fallback.unlockedFragments.slice(),
+    discoveredBoons: Array.isArray(source.discoveredBoons) ? source.discoveredBoons.slice() : fallback.discoveredBoons.slice()
+  };
+}
+
 function createDefaultSave() {
   const starterIds = getDefaultStarterDefenderIds();
 
@@ -673,6 +708,7 @@ function createDefaultSave() {
       recruitedThreats: [],
       discoveredVariants: []
     },
+    story: createDefaultStoryState(),
     settings: {}
   };
 }
@@ -749,6 +785,7 @@ function normalizeDefenderSave(saveData) {
       recruitedThreats: Array.isArray(collectionSource.recruitedThreats) ? collectionSource.recruitedThreats.slice() : fallback.collection.recruitedThreats.slice(),
       discoveredVariants: Array.isArray(collectionSource.discoveredVariants) ? collectionSource.discoveredVariants.slice() : fallback.collection.discoveredVariants.slice()
     },
+    story: normalizeStoryState(source.story),
     settings: source.settings && typeof source.settings === "object" ? { ...source.settings } : {}
   };
 }
@@ -882,6 +919,9 @@ function markDefenderRunStarted() {
   }
 
   const starterIds = normalizeStarterSelection(defenderSaveState.selectedDefenders || defenderSaveState.selectedStarterIds || []);
+  defenderSaveState.story = normalizeStoryState(defenderSaveState.story);
+  defenderSaveState.story.totalRunsStarted += 1;
+  defenderSaveState.story.lastPantheonDialogue = "";
 
   defenderSaveState.currentRun = {
     ...defenderSaveState.currentRun,
@@ -892,11 +932,14 @@ function markDefenderRunStarted() {
     endedAt: null,
     starterLoadoutIds: starterIds.slice(),
     party: buildSavedDefenderParty(starterIds),
-    defeatedThreats: Array.isArray(defenderSaveState.currentRun?.defeatedThreats) ? defenderSaveState.currentRun.defeatedThreats.slice() : [],
-    currentZone: Number.isFinite(defenderSaveState.currentRun?.currentZone) ? defenderSaveState.currentRun.currentZone : 1,
-    clearedThreatIds: Array.isArray(defenderSaveState.currentRun?.clearedThreatIds) ? defenderSaveState.currentRun.clearedThreatIds.slice() : [],
-    capturedThreatIds: Array.isArray(defenderSaveState.currentRun?.capturedThreatIds) ? defenderSaveState.currentRun.capturedThreatIds.slice() : [],
-    discoveredVariants: Array.isArray(defenderSaveState.currentRun?.discoveredVariants) ? defenderSaveState.currentRun.discoveredVariants.slice() : []
+    defeatedThreats: [],
+    currentZone: 1,
+    clearedThreatIds: [],
+    capturedThreatIds: [],
+    discoveredVariants: [],
+    nextBattleGaugeBonus: 0,
+    nextBattleAccuracyBonus: 0,
+    nextThreatHint: ""
   };
   saveGame();
 }
@@ -934,19 +977,7 @@ function startRunWithSelectedDefenders() {
     loadSave();
   }
 
-  defenderSaveState.currentRun = {
-    ...defenderSaveState.currentRun,
-    active: true,
-    runStartedAt: Date.now(),
-    startedAt: Date.now(),
-    runEndedAt: null,
-    endedAt: null,
-    starterLoadoutIds: selectedIds.slice(),
-    party: buildSavedDefenderParty(selectedIds),
-    defeatedThreats: [],
-    currentZone: 1
-  };
-  saveGame();
+  markDefenderRunStarted();
 
   if (typeof startGame === "function") {
     startGame();

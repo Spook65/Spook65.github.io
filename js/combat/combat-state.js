@@ -295,6 +295,19 @@ function buildCombatState(sourceThreat) {
   const playerParty = programs;
   const turnOrder = buildTurnOrder(playerParty, threat);
   const firstProgram = turnOrder.find((entry) => entry.kind === "program" && entry.ref.hp > 0);
+  const runState = typeof defenderSaveState !== "undefined" && defenderSaveState && defenderSaveState.currentRun ? defenderSaveState.currentRun : null;
+  const storyState = typeof defenderSaveState !== "undefined" && defenderSaveState && defenderSaveState.story ? defenderSaveState.story : null;
+  const pendingGaugeBonus = Number.isFinite(runState?.nextBattleGaugeBonus) ? runState.nextBattleGaugeBonus : 0;
+  const pendingThreatHint = typeof runState?.nextThreatHint === "string" && runState.nextThreatHint.trim() ? runState.nextThreatHint.trim() : "";
+
+  if (runState) {
+    runState.nextBattleGaugeBonus = 0;
+    runState.nextThreatHint = "";
+  }
+
+  if (typeof saveGame === "function" && (pendingGaugeBonus > 0 || pendingThreatHint)) {
+    saveGame();
+  }
 
   return resetBattleIntroState({
     sourceThreat,
@@ -303,7 +316,7 @@ function buildCombatState(sourceThreat) {
     turnOrder,
     currentTurnIndex: 0,
     activeProgramId: firstProgram ? firstProgram.ref.id : playerParty[0].id,
-    responseGauge: 0,
+    responseGauge: pendingGaugeBonus,
     battleLog: [],
     battleMessage: "",
     battleSubmessage: "",
@@ -314,6 +327,7 @@ function buildCombatState(sourceThreat) {
     phase: "intro",
     nextDamageReduction: 0,
     nextCounterDamage: 0,
-    encounterLevel
+    encounterLevel,
+    pantheonInsight: pendingThreatHint || (storyState?.lastPantheonDialogue || "")
   });
 }

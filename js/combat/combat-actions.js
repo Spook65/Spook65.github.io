@@ -795,6 +795,13 @@ class ThreatCombat {
 
     this.state.phase = "defeat";
     addBattleLog(`ALL PROGRAMS FAILED. BATTLE LOST.`, "damage");
+    try {
+      if (typeof recordPantheonDefeat === "function") {
+        recordPantheonDefeat(this.state.sourceThreat);
+      }
+    } catch (error) {
+      console.error("[Pantheon] Failed to record defeat memory.", error);
+    }
     showCombatDefeatScreen("lose");
   }
 }
