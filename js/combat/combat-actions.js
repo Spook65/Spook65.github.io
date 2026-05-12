@@ -765,6 +765,9 @@ class ThreatCombat {
           if (this.checkWinCondition()) {
             return;
           }
+          if (typeof recordEnemyIntentHistory === "function" && resolvedEnemyIntent?.intent?.id) {
+            recordEnemyIntentHistory(this.state, resolvedEnemyIntent.intent.id);
+          }
           this.advanceTurn();
         }, 360);
         return;
@@ -824,6 +827,9 @@ class ThreatCombat {
 
         scheduleBattleStep(this, () => {
           this.state.resolvedEnemyIntent = resolvedEnemyIntent?.intent ? { ...resolvedEnemyIntent.intent, consumedAt: Date.now() } : this.state.resolvedEnemyIntent;
+          if (typeof recordEnemyIntentHistory === "function" && resolvedEnemyIntent?.intent?.id) {
+            recordEnemyIntentHistory(this.state, resolvedEnemyIntent.intent.id);
+          }
           this.state.enemyIntent = null;
           this.state.battleMessage = "";
           this.state.battleSubmessage = "";

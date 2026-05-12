@@ -309,6 +309,93 @@ function getEnemyIntentMetadata(intentId, battleState = null) {
   };
 }
 
+// getEnemyIntentCategory() groups intent types so the chooser can prefer a healthier attack flow.
+function getEnemyIntentCategory(intentId) {
+  const normalizedId = String(intentId || "strike").toLowerCase();
+
+  if (normalizedId === "charge" || normalizedId === "trace") {
+    return "setup";
+  }
+
+  if (normalizedId === "shield") {
+    return "defensive";
+  }
+
+  if (normalizedId === "overload" || normalizedId === "lockout" || normalizedId === "corrupt") {
+    return "disruption";
+  }
+
+  if (normalizedId === "swarm" || normalizedId === "strike") {
+    return "direct";
+  }
+
+  return "direct";
+}
+
+// recordEnemyIntentHistory() keeps a short recent history so the chooser can avoid repetitive same-intent spam.
+function recordEnemyIntentHistory(battleState, intentId) {
+  const safeState = battleState && typeof battleState === "object" ? battleState : null;
+  const normalizedId = String(intentId || "").toLowerCase();
+
+  if (!safeState || !normalizedId) {
+    return [];
+  }
+
+  if (!Array.isArray(safeState.recentEnemyIntents)) {
+    safeState.recentEnemyIntents = [];
+  }
+
+  safeState.recentEnemyIntents.push(normalizedId);
+  safeState.recentEnemyIntents = safeState.recentEnemyIntents.slice(-3);
+  return safeState.recentEnemyIntents;
+}
+
+// getRecentEnemyIntentStreak() counts how many times the same intent has appeared in a row.
+function getRecentEnemyIntentStreak(recentEnemyIntents = [], intentId = null) {
+  const recent = Array.isArray(recentEnemyIntents) ? recentEnemyIntents : [];
+  const target = String(intentId || recent[recent.length - 1] || "").toLowerCase();
+
+  if (!target || !recent.length) {
+    return 0;
+  }
+
+  let streak = 0;
+  for (let index = recent.length - 1; index >= 0; index -= 1) {
+    if (String(recent[index] || "").toLowerCase() !== target) {
+      break;
+    }
+
+    streak += 1;
+  }
+
+  return streak;
+}
+
+// buildEnemyIntentCandidate() packages an intent with the ability that best represents it for the current threat.
+function buildEnemyIntentCandidate(intentId, threat, abilityIndex, baseWeight) {
+  const catalog = getEnemyIntentMetadata(intentId, null);
+  const abilities = Array.isArray(threat?.abilities) ? threat.abilities : [];
+  const selectedAbility = Number.isInteger(abilityIndex) && abilityIndex >= 0 ? abilities[abilityIndex] : null;
+  const fallbackAbility = abilities.find((ability) => ability && Number.isFinite(ability.baseDamage) && ability.baseDamage > 0 && String(ability.effect || "") !== "self_level_up") || abilities[0] || null;
+  const resolvedAbility = selectedAbility || fallbackAbility;
+
+  return {
+    id: catalog.id,
+    type: catalog.type,
+    label: catalog.label,
+    description: catalog.description,
+    effectText: catalog.effectText,
+    counterplayText: catalog.counterplayText,
+    severity: catalog.severity,
+    iconLabel: catalog.iconLabel,
+    abilityIndex: Number.isInteger(abilityIndex) && abilityIndex >= 0 ? abilityIndex : (abilities.indexOf(resolvedAbility) >= 0 ? abilities.indexOf(resolvedAbility) : 0),
+    abilityId: resolvedAbility?.id || "",
+    abilityName: resolvedAbility?.name || "",
+    baseWeight: Number.isFinite(baseWeight) ? baseWeight : 1,
+    threatName: threat?.title || "THREAT"
+  };
+}
+
 // prepareNextEnemyIntent() refreshes the forecast so the Tactical Brief always shows the next hostile action, not a stale one.
 function prepareNextEnemyIntent(battleState) {
   const safeState = battleState && typeof battleState === "object" ? battleState : null;
@@ -348,40 +435,108 @@ function chooseEnemyIntent(threat, battleState = null) {
   }, abilities.findIndex((ability) => Number.isFinite(ability?.baseDamage) && ability.baseDamage > 0));
   const strikeIndex = abilities.findIndex((ability) => String(ability?.effect || "") !== "self_level_up" && Number.isFinite(ability?.baseDamage) && ability.baseDamage > 0);
   const fallbackIndex = abilities.findIndex((ability) => ability);
+  const recentEnemyIntents = Array.isArray(battleState?.recentEnemyIntents) ? battleState.recentEnemyIntents.slice(-3) : [];
+  const lastIntentId = recentEnemyIntents[recentEnemyIntents.length - 1] || null;
+  const sameIntentStreak = getRecentEnemyIntentStreak(recentEnemyIntents, lastIntentId);
+  const lastCategory = getEnemyIntentCategory(lastIntentId);
+  const threatIntentCandidates = [];
+  const pushCandidate = (candidate) => {
+    if (candidate && !threatIntentCandidates.some((entry) => entry.id === candidate.id)) {
+      threatIntentCandidates.push(candidate);
+    }
+  };
 
-  let intentId = "strike";
   if (hasEffect("self_level_up")) {
-    intentId = threatType === "ddos" || threatType === "botnet" ? "charge" : "shield";
-  } else if (hasEffect("damage_all") && (threatType === "ddos" || threatType === "botnet")) {
-    intentId = severity === "high" ? "overload" : "swarm";
-  } else if (hasEffect("status_isolated")) {
-    intentId = "lockout";
-  } else if (hasEffect("status_encrypted")) {
-    intentId = "corrupt";
-  } else if (hasEffect("status_detected")) {
-    intentId = "trace";
-  } else if (hasEffect("damage_all")) {
-    intentId = "swarm";
+    pushCandidate(buildEnemyIntentCandidate(threatType === "ddos" || threatType === "botnet" ? "charge" : "shield", threat, threatType === "ddos" || threatType === "botnet" ? Math.max(0, abilities.findIndex((ability) => String(ability?.effect || "") === "self_level_up")) : abilities.findIndex((ability) => String(ability?.effect || "") === "self_level_up"), 3));
   }
 
-  const catalogEntry = getEnemyIntentMetadata(intentId, battleState);
+  if (hasEffect("damage_all") && (threatType === "ddos" || threatType === "botnet")) {
+    pushCandidate(buildEnemyIntentCandidate(severity === "high" ? "overload" : "swarm", threat, highestDamageIndex, severity === "high" ? 3 : 2));
+  } else if (hasEffect("damage_all")) {
+    pushCandidate(buildEnemyIntentCandidate("swarm", threat, highestDamageIndex, 2));
+  }
 
-  const selectedIndex = (
-    intentId === "overload" || intentId === "swarm"
-      ? highestDamageIndex
-      : intentId === "lockout"
-        ? (indexOfEffect("status_isolated") >= 0 ? indexOfEffect("status_isolated") : indexOfEffect("status_encrypted") >= 0 ? indexOfEffect("status_encrypted") : strikeIndex)
-        : intentId === "corrupt"
-          ? (indexOfEffect("status_encrypted") >= 0 ? indexOfEffect("status_encrypted") : indexOfEffect("status_detected") >= 0 ? indexOfEffect("status_detected") : strikeIndex)
-          : intentId === "trace"
-            ? (indexOfEffect("status_detected") >= 0 ? indexOfEffect("status_detected") : strikeIndex)
-            : intentId === "charge" || intentId === "shield"
-              ? (indexOfEffect("self_level_up") >= 0 ? indexOfEffect("self_level_up") : highestDamageIndex)
-              : strikeIndex
-  );
+  if (hasEffect("status_isolated")) {
+    pushCandidate(buildEnemyIntentCandidate("lockout", threat, indexOfEffect("status_isolated"), 2));
+  }
 
-  const fallbackAbility = abilities[fallbackIndex] || abilities[0] || null;
-  const selectedAbility = abilities[selectedIndex] || fallbackAbility;
+  if (hasEffect("status_encrypted")) {
+    pushCandidate(buildEnemyIntentCandidate("corrupt", threat, indexOfEffect("status_encrypted"), 2));
+  }
+
+  if (hasEffect("status_detected")) {
+    pushCandidate(buildEnemyIntentCandidate("trace", threat, indexOfEffect("status_detected"), 2));
+  }
+
+  if (strikeIndex >= 0 || !threatIntentCandidates.length) {
+    pushCandidate(buildEnemyIntentCandidate("strike", threat, strikeIndex >= 0 ? strikeIndex : fallbackIndex, 1.2));
+  }
+
+  const scoredCandidates = threatIntentCandidates.map((candidate) => {
+    let score = candidate.baseWeight;
+    const candidateCategory = getEnemyIntentCategory(candidate.id);
+    const isSameIntent = candidate.id === lastIntentId;
+
+    if (isSameIntent) {
+      score *= sameIntentStreak >= 2 ? 0.04 : 0.65;
+    }
+
+    if (sameIntentStreak >= 2 && isSameIntent) {
+      score *= 0.2;
+    }
+
+    if (lastCategory === "setup" && candidateCategory === "setup") {
+      score *= 0.18;
+    } else if (lastCategory === "setup" && candidateCategory === "direct") {
+      score *= 1.55;
+    } else if (lastCategory === "setup" && candidateCategory === "disruption") {
+      score *= 1.35;
+    }
+
+    if (lastCategory === "defensive" && candidateCategory === "defensive") {
+      score *= 0.2;
+    } else if (lastCategory === "defensive" && candidateCategory === "direct") {
+      score *= 1.35;
+    }
+
+    if (lastCategory === "disruption" && candidateCategory === "setup") {
+      score *= 0.7;
+    } else if (lastCategory === "disruption" && candidateCategory === "direct") {
+      score *= 1.15;
+    }
+
+    if (lastCategory === "direct" && candidateCategory === "direct") {
+      score *= 0.9;
+    }
+
+    if (candidateCategory === "setup" && candidate.id !== lastIntentId) {
+      score *= lastCategory === "direct" ? 1.2 : 1;
+    }
+
+    return {
+      ...candidate,
+      score
+    };
+  }).sort((left, right) => right.score - left.score);
+
+  let selectedCandidate = scoredCandidates[0] && scoredCandidates[0].score > 0
+    ? scoredCandidates[0]
+    : buildEnemyIntentCandidate("strike", threat, strikeIndex >= 0 ? strikeIndex : fallbackIndex, 1);
+
+  if (sameIntentStreak >= 2 && selectedCandidate.id === lastIntentId) {
+    const avoidedCandidate = scoredCandidates.find((candidate) => candidate.id !== lastIntentId);
+    if (avoidedCandidate) {
+      selectedCandidate = avoidedCandidate;
+      console.log("[Intent] avoided repeat:", avoidedCandidate.id);
+    } else if (selectedCandidate.id !== "strike") {
+      selectedCandidate = buildEnemyIntentCandidate("strike", threat, strikeIndex >= 0 ? strikeIndex : fallbackIndex, 1);
+      console.log("[Intent] avoided repeat:", selectedCandidate.id);
+    }
+  }
+
+  console.log("[Intent] recent:", recentEnemyIntents);
+  console.log("[Intent] selected:", selectedCandidate.id);
+
   const forecastNote = battleState?.pantheonInsight ? String(battleState.pantheonInsight) : "";
 
   if (!abilities.length) {
@@ -389,17 +544,10 @@ function chooseEnemyIntent(threat, battleState = null) {
   }
 
   return {
-    id: intentId,
-    type: intentId,
-    label: catalogEntry.label,
-    description: catalogEntry.description,
-    effectText: catalogEntry.effectText,
-    counterplayText: catalogEntry.counterplayText,
-    severity: catalogEntry.severity,
-    iconLabel: catalogEntry.iconLabel,
-    abilityIndex: Number.isInteger(selectedIndex) && selectedIndex >= 0 ? selectedIndex : (Number.isInteger(fallbackIndex) ? fallbackIndex : 0),
-    abilityId: selectedAbility?.id || "",
-    abilityName: selectedAbility?.name || "",
+    ...getEnemyIntentMetadata(selectedCandidate.id, battleState),
+    abilityIndex: Number.isInteger(selectedCandidate.abilityIndex) && selectedCandidate.abilityIndex >= 0 ? selectedCandidate.abilityIndex : 0,
+    abilityId: selectedCandidate.abilityId || "",
+    abilityName: selectedCandidate.abilityName || "",
     threatName: threat?.title || "THREAT",
     forecastNote,
     clarified: Boolean(forecastNote)
@@ -653,6 +801,7 @@ function buildCombatState(sourceThreat) {
     openingDamageBonusConsumed: false,
     runDamageReductionPercent: activeRunDamageReduction,
     enemyForecastActive,
+    recentEnemyIntents: [],
     resolvedEnemyIntent: null,
     lastEnemyIntentId: enemyIntent?.id || null,
     pantheonBoonMessages: activeBoonMessages.concat(battleBoonMessages),
