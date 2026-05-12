@@ -35,8 +35,7 @@ function consumeMoveCharge(move) {
 
   const currentCharges = getMoveChargeCount(move);
   const nextCharges = Math.max(0, currentCharges - 1);
-  move.charges = nextCharges;
-
+  setMoveCharges(move, nextCharges);
   if (!Number.isFinite(move.maxCharges)) {
     move.maxCharges = currentCharges;
   }

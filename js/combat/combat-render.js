@@ -532,7 +532,7 @@ function buildActionButtonMarkup(state) {
             .concat([`PWR ${Number.isFinite(ability.power) ? ability.power : ability.baseDamage || 0}`, moveAccuracy, moveCharges].filter(Boolean))
             .join(" / ");
           return `
-            <button class="combat-action-button ${disabledClass}" type="button" data-combat-ability="${index}" data-ability-cost="${ability.cost}" ${outOfCharges ? "disabled" : ""}>
+            <button class="combat-action-button ${disabledClass}" type="button" data-combat-ability="${index}" data-combat-ability-id="${ability.id || ""}" data-ability-cost="${ability.cost}" ${outOfCharges ? "disabled" : ""}>
               <span class="combat-command-name">${ability.name.toUpperCase()}</span>
               <span class="combat-command-cost">${moveMeta}${canUse ? "" : " / NO GAUGE"}</span>
             </button>
@@ -784,7 +784,15 @@ function bindCombatButtons() {
       }
 
       const abilityIndex = Number(button.getAttribute("data-combat-ability"));
-      const ability = actor.ref.abilities[abilityIndex];
+      const abilityId = button.getAttribute("data-combat-ability-id");
+      const ability = abilityId
+        ? actor.ref.abilities.find((candidate) => candidate && candidate.id === abilityId)
+        : actor.ref.abilities[abilityIndex];
+
+      console.log("[Move Debug] selected move id:", abilityId || abilityIndex);
+      console.log("[Move Debug] active defender:", actor.ref?.id || actor.ref?.name);
+      console.log("[Move Debug] move before execute:", ability);
+      console.log("[Move Debug] charges before execute:", getMoveChargeCount(ability));
 
       if (!ability) {
         return;
@@ -799,6 +807,7 @@ function bindCombatButtons() {
       }
 
       const requiredGauge = Number(button.getAttribute("data-ability-cost") || ability.cost || 0);
+      console.log("[Move Debug] response gauge:", combatState.responseGauge, "required gauge:", requiredGauge);
       if (combatState.responseGauge < requiredGauge) {
         combatState.battleMessage = "NOT ENOUGH RESPONSE GAUGE.";
         combatState.battleSubmessage = "BUILD GAUGE OR CHOOSE ANOTHER COMMAND.";

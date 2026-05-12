@@ -418,8 +418,7 @@ function applyNarrativeChoiceEffect(choice, encounter) {
         program.abilities.forEach((ability) => {
           const maxCharges = Number.isFinite(ability.maxCharges) ? ability.maxCharges : getMoveChargeCount(ability);
           const currentCharges = getMoveChargeCount(ability);
-          ability.maxCharges = maxCharges;
-          ability.charges = Math.min(maxCharges, currentCharges + effectValue);
+          setMoveCharges(ability, Math.min(maxCharges, currentCharges + effectValue));
         });
       });
     }
@@ -1457,6 +1456,7 @@ function applyPantheonBoon(boon, encounter) {
       runState.lastPantheonChoiceId = boon.id;
     }
   } else if (effectType === "charge_restore") {
+    let highestRestoredMoveCost = 0;
     liveParty.forEach((program) => {
       if (!Array.isArray(program.abilities)) {
         return;
@@ -1465,12 +1465,17 @@ function applyPantheonBoon(boon, encounter) {
       program.abilities.forEach((ability) => {
         const maxCharges = Number.isFinite(ability.maxCharges) ? ability.maxCharges : getMoveChargeCount(ability);
         const currentCharges = getMoveChargeCount(ability);
-        ability.maxCharges = maxCharges;
-        ability.charges = Math.min(maxCharges, currentCharges + effectValue);
+        const nextCharges = Math.min(maxCharges, currentCharges + effectValue);
+        console.log("[Move Debug] restoring charges for:", program.name, ability.name, ability.id || "");
+        setMoveCharges(ability, nextCharges);
+        console.log("[Move Debug] charges after restore:", getMoveChargeCount(ability));
+        highestRestoredMoveCost = Math.max(highestRestoredMoveCost, Number.isFinite(ability.cost) ? ability.cost : 0);
       });
     });
     syncRunParty();
     if (runState) {
+      runState.nextBattleGaugeBonus = Math.max(Number.isFinite(runState.nextBattleGaugeBonus) ? runState.nextBattleGaugeBonus : 0, highestRestoredMoveCost);
+      console.log("[Move Debug] next battle gauge bonus:", runState.nextBattleGaugeBonus);
       runState.lastPantheonChoiceId = boon.id;
     }
   } else if (effectType === "accuracy_boost_next") {

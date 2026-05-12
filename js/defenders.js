@@ -508,19 +508,24 @@ function getStarterDefenderCatalog() {
 }
 
 // buildCombatAbilities() converts the defender move model into the combat engine's lightweight ability shape.
-function buildCombatAbilities(moves = []) {
-  return moves.map((move) => {
+function buildCombatAbilities(moves = [], defenderId = "move") {
+  return moves.map((move, index) => {
     const safeMove = move && typeof move === "object" ? move : {};
     const chargeCount = getMoveChargeCount(safeMove);
     const maxCharges = Number.isFinite(safeMove.maxCharges) ? safeMove.maxCharges : chargeCount;
+    const moveId = typeof safeMove.id === "string" && safeMove.id.trim()
+      ? safeMove.id.trim()
+      : `${String(defenderId || "move").toLowerCase()}-${String(safeMove.name || "ability").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")}-${index}`;
 
     return {
-      id: safeMove.id,
+      id: moveId,
       name: safeMove.name,
       domain: safeMove.domain,
       category: safeMove.category,
       charges: chargeCount,
+      currentCharges: chargeCount,
       maxCharges,
+      remainingCharges: chargeCount,
       power: Number.isFinite(safeMove.power) ? safeMove.power : 0,
       accuracy: Number.isFinite(safeMove.accuracy) ? safeMove.accuracy : 100,
       cost: Number.isFinite(safeMove.cost) ? safeMove.cost : 0,
@@ -533,13 +538,39 @@ function buildCombatAbilities(moves = []) {
 
 // getMoveChargeCount() safely resolves a move's current charge value without crashing on older save data.
 function getMoveChargeCount(move) {
-  const maxCharges = Number.isFinite(move?.maxCharges)
-    ? move.maxCharges
-    : Number.isFinite(move?.charges)
-      ? move.charges
+  return Number.isFinite(move?.charges)
+    ? move.charges
+    : Number.isFinite(move?.currentCharges)
+      ? move.currentCharges
+      : Number.isFinite(move?.remainingCharges)
+        ? move.remainingCharges
       : 0;
+}
 
-  return Number.isFinite(move?.charges) ? move.charges : maxCharges;
+// getMoveCharges() is a small compatibility alias for code paths that expect the newer helper name.
+function getMoveCharges(move) {
+  return getMoveChargeCount(move);
+}
+
+// setMoveCharges() keeps every legacy charge field in sync so render and execution read the same value.
+function setMoveCharges(move, charges) {
+  if (!move || typeof move !== "object") {
+    return 0;
+  }
+
+  const safeCharges = Math.max(0, Math.floor(Number.isFinite(charges) ? charges : 0));
+  move.charges = safeCharges;
+  move.currentCharges = safeCharges;
+  move.remainingCharges = safeCharges;
+  if (!Number.isFinite(move.maxCharges)) {
+    move.maxCharges = safeCharges;
+  }
+  return safeCharges;
+}
+
+// canUseMove() returns true when the move has usable charges regardless of charge display legacy fields.
+function canUseMove(move) {
+  return getMoveCharges(move) > 0;
 }
 
 // resetMoveChargesForRun() clones a defender so fresh run copies always start with full move charges.
@@ -550,19 +581,28 @@ function resetMoveChargesForRun(defender) {
 
   const nextDefender = cloneDefenderBlueprint(defender);
   nextDefender.moves = Array.isArray(nextDefender.moves)
-    ? nextDefender.moves.map((move) => {
+    ? nextDefender.moves.map((move, index) => {
         const maxCharges = Number.isFinite(move.maxCharges)
           ? move.maxCharges
           : Number.isFinite(move.charges)
             ? move.charges
             : 0;
+        const moveId = typeof move.id === "string" && move.id.trim()
+          ? move.id.trim()
+          : `${String(nextDefender.id || "defender").toLowerCase()}-${String(move.name || "ability").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")}-${index}`;
 
-        return {
+        const nextMove = {
           ...move,
+          id: moveId,
           charges: maxCharges,
+          currentCharges: maxCharges,
+          remainingCharges: maxCharges,
           maxCharges,
           accuracy: Number.isFinite(move.accuracy) ? move.accuracy : 100
         };
+
+        setMoveCharges(nextMove, maxCharges);
+        return nextMove;
       })
     : [];
 
@@ -592,7 +632,7 @@ function buildCombatProgramFromDefender(defender) {
     color: battleDefender.color || "#00ff88",
     xp: battleDefender.xp || 0,
     statusEffects: Array.isArray(battleDefender.statusEffects) ? battleDefender.statusEffects.slice() : [],
-    abilities: buildCombatAbilities(moves),
+    abilities: buildCombatAbilities(moves, battleDefender.id),
     moves: JSON.parse(JSON.stringify(moves)),
     role: battleDefender.role,
     domain: battleDefender.domain,
