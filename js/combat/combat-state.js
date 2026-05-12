@@ -231,6 +231,28 @@ function getMoveUseAvailability(move, battleState = null) {
   };
 }
 
+// hasUsableMove() checks whether the active Defender can currently execute at least one move.
+function hasUsableMove(defender, battleState = null) {
+  const safeDefender = defender && typeof defender === "object" ? defender : null;
+  const abilities = Array.isArray(safeDefender?.abilities) ? safeDefender.abilities : [];
+
+  if (!safeDefender || !abilities.length) {
+    return false;
+  }
+
+  return abilities.some((ability) => {
+    const availability = typeof getMoveUseAvailability === "function"
+      ? getMoveUseAvailability(ability, battleState)
+      : {
+          canUse: getMoveChargeCount(ability) > 0 && Number.isFinite(battleState?.responseGauge)
+            ? battleState.responseGauge >= (Number.isFinite(ability?.cost) ? ability.cost : 0)
+            : getMoveChargeCount(ability) > 0,
+        };
+
+    return Boolean(availability?.canUse);
+  });
+}
+
 // getEnemyIntentMetadata() returns player-facing effect and counterplay text for a forecasted enemy intent.
 function getEnemyIntentMetadata(intentId, battleState = null) {
   const normalizedId = String(intentId || "strike").toLowerCase();

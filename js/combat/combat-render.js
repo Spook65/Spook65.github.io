@@ -153,6 +153,28 @@ function buildEnemyIntentBrief(state) {
   return buildActionableIntentBrief(state?.enemyIntent, state?.threat, state);
 }
 
+// buildFocusAvailabilityBrief() explains when FOCUS is the safe fallback for an active Defender.
+function buildFocusAvailabilityBrief(state) {
+  const currentActor = state?.turnOrder?.[state.currentTurnIndex];
+  if (!currentActor || currentActor.kind !== "program" || currentActor.ref.hp <= 0) {
+    return "";
+  }
+
+  const noUsableMoves = typeof hasUsableMove === "function" ? !hasUsableMove(currentActor.ref, state) : false;
+  if (!noUsableMoves) {
+    return "";
+  }
+
+  const actorName = String(currentActor.ref.name || "THIS DEFENDER").toUpperCase();
+  return `
+    <div class="combat-focus-hint-panel">
+      <div class="combat-panel-title">FOCUS</div>
+      <div class="combat-focus-hint-line">NO EXECUTABLE MOVES AVAILABLE.</div>
+      <div class="combat-focus-hint-line is-secondary">${actorName} CAN FOCUS TO RECOVER TACTICAL GAUGE AND PASS THIS TURN.</div>
+    </div>
+  `;
+}
+
 // getBattleMessageText() keeps the primary battle prompt readable even while the engine is animating a move.
 function getBattleMessageText(state) {
   if (state.battleIntroPlaying) {
@@ -254,6 +276,25 @@ function getBattleSubmessageText(state) {
   }
 
   return "RESPONSE GATE ONLINE.";
+}
+
+// buildFocusCommandMarkup() renders the fallback command that always ends the active Defender's turn.
+function buildFocusCommandMarkup(state) {
+  const currentActor = state?.turnOrder?.[state.currentTurnIndex];
+  if (!currentActor || currentActor.kind !== "program" || currentActor.ref.hp <= 0) {
+    return "";
+  }
+
+  const noUsableMoves = typeof hasUsableMove === "function" ? !hasUsableMove(currentActor.ref, state) : false;
+
+  return `
+    <div class="combat-focus-row ${noUsableMoves ? "is-focus-needed" : ""}">
+      <button class="combat-action-button is-secondary combat-focus-button ${noUsableMoves ? "is-focus-needed" : ""}" type="button" data-combat-command="focus">
+        <span class="combat-command-name">FOCUS</span>
+        <span class="combat-command-cost">RECOVER GAUGE / END TURN</span>
+      </button>
+    </div>
+  `;
 }
 
 // getAbilityPresentation() maps a move to a small animation family without changing the move's combat rules.
@@ -525,6 +566,7 @@ function buildActionButtonMarkup(state) {
   const ids = programs.find((program) => program.id === "ids-4" && program.hp > 0);
   const honeypot = programs.find((program) => program.id === "honeypot-3" && program.hp > 0);
   const antivirus = programs.find((program) => program.id === "antivirus-9" && program.hp > 0);
+  const focusMarkup = buildFocusCommandMarkup(state);
 
   if (commandMode === "programs") {
     return `
@@ -540,6 +582,7 @@ function buildActionButtonMarkup(state) {
         `).join("")}
       </div>
       <div class="combat-action-note">SWITCHING COMING SOON.</div>
+      ${focusMarkup}
       <div class="combat-command-back-row">
         <button class="combat-action-button is-secondary" type="button" data-combat-command="back">BACK</button>
       </div>
@@ -550,6 +593,7 @@ function buildActionButtonMarkup(state) {
     return `
       <div class="combat-command-subtitle">ITEMS</div>
       <div class="combat-command-empty">NO RECOVERY ITEMS AVAILABLE.</div>
+      ${focusMarkup}
       <div class="combat-command-back-row">
         <button class="combat-action-button is-secondary" type="button" data-combat-command="back">BACK</button>
       </div>
@@ -616,6 +660,7 @@ function buildActionButtonMarkup(state) {
         <button class="combat-action-button is-secondary" type="button" data-combat-command="back">BACK</button>
       </div>
       ${comboButtons.length ? `<div class="combat-command-subtitle is-secondary">COMBO OPTIONS</div><div class="combat-ability-row">${comboButtons.join("")}</div><div class="combat-action-note">RESPONSE GAUGE ${state.responseGauge}/100</div>` : ""}
+      ${focusMarkup}
     `;
   }
 
@@ -638,6 +683,7 @@ function buildActionButtonMarkup(state) {
         <span class="combat-command-cost">FLEE</span>
       </button>
     </div>
+    ${focusMarkup}
   `;
 }
 
@@ -708,6 +754,7 @@ function buildCombatMarkup(state) {
           <div id="battle-submessage" class="combat-voice-subtext">${getBattleSubmessageText(state)}</div>
           <div id="battle-log" class="combat-history-strip">${buildBattleLogMarkup(state)}</div>
           ${buildEnemyIntentBrief(state)}
+          ${buildFocusAvailabilityBrief(state)}
           ${buildPantheonBoonBriefMarkup(state)}
         </div>
 
@@ -843,6 +890,13 @@ function bindCombatButtons() {
         combatState.battleMessage = "";
         combatState.battleSubmessage = "";
         renderCombatScreen();
+        return;
+      }
+
+      if (command === "focus") {
+        if (typeof focusActiveDefenderTurn === "function") {
+          focusActiveDefenderTurn(combatEngine);
+        }
         return;
       }
 

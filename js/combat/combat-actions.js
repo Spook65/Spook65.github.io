@@ -196,6 +196,53 @@ function completeBattleSummonIntro(engine) {
   engine.resolveCurrentTurn();
 }
 
+// focusActiveDefenderTurn() restores Tactical Gauge when possible and ends the active Defender's turn.
+function focusActiveDefenderTurn(engine) {
+  if (!engine || !engine.state || engine.state.phase !== "battle") {
+    return;
+  }
+
+  const state = engine.state;
+  const currentActor = typeof engine.getCurrentActor === "function" ? engine.getCurrentActor() : state.turnOrder[state.currentTurnIndex];
+
+  if (!currentActor || currentActor.kind !== "program" || currentActor.ref.hp <= 0 || state.actionLocked) {
+    return;
+  }
+
+  const actor = currentActor.ref;
+  const currentGauge = Number.isFinite(state.responseGauge) ? Math.max(0, Math.min(100, state.responseGauge)) : 0;
+  const nextGauge = currentGauge < 100 ? Math.min(100, currentGauge + 25) : currentGauge;
+  const gaugeGain = nextGauge - currentGauge;
+
+  state.actionLocked = true;
+  state.commandMode = "main";
+
+  if (gaugeGain > 0) {
+    state.responseGauge = nextGauge;
+    state.battleMessage = `${actor.name.toUpperCase()} FOCUSES AND RECHARGES THE RESPONSE GATE.`;
+    state.battleSubmessage = `TACTICAL GAUGE +${gaugeGain}.`;
+    addBattleLog(`${actor.name.toUpperCase()} FOCUSED. RESPONSE GAUGE +${gaugeGain}.`, "buff");
+  } else {
+    state.responseGauge = currentGauge;
+    state.battleMessage = `${actor.name.toUpperCase()} HOLDS POSITION.`;
+    state.battleSubmessage = "RESPONSE GATE IS ALREADY FULL.";
+    addBattleLog(`${actor.name.toUpperCase()} HELD POSITION. RESPONSE GATE WAS ALREADY FULL.`, "buff");
+  }
+
+  renderCombatScreen();
+
+  scheduleBattleStep(engine, () => {
+    if (!engine.state || engine.state.phase !== "battle") {
+      return;
+    }
+
+    engine.state.actionLocked = false;
+    engine.state.battleMessage = "";
+    engine.state.battleSubmessage = "";
+    engine.advanceTurn();
+  }, 340);
+}
+
 // showCombatReward() keeps the overlay open after victory until the player chooses what comes next.
 function showCombatReward(rewardLines) {
   if (!combatState) {

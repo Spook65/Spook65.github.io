@@ -7949,6 +7949,58 @@ body {
   opacity: 0.95;
 }
 
+.combat-focus-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.combat-focus-button {
+  width: min(100%, 260px);
+  min-height: 60px;
+  padding: 10px 12px;
+  border-style: dashed;
+}
+
+.combat-focus-button .combat-command-name {
+  font-size: 0.66rem;
+}
+
+.combat-focus-button .combat-command-cost {
+  font-size: 0.54rem;
+}
+
+.combat-focus-button.is-focus-needed {
+  border-color: rgba(245, 197, 87, 0.82);
+  color: #f5c557;
+  box-shadow: 0 0 0 1px rgba(245, 197, 87, 0.14), 0 12px 24px rgba(0, 0, 0, 0.16), 0 0 18px rgba(245, 197, 87, 0.08);
+}
+
+.combat-focus-button.is-focus-needed .combat-command-name,
+.combat-focus-button.is-focus-needed .combat-command-cost {
+  color: #f5c557;
+}
+
+.combat-focus-hint-panel {
+  margin-top: 0.65rem;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid rgba(245, 197, 87, 0.22);
+  border-left: 2px solid rgba(245, 197, 87, 0.64);
+  background: linear-gradient(180deg, rgba(28, 22, 10, 0.82), rgba(12, 10, 6, 0.94));
+}
+
+.combat-focus-hint-line {
+  margin-top: 0.3rem;
+  color: #f5c557;
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.combat-focus-hint-line.is-secondary {
+  color: rgba(245, 197, 87, 0.8);
+}
+
 .combat-intent-panel {
   margin-top: 0.65rem;
   padding: 0.7rem 0.85rem;
