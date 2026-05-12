@@ -588,16 +588,31 @@ class ThreatCombat {
         return;
       }
 
-      const availableCharges = getMoveChargeCount(ability);
-      if (availableCharges <= 0) {
-        addBattleLog(`${actor.name.toUpperCase()} TRIED ${ability.name.toUpperCase()} BUT HAD NO CHARGES LEFT.`, "buff");
-        this.setBattleCue("NO CHARGES REMAINING.", "SELECT A DIFFERENT MOVE.");
-        return;
-      }
+      const availability = typeof getMoveUseAvailability === "function"
+        ? getMoveUseAvailability(ability, this.state)
+        : {
+            canUse: getMoveChargeCount(ability) > 0 && this.state.responseGauge >= (Number.isFinite(ability.cost) ? ability.cost : 0),
+            reason: getMoveChargeCount(ability) <= 0 ? "charges" : "gauge",
+            message: "",
+            detail: "",
+            charges: getMoveChargeCount(ability),
+            maxCharges: Number.isFinite(ability.maxCharges) ? ability.maxCharges : getMoveChargeCount(ability),
+            requiredGauge: Number.isFinite(ability.cost) ? ability.cost : 0,
+            currentGauge: this.state.responseGauge
+          };
 
-      if (this.state.responseGauge < ability.cost) {
-        addBattleLog(`${actor.name.toUpperCase()} NEEDS MORE RESPONSE GAUGE.`, "buff");
-        this.setBattleCue("NOT ENOUGH TACTICAL GAUGE.", `REQUIRED ${ability.cost} / CURRENT ${this.state.responseGauge}.`);
+      if (!availability.canUse) {
+        if (availability.reason === "charges") {
+          addBattleLog(`${actor.name.toUpperCase()} TRIED ${ability.name.toUpperCase()} BUT HAD NO CHARGES LEFT.`, "buff");
+        } else if (availability.reason === "gauge") {
+          addBattleLog(`${actor.name.toUpperCase()} NEEDS MORE TACTICAL GAUGE FOR ${ability.name.toUpperCase()}.`, "buff");
+        } else {
+          addBattleLog(`${actor.name.toUpperCase()} COULD NOT USE ${ability.name.toUpperCase()}.`, "buff");
+        }
+        this.setBattleCue(
+          availability.message || "MOVE UNAVAILABLE.",
+          availability.detail || "SELECT A DIFFERENT MOVE."
+        );
         renderCombatScreen();
         return;
       }

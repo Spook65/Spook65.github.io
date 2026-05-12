@@ -7934,3 +7934,17 @@ body {
     filter: saturate(1) brightness(1);
   }
 }
+
+.combat-action-button.is-gauge-low {
+  opacity: 0.82;
+  filter: saturate(0.88);
+}
+
+.combat-action-button.is-gauge-low .combat-command-cost {
+  color: #d7b86a;
+}
+
+.combat-action-button.is-gauge-low:hover,
+.combat-action-button.is-gauge-low:focus-visible {
+  opacity: 0.95;
+}

@@ -171,6 +171,66 @@ function resetBattleIntroState(state) {
   };
 }
 
+// getMoveUseAvailability() returns whether a move can currently be used and, if not, why it is blocked.
+function getMoveUseAvailability(move, battleState = null) {
+  const safeMove = move && typeof move === "object" ? move : null;
+  const moveName = safeMove?.name || "THIS MOVE";
+  const charges = safeMove ? getMoveChargeCount(safeMove) : 0;
+  const maxCharges = safeMove && Number.isFinite(safeMove.maxCharges) ? safeMove.maxCharges : Math.max(0, charges);
+  const requiredGauge = safeMove && Number.isFinite(safeMove.cost) ? Math.max(0, safeMove.cost) : 0;
+  const currentGauge = Number.isFinite(battleState?.responseGauge) ? battleState.responseGauge : 0;
+
+  if (!safeMove) {
+    return {
+      canUse: false,
+      reason: "unavailable",
+      message: "MOVE UNAVAILABLE.",
+      detail: "SELECT ANOTHER MOVE.",
+      charges: 0,
+      maxCharges: 0,
+      requiredGauge: 0,
+      currentGauge
+    };
+  }
+
+  if (charges <= 0) {
+    return {
+      canUse: false,
+      reason: "charges",
+      message: "NO CHARGES REMAINING.",
+      detail: `${moveName.toUpperCase()} HAS NO CHARGES LEFT.`,
+      charges,
+      maxCharges,
+      requiredGauge,
+      currentGauge
+    };
+  }
+
+  if (currentGauge < requiredGauge) {
+    return {
+      canUse: false,
+      reason: "gauge",
+      message: "NOT ENOUGH TACTICAL GAUGE.",
+      detail: `${moveName.toUpperCase()} REQUIRES ${requiredGauge} TACTICAL GAUGE. CURRENT: ${currentGauge}.`,
+      charges,
+      maxCharges,
+      requiredGauge,
+      currentGauge
+    };
+  }
+
+  return {
+    canUse: true,
+    reason: "ready",
+    message: "",
+    detail: "",
+    charges,
+    maxCharges,
+    requiredGauge,
+    currentGauge
+  };
+}
+
 // getThreatLevel() scales the encounter around the current party average so the run ramps naturally.
 function getThreatLevel() {
   const avgPartyLevel = Math.floor(programs.reduce((sum, program) => sum + program.level, 0) / 4);

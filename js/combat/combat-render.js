@@ -542,11 +542,21 @@ function buildActionButtonMarkup(state) {
       <div class="combat-command-subtitle">CHOOSE AN ACTION FOR ${actor.name.toUpperCase()}</div>
       <div class="combat-command-grid is-ability-grid">
         ${actor.abilities.map((ability, index) => {
-          const canUse = state.responseGauge >= ability.cost;
-          const currentCharges = getMoveChargeCount(ability);
-          const maxCharges = Number.isFinite(ability.maxCharges) ? ability.maxCharges : currentCharges;
-          const outOfCharges = currentCharges <= 0;
-          const disabledClass = outOfCharges ? "is-disabled" : "";
+          const availability = typeof getMoveUseAvailability === "function" ? getMoveUseAvailability(ability, state) : {
+            canUse: state.responseGauge >= ability.cost && getMoveChargeCount(ability) > 0,
+            reason: state.responseGauge >= ability.cost ? "ready" : "gauge",
+            message: "",
+            detail: "",
+            charges: getMoveChargeCount(ability),
+            maxCharges: Number.isFinite(ability.maxCharges) ? ability.maxCharges : getMoveChargeCount(ability),
+            requiredGauge: Number.isFinite(ability.cost) ? ability.cost : 0,
+            currentGauge: state.responseGauge
+          };
+          const currentCharges = availability.charges;
+          const maxCharges = availability.maxCharges;
+          const isNoCharges = availability.reason === "charges";
+          const isGaugeLow = availability.reason === "gauge";
+          const disabledClass = isNoCharges ? "is-disabled" : isGaugeLow ? "is-gauge-low" : "";
           const moveAccuracy = Number.isFinite(ability.accuracy) ? `${ability.accuracy}% ACC` : null;
           const moveCharges = `CHG ${currentCharges}/${maxCharges}`;
           const moveMeta = [ability.domain, ability.category]
@@ -554,10 +564,13 @@ function buildActionButtonMarkup(state) {
             .map((value) => String(value).toUpperCase())
             .concat([`PWR ${Number.isFinite(ability.power) ? ability.power : ability.baseDamage || 0}`, moveAccuracy, moveCharges].filter(Boolean))
             .join(" / ");
+          const requirementMeta = isNoCharges
+            ? `${moveMeta} / NO CHARGES REMAINING`
+            : `${moveMeta} / REQUIRES GAUGE: ${availability.requiredGauge}${isGaugeLow ? ` / GAUGE LOW / CURRENT: ${availability.currentGauge}` : ""}`;
           return `
-            <button class="combat-action-button ${disabledClass}" type="button" data-combat-ability="${index}" data-combat-ability-id="${ability.id || ""}" data-ability-cost="${ability.cost}" ${outOfCharges ? "disabled" : ""}>
+            <button class="combat-action-button ${disabledClass}" type="button" data-combat-ability="${index}" data-combat-ability-id="${ability.id || ""}" data-ability-cost="${ability.cost}" data-availability-reason="${availability.reason}" ${isNoCharges ? 'aria-disabled="true"' : ""}>
               <span class="combat-command-name">${ability.name.toUpperCase()}</span>
-              <span class="combat-command-cost">${moveMeta}${canUse ? "" : " / TACTICAL GAUGE LOW"}</span>
+              <span class="combat-command-cost">${requirementMeta}</span>
             </button>
           `;
         }).join("")}
@@ -819,26 +832,42 @@ function bindCombatButtons() {
       console.log("[Move Debug] charges before execute:", getMoveChargeCount(ability));
 
       if (!ability) {
-        return;
-      }
-
-      if (getMoveChargeCount(ability) <= 0) {
-        combatState.battleMessage = "NO CHARGES REMAINING.";
-        combatState.battleSubmessage = "SELECT A DIFFERENT MOVE.";
-        addBattleLog(`${actor.ref.name.toUpperCase()} TRIED ${ability.name.toUpperCase()} BUT HAD NO CHARGES LEFT.`, "buff");
+        combatState.battleMessage = "MOVE UNAVAILABLE.";
+        combatState.battleSubmessage = "SELECT ANOTHER MOVE.";
         renderCombatScreen();
         return;
       }
 
-      const requiredGauge = Number(button.getAttribute("data-ability-cost") || ability.cost || 0);
+      const availability = typeof getMoveUseAvailability === "function"
+        ? getMoveUseAvailability(ability, combatState)
+        : {
+            canUse: getMoveChargeCount(ability) > 0 && combatState.responseGauge >= (Number.isFinite(ability.cost) ? ability.cost : 0),
+            reason: getMoveChargeCount(ability) <= 0 ? "charges" : "gauge",
+            message: "",
+            detail: "",
+            charges: getMoveChargeCount(ability),
+            maxCharges: Number.isFinite(ability.maxCharges) ? ability.maxCharges : getMoveChargeCount(ability),
+            requiredGauge: Number.isFinite(ability.cost) ? ability.cost : 0,
+            currentGauge: combatState.responseGauge
+          };
+
+      console.log("[Move Debug] availability:", availability);
+      if (!availability.canUse) {
+        combatState.battleMessage = availability.message || "MOVE UNAVAILABLE.";
+        combatState.battleSubmessage = availability.detail || "SELECT ANOTHER MOVE.";
+        if (availability.reason === "charges") {
+          addBattleLog(`${actor.ref.name.toUpperCase()} TRIED ${ability.name.toUpperCase()} BUT HAD NO CHARGES LEFT.`, "buff");
+        } else if (availability.reason === "gauge") {
+          addBattleLog(`${actor.ref.name.toUpperCase()} NEEDS MORE TACTICAL GAUGE FOR ${ability.name.toUpperCase()}.`, "buff");
+        } else {
+          addBattleLog(`${actor.ref.name.toUpperCase()} COULD NOT USE ${ability.name.toUpperCase()}.`, "buff");
+        }
+        renderCombatScreen();
+        return;
+      }
+
+      const requiredGauge = availability.requiredGauge;
       console.log("[Move Debug] response gauge:", combatState.responseGauge, "required gauge:", requiredGauge);
-      if (combatState.responseGauge < requiredGauge) {
-        combatState.battleMessage = "NOT ENOUGH RESPONSE GAUGE.";
-        combatState.battleSubmessage = "BUILD GAUGE OR CHOOSE ANOTHER COMMAND.";
-        renderCombatScreen();
-        return;
-      }
-
       combatEngine.takeTurn(actor, ability);
     });
   });
