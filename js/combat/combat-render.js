@@ -95,6 +95,29 @@ function buildBattleLogMarkup(state) {
   }).join("");
 }
 
+// buildPantheonBoonBriefMarkup() shows the active and opening Protocol God boon effects without adding a new screen.
+function buildPantheonBoonBriefMarkup(state) {
+  const boonLines = Array.isArray(state.pantheonBoonMessages) ? state.pantheonBoonMessages : [];
+
+  if (!boonLines.length) {
+    return "";
+  }
+
+  return `
+    <div class="combat-boon-panel">
+      <div class="combat-panel-title">PANTHEON BOONS</div>
+      <div class="combat-boon-list">
+        ${boonLines.map((line) => `
+          <div class="combat-boon-line ${line.status ? `is-${line.status}` : ""}">
+            <span class="combat-boon-label">${line.label}</span>
+            <span class="combat-boon-text">${line.text}</span>
+          </div>
+        `).join("")}
+      </div>
+    </div>
+  `;
+}
+
 // getBattleMessageText() keeps the primary battle prompt readable even while the engine is animating a move.
 function getBattleMessageText(state) {
   if (state.battleIntroPlaying) {
@@ -534,7 +557,7 @@ function buildActionButtonMarkup(state) {
           return `
             <button class="combat-action-button ${disabledClass}" type="button" data-combat-ability="${index}" data-combat-ability-id="${ability.id || ""}" data-ability-cost="${ability.cost}" ${outOfCharges ? "disabled" : ""}>
               <span class="combat-command-name">${ability.name.toUpperCase()}</span>
-              <span class="combat-command-cost">${moveMeta}${canUse ? "" : " / NO GAUGE"}</span>
+              <span class="combat-command-cost">${moveMeta}${canUse ? "" : " / TACTICAL GAUGE LOW"}</span>
             </button>
           `;
         }).join("")}
@@ -632,6 +655,7 @@ function buildCombatMarkup(state) {
             <div id="battle-message" class="combat-voice-text">${getBattleMessageText(state)}</div>
           <div id="battle-submessage" class="combat-voice-subtext">${getBattleSubmessageText(state)}</div>
           <div id="battle-log" class="combat-history-strip">${buildBattleLogMarkup(state)}</div>
+          ${buildPantheonBoonBriefMarkup(state)}
         </div>
 
           <div class="combat-command-box ${commandBoxClass}">

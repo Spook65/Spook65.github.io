@@ -1114,8 +1114,32 @@ function ensurePantheonStoryState() {
     defenderSaveState.currentRun.nextBattleAccuracyBonus = 0;
   }
 
+  if (!Number.isFinite(defenderSaveState.currentRun.nextBattleOpeningDamageBonus)) {
+    defenderSaveState.currentRun.nextBattleOpeningDamageBonus = 0;
+  }
+
+  if (!Number.isFinite(defenderSaveState.currentRun.chargeRestoreBattleGaugeBonus)) {
+    defenderSaveState.currentRun.chargeRestoreBattleGaugeBonus = 0;
+  }
+
   if (typeof defenderSaveState.currentRun.nextThreatHint !== "string") {
     defenderSaveState.currentRun.nextThreatHint = "";
+  }
+
+  if (!Number.isFinite(defenderSaveState.currentRun.damageReductionRunPercent)) {
+    defenderSaveState.currentRun.damageReductionRunPercent = 0;
+  }
+
+  if (!Array.isArray(defenderSaveState.currentRun.activeBoons)) {
+    defenderSaveState.currentRun.activeBoons = [];
+  }
+
+  if (!Array.isArray(defenderSaveState.currentRun.pendingNextBattleBoons)) {
+    defenderSaveState.currentRun.pendingNextBattleBoons = [];
+  }
+
+  if (!Array.isArray(defenderSaveState.currentRun.consumedBoons)) {
+    defenderSaveState.currentRun.consumedBoons = [];
   }
 
   if (!Array.isArray(defenderSaveState.currentRun.choiceHistory)) {
@@ -1135,6 +1159,193 @@ function ensurePantheonStoryState() {
   }
 
   return defenderSaveState;
+}
+
+// ensurePantheonBoonState() creates the run-local boon buckets used to show and consume active Protocol God effects.
+function ensurePantheonBoonState(runState) {
+  if (!runState || typeof runState !== "object") {
+    return null;
+  }
+
+  if (!Array.isArray(runState.activeBoons)) {
+    runState.activeBoons = [];
+  }
+
+  if (!Array.isArray(runState.pendingNextBattleBoons)) {
+    runState.pendingNextBattleBoons = [];
+  }
+
+  if (!Array.isArray(runState.consumedBoons)) {
+    runState.consumedBoons = [];
+  }
+
+  return runState;
+}
+
+// normalizePantheonBoonRecord() copies the boon's identity into a small safe record for save state and battle state.
+function normalizePantheonBoonRecord(boon, encounter, status) {
+  if (!boon || typeof boon !== "object") {
+    return null;
+  }
+
+  const effectType = String(boon.effectType || "");
+  const effectValue = Number.isFinite(boon.effectValue) ? boon.effectValue : 0;
+  const duration = String(boon.duration || "run").toLowerCase();
+  const entityId = encounter?.entityId || boon.entityId || null;
+  const entityName = encounter?.entityName || boon.entityName || "PROTO GOD";
+
+  return {
+    id: boon.id || `${entityId || "boon"}-${effectType || "effect"}`,
+    entityId,
+    entityName,
+    name: boon.name || "Unnamed Boon",
+    rarity: boon.rarity || "common",
+    description: boon.description || "",
+    effectType,
+    effectValue,
+    duration,
+    flavorLine: boon.flavorLine || "",
+    costType: boon.costType || "",
+    costValue: Number.isFinite(boon.costValue) ? boon.costValue : 0,
+    targetScope: boon.targetScope || "",
+    tags: Array.isArray(boon.tags) ? boon.tags.slice() : [],
+    status: status || (duration === "next_battle" ? "pending" : "active")
+  };
+}
+
+// registerSelectedPantheonBoon() sorts a chosen boon into the current run's active, pending, or consumed buckets.
+function registerSelectedPantheonBoon(boon, encounter, runState) {
+  const state = ensurePantheonBoonState(runState);
+  const record = normalizePantheonBoonRecord(boon, encounter, "chosen");
+
+  if (!state || !record) {
+    return null;
+  }
+
+  const isNextBattleEffect = record.duration === "next_battle" || record.effectType === "accuracy_boost_next" || record.effectType === "start_gauge_bonus_next" || record.effectType === "reveal_next_weakness" || record.effectType === "bonus_damage_next";
+  const isRunEffect = record.effectType === "damage_reduction_run" || record.effectType === "stat_boost_run";
+  const isImmediateEffect = record.effectType === "party_heal" || record.effectType === "charge_restore";
+
+  if (isNextBattleEffect) {
+    if (!state.pendingNextBattleBoons.some((entry) => entry.id === record.id)) {
+      state.pendingNextBattleBoons.push({
+        ...record,
+        status: "pending"
+      });
+    }
+  } else if (isRunEffect) {
+    if (!state.activeBoons.some((entry) => entry.id === record.id)) {
+      state.activeBoons.push({
+        ...record,
+        status: "active"
+      });
+    }
+  } else if (isImmediateEffect || !state.consumedBoons.some((entry) => entry.id === record.id)) {
+    state.consumedBoons.push({
+      ...record,
+      status: "consumed"
+    });
+  }
+
+  return record;
+}
+
+// buildActiveBoonMessages() turns the current run's Protocol God effects into a short tactical brief.
+function buildActiveBoonMessages(runState) {
+  if (!runState || typeof runState !== "object") {
+    return [];
+  }
+
+  const lines = [];
+  const activeBoons = Array.isArray(runState.activeBoons) ? runState.activeBoons : [];
+  activeBoons.forEach((boon) => {
+    const mechanics = formatPantheonBoonMechanics(boon);
+    lines.push({
+      status: "active",
+      label: `${boon.entityName || "PROTO GOD"} / ${boon.name || "BOON"}`,
+      text: `${mechanics.effectLine} ${mechanics.durationLine}`
+    });
+  });
+
+  return lines;
+}
+
+// consumeNextBattleBoon() moves a one-shot boon from the pending bucket into the consumed bucket after it triggers.
+function consumeNextBattleBoon(boonId, runState) {
+  const state = ensurePantheonBoonState(runState);
+  if (!state || !boonId) {
+    return null;
+  }
+
+  const pendingIndex = state.pendingNextBattleBoons.findIndex((boon) => boon.id === boonId);
+  const boon = pendingIndex >= 0 ? state.pendingNextBattleBoons.splice(pendingIndex, 1)[0] : null;
+  if (!boon) {
+    return null;
+  }
+
+  if (!state.consumedBoons.some((entry) => entry.id === boon.id)) {
+    state.consumedBoons.push({
+      ...boon,
+      status: "consumed"
+    });
+  }
+
+  return boon;
+}
+
+// applyPendingNextBattleBoons() turns queued next-battle boons into battle-state effects and brief messages.
+function applyPendingNextBattleBoons(runState, battleState) {
+  const state = ensurePantheonBoonState(runState);
+  if (!state || !battleState || typeof battleState !== "object") {
+    return [];
+  }
+
+  const messages = [];
+  const pendingBoons = Array.isArray(state.pendingNextBattleBoons) ? state.pendingNextBattleBoons.slice() : [];
+
+  pendingBoons.forEach((boon) => {
+    const effectType = String(boon.effectType || "");
+    const effectValue = Number.isFinite(boon.effectValue) ? boon.effectValue : 0;
+    const entityName = boon.entityName || "PROTO GOD";
+
+    if (effectType === "start_gauge_bonus_next") {
+      battleState.responseGauge = Math.min(100, (Number.isFinite(battleState.responseGauge) ? battleState.responseGauge : 0) + effectValue);
+      messages.push({
+        status: "opening",
+        label: `${entityName} / ${boon.name}`,
+        text: `Tactical Gauge +${effectValue}.`
+      });
+    } else if (effectType === "accuracy_boost_next") {
+      battleState.battleAccuracyBonus = Math.min(100, (Number.isFinite(battleState.battleAccuracyBonus) ? battleState.battleAccuracyBonus : 0) + effectValue);
+      messages.push({
+        status: "opening",
+        label: `${entityName} / ${boon.name}`,
+        text: `Accuracy boosted by ${effectValue} for this battle.`
+      });
+    } else if (effectType === "reveal_next_weakness") {
+      battleState.pantheonInsight = `${entityName} reveals a weakness: ${boon.flavorLine || boon.description || "The next threat will be easier to read."}`;
+      messages.push({
+        status: "opening",
+        label: `${entityName} / ${boon.name}`,
+        text: "Weakness hint revealed for the next threat."
+      });
+    } else if (effectType === "bonus_damage_next") {
+      battleState.openingDamageBonus = Math.max(0, (Number.isFinite(battleState.openingDamageBonus) ? battleState.openingDamageBonus : 0) + effectValue);
+      messages.push({
+        status: "opening",
+        label: `${entityName} / ${boon.name}`,
+        text: `Opening strike bonus +${effectValue}.`
+      });
+    }
+
+    consumeNextBattleBoon(boon.id, state);
+  });
+
+  if (pendingBoons.length && typeof saveGame === "function") {
+    saveGame();
+  }
+
+  return messages;
 }
 
 // getPantheonSectorForThreat() reuses the grounded sector labels so the myth encounter still feels tied to the network being reclaimed.
@@ -1399,6 +1610,7 @@ function applyPantheonBoon(boon, encounter) {
   const effectValue = Number.isFinite(boon.effectValue) ? boon.effectValue : 0;
   const runState = storyState.currentRun;
   const liveParty = Array.isArray(programs) ? programs : [];
+  registerSelectedPantheonBoon(boon, encounter, runState);
 
   if (runState) {
     runState.pantheonHistory = {
@@ -1437,15 +1649,11 @@ function applyPantheonBoon(boon, encounter) {
       runState.lastPantheonChoiceId = boon.id;
     }
   } else if (effectType === "damage_reduction_run") {
-    liveParty.forEach((program) => {
-      program.def = (program.def || 0) + effectValue;
-      program.maxHp = (program.maxHp || 0) + 5;
-      program.hp = Math.min(program.maxHp, (program.hp || 0) + 5);
-    });
-    syncRunParty();
     if (runState) {
+      runState.damageReductionRunPercent = Math.min(30, (Number.isFinite(runState.damageReductionRunPercent) ? runState.damageReductionRunPercent : 0) + effectValue);
       runState.lastPantheonChoiceId = boon.id;
     }
+    syncRunParty();
   } else if (effectType === "stat_boost_run") {
     liveParty.forEach((program) => {
       program.atk = (program.atk || 0) + effectValue;
@@ -1474,8 +1682,8 @@ function applyPantheonBoon(boon, encounter) {
     });
     syncRunParty();
     if (runState) {
-      runState.nextBattleGaugeBonus = Math.max(Number.isFinite(runState.nextBattleGaugeBonus) ? runState.nextBattleGaugeBonus : 0, highestRestoredMoveCost);
-      console.log("[Move Debug] next battle gauge bonus:", runState.nextBattleGaugeBonus);
+      runState.chargeRestoreBattleGaugeBonus = Math.max(Number.isFinite(runState.chargeRestoreBattleGaugeBonus) ? runState.chargeRestoreBattleGaugeBonus : 0, highestRestoredMoveCost);
+      console.log("[Move Debug] next battle gauge bonus:", runState.chargeRestoreBattleGaugeBonus);
       runState.lastPantheonChoiceId = boon.id;
     }
   } else if (effectType === "accuracy_boost_next") {
@@ -1494,11 +1702,8 @@ function applyPantheonBoon(boon, encounter) {
       runState.lastPantheonChoiceId = boon.id;
     }
   } else if (effectType === "bonus_damage_next") {
-    liveParty.forEach((program) => {
-      program.atk = (program.atk || 0) + effectValue;
-    });
-    syncRunParty();
     if (runState) {
+      runState.nextBattleOpeningDamageBonus = Math.max(0, (Number.isFinite(runState.nextBattleOpeningDamageBonus) ? runState.nextBattleOpeningDamageBonus : 0) + effectValue);
       runState.lastPantheonChoiceId = boon.id;
     }
   }

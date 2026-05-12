@@ -297,16 +297,83 @@ function buildCombatState(sourceThreat) {
   const firstProgram = turnOrder.find((entry) => entry.kind === "program" && entry.ref.hp > 0);
   const runState = typeof defenderSaveState !== "undefined" && defenderSaveState && defenderSaveState.currentRun ? defenderSaveState.currentRun : null;
   const storyState = typeof defenderSaveState !== "undefined" && defenderSaveState && defenderSaveState.story ? defenderSaveState.story : null;
-  const pendingGaugeBonus = Number.isFinite(runState?.nextBattleGaugeBonus) ? runState.nextBattleGaugeBonus : 0;
-  const pendingThreatHint = typeof runState?.nextThreatHint === "string" && runState.nextThreatHint.trim() ? runState.nextThreatHint.trim() : "";
+  const pendingQueue = Array.isArray(runState?.pendingNextBattleBoons) ? runState.pendingNextBattleBoons.slice() : [];
+  const legacyGaugeBonus = Number.isFinite(runState?.nextBattleGaugeBonus) ? runState.nextBattleGaugeBonus : 0;
+  const legacyChargeRestoreGaugeBonus = Number.isFinite(runState?.chargeRestoreBattleGaugeBonus) ? runState.chargeRestoreBattleGaugeBonus : 0;
+  const legacyAccuracyBonus = Number.isFinite(runState?.nextBattleAccuracyBonus) ? runState.nextBattleAccuracyBonus : 0;
+  const legacyOpeningDamageBonus = Number.isFinite(runState?.nextBattleOpeningDamageBonus) ? runState.nextBattleOpeningDamageBonus : 0;
+  const legacyThreatHint = typeof runState?.nextThreatHint === "string" && runState.nextThreatHint.trim() ? runState.nextThreatHint.trim() : "";
+  const queueHasGaugeBonus = pendingQueue.some((boon) => String(boon?.effectType || "") === "start_gauge_bonus_next");
+  const queueHasAccuracyBonus = pendingQueue.some((boon) => String(boon?.effectType || "") === "accuracy_boost_next");
+  const queueHasOpeningDamageBonus = pendingQueue.some((boon) => String(boon?.effectType || "") === "bonus_damage_next");
+  const queueHasThreatHint = pendingQueue.some((boon) => String(boon?.effectType || "") === "reveal_next_weakness");
+  const pendingGaugeBonus = (queueHasGaugeBonus ? 0 : legacyGaugeBonus) + legacyChargeRestoreGaugeBonus;
+  const pendingAccuracyBonus = queueHasAccuracyBonus ? 0 : legacyAccuracyBonus;
+  const pendingOpeningDamageBonus = queueHasOpeningDamageBonus ? 0 : legacyOpeningDamageBonus;
+  const pendingThreatHint = queueHasThreatHint ? "" : legacyThreatHint;
+  const activeBoons = Array.isArray(runState?.activeBoons) ? runState.activeBoons.slice() : [];
+  const activeRunDamageReduction = activeBoons.reduce((total, boon) => {
+    if (String(boon?.effectType || "") !== "damage_reduction_run") {
+      return total;
+    }
+
+    return total + (Number.isFinite(boon?.effectValue) ? boon.effectValue : 0);
+  }, 0);
+  const battleBoonMessages = [];
+  const activeBoonMessages = typeof buildActiveBoonMessages === "function" ? buildActiveBoonMessages(runState) : [];
+  const pendingBattleEffects = {
+    responseGauge: pendingGaugeBonus,
+    battleAccuracyBonus: pendingAccuracyBonus,
+    openingDamageBonus: pendingOpeningDamageBonus,
+    pantheonInsight: pendingThreatHint
+  };
 
   if (runState) {
+    runState.chargeRestoreBattleGaugeBonus = 0;
     runState.nextBattleGaugeBonus = 0;
     runState.nextThreatHint = "";
+    runState.nextBattleAccuracyBonus = 0;
+    runState.nextBattleOpeningDamageBonus = 0;
   }
 
-  if (typeof saveGame === "function" && (pendingGaugeBonus > 0 || pendingThreatHint)) {
+  if (typeof saveGame === "function" && (pendingGaugeBonus > 0 || pendingAccuracyBonus > 0 || pendingOpeningDamageBonus > 0 || pendingThreatHint)) {
     saveGame();
+  }
+
+  if (runState && pendingQueue.length && typeof applyPendingNextBattleBoons === "function") {
+    battleBoonMessages.push(...applyPendingNextBattleBoons(runState, pendingBattleEffects));
+  }
+
+  if (pendingGaugeBonus > 0) {
+    battleBoonMessages.push({
+      status: "opening",
+      label: "PROTOCOL GOD / STARTUP ROUTE",
+      text: `Tactical Gauge +${pendingGaugeBonus}.`
+    });
+  }
+
+  if (pendingAccuracyBonus > 0) {
+    battleBoonMessages.push({
+      status: "opening",
+      label: "PROTOCOL GOD / FORECAST",
+      text: `Accuracy boosted by ${pendingAccuracyBonus} for this battle.`
+    });
+  }
+
+  if (pendingOpeningDamageBonus > 0) {
+    battleBoonMessages.push({
+      status: "opening",
+      label: "PROTOCOL GOD / OPENING STRIKE",
+      text: `Opening strike bonus +${pendingOpeningDamageBonus}.`
+    });
+  }
+
+  if (pendingThreatHint) {
+    battleBoonMessages.push({
+      status: "opening",
+      label: "PROTOCOL GOD / THREAT HINT",
+      text: pendingThreatHint
+    });
   }
 
   return resetBattleIntroState({
@@ -316,7 +383,7 @@ function buildCombatState(sourceThreat) {
     turnOrder,
     currentTurnIndex: 0,
     activeProgramId: firstProgram ? firstProgram.ref.id : playerParty[0].id,
-    responseGauge: pendingGaugeBonus,
+    responseGauge: pendingQueue.length ? pendingBattleEffects.responseGauge : pendingGaugeBonus,
     battleLog: [],
     battleMessage: "",
     battleSubmessage: "",
@@ -328,6 +395,14 @@ function buildCombatState(sourceThreat) {
     nextDamageReduction: 0,
     nextCounterDamage: 0,
     encounterLevel,
-    pantheonInsight: pendingThreatHint || (storyState?.lastPantheonDialogue || "")
+    pantheonInsight: pendingQueue.length
+      ? (pendingBattleEffects.pantheonInsight || (storyState?.lastPantheonDialogue || ""))
+      : (pendingThreatHint || (storyState?.lastPantheonDialogue || "")),
+    battleAccuracyBonus: pendingQueue.length ? pendingBattleEffects.battleAccuracyBonus : pendingAccuracyBonus,
+    openingDamageBonus: pendingQueue.length ? pendingBattleEffects.openingDamageBonus : pendingOpeningDamageBonus,
+    openingDamageBonusConsumed: false,
+    runDamageReductionPercent: activeRunDamageReduction,
+    pantheonBoonMessages: activeBoonMessages.concat(battleBoonMessages),
+    activeBoons: activeBoons
   });
 }

@@ -44,9 +44,10 @@ function consumeMoveCharge(move) {
 }
 
 // rollMoveAccuracy() resolves a move attempt against its accuracy stat before damage is applied.
-function rollMoveAccuracy(move) {
+function rollMoveAccuracy(move, accuracyBonus = 0) {
   const accuracy = Number.isFinite(move?.accuracy) ? Math.max(0, Math.min(100, move.accuracy)) : 100;
-  return (Math.floor(Math.random() * 100) + 1) <= accuracy;
+  const bonus = Number.isFinite(accuracyBonus) ? Math.max(0, accuracyBonus) : 0;
+  return (Math.floor(Math.random() * 100) + 1) <= Math.min(100, accuracy + bonus);
 }
 
 // getRandomActiveThreat() selects the next live target from the global roster.
@@ -534,10 +535,20 @@ class ThreatCombat {
   resolveDamage(attacker, defender, ability, options = {}) {
     const damageResult = this.calculateDamage(attacker, defender, ability);
     let damage = damageResult.damage;
+    const bonusDamage = Number.isFinite(options.bonusDamage) ? Math.max(0, options.bonusDamage) : 0;
+
+    if (bonusDamage > 0) {
+      damage += bonusDamage;
+    }
 
     if (options.isThreatAttack && this.state.nextDamageReduction > 0) {
       damage = Math.max(1, Math.round(damage * (1 - this.state.nextDamageReduction)));
       this.state.nextDamageReduction = 0;
+    }
+
+    if (options.isThreatAttack && Number.isFinite(this.state.runDamageReductionPercent) && this.state.runDamageReductionPercent > 0) {
+      const reduction = Math.min(0.5, Math.max(0, this.state.runDamageReductionPercent / 100));
+      damage = Math.max(1, Math.round(damage * (1 - reduction)));
     }
 
     if (defender === this.state.threat && Array.isArray(defender.statusEffects) && defender.statusEffects.includes("isolated")) {
@@ -586,12 +597,13 @@ class ThreatCombat {
 
       if (this.state.responseGauge < ability.cost) {
         addBattleLog(`${actor.name.toUpperCase()} NEEDS MORE RESPONSE GAUGE.`, "buff");
+        this.setBattleCue("NOT ENOUGH TACTICAL GAUGE.", `REQUIRED ${ability.cost} / CURRENT ${this.state.responseGauge}.`);
         renderCombatScreen();
         return;
       }
 
       consumeMoveCharge(ability);
-      const attackHits = rollMoveAccuracy(ability);
+      const attackHits = rollMoveAccuracy(ability, this.state.battleAccuracyBonus || 0);
       this.state.actionLocked = true;
       this.setBattleCue(
         `${actor.name.toUpperCase()} USED ${ability.name.toUpperCase()}!`,
@@ -618,7 +630,13 @@ class ThreatCombat {
           return;
         }
 
-        const damageResult = this.resolveDamage(actor, this.state.threat, ability);
+        const openingDamageBonus = !this.state.openingDamageBonusConsumed && Number.isFinite(this.state.openingDamageBonus) ? this.state.openingDamageBonus : 0;
+        const damageResult = this.resolveDamage(actor, this.state.threat, ability, {
+          bonusDamage: openingDamageBonus
+        });
+        if (openingDamageBonus > 0) {
+          this.state.openingDamageBonusConsumed = true;
+        }
         this.state.responseGauge = Math.min(100, this.state.responseGauge + getRandomInt(10, 15));
         this.applyPlayerEffect(actor, ability, damageResult);
 
