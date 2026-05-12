@@ -118,6 +118,29 @@ function buildPantheonBoonBriefMarkup(state) {
   `;
 }
 
+// buildEnemyIntentBrief() renders the current threat forecast inside the tactical brief.
+function buildEnemyIntentBrief(state) {
+  const intent = state?.enemyIntent;
+
+  if (!intent) {
+    return "";
+  }
+
+  const panelLabel = state?.enemyForecastActive ? "ORACLE FORECAST" : "ENEMY INTENT";
+  const threatName = String(state?.threat?.title || "THE THREAT").toUpperCase();
+  const intentLabel = String(intent.label || "STRIKE").toUpperCase();
+  const expectedText = String(intent.description || "normal damage.");
+
+  return `
+    <div class="combat-intent-panel">
+      <div class="combat-panel-title">${panelLabel}</div>
+      <div class="combat-intent-headline">${threatName} PREPARES ${intentLabel}.</div>
+      <div class="combat-intent-text">Expected: ${expectedText}</div>
+      ${state?.enemyForecastActive ? `<div class="combat-intent-note">ORACLE-9 CLARIFIES THE FORECAST.</div>` : ""}
+    </div>
+  `;
+}
+
 // getBattleMessageText() keeps the primary battle prompt readable even while the engine is animating a move.
 function getBattleMessageText(state) {
   if (state.battleIntroPlaying) {
@@ -460,6 +483,7 @@ function buildThreatVisualMarkup(state) {
         <div class="combat-subline">HP ${threat.hp}/${threat.maxHp}</div>
         ${renderBar(threat.hp, threat.maxHp, "is-hp")}
         <div class="combat-subline">WEAK TO: ${String(getActorCombatType(threat, true) || "UNKNOWN").toUpperCase()}</div>
+        ${state.enemyIntent ? `<div class="combat-subline is-intent">INTENT: ${String(state.enemyIntent.label || "STRIKE").toUpperCase()}</div>` : ""}
         ${statusMarkup}
       </div>
     </article>
@@ -665,9 +689,10 @@ function buildCombatMarkup(state) {
         <div class="combat-footer-left">
           <div class="combat-voice-box">
             <div class="combat-panel-title">TACTICAL BRIEF</div>
-            <div id="battle-message" class="combat-voice-text">${getBattleMessageText(state)}</div>
+          <div id="battle-message" class="combat-voice-text">${getBattleMessageText(state)}</div>
           <div id="battle-submessage" class="combat-voice-subtext">${getBattleSubmessageText(state)}</div>
           <div id="battle-log" class="combat-history-strip">${buildBattleLogMarkup(state)}</div>
+          ${buildEnemyIntentBrief(state)}
           ${buildPantheonBoonBriefMarkup(state)}
         </div>
 

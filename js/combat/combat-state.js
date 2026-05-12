@@ -231,6 +231,118 @@ function getMoveUseAvailability(move, battleState = null) {
   };
 }
 
+// chooseEnemyIntent() turns the current threat's loadout into a readable forecast for the next hostile action.
+function chooseEnemyIntent(threat, battleState = null) {
+  const abilities = Array.isArray(threat?.abilities) ? threat.abilities : [];
+  const threatType = String(threat?.type || threat?.combatType || "").toLowerCase();
+  const severity = String(threat?.severity || "medium").toLowerCase();
+  const hasEffect = (effectName) => abilities.some((ability) => String(ability?.effect || "") === effectName);
+  const indexOfEffect = (effectName) => abilities.findIndex((ability) => String(ability?.effect || "") === effectName);
+  const highestDamageIndex = abilities.reduce((bestIndex, ability, index) => {
+    const bestAbility = abilities[bestIndex];
+    const candidateDamage = Number.isFinite(ability?.baseDamage) ? ability.baseDamage : 0;
+    const bestDamage = Number.isFinite(bestAbility?.baseDamage) ? bestAbility.baseDamage : 0;
+    return candidateDamage >= bestDamage ? index : bestIndex;
+  }, abilities.findIndex((ability) => Number.isFinite(ability?.baseDamage) && ability.baseDamage > 0));
+  const strikeIndex = abilities.findIndex((ability) => String(ability?.effect || "") !== "self_level_up" && Number.isFinite(ability?.baseDamage) && ability.baseDamage > 0);
+  const fallbackIndex = abilities.findIndex((ability) => ability);
+
+  let intentId = "strike";
+  if (hasEffect("self_level_up")) {
+    intentId = threatType === "ddos" || threatType === "botnet" ? "charge" : "shield";
+  } else if (hasEffect("damage_all") && (threatType === "ddos" || threatType === "botnet")) {
+    intentId = severity === "high" ? "overload" : "swarm";
+  } else if (hasEffect("status_isolated")) {
+    intentId = "lockout";
+  } else if (hasEffect("status_encrypted")) {
+    intentId = "corrupt";
+  } else if (hasEffect("status_detected")) {
+    intentId = "trace";
+  } else if (hasEffect("damage_all")) {
+    intentId = "swarm";
+  }
+
+  const intentCatalog = {
+    strike: {
+      label: "STRIKE",
+      description: "normal damage.",
+      severity: "low"
+    },
+    overload: {
+      label: "OVERLOAD",
+      description: "light damage and Tactical Gauge disruption.",
+      severity: "medium"
+    },
+    lockout: {
+      label: "LOCKOUT",
+      description: "light damage and command disruption.",
+      severity: "medium"
+    },
+    corrupt: {
+      label: "CORRUPT",
+      description: "damage and corruption pressure.",
+      severity: "medium"
+    },
+    shield: {
+      label: "SHIELD",
+      description: "defensive hardening and reduced damage next turn.",
+      severity: "low"
+    },
+    swarm: {
+      label: "SWARM",
+      description: "multiple weak hits.",
+      severity: "medium"
+    },
+    trace: {
+      label: "TRACE",
+      description: "marking and accuracy pressure.",
+      severity: "low"
+    },
+    charge: {
+      label: "CHARGE",
+      description: "power rises before the next strike.",
+      severity: "low"
+    }
+  };
+
+  const selectedIndex = (
+    intentId === "overload" || intentId === "swarm"
+      ? highestDamageIndex
+      : intentId === "lockout"
+        ? (indexOfEffect("status_isolated") >= 0 ? indexOfEffect("status_isolated") : indexOfEffect("status_encrypted") >= 0 ? indexOfEffect("status_encrypted") : strikeIndex)
+        : intentId === "corrupt"
+          ? (indexOfEffect("status_encrypted") >= 0 ? indexOfEffect("status_encrypted") : indexOfEffect("status_detected") >= 0 ? indexOfEffect("status_detected") : strikeIndex)
+          : intentId === "trace"
+            ? (indexOfEffect("status_detected") >= 0 ? indexOfEffect("status_detected") : strikeIndex)
+            : intentId === "charge" || intentId === "shield"
+              ? (indexOfEffect("self_level_up") >= 0 ? indexOfEffect("self_level_up") : highestDamageIndex)
+              : strikeIndex
+  );
+
+  const fallbackAbility = abilities[fallbackIndex] || abilities[0] || null;
+  const selectedAbility = abilities[selectedIndex] || fallbackAbility;
+  const catalogEntry = intentCatalog[intentId] || intentCatalog.strike;
+  const forecastNote = battleState?.pantheonInsight ? String(battleState.pantheonInsight) : "";
+
+  if (!abilities.length) {
+    console.warn("[Combat] Enemy intent fallback to STRIKE due to missing threat abilities.", threat?.id || threat?.title || "unknown threat");
+  }
+
+  return {
+    id: intentId,
+    type: intentId,
+    label: catalogEntry.label,
+    description: catalogEntry.description,
+    severity: catalogEntry.severity,
+    abilityIndex: Number.isInteger(selectedIndex) && selectedIndex >= 0 ? selectedIndex : (Number.isInteger(fallbackIndex) ? fallbackIndex : 0),
+    abilityId: selectedAbility?.id || "",
+    abilityName: selectedAbility?.name || "",
+    threatName: threat?.title || "THREAT",
+    forecastNote,
+    clarified: Boolean(forecastNote)
+  };
+}
+
 // getThreatLevel() scales the encounter around the current party average so the run ramps naturally.
 function getThreatLevel() {
   const avgPartyLevel = Math.floor(programs.reduce((sum, program) => sum + program.level, 0) / 4);
@@ -367,6 +479,7 @@ function buildCombatState(sourceThreat) {
   const queueHasAccuracyBonus = pendingQueue.some((boon) => String(boon?.effectType || "") === "accuracy_boost_next");
   const queueHasOpeningDamageBonus = pendingQueue.some((boon) => String(boon?.effectType || "") === "bonus_damage_next");
   const queueHasThreatHint = pendingQueue.some((boon) => String(boon?.effectType || "") === "reveal_next_weakness");
+  const enemyForecastActive = queueHasThreatHint || Boolean(legacyThreatHint);
   const pendingGaugeBonus = (queueHasGaugeBonus ? 0 : legacyGaugeBonus) + legacyChargeRestoreGaugeBonus;
   const pendingAccuracyBonus = queueHasAccuracyBonus ? 0 : legacyAccuracyBonus;
   const pendingOpeningDamageBonus = queueHasOpeningDamageBonus ? 0 : legacyOpeningDamageBonus;
@@ -387,6 +500,19 @@ function buildCombatState(sourceThreat) {
     openingDamageBonus: pendingOpeningDamageBonus,
     pantheonInsight: pendingThreatHint
   };
+  const previewBattleState = {
+    threat,
+    playerParty,
+    turnOrder,
+    responseGauge: pendingQueue.length ? pendingBattleEffects.responseGauge : pendingGaugeBonus,
+    battleAccuracyBonus: pendingQueue.length ? pendingBattleEffects.battleAccuracyBonus : pendingAccuracyBonus,
+    openingDamageBonus: pendingQueue.length ? pendingBattleEffects.openingDamageBonus : pendingOpeningDamageBonus,
+    pantheonInsight: pendingQueue.length
+      ? (pendingBattleEffects.pantheonInsight || (storyState?.lastPantheonDialogue || ""))
+      : (pendingThreatHint || (storyState?.lastPantheonDialogue || "")),
+    activeBoons
+  };
+  const enemyIntent = typeof chooseEnemyIntent === "function" ? chooseEnemyIntent(threat, previewBattleState) : null;
 
   if (runState) {
     runState.chargeRestoreBattleGaugeBonus = 0;
@@ -452,16 +578,16 @@ function buildCombatState(sourceThreat) {
     commandMode: "main",
     outcome: "ongoing",
     phase: "intro",
+    enemyIntent,
     nextDamageReduction: 0,
     nextCounterDamage: 0,
     encounterLevel,
-    pantheonInsight: pendingQueue.length
-      ? (pendingBattleEffects.pantheonInsight || (storyState?.lastPantheonDialogue || ""))
-      : (pendingThreatHint || (storyState?.lastPantheonDialogue || "")),
+    pantheonInsight: previewBattleState.pantheonInsight,
     battleAccuracyBonus: pendingQueue.length ? pendingBattleEffects.battleAccuracyBonus : pendingAccuracyBonus,
     openingDamageBonus: pendingQueue.length ? pendingBattleEffects.openingDamageBonus : pendingOpeningDamageBonus,
     openingDamageBonusConsumed: false,
     runDamageReductionPercent: activeRunDamageReduction,
+    enemyForecastActive,
     pantheonBoonMessages: activeBoonMessages.concat(battleBoonMessages),
     activeBoons: activeBoons
   });

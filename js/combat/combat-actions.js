@@ -50,6 +50,38 @@ function rollMoveAccuracy(move, accuracyBonus = 0) {
   return (Math.floor(Math.random() * 100) + 1) <= Math.min(100, accuracy + bonus);
 }
 
+// resolveEnemyIntent() turns the forecast into the exact threat ability that will be used this turn.
+function resolveEnemyIntent(intent, battleState) {
+  const threat = battleState?.threat;
+  const abilities = Array.isArray(threat?.abilities) ? threat.abilities : [];
+  const safeIntent = intent && typeof intent === "object" ? intent : null;
+  let ability = null;
+
+  if (safeIntent && Number.isInteger(safeIntent.abilityIndex) && abilities[safeIntent.abilityIndex]) {
+    ability = abilities[safeIntent.abilityIndex];
+  }
+
+  if (!ability && safeIntent?.abilityId) {
+    ability = abilities.find((candidate) => candidate && candidate.id === safeIntent.abilityId) || null;
+  }
+
+  if (!ability) {
+    ability = abilities.find((candidate) => candidate && Number.isFinite(candidate.baseDamage) && candidate.baseDamage > 0 && String(candidate.effect || "") !== "self_level_up")
+      || abilities[0]
+      || {
+        name: "System Strike",
+        cost: 0,
+        baseDamage: Number.isFinite(threat?.atk) ? threat.atk : 1,
+        effect: ""
+      };
+  }
+
+  return {
+    intent: safeIntent,
+    ability
+  };
+}
+
 // getRandomActiveThreat() selects the next live target from the global roster.
 function getRandomActiveThreat() {
   const activeThreats = threats.filter((threat) => threat.status === "active");
@@ -384,6 +416,9 @@ class ThreatCombat {
       if (nextActor.kind === "program" && nextActor.ref.hp > 0) {
         this.state.activeProgramId = nextActor.ref.id;
         this.state.commandMode = "main";
+        if (typeof chooseEnemyIntent === "function") {
+          this.state.enemyIntent = chooseEnemyIntent(this.state.threat, this.state);
+        }
         break;
       }
 
@@ -688,7 +723,13 @@ class ThreatCombat {
     }
 
     if (actorEntry.kind === "threat") {
-      const threatAbility = ability || actor.abilities[getRandomInt(0, actor.abilities.length - 1)];
+      const resolvedEnemyIntent = typeof resolveEnemyIntent === "function"
+        ? resolveEnemyIntent(this.state.enemyIntent, this.state)
+        : null;
+      const threatAbility = resolvedEnemyIntent?.ability || ability || actor.abilities[getRandomInt(0, actor.abilities.length - 1)];
+      if (resolvedEnemyIntent && resolvedEnemyIntent.intent) {
+        this.state.enemyIntent = resolvedEnemyIntent.intent;
+      }
       const livingPrograms = programs.filter((program) => program.hp > 0);
 
       if (!livingPrograms.length) {
@@ -723,7 +764,7 @@ class ThreatCombat {
 
       this.setBattleCue(
         `${actor.title.toUpperCase()} USED ${threatAbility.name.toUpperCase()}!`,
-        "COUNTERMEASURE DEPLOYED.",
+        resolvedEnemyIntent?.intent?.description ? resolvedEnemyIntent.intent.description.toUpperCase() : "COUNTERMEASURE DEPLOYED.",
         this.buildVisualEffect(actorEntry, { kind: "program", ref: chosenTarget }, threatAbility, null, "windup")
       );
 

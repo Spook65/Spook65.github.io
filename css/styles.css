@@ -7948,3 +7948,37 @@ body {
 .combat-action-button.is-gauge-low:focus-visible {
   opacity: 0.95;
 }
+
+.combat-intent-panel {
+  margin-top: 0.65rem;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid rgba(122, 178, 255, 0.18);
+  border-left: 2px solid rgba(122, 178, 255, 0.62);
+  background: linear-gradient(180deg, rgba(12, 18, 33, 0.86), rgba(7, 11, 22, 0.96));
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.02) inset;
+}
+
+.combat-intent-headline {
+  margin-top: 0.35rem;
+  color: #f2eadf;
+  font-size: 0.83rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.combat-intent-text,
+.combat-intent-note {
+  margin-top: 0.25rem;
+  color: rgba(220, 223, 231, 0.84);
+  font-size: 0.73rem;
+  line-height: 1.45;
+  letter-spacing: 0.06em;
+}
+
+.combat-intent-note {
+  color: #91c6ff;
+}
+
+.combat-subline.is-intent {
+  color: #d7b86a;
+}
