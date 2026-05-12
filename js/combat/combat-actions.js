@@ -51,7 +51,10 @@ function rollMoveAccuracy(move, accuracyBonus = 0) {
 }
 
 // resolveEnemyIntent() turns the forecast into the exact threat ability that will be used this turn.
-function resolveEnemyIntent(intent, battleState) {
+function resolveEnemyIntent(intentOrBattleState, battleStateMaybe) {
+  const hasExplicitBattleState = Boolean(battleStateMaybe);
+  const battleState = hasExplicitBattleState ? battleStateMaybe : intentOrBattleState;
+  const intent = hasExplicitBattleState ? intentOrBattleState : battleState?.enemyIntent;
   const threat = battleState?.threat;
   const abilities = Array.isArray(threat?.abilities) ? threat.abilities : [];
   const safeIntent = intent && typeof intent === "object" ? intent : null;
@@ -74,6 +77,14 @@ function resolveEnemyIntent(intent, battleState) {
         baseDamage: Number.isFinite(threat?.atk) ? threat.atk : 1,
         effect: ""
       };
+  }
+
+  if (battleState && safeIntent) {
+    battleState.resolvedEnemyIntent = {
+      ...safeIntent,
+      resolvedAt: Date.now()
+    };
+    console.log("[Intent] resolving:", safeIntent.id);
   }
 
   return {
@@ -416,7 +427,9 @@ class ThreatCombat {
       if (nextActor.kind === "program" && nextActor.ref.hp > 0) {
         this.state.activeProgramId = nextActor.ref.id;
         this.state.commandMode = "main";
-        if (typeof chooseEnemyIntent === "function") {
+        if (typeof prepareNextEnemyIntent === "function") {
+          prepareNextEnemyIntent(this.state);
+        } else if (typeof chooseEnemyIntent === "function") {
           this.state.enemyIntent = chooseEnemyIntent(this.state.threat, this.state);
         }
         break;
@@ -724,7 +737,7 @@ class ThreatCombat {
 
     if (actorEntry.kind === "threat") {
       const resolvedEnemyIntent = typeof resolveEnemyIntent === "function"
-        ? resolveEnemyIntent(this.state.enemyIntent, this.state)
+        ? resolveEnemyIntent(this.state)
         : null;
       const threatAbility = resolvedEnemyIntent?.ability || ability || actor.abilities[getRandomInt(0, actor.abilities.length - 1)];
       if (resolvedEnemyIntent && resolvedEnemyIntent.intent) {
@@ -810,6 +823,8 @@ class ThreatCombat {
         }
 
         scheduleBattleStep(this, () => {
+          this.state.resolvedEnemyIntent = resolvedEnemyIntent?.intent ? { ...resolvedEnemyIntent.intent, consumedAt: Date.now() } : this.state.resolvedEnemyIntent;
+          this.state.enemyIntent = null;
           this.state.battleMessage = "";
           this.state.battleSubmessage = "";
           this.state.actionLocked = false;

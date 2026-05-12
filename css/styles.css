@@ -7989,6 +7989,10 @@ body {
   color: #91c6ff;
 }
 
+.combat-intent-note.is-repeat {
+  color: rgba(215, 184, 106, 0.95);
+}
+
 .combat-subline.is-intent {
   color: #d7b86a;
 }

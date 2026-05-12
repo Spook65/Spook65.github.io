@@ -118,31 +118,39 @@ function buildPantheonBoonBriefMarkup(state) {
   `;
 }
 
-// buildEnemyIntentBrief() renders the current threat forecast inside the tactical brief.
-function buildEnemyIntentBrief(state) {
-  const intent = state?.enemyIntent;
+// buildActionableIntentBrief() renders the current threat forecast inside the tactical brief.
+function buildActionableIntentBrief(intent, threat, battleState) {
+  const safeIntent = intent && typeof intent === "object" ? intent : null;
 
-  if (!intent) {
+  if (!safeIntent) {
     return "";
   }
 
-  const panelLabel = state?.enemyForecastActive ? "ORACLE FORECAST" : "ENEMY INTENT";
-  const threatName = String(state?.threat?.title || "THE THREAT").toUpperCase();
-  const intentLabel = String(intent.label || "STRIKE").toUpperCase();
-  const effectText = String(intent.effectText || "Effect: Enemy deals normal damage.");
-  const counterplayText = String(intent.counterplayText || "Counterplay: Attack, defend, or use support.");
-  const descriptionText = String(intent.description || "The threat is preparing a direct attack.");
+  const panelLabel = battleState?.enemyForecastActive ? "ORACLE FORECAST" : "ENEMY INTENT";
+  const threatName = String(threat?.title || "THE THREAT").toUpperCase();
+  const intentLabel = String(safeIntent.label || "STRIKE").toUpperCase();
+  const effectText = String(safeIntent.effectText || "Effect: Enemy deals normal damage.");
+  const counterplayText = String(safeIntent.counterplayText || "Counterplay: Attack, defend, or use support.");
+  const descriptionText = String(safeIntent.description || "The threat is preparing a direct attack.");
+  const repeatSuffix = safeIntent.repeated ? " AGAIN" : "";
+  const forecastNote = safeIntent.repeated ? `<div class="combat-intent-note is-repeat">REGENERATED FORECAST.</div>` : "";
 
   return `
     <div class="combat-intent-panel">
       <div class="combat-panel-title">${panelLabel}</div>
-      <div class="combat-intent-headline">${threatName} PREPARES ${intentLabel}.</div>
+      <div class="combat-intent-headline">${threatName} PREPARES ${intentLabel}${repeatSuffix}.</div>
       <div class="combat-intent-text">${descriptionText}</div>
       <div class="combat-intent-effect">${effectText}</div>
       <div class="combat-intent-counterplay">${counterplayText}</div>
-      ${state?.enemyForecastActive ? `<div class="combat-intent-note">ORACLE-9 CLARIFIES THE FORECAST.</div>` : ""}
+      ${battleState?.enemyForecastActive ? `<div class="combat-intent-note">ORACLE-9 CLARIFIES THE FORECAST.</div>` : ""}
+      ${forecastNote}
     </div>
   `;
+}
+
+// buildEnemyIntentBrief() keeps the Tactical Brief hooked to the currently prepared enemy forecast.
+function buildEnemyIntentBrief(state) {
+  return buildActionableIntentBrief(state?.enemyIntent, state?.threat, state);
 }
 
 // getBattleMessageText() keeps the primary battle prompt readable even while the engine is animating a move.

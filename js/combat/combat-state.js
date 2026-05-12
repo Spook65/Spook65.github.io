@@ -309,6 +309,30 @@ function getEnemyIntentMetadata(intentId, battleState = null) {
   };
 }
 
+// prepareNextEnemyIntent() refreshes the forecast so the Tactical Brief always shows the next hostile action, not a stale one.
+function prepareNextEnemyIntent(battleState) {
+  const safeState = battleState && typeof battleState === "object" ? battleState : null;
+  if (!safeState || !safeState.threat) {
+    return null;
+  }
+
+  const nextIntent = typeof chooseEnemyIntent === "function"
+    ? chooseEnemyIntent(safeState.threat, safeState)
+    : getEnemyIntentMetadata("strike", safeState);
+  const previousIntentId = safeState.lastEnemyIntentId || safeState.resolvedEnemyIntent?.id || null;
+  const repeatedIntent = Boolean(previousIntentId && nextIntent?.id && previousIntentId === nextIntent.id);
+
+  safeState.enemyIntent = {
+    ...nextIntent,
+    repeated: repeatedIntent,
+    refreshedAt: Date.now()
+  };
+  safeState.lastEnemyIntentId = safeState.enemyIntent.id;
+  safeState.resolvedEnemyIntent = null;
+  console.log("[Intent] prepared:", safeState.enemyIntent?.id, repeatedIntent ? "(same)" : "");
+  return safeState.enemyIntent;
+}
+
 // chooseEnemyIntent() turns the current threat's loadout into a readable forecast for the next hostile action.
 function chooseEnemyIntent(threat, battleState = null) {
   const abilities = Array.isArray(threat?.abilities) ? threat.abilities : [];
@@ -551,7 +575,9 @@ function buildCombatState(sourceThreat) {
       : (pendingThreatHint || (storyState?.lastPantheonDialogue || "")),
     activeBoons
   };
-  const enemyIntent = typeof chooseEnemyIntent === "function" ? chooseEnemyIntent(threat, previewBattleState) : null;
+  const enemyIntent = typeof prepareNextEnemyIntent === "function"
+    ? prepareNextEnemyIntent(previewBattleState)
+    : (typeof chooseEnemyIntent === "function" ? chooseEnemyIntent(threat, previewBattleState) : null);
 
   if (runState) {
     runState.chargeRestoreBattleGaugeBonus = 0;
@@ -627,6 +653,8 @@ function buildCombatState(sourceThreat) {
     openingDamageBonusConsumed: false,
     runDamageReductionPercent: activeRunDamageReduction,
     enemyForecastActive,
+    resolvedEnemyIntent: null,
+    lastEnemyIntentId: enemyIntent?.id || null,
     pantheonBoonMessages: activeBoonMessages.concat(battleBoonMessages),
     activeBoons: activeBoons
   });
