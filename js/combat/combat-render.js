@@ -129,13 +129,17 @@ function buildEnemyIntentBrief(state) {
   const panelLabel = state?.enemyForecastActive ? "ORACLE FORECAST" : "ENEMY INTENT";
   const threatName = String(state?.threat?.title || "THE THREAT").toUpperCase();
   const intentLabel = String(intent.label || "STRIKE").toUpperCase();
-  const expectedText = String(intent.description || "normal damage.");
+  const effectText = String(intent.effectText || "Effect: Enemy deals normal damage.");
+  const counterplayText = String(intent.counterplayText || "Counterplay: Attack, defend, or use support.");
+  const descriptionText = String(intent.description || "The threat is preparing a direct attack.");
 
   return `
     <div class="combat-intent-panel">
       <div class="combat-panel-title">${panelLabel}</div>
       <div class="combat-intent-headline">${threatName} PREPARES ${intentLabel}.</div>
-      <div class="combat-intent-text">Expected: ${expectedText}</div>
+      <div class="combat-intent-text">${descriptionText}</div>
+      <div class="combat-intent-effect">${effectText}</div>
+      <div class="combat-intent-counterplay">${counterplayText}</div>
       ${state?.enemyForecastActive ? `<div class="combat-intent-note">ORACLE-9 CLARIFIES THE FORECAST.</div>` : ""}
     </div>
   `;
@@ -483,7 +487,10 @@ function buildThreatVisualMarkup(state) {
         <div class="combat-subline">HP ${threat.hp}/${threat.maxHp}</div>
         ${renderBar(threat.hp, threat.maxHp, "is-hp")}
         <div class="combat-subline">WEAK TO: ${String(getActorCombatType(threat, true) || "UNKNOWN").toUpperCase()}</div>
-        ${state.enemyIntent ? `<div class="combat-subline is-intent">INTENT: ${String(state.enemyIntent.label || "STRIKE").toUpperCase()}</div>` : ""}
+        ${state.enemyIntent ? `
+          <div class="combat-subline is-intent">INTENT: ${String(state.enemyIntent.label || "STRIKE").toUpperCase()}</div>
+          <div class="combat-subline is-intent-hint">${String(state.enemyIntent.iconLabel || state.enemyIntent.severity || "").toUpperCase()}</div>
+        ` : ""}
         ${statusMarkup}
       </div>
     </article>

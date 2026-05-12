@@ -7967,6 +7967,8 @@ body {
 }
 
 .combat-intent-text,
+.combat-intent-effect,
+.combat-intent-counterplay,
 .combat-intent-note {
   margin-top: 0.25rem;
   color: rgba(220, 223, 231, 0.84);
@@ -7975,10 +7977,24 @@ body {
   letter-spacing: 0.06em;
 }
 
+.combat-intent-effect {
+  color: #f2eadf;
+}
+
+.combat-intent-counterplay {
+  color: #d7b86a;
+}
+
 .combat-intent-note {
   color: #91c6ff;
 }
 
 .combat-subline.is-intent {
   color: #d7b86a;
+}
+
+.combat-subline.is-intent-hint {
+  color: rgba(145, 198, 255, 0.9);
+  font-size: 0.66rem;
+  letter-spacing: 0.14em;
 }

@@ -231,6 +231,84 @@ function getMoveUseAvailability(move, battleState = null) {
   };
 }
 
+// getEnemyIntentMetadata() returns player-facing effect and counterplay text for a forecasted enemy intent.
+function getEnemyIntentMetadata(intentId, battleState = null) {
+  const normalizedId = String(intentId || "strike").toLowerCase();
+  const catalog = {
+    strike: {
+      label: "STRIKE",
+      description: "The threat is lining up a direct attack.",
+      effectText: "Effect: Enemy deals normal damage.",
+      counterplayText: "Counterplay: Attack, defend, or use support.",
+      severity: "low",
+      iconLabel: "DMG"
+    },
+    overload: {
+      label: "OVERLOAD",
+      description: "The threat is routing excess traffic into your command layer.",
+      effectText: "Effect: Light damage + Tactical Gauge loss.",
+      counterplayText: "Counterplay: Spend gauge now or prepare for reduced options.",
+      severity: "medium",
+      iconLabel: "GAUGE"
+    },
+    lockout: {
+      label: "LOCKOUT",
+      description: "The threat is sealing part of your command deck.",
+      effectText: "Effect: A move or action may become restricted.",
+      counterplayText: "Counterplay: Use important moves now or switch strategy.",
+      severity: "medium",
+      iconLabel: "LOCK"
+    },
+    corrupt: {
+      label: "CORRUPT",
+      description: "The threat is poisoning the system with corruption pressure.",
+      effectText: "Effect: Damage and a light debuff pressure.",
+      counterplayText: "Counterplay: Strike before the corruption stacks.",
+      severity: "medium",
+      iconLabel: "ROT"
+    },
+    shield: {
+      label: "SHIELD",
+      description: "The threat is hardening its corrupted shell.",
+      effectText: "Effect: Enemy takes reduced damage next turn.",
+      counterplayText: "Counterplay: Restore gauge, use support, or save high-power moves.",
+      severity: "low",
+      iconLabel: "ARMOR"
+    },
+    swarm: {
+      label: "SWARM",
+      description: "The threat is splitting into mirrored processes.",
+      effectText: "Effect: Multiple weak hits.",
+      counterplayText: "Counterplay: Clear the field fast or brace for chip damage.",
+      severity: "medium",
+      iconLabel: "MULTI"
+    },
+    trace: {
+      label: "TRACE",
+      description: "The threat is locking onto your signal path.",
+      effectText: "Effect: Accuracy pressure and mark buildup.",
+      counterplayText: "Counterplay: Burst now or raise your defenses.",
+      severity: "low",
+      iconLabel: "SCAN"
+    },
+    charge: {
+      label: "CHARGE",
+      description: "The threat is storing overload pressure.",
+      effectText: "Effect: Next enemy attack deals increased damage.",
+      counterplayText: "Counterplay: Attack now, defend, disrupt, or prepare healing.",
+      severity: "medium",
+      iconLabel: "UPGRADE"
+    }
+  };
+
+  const fallback = catalog.strike;
+  return {
+    id: normalizedId,
+    ...fallback,
+    ...(catalog[normalizedId] || {})
+  };
+}
+
 // chooseEnemyIntent() turns the current threat's loadout into a readable forecast for the next hostile action.
 function chooseEnemyIntent(threat, battleState = null) {
   const abilities = Array.isArray(threat?.abilities) ? threat.abilities : [];
@@ -262,48 +340,7 @@ function chooseEnemyIntent(threat, battleState = null) {
     intentId = "swarm";
   }
 
-  const intentCatalog = {
-    strike: {
-      label: "STRIKE",
-      description: "normal damage.",
-      severity: "low"
-    },
-    overload: {
-      label: "OVERLOAD",
-      description: "light damage and Tactical Gauge disruption.",
-      severity: "medium"
-    },
-    lockout: {
-      label: "LOCKOUT",
-      description: "light damage and command disruption.",
-      severity: "medium"
-    },
-    corrupt: {
-      label: "CORRUPT",
-      description: "damage and corruption pressure.",
-      severity: "medium"
-    },
-    shield: {
-      label: "SHIELD",
-      description: "defensive hardening and reduced damage next turn.",
-      severity: "low"
-    },
-    swarm: {
-      label: "SWARM",
-      description: "multiple weak hits.",
-      severity: "medium"
-    },
-    trace: {
-      label: "TRACE",
-      description: "marking and accuracy pressure.",
-      severity: "low"
-    },
-    charge: {
-      label: "CHARGE",
-      description: "power rises before the next strike.",
-      severity: "low"
-    }
-  };
+  const catalogEntry = getEnemyIntentMetadata(intentId, battleState);
 
   const selectedIndex = (
     intentId === "overload" || intentId === "swarm"
@@ -321,7 +358,6 @@ function chooseEnemyIntent(threat, battleState = null) {
 
   const fallbackAbility = abilities[fallbackIndex] || abilities[0] || null;
   const selectedAbility = abilities[selectedIndex] || fallbackAbility;
-  const catalogEntry = intentCatalog[intentId] || intentCatalog.strike;
   const forecastNote = battleState?.pantheonInsight ? String(battleState.pantheonInsight) : "";
 
   if (!abilities.length) {
@@ -333,7 +369,10 @@ function chooseEnemyIntent(threat, battleState = null) {
     type: intentId,
     label: catalogEntry.label,
     description: catalogEntry.description,
+    effectText: catalogEntry.effectText,
+    counterplayText: catalogEntry.counterplayText,
     severity: catalogEntry.severity,
+    iconLabel: catalogEntry.iconLabel,
     abilityIndex: Number.isInteger(selectedIndex) && selectedIndex >= 0 ? selectedIndex : (Number.isInteger(fallbackIndex) ? fallbackIndex : 0),
     abilityId: selectedAbility?.id || "",
     abilityName: selectedAbility?.name || "",
