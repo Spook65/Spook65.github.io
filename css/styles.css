@@ -8448,3 +8448,770 @@ body {
     max-width: 100%;
   }
 }
+
+/* Desktop-only spacing: keeps the full-width command prototype from clustering while preserving the narrow layout. */
+@media (min-width: 1161px) {
+  .combat-command-box .battle-command-selector {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    align-items: stretch;
+  }
+
+  .combat-command-box .battle-command-choice {
+    min-height: 64px;
+    padding: 10px 12px;
+    display: grid;
+    align-content: start;
+    gap: 4px;
+  }
+
+  .combat-command-box .battle-command-choice--attack {
+    grid-column: 1 / -1;
+    min-height: 78px;
+    border-color: rgba(215, 184, 106, 0.42);
+    background:
+      linear-gradient(180deg, rgba(28, 25, 17, 0.98), rgba(8, 10, 14, 0.98));
+    box-shadow:
+      0 12px 26px rgba(0, 0, 0, 0.2),
+      0 0 0 1px rgba(215, 184, 106, 0.1) inset,
+      0 0 18px rgba(215, 184, 106, 0.08);
+  }
+
+  .combat-command-box .battle-command-choice--programs,
+  .combat-command-box .battle-command-choice--items,
+  .combat-command-box .battle-command-choice--run {
+    min-height: 58px;
+  }
+
+  .combat-command-box .battle-command-choice .combat-command-name {
+    font-size: 0.68rem;
+  }
+
+  .combat-command-box .battle-command-choice .combat-command-cost {
+    font-size: 0.5rem;
+  }
+
+  .battle-focus-gauge-strip {
+    display: grid;
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+    gap: 8px;
+    align-items: stretch;
+    margin-top: 8px;
+  }
+
+  .battle-focus-gauge-strip .combat-focus-row,
+  .battle-focus-gauge-strip .combat-gauge-wrap {
+    margin-top: 0;
+  }
+
+  .battle-focus-gauge-strip .combat-focus-button {
+    min-height: 64px;
+  }
+
+  .battle-focus-gauge-strip .combat-gauge-wrap {
+    padding-top: 0;
+    border-top: 0;
+    align-content: start;
+  }
+
+  .battle-focus-gauge-strip .combat-gauge-label {
+    font-size: 0.52rem;
+  }
+
+  .battle-focus-gauge-strip .combat-gauge-text {
+    font-size: 0.58rem;
+  }
+
+  .battle-focus-gauge-strip .combat-gauge-note {
+    font-size: 0.5rem;
+  }
+
+  .battle-focus-gauge-strip .combat-bar.is-gauge {
+    height: 8px;
+  }
+
+  .battle-command-box .battle-move-option {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "name cost"
+      "meta meta"
+      "detail detail";
+    gap: 4px 10px;
+    align-items: start;
+    min-height: 68px;
+    padding: 10px 12px;
+  }
+
+  .battle-command-box .battle-move-option .combat-command-name {
+    grid-area: name;
+  }
+
+  .battle-command-box .battle-move-option .combat-command-meta {
+    grid-area: meta;
+  }
+
+  .battle-command-box .battle-move-option .combat-command-cost {
+    grid-area: cost;
+    justify-self: end;
+  }
+
+  .battle-command-box .battle-move-option .combat-command-detail {
+    grid-area: detail;
+  }
+}
+
+/* Prototype-derived live command wheel: keeps the HUD compact while replacing the old 2x2 grid with a guided selector. */
+.combat-command-box .battle-command-stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1.18fr) minmax(14.5rem, 0.82fr);
+  gap: clamp(0.9rem, 1.8vw, 1.35rem);
+  align-items: start;
+  width: 100%;
+  min-width: 0;
+}
+
+.combat-command-box .battle-command-wheel,
+.combat-command-box .battle-command-side,
+.combat-command-box .battle-command-panel,
+.combat-command-box .battle-resource-ribbon,
+.combat-command-box .battle-move-lens,
+.combat-command-box .battle-move-extras,
+.combat-command-box .battle-command-list {
+  min-width: 0;
+}
+
+.combat-command-box .battle-command-wheel {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.combat-command-box .battle-command-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.combat-command-box .battle-command-rhythm {
+  color: rgba(0, 255, 136, 0.72);
+  font-size: 0.54rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-align: right;
+}
+
+.combat-command-box .battle-command-orbit {
+  position: relative;
+  width: 100%;
+  max-width: 24.5rem;
+  aspect-ratio: 1.18 / 1;
+  border: 1px solid rgba(0, 255, 136, 0.16);
+  border-radius: 1.6rem;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 52%, rgba(0, 255, 136, 0.05), transparent 22%),
+    radial-gradient(circle at 56% 36%, rgba(0, 204, 255, 0.05), transparent 20%),
+    linear-gradient(180deg, rgba(8, 10, 14, 0.96), rgba(4, 6, 9, 0.98));
+  box-shadow:
+    0 18px 32px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.combat-command-box .battle-command-ring,
+.combat-command-box .battle-command-trace {
+  position: absolute;
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+.combat-command-box .battle-command-ring {
+  inset: 11% 14% 12% 14%;
+  border: 1px solid rgba(0, 255, 136, 0.12);
+  box-shadow: inset 0 0 0 1px rgba(0, 204, 255, 0.05);
+}
+
+.combat-command-box .battle-command-trace {
+  inset: 19% 14% 16% 14%;
+  border: 1px dashed rgba(0, 255, 136, 0.16);
+  transform: rotate(-11deg);
+  opacity: 0.78;
+}
+
+.combat-command-box .battle-command-option {
+  position: absolute;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.72rem;
+  width: auto;
+  min-width: 8.9rem;
+  padding: 0.68rem 0.82rem;
+  text-align: left;
+  border-radius: 0.95rem;
+  border: 1px solid rgba(0, 255, 136, 0.16);
+  background:
+    linear-gradient(180deg, rgba(12, 14, 20, 0.97), rgba(7, 8, 12, 0.98));
+  box-shadow:
+    0 12px 24px rgba(0, 0, 0, 0.18),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+  transform: rotate(var(--battle-command-tilt, 0deg));
+}
+
+.combat-command-box .battle-command-option:hover,
+.combat-command-box .battle-command-option:focus-visible {
+  transform: translateY(-2px) rotate(var(--battle-command-tilt, 0deg));
+}
+
+.combat-command-box .battle-command-option.is-selected {
+  border-color: rgba(240, 210, 139, 0.72);
+  background:
+    linear-gradient(180deg, rgba(32, 26, 16, 0.98), rgba(8, 10, 14, 0.98));
+  box-shadow:
+    0 0 0 1px rgba(240, 210, 139, 0.12),
+    0 16px 28px rgba(0, 0, 0, 0.22),
+    0 0 22px rgba(240, 210, 139, 0.08);
+}
+
+.combat-command-box .battle-command-option-icon {
+  display: grid;
+  place-items: center;
+  width: 1.95rem;
+  height: 1.95rem;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 255, 136, 0.16);
+  background:
+    radial-gradient(circle at 35% 28%, rgba(255, 255, 255, 0.16), transparent 34%),
+    linear-gradient(180deg, rgba(20, 24, 30, 0.98), rgba(8, 10, 14, 0.98));
+  color: rgba(244, 239, 227, 0.9);
+  font-size: 0.82rem;
+  flex: 0 0 auto;
+}
+
+.combat-command-box .battle-command-option-copy {
+  display: grid;
+  gap: 0.08rem;
+}
+
+.combat-command-box .battle-command-option-name,
+.combat-command-box .battle-command-anchor-title,
+.combat-command-box .battle-focus-card-kicker,
+.combat-command-box .battle-move-card-name,
+.combat-command-box .battle-command-mini-name {
+  font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+  letter-spacing: 0.03em;
+}
+
+.combat-command-box .battle-command-option-name {
+  color: #f4efe3;
+  font-size: 0.88rem;
+  line-height: 1;
+}
+
+.combat-command-box .battle-command-option-meta {
+  color: rgba(244, 239, 227, 0.62);
+  font-size: 0.48rem;
+  letter-spacing: 0.12em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.combat-command-box .battle-command-option--programs {
+  left: 5%;
+  top: 16%;
+  --battle-command-tilt: -8deg;
+}
+
+.combat-command-box .battle-command-option--items {
+  right: 9%;
+  top: 13%;
+  --battle-command-tilt: 6deg;
+}
+
+.combat-command-box .battle-command-option--run {
+  right: 7%;
+  bottom: 13%;
+  --battle-command-tilt: 8deg;
+}
+
+.combat-command-box .battle-command-option--attack {
+  left: 18%;
+  bottom: 10%;
+  min-width: 10.5rem;
+  --battle-command-tilt: -4deg;
+}
+
+.combat-command-box .battle-command-option--attack .battle-command-option-icon {
+  border-color: rgba(0, 204, 255, 0.42);
+  color: #d7e3ff;
+  background:
+    radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.18), transparent 34%),
+    linear-gradient(180deg, rgba(24, 35, 44, 0.98), rgba(11, 15, 20, 0.98));
+}
+
+.combat-command-box .battle-command-anchor {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  top: 50%;
+  width: min(12rem, 44%);
+  transform: translate(-50%, -50%);
+  padding: 0.92rem 1rem;
+  text-align: center;
+  border-radius: 1.3rem;
+  border: 1px solid rgba(0, 255, 136, 0.12);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.07), transparent 36%),
+    linear-gradient(180deg, rgba(16, 18, 22, 0.96), rgba(8, 9, 12, 0.98));
+  box-shadow:
+    0 16px 24px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.combat-command-box .battle-command-anchor::before {
+  content: "";
+  position: absolute;
+  inset: 0.38rem;
+  border-radius: inherit;
+  border: 1px solid rgba(0, 204, 255, 0.08);
+  pointer-events: none;
+}
+
+.combat-command-box .battle-command-anchor-kicker {
+  color: rgba(0, 255, 136, 0.72);
+  font-size: 0.52rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.combat-command-box .battle-command-anchor-title {
+  margin-top: 0.4rem;
+  color: #f0d28b;
+  font-size: 1.75rem;
+  line-height: 1;
+}
+
+.combat-command-box .battle-command-anchor-copy {
+  margin-top: 0.34rem;
+  color: rgba(244, 239, 227, 0.74);
+  font-size: 0.68rem;
+  line-height: 1.45;
+}
+
+.combat-command-box .battle-command-side {
+  display: grid;
+  gap: 0.82rem;
+  align-content: start;
+  width: 100%;
+  max-width: 17rem;
+}
+
+.combat-command-box .battle-resource-ribbon {
+  display: grid;
+  gap: 0.72rem;
+}
+
+.combat-command-box .battle-focus-card,
+.combat-command-box .battle-gauge-card,
+.combat-command-box .battle-command-panel,
+.combat-command-box .battle-command-mini-card,
+.combat-command-box .battle-move-card,
+.combat-command-box .battle-command-empty,
+.combat-command-box .battle-command-empty-state {
+  border: 1px solid rgba(0, 255, 136, 0.14);
+  background:
+    linear-gradient(180deg, rgba(8, 10, 14, 0.96), rgba(4, 6, 9, 0.98));
+  box-shadow: 0 14px 26px rgba(0, 0, 0, 0.18);
+}
+
+.combat-command-box .battle-focus-card {
+  display: grid;
+  gap: 0.2rem;
+  align-content: center;
+  min-height: 4.2rem;
+  padding: 0.82rem 0.9rem;
+  text-align: left;
+  color: #f4efe3;
+  border-color: rgba(0, 255, 136, 0.16);
+  border-left-width: 3px;
+}
+
+.combat-command-box .battle-focus-card.is-focus-needed,
+.combat-command-box .battle-resource-ribbon.is-focus-needed .battle-focus-card {
+  border-color: rgba(240, 210, 139, 0.72);
+  box-shadow:
+    0 14px 26px rgba(0, 0, 0, 0.18),
+    0 0 0 1px rgba(240, 210, 139, 0.12),
+    0 0 18px rgba(240, 210, 139, 0.08);
+}
+
+.combat-command-box .battle-focus-card-kicker {
+  color: #f4efe3;
+  font-size: 0.92rem;
+  line-height: 1.1;
+}
+
+.combat-command-box .battle-focus-card-copy {
+  color: rgba(244, 239, 227, 0.66);
+  font-size: 0.66rem;
+  line-height: 1.45;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.combat-command-box .battle-gauge-card {
+  display: grid;
+  gap: 0.48rem;
+  padding: 0.8rem 0.9rem 0.85rem;
+  border-radius: 1rem;
+  min-width: 0;
+}
+
+.combat-command-box .battle-gauge-card.is-focus-needed {
+  border-color: rgba(240, 210, 139, 0.28);
+}
+
+.combat-command-box .battle-gauge-card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.combat-command-box .battle-gauge-card-label {
+  color: rgba(0, 255, 136, 0.78);
+  font-size: 0.58rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.combat-command-box .battle-gauge-card-value {
+  color: #f4efe3;
+  font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+  font-size: 1.08rem;
+  letter-spacing: 0.03em;
+}
+
+.combat-command-box .battle-gauge-card-copy {
+  color: rgba(244, 239, 227, 0.66);
+  font-size: 0.58rem;
+  line-height: 1.45;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.combat-command-box .battle-command-panel {
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.85rem 0.9rem;
+  border-radius: 1rem;
+}
+
+.combat-command-box .battle-command-subtitle {
+  color: rgba(0, 255, 136, 0.72);
+  font-size: 0.54rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.combat-command-box .battle-command-empty,
+.combat-command-box .battle-command-empty-state {
+  padding: 0.85rem 0.9rem;
+  color: rgba(244, 239, 227, 0.72);
+  font-size: 0.58rem;
+  line-height: 1.45;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.combat-command-box .battle-command-list {
+  display: grid;
+  gap: 0.7rem;
+  max-height: 15rem;
+  overflow: auto;
+}
+
+.combat-command-box .battle-command-mini-card {
+  display: grid;
+  gap: 0.16rem;
+  padding: 0.74rem 0.86rem;
+  border-radius: 0.95rem;
+  border-color: rgba(0, 255, 136, 0.12);
+}
+
+.combat-command-box .battle-command-mini-card.is-active {
+  border-color: rgba(240, 210, 139, 0.52);
+  background:
+    linear-gradient(180deg, rgba(32, 26, 16, 0.96), rgba(4, 6, 9, 0.98));
+}
+
+.combat-command-box .battle-command-mini-card.is-down {
+  opacity: 0.45;
+}
+
+.combat-command-box .battle-command-mini-name {
+  color: #f4efe3;
+  font-size: 0.9rem;
+  line-height: 1.1;
+}
+
+.combat-command-box .battle-command-mini-meta,
+.combat-command-box .battle-command-mini-tag {
+  color: rgba(244, 239, 227, 0.62);
+  font-size: 0.52rem;
+  letter-spacing: 0.1em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.combat-command-box .battle-command-mini-tag {
+  color: rgba(240, 210, 139, 0.82);
+}
+
+.combat-command-box .battle-move-lens,
+.combat-command-box .battle-move-extras {
+  display: grid;
+  gap: 0.72rem;
+}
+
+.combat-command-box .battle-move-lens {
+  max-height: clamp(13.5rem, 34vh, 18.75rem);
+  overflow: auto;
+  padding-right: 0.2rem;
+}
+
+.combat-command-box .battle-move-card {
+  display: grid;
+  gap: 0.24rem;
+  padding: 0.78rem 0.88rem;
+  min-height: 4.45rem;
+  border-radius: 0.95rem;
+  text-align: left;
+  border-color: rgba(0, 255, 136, 0.16);
+}
+
+.combat-command-box .battle-move-card.is-ready {
+  border-color: rgba(0, 255, 136, 0.18);
+}
+
+.combat-command-box .battle-move-card.is-gauge-low {
+  border-color: rgba(240, 210, 139, 0.26);
+}
+
+.combat-command-box .battle-move-card.is-blocked {
+  border-color: rgba(198, 111, 97, 0.3);
+  background:
+    linear-gradient(180deg, rgba(22, 11, 11, 0.96), rgba(4, 6, 9, 0.98));
+}
+
+.combat-command-box .battle-move-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.combat-command-box .battle-move-card-name {
+  color: #f4efe3;
+  font-size: 0.94rem;
+  line-height: 1.1;
+}
+
+.combat-command-box .battle-move-card-cost {
+  color: rgba(244, 239, 227, 0.62);
+  font-size: 0.5rem;
+  line-height: 1.45;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-align: right;
+}
+
+.combat-command-box .battle-move-card-meta,
+.combat-command-box .battle-move-card-copy,
+.combat-command-box .battle-command-note {
+  color: rgba(244, 239, 227, 0.64);
+  font-size: 0.54rem;
+  line-height: 1.45;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.combat-command-box .battle-move-card-copy {
+  color: rgba(0, 255, 136, 0.66);
+}
+
+.combat-command-box .battle-move-card.is-blocked .battle-move-card-copy {
+  color: rgba(198, 111, 97, 0.92);
+}
+
+.combat-command-box .battle-move-card--combo {
+  border-color: rgba(0, 204, 255, 0.2);
+}
+
+.combat-command-box .battle-move-subtitle {
+  color: rgba(240, 210, 139, 0.8);
+  font-size: 0.54rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.combat-command-box .battle-command-back-row {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.combat-command-box .battle-command-back {
+  width: min(8.8rem, 100%);
+  min-height: 2.8rem;
+  padding: 0.66rem 0.84rem;
+  border-color: rgba(0, 255, 136, 0.18);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.combat-command-box .battle-command-note {
+  color: rgba(0, 255, 136, 0.62);
+}
+
+.combat-command-box .battle-command-stage.is-focus-needed .battle-command-option--attack,
+.combat-command-box .battle-command-stage.is-focus-needed .battle-focus-card {
+  box-shadow:
+    0 0 0 1px rgba(240, 210, 139, 0.12),
+    0 0 18px rgba(240, 210, 139, 0.08);
+}
+
+@media (min-width: 1161px) {
+  .combat-command-box .battle-command-stage {
+    grid-template-columns: minmax(0, 1.2fr) minmax(14rem, 0.78fr);
+    gap: clamp(1rem, 2vw, 1.5rem);
+  }
+
+  .combat-command-box .battle-command-orbit {
+    max-width: 24rem;
+    aspect-ratio: 1.14 / 1;
+  }
+
+  .combat-command-box .battle-command-option {
+    min-width: 8.8rem;
+    padding: 0.64rem 0.78rem;
+  }
+
+  .combat-command-box .battle-command-option--programs {
+    left: 4%;
+    top: 15%;
+  }
+
+  .combat-command-box .battle-command-option--items {
+    right: 8%;
+    top: 12%;
+  }
+
+  .combat-command-box .battle-command-option--run {
+    right: 6%;
+    bottom: 11%;
+  }
+
+  .combat-command-box .battle-command-option--attack {
+    left: 17%;
+    bottom: 8%;
+    min-width: 10.2rem;
+  }
+
+  .combat-command-box .battle-command-side {
+    max-width: 16.5rem;
+    gap: 0.9rem;
+  }
+
+  .combat-command-box .battle-command-list,
+  .combat-command-box .battle-move-lens {
+    max-height: 15.5rem;
+  }
+}
+
+@media (max-width: 1160px) {
+  .combat-command-box .battle-command-stage {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .combat-command-box .battle-command-side {
+    max-width: 34rem;
+    justify-self: end;
+  }
+
+  .combat-command-box .battle-command-orbit {
+    max-width: none;
+    aspect-ratio: 1.16 / 1;
+  }
+}
+
+@media (max-width: 920px) {
+  .combat-command-box .battle-command-stage {
+    max-width: 34rem;
+    justify-content: start;
+  }
+
+  .combat-command-box .battle-resource-ribbon {
+    gap: 0.62rem;
+  }
+
+  .combat-command-box .battle-focus-card {
+    max-width: 18rem;
+  }
+
+  .combat-command-box .battle-command-list,
+  .combat-command-box .battle-move-lens {
+    max-height: none;
+  }
+}
+
+@media (max-width: 700px) {
+  .combat-command-box .battle-command-stage {
+    gap: 0.72rem;
+  }
+
+  .combat-command-box .battle-command-orbit {
+    aspect-ratio: 1 / 0.96;
+  }
+
+  .combat-command-box .battle-command-option {
+    min-width: 7.9rem;
+    padding: 0.56rem 0.64rem;
+    gap: 0.48rem;
+  }
+
+  .combat-command-box .battle-command-option-icon {
+    width: 1.6rem;
+    height: 1.6rem;
+    font-size: 0.74rem;
+  }
+
+  .combat-command-box .battle-command-option-name {
+    font-size: 0.8rem;
+  }
+
+  .combat-command-box .battle-command-option-meta {
+    font-size: 0.45rem;
+  }
+
+  .combat-command-box .battle-command-option--attack {
+    min-width: 8.7rem;
+  }
+
+  .combat-command-box .battle-command-anchor {
+    width: min(10rem, 46%);
+    padding: 0.74rem 0.82rem;
+  }
+
+  .combat-command-box .battle-command-anchor-title {
+    font-size: 1.42rem;
+  }
+
+  .combat-command-box .battle-focus-card,
+  .combat-command-box .battle-gauge-card {
+    padding-inline: 0.8rem;
+  }
+
+  .combat-command-box .battle-move-card {
+    padding: 0.72rem 0.78rem;
+  }
+}
