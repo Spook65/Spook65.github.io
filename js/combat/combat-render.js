@@ -309,6 +309,31 @@ function buildFocusCommandMarkup(state) {
   `;
 }
 
+// buildCommandUtilityMarkup() keeps FOCUS and the Tactical Gauge visually tied together as one utility rail.
+function buildCommandUtilityMarkup(state, focusNeeded) {
+  const currentGauge = Number.isFinite(state?.responseGauge) ? state.responseGauge : 0;
+
+  return `
+    <aside class="combat-command-utility ${focusNeeded ? "is-focus-needed" : ""}">
+      <div class="combat-command-utility-head">
+        <div class="combat-panel-title">UTILITY GATE</div>
+        <div class="combat-command-rhythm">${focusNeeded ? "FOCUS IS THE SAFE EXIT." : "FOCUS / GAUGE / END TURN."}</div>
+      </div>
+      <div class="combat-command-utility-focus">
+        ${buildFocusCommandMarkup(state)}
+      </div>
+      <div class="combat-gauge-wrap ${focusNeeded ? "is-focus-needed" : ""}">
+        <div class="combat-gauge-topline">
+          <div class="combat-gauge-label">TACTICAL GAUGE</div>
+          <div class="combat-gauge-text">${currentGauge}/100</div>
+        </div>
+        ${renderBar(currentGauge, 100, "is-gauge")}
+        <div class="combat-gauge-note">${focusNeeded ? "NO EXECUTABLE MOVES. FOCUS RECOVERS GAUGE." : "HIGH-COST MOVES SPEND GAUGE. FOCUS RESTORES IT."}</div>
+      </div>
+    </aside>
+  `;
+}
+
 // getAbilityPresentation() maps a move to a small animation family without changing the move's combat rules.
 function getAbilityPresentation(ability) {
   const effect = String(ability && ability.effect ? ability.effect : "");
@@ -579,36 +604,45 @@ function buildActionButtonMarkup(state) {
   const ids = programs.find((program) => program.id === "ids-4" && program.hp > 0);
   const honeypot = programs.find((program) => program.id === "honeypot-3" && program.hp > 0);
   const antivirus = programs.find((program) => program.id === "antivirus-9" && program.hp > 0);
-  const focusMarkup = buildFocusCommandMarkup(state);
+  const focusNeeded = typeof hasUsableMove === "function" ? !hasUsableMove(actor, state) : false;
+  const utilityMarkup = buildCommandUtilityMarkup(state, focusNeeded);
 
   if (commandMode === "programs") {
     return `
-      <div class="combat-command-subtitle">ACTIVE PARTY</div>
-      <div class="combat-party-grid">
-        ${state.playerParty.map((program) => `
-          <div class="combat-party-card ${program.id === actor.id ? "is-active" : ""} ${program.hp <= 0 ? "is-down" : ""}">
-            <div class="combat-party-name">${program.name}</div>
-            <div class="combat-party-meta">HP ${program.hp}/${program.maxHp}</div>
-            <div class="combat-party-meta">LVL ${program.level}</div>
-            ${program.id === actor.id ? '<div class="combat-party-tag">ACTIVE</div>' : ""}
+      <div class="combat-command-layout is-sidecar-layout">
+        <div class="combat-command-column is-library-column">
+          <div class="combat-command-subtitle">ACTIVE PARTY</div>
+          <div class="combat-party-grid">
+            ${state.playerParty.map((program) => `
+              <div class="combat-party-card ${program.id === actor.id ? "is-active" : ""} ${program.hp <= 0 ? "is-down" : ""}">
+                <div class="combat-party-name">${program.name}</div>
+                <div class="combat-party-meta">HP ${program.hp}/${program.maxHp}</div>
+                <div class="combat-party-meta">LVL ${program.level}</div>
+                ${program.id === actor.id ? '<div class="combat-party-tag">ACTIVE</div>' : ""}
+              </div>
+            `).join("")}
           </div>
-        `).join("")}
-      </div>
-      <div class="combat-action-note">SWITCHING COMING SOON.</div>
-      ${focusMarkup}
-      <div class="combat-command-back-row">
-        <button class="combat-action-button is-secondary" type="button" data-combat-command="back">BACK</button>
+          <div class="combat-action-note">SWITCHING COMING SOON.</div>
+          <div class="combat-command-back-row">
+            <button class="combat-action-button is-secondary is-back-command" type="button" data-combat-command="back">BACK</button>
+          </div>
+        </div>
+        ${utilityMarkup}
       </div>
     `;
   }
 
   if (commandMode === "items") {
     return `
-      <div class="combat-command-subtitle">ITEMS</div>
-      <div class="combat-command-empty">NO RECOVERY ITEMS AVAILABLE.</div>
-      ${focusMarkup}
-      <div class="combat-command-back-row">
-        <button class="combat-action-button is-secondary" type="button" data-combat-command="back">BACK</button>
+      <div class="combat-command-layout is-sidecar-layout">
+        <div class="combat-command-column is-library-column">
+          <div class="combat-command-subtitle">ITEMS</div>
+          <div class="combat-command-empty">NO RECOVERY ITEMS AVAILABLE.</div>
+          <div class="combat-command-back-row">
+            <button class="combat-action-button is-secondary is-back-command" type="button" data-combat-command="back">BACK</button>
+          </div>
+        </div>
+        ${utilityMarkup}
       </div>
     `;
   }
@@ -635,9 +669,11 @@ function buildActionButtonMarkup(state) {
     }
 
     return `
-      <div class="combat-command-subtitle">CHOOSE AN ACTION FOR ${actor.name.toUpperCase()}</div>
-      <div class="combat-command-grid is-ability-grid">
-        ${actor.abilities.map((ability, index) => {
+      <div class="combat-command-layout is-attack-layout">
+        <div class="combat-command-column is-ability-column">
+          <div class="combat-command-subtitle">CHOOSE AN ACTION FOR ${actor.name.toUpperCase()}</div>
+          <div class="combat-ability-list">
+            ${actor.abilities.map((ability, index) => {
           const availability = typeof getMoveUseAvailability === "function" ? getMoveUseAvailability(ability, state) : {
             canUse: state.responseGauge >= ability.cost && getMoveChargeCount(ability) > 0,
             reason: state.responseGauge >= ability.cost ? "ready" : "gauge",
@@ -667,46 +703,70 @@ function buildActionButtonMarkup(state) {
               : availability.requiredGauge > 0
                 ? `REQUIRES ${availability.requiredGauge} TACTICAL GAUGE.`
                 : "NO TACTICAL GAUGE REQUIRED.";
+          const commandIndex = String(index + 1).padStart(2, "0");
           return `
-            <button class="combat-action-button ${disabledClass}" type="button" data-combat-ability="${index}" data-combat-ability-id="${ability.id || ""}" data-ability-cost="${ability.cost}" data-availability-reason="${availability.reason}" ${isNoCharges ? 'aria-disabled="true"' : ""}>
-              <span class="combat-command-name">${ability.name.toUpperCase()}</span>
-              <span class="combat-command-meta">${moveMeta}</span>
-              <span class="combat-command-cost">${requirementMeta}</span>
-              <span class="combat-command-detail">${availability.canUse ? "READY TO EXECUTE." : availability.detail || availability.message || "SELECT ANOTHER MOVE."}</span>
+            <button class="combat-action-button ${disabledClass} is-move-command" type="button" data-combat-ability="${index}" data-combat-ability-id="${ability.id || ""}" data-ability-cost="${ability.cost}" data-availability-reason="${availability.reason}" ${isNoCharges ? 'aria-disabled="true"' : ""}>
+              <span class="combat-command-index">${commandIndex}</span>
+              <span class="combat-command-copy">
+                <span class="combat-command-name">${ability.name.toUpperCase()}</span>
+                <span class="combat-command-meta">${moveMeta}</span>
+                <span class="combat-command-cost">${requirementMeta}</span>
+                <span class="combat-command-detail">${availability.canUse ? "READY TO EXECUTE." : availability.detail || availability.message || "SELECT ANOTHER MOVE."}</span>
+              </span>
             </button>
           `;
-        }).join("")}
-        <button class="combat-action-button is-secondary" type="button" data-combat-command="back">BACK</button>
+            }).join("")}
+          </div>
+          ${comboButtons.length ? `<div class="combat-command-subtitle is-secondary">COMBO OPTIONS</div><div class="combat-ability-row">${comboButtons.join("")}</div><div class="combat-action-note">RESPONSE GAUGE ${state.responseGauge}/100</div>` : ""}
+          <div class="combat-command-back-row">
+            <button class="combat-action-button is-secondary is-back-command" type="button" data-combat-command="back">BACK</button>
+          </div>
+        </div>
+        ${utilityMarkup}
       </div>
-      ${comboButtons.length ? `<div class="combat-command-subtitle is-secondary">COMBO OPTIONS</div><div class="combat-ability-row">${comboButtons.join("")}</div><div class="combat-action-note">RESPONSE GAUGE ${state.responseGauge}/100</div>` : ""}
-      ${focusMarkup}
     `;
   }
 
   return `
-    <div class="combat-command-grid is-main-grid">
-      <button class="combat-action-button is-primary ${commandMode === "attack" ? "is-selected" : ""}" type="button" data-combat-command="attack">
-        <span class="combat-command-name">ATTACK</span>
-        <span class="combat-command-meta">OPEN MOVE DECK</span>
-        <span class="combat-command-cost">PROGRAM ATTACKS / AVAILABLE COMBOS</span>
-      </button>
-      <button class="combat-action-button is-primary ${commandMode === "programs" ? "is-selected" : ""}" type="button" data-combat-command="programs">
-        <span class="combat-command-name">PROGRAMS</span>
-        <span class="combat-command-meta">REVIEW PARTY</span>
-        <span class="combat-command-cost">ACTIVE DEFENDERS / STATUS</span>
-      </button>
-      <button class="combat-action-button is-primary ${commandMode === "items" ? "is-selected" : ""}" type="button" data-combat-command="items">
-        <span class="combat-command-name">ITEMS</span>
-        <span class="combat-command-meta">SUPPLIES CACHE</span>
-        <span class="combat-command-cost">RECOVERY / UTILITY</span>
-      </button>
-      <button class="combat-action-button is-primary ${commandMode === "run" ? "is-selected" : ""}" type="button" data-combat-command="run">
-        <span class="combat-command-name">RUN</span>
-        <span class="combat-command-meta">ABORT EXPEDITION</span>
-        <span class="combat-command-cost">FLEE / RETREAT</span>
-      </button>
+    <div class="combat-command-layout is-main-layout">
+      <div class="combat-command-column is-primary-column">
+        <button class="combat-action-button is-primary is-selected is-attack-command" type="button" data-combat-command="attack">
+          <span class="combat-command-index">01</span>
+          <span class="combat-command-copy">
+            <span class="combat-command-name">ATTACK</span>
+            <span class="combat-command-meta">OPEN MOVE DECK</span>
+            <span class="combat-command-cost">PROGRAM ATTACKS / AVAILABLE COMBOS</span>
+          </span>
+        </button>
+        <div class="combat-command-secondary-grid">
+          <button class="combat-action-button is-primary is-party-command ${commandMode === "programs" ? "is-selected" : ""}" type="button" data-combat-command="programs">
+            <span class="combat-command-index">02</span>
+            <span class="combat-command-copy">
+              <span class="combat-command-name">PROGRAMS</span>
+              <span class="combat-command-meta">REVIEW PARTY</span>
+              <span class="combat-command-cost">ACTIVE DEFENDERS / STATUS</span>
+            </span>
+          </button>
+          <button class="combat-action-button is-primary is-item-command ${commandMode === "items" ? "is-selected" : ""}" type="button" data-combat-command="items">
+            <span class="combat-command-index">03</span>
+            <span class="combat-command-copy">
+              <span class="combat-command-name">ITEMS</span>
+              <span class="combat-command-meta">SUPPLIES CACHE</span>
+              <span class="combat-command-cost">RECOVERY / UTILITY</span>
+            </span>
+          </button>
+          <button class="combat-action-button is-primary is-run-command ${commandMode === "run" ? "is-selected" : ""}" type="button" data-combat-command="run">
+            <span class="combat-command-index">04</span>
+            <span class="combat-command-copy">
+              <span class="combat-command-name">RUN</span>
+              <span class="combat-command-meta">ABORT EXPEDITION</span>
+              <span class="combat-command-cost">FLEE / RETREAT</span>
+            </span>
+          </button>
+        </div>
+      </div>
+      ${utilityMarkup}
     </div>
-    ${focusMarkup}
   `;
 }
 
@@ -788,14 +848,6 @@ function buildCombatMarkup(state) {
               <div class="combat-command-rhythm">${focusNeeded ? "FOCUS RECHARGES THE GATE." : "TACTICAL DECK READY."}</div>
             </div>
             ${buildActionButtonMarkup(state)}
-            <div class="combat-gauge-wrap ${focusNeeded ? "is-focus-needed" : ""}">
-              <div class="combat-gauge-topline">
-                <div class="combat-gauge-label">TACTICAL GAUGE</div>
-                <div class="combat-gauge-text">${state.responseGauge}/100</div>
-              </div>
-              ${renderBar(state.responseGauge, 100, "is-gauge")}
-              <div class="combat-gauge-note">${focusNeeded ? "NO EXECUTABLE MOVES. FOCUS RECOVERS GAUGE." : "FOCUS RECHARGES THE GATE. HIGH-COST MOVES SPEND IT."}</div>
-            </div>
           </div>
         </div>
       </footer>
