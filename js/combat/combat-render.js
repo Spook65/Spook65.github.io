@@ -712,6 +712,7 @@ function buildCombatMarkup(state) {
   const introStage = state.battleIntroStage || "operator";
   const introStageClass = `is-stage-${introStage}`;
   const commandBoxClass = state.battleIntroPlaying ? "is-intro-hidden" : "is-intro-revealed";
+  const focusNeeded = typeof hasUsableMove === "function" ? !hasUsableMove(currentProgram, state) : false;
 
   return `
     <div class="combat-shell ${state.battleIntroPlaying ? "is-intro-playing" : ""}">
@@ -780,7 +781,7 @@ function buildCombatMarkup(state) {
           <div class="combat-command-box ${commandBoxClass}">
             <div class="combat-panel-title">COMMAND DECK</div>
             ${buildActionButtonMarkup(state)}
-            <div class="combat-gauge-wrap">
+            <div class="combat-gauge-wrap ${focusNeeded ? "is-focus-needed" : ""}">
               <div class="combat-gauge-label">TACTICAL GAUGE</div>
               ${renderBar(state.responseGauge, 100, "is-gauge")}
               <div class="combat-gauge-text">${state.responseGauge}/100</div>

@@ -8326,52 +8326,71 @@ body {
 
 .combat-focus-button {
   width: 100%;
-  min-height: 64px;
+  min-height: 60px;
   border-style: solid;
-  border-color: rgba(215, 184, 106, 0.34);
+  border-color: rgba(215, 184, 106, 0.42);
+  border-left-width: 3px;
   color: rgba(242, 239, 227, 0.86);
   background:
-    linear-gradient(180deg, rgba(24, 22, 15, 0.98), rgba(8, 9, 12, 0.98));
+    linear-gradient(180deg, rgba(22, 20, 14, 0.98), rgba(8, 9, 12, 0.98));
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.03),
+    0 10px 20px rgba(0, 0, 0, 0.12);
 }
 
 .combat-focus-button.is-focus-needed {
   border-color: rgba(215, 184, 106, 0.82);
   color: #f2eadf;
   box-shadow:
-    0 12px 26px rgba(0, 0, 0, 0.2),
+    0 12px 22px rgba(0, 0, 0, 0.16),
     0 0 0 1px rgba(215, 184, 106, 0.12) inset,
-    0 0 18px rgba(215, 184, 106, 0.08);
+    0 0 12px rgba(215, 184, 106, 0.08);
 }
 
 .combat-focus-button .combat-command-name {
-  font-size: 0.7rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.19em;
 }
 
 .combat-focus-button .combat-command-cost {
   color: rgba(214, 236, 255, 0.66);
   font-size: 0.52rem;
+  line-height: 1.25;
 }
 
 .combat-gauge-wrap {
-  gap: 6px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 8px;
+  align-items: center;
   padding-top: 8px;
   border-top: 1px solid rgba(242, 239, 227, 0.08);
 }
 
 .combat-gauge-label {
+  grid-column: 1;
   color: rgba(214, 236, 255, 0.64);
   font-size: 0.55rem;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.2em;
 }
 
 .combat-gauge-text {
+  grid-column: 2;
+  justify-self: end;
   color: rgba(242, 239, 227, 0.9);
-  font-size: 0.6rem;
-  letter-spacing: 0.16em;
+  font-size: 0.62rem;
+  letter-spacing: 0.18em;
+  padding: 2px 6px;
+  border: 1px solid rgba(215, 184, 106, 0.18);
+  background: rgba(215, 184, 106, 0.06);
 }
 
 .combat-gauge-note {
+  grid-column: 1 / -1;
   color: rgba(135, 228, 255, 0.64);
+  font-size: 0.52rem;
+  line-height: 1.35;
+  letter-spacing: 0.12em;
 }
 
 .combat-gauge-wrap.is-focus-needed .combat-gauge-note {
@@ -8379,6 +8398,7 @@ body {
 }
 
 .combat-bar.is-gauge {
+  grid-column: 1 / -1;
   height: 10px;
   background: rgba(242, 239, 227, 0.06);
 }
