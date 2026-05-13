@@ -8091,3 +8091,340 @@ body {
   font-size: 0.66rem;
   letter-spacing: 0.14em;
 }
+
+/* Battle command deck refinements stay isolated here so the rest of combat keeps its working layout and pacing. */
+.combat-command-box {
+  border: 1px solid rgba(242, 239, 227, 0.12);
+  background:
+    linear-gradient(180deg, rgba(10, 13, 20, 0.98), rgba(5, 7, 11, 0.97));
+  box-shadow:
+    0 18px 30px rgba(0, 0, 0, 0.16),
+    0 0 0 1px rgba(255, 255, 255, 0.02) inset;
+}
+
+.combat-command-box.is-focus-needed {
+  border-color: rgba(215, 184, 106, 0.28);
+  box-shadow:
+    0 18px 30px rgba(0, 0, 0, 0.16),
+    0 0 0 1px rgba(215, 184, 106, 0.08) inset;
+}
+
+.combat-command-topline,
+.combat-gauge-topline {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.combat-command-rhythm,
+.combat-gauge-note,
+.combat-command-detail {
+  color: rgba(214, 236, 255, 0.7);
+  font-size: 0.57rem;
+  line-height: 1.45;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.combat-command-rhythm {
+  color: rgba(242, 239, 227, 0.56);
+  text-align: right;
+}
+
+.combat-command-subtitle {
+  color: rgba(242, 239, 227, 0.62);
+  font-size: 0.55rem;
+  letter-spacing: 0.22em;
+}
+
+.combat-command-subtitle.is-secondary {
+  color: rgba(215, 184, 106, 0.82);
+}
+
+.combat-command-grid {
+  gap: 8px;
+}
+
+.combat-command-grid.is-main-grid,
+.combat-command-grid.is-ability-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.combat-ability-row {
+  display: grid;
+  gap: 8px;
+}
+
+.combat-command-box .combat-ability-row .combat-action-button,
+.combat-command-grid.is-main-grid .combat-action-button,
+.combat-command-grid.is-ability-grid .combat-action-button {
+  min-height: 78px;
+}
+
+.combat-action-button {
+  border-radius: 0;
+  border: 1px solid rgba(242, 239, 227, 0.16);
+  background:
+    linear-gradient(180deg, rgba(14, 18, 26, 0.98), rgba(6, 8, 12, 0.98));
+  box-shadow:
+    0 10px 22px rgba(0, 0, 0, 0.18),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+  color: var(--silver);
+  overflow: hidden;
+  transform: translateY(0);
+  transition:
+    transform 130ms ease,
+    border-color 130ms ease,
+    box-shadow 130ms ease,
+    background 130ms ease,
+    color 130ms ease;
+}
+
+.combat-action-button::after {
+  content: "";
+}
+
+.combat-action-button.is-primary {
+  min-height: 72px;
+}
+
+.combat-action-button.is-secondary {
+  border-color: rgba(135, 228, 255, 0.24);
+}
+
+.combat-action-button.is-selected {
+  border-color: rgba(215, 184, 106, 0.64);
+  background:
+    linear-gradient(180deg, rgba(28, 25, 17, 0.98), rgba(8, 10, 14, 0.98));
+  box-shadow:
+    0 12px 26px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(215, 184, 106, 0.1) inset,
+    0 0 18px rgba(215, 184, 106, 0.08);
+}
+
+.combat-action-button:hover,
+.combat-action-button:focus-visible {
+  transform: translateY(-1px);
+  border-color: rgba(214, 236, 255, 0.42);
+  background:
+    linear-gradient(180deg, rgba(22, 28, 40, 0.98), rgba(8, 10, 14, 0.98));
+  box-shadow:
+    0 14px 28px rgba(0, 0, 0, 0.22),
+    0 0 0 1px rgba(214, 236, 255, 0.08) inset,
+    0 0 18px rgba(135, 228, 255, 0.1);
+}
+
+.combat-action-button.is-selected:hover,
+.combat-action-button.is-selected:focus-visible {
+  border-color: rgba(215, 184, 106, 0.76);
+  box-shadow:
+    0 14px 28px rgba(0, 0, 0, 0.22),
+    0 0 0 1px rgba(215, 184, 106, 0.12) inset,
+    0 0 18px rgba(215, 184, 106, 0.12);
+}
+
+.combat-action-button:active {
+  transform: translateY(1px);
+}
+
+.combat-action-button.is-disabled {
+  opacity: 0.5;
+  border-color: rgba(242, 239, 227, 0.09);
+  color: rgba(214, 236, 255, 0.52);
+}
+
+.combat-action-button.is-gauge-low {
+  border-color: rgba(215, 184, 106, 0.28);
+  color: rgba(242, 239, 227, 0.88);
+}
+
+.combat-action-button.is-gauge-low .combat-command-cost,
+.combat-action-button.is-gauge-low .combat-command-detail {
+  color: rgba(215, 184, 106, 0.86);
+}
+
+.combat-command-name {
+  color: var(--silver);
+  font-size: 0.74rem;
+  letter-spacing: 0.18em;
+}
+
+.combat-command-meta,
+.combat-command-cost,
+.combat-command-detail {
+  position: relative;
+  z-index: 1;
+}
+
+.combat-command-meta {
+  color: rgba(214, 236, 255, 0.68);
+  font-size: 0.52rem;
+  line-height: 1.35;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.combat-command-cost {
+  color: rgba(242, 239, 227, 0.72);
+  font-size: 0.55rem;
+  line-height: 1.35;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.combat-command-detail {
+  color: rgba(135, 228, 255, 0.68);
+  font-size: 0.5rem;
+  line-height: 1.35;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.combat-command-empty {
+  border: 1px solid rgba(242, 239, 227, 0.12);
+  border-radius: 0;
+  background: rgba(242, 239, 227, 0.03);
+  color: rgba(214, 236, 255, 0.7);
+}
+
+.combat-party-grid {
+  gap: 8px;
+}
+
+.combat-party-card {
+  border: 1px solid rgba(242, 239, 227, 0.12);
+  border-radius: 0;
+  background: rgba(242, 239, 227, 0.03);
+}
+
+.combat-party-card.is-active {
+  border-color: rgba(215, 184, 106, 0.56);
+  background: rgba(215, 184, 106, 0.07);
+}
+
+.combat-party-card.is-down {
+  opacity: 0.45;
+}
+
+.combat-party-name {
+  color: var(--silver);
+}
+
+.combat-party-meta,
+.combat-party-tag {
+  color: rgba(214, 236, 255, 0.64);
+}
+
+.combat-party-tag {
+  color: rgba(215, 184, 106, 0.92);
+}
+
+.combat-focus-row {
+  margin-top: 8px;
+}
+
+.combat-focus-button {
+  width: 100%;
+  min-height: 64px;
+  border-style: solid;
+  border-color: rgba(215, 184, 106, 0.34);
+  color: rgba(242, 239, 227, 0.86);
+  background:
+    linear-gradient(180deg, rgba(24, 22, 15, 0.98), rgba(8, 9, 12, 0.98));
+}
+
+.combat-focus-button.is-focus-needed {
+  border-color: rgba(215, 184, 106, 0.82);
+  color: #f2eadf;
+  box-shadow:
+    0 12px 26px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(215, 184, 106, 0.12) inset,
+    0 0 18px rgba(215, 184, 106, 0.08);
+}
+
+.combat-focus-button .combat-command-name {
+  font-size: 0.7rem;
+}
+
+.combat-focus-button .combat-command-cost {
+  color: rgba(214, 236, 255, 0.66);
+  font-size: 0.52rem;
+}
+
+.combat-gauge-wrap {
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(242, 239, 227, 0.08);
+}
+
+.combat-gauge-label {
+  color: rgba(214, 236, 255, 0.64);
+  font-size: 0.55rem;
+  letter-spacing: 0.18em;
+}
+
+.combat-gauge-text {
+  color: rgba(242, 239, 227, 0.9);
+  font-size: 0.6rem;
+  letter-spacing: 0.16em;
+}
+
+.combat-gauge-note {
+  color: rgba(135, 228, 255, 0.64);
+}
+
+.combat-gauge-wrap.is-focus-needed .combat-gauge-note {
+  color: rgba(215, 184, 106, 0.84);
+}
+
+.combat-bar.is-gauge {
+  height: 10px;
+  background: rgba(242, 239, 227, 0.06);
+}
+
+.combat-bar-fill.is-gauge {
+  background:
+    linear-gradient(90deg, rgba(135, 228, 255, 0.72), rgba(215, 184, 106, 0.92));
+  box-shadow:
+    0 0 12px rgba(135, 228, 255, 0.14),
+    0 0 14px rgba(215, 184, 106, 0.08);
+}
+
+.combat-command-topline + .combat-command-grid {
+  margin-top: 8px;
+}
+
+@media (max-width: 920px) {
+  .combat-command-grid.is-main-grid,
+  .combat-command-grid.is-ability-grid,
+  .combat-party-grid,
+  .combat-ability-row {
+    grid-template-columns: 1fr;
+  }
+
+  .combat-command-topline,
+  .combat-gauge-topline {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .combat-command-rhythm {
+    text-align: left;
+  }
+
+  .combat-action-button {
+    min-height: 70px;
+  }
+
+  .combat-command-name {
+    font-size: 0.7rem;
+  }
+
+  .combat-command-meta,
+  .combat-command-cost,
+  .combat-command-detail,
+  .combat-gauge-note {
+    max-width: 100%;
+  }
+}
