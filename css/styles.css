@@ -3185,6 +3185,12 @@ canvas {
   box-shadow: 0 0 10px rgba(245, 197, 87, 0.08);
 }
 
+.status-pill.is-flood {
+  color: #6ddfff;
+  border-color: rgba(109, 223, 255, 0.35);
+  box-shadow: 0 0 10px rgba(109, 223, 255, 0.08);
+}
+
 .combat-actions,
 .battle-reward-actions,
 .battle-end-actions {

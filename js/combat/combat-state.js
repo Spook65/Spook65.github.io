@@ -255,6 +255,18 @@ function normalizeCombatantStatusEffect(statusEffect) {
       };
     }
 
+    if (id === "flood") {
+      return {
+        id,
+        label: "FLOOD",
+        type: "gauge_disruption",
+        duration: 3,
+        potency: 10,
+        sourceId: null,
+        description: "Flooded command traffic reduces Tactical Gauge recovery."
+      };
+    }
+
     return {
       id,
       label: id.toUpperCase(),
@@ -353,8 +365,8 @@ function removeExpiredStatusEffects(combatant) {
       return false;
     }
 
-    if (normalized.type === "damage_over_time") {
-      return Number.isFinite(normalized.duration) ? normalized.duration > 0 : true;
+    if (Number.isFinite(normalized.duration)) {
+      return normalized.duration > 0;
     }
 
     return true;
@@ -405,6 +417,27 @@ function resolveEndOfTurnStatusEffects(combatant, battleState = null) {
       return;
     }
 
+    if (normalized.id === "flood" && normalized.type === "gauge_disruption") {
+      const nextDuration = Number.isFinite(normalized.duration) ? normalized.duration - 1 : 0;
+
+      if (nextDuration > 0) {
+        events.push({
+          message: `FLOOD PRESSURE REMAINS ON ${actorName}. ${nextDuration} TURNS LEFT.`,
+          variant: "warn"
+        });
+        nextStatuses.push({
+          ...normalized,
+          duration: nextDuration
+        });
+      } else {
+        events.push({
+          message: `${actorName} CLEARED THE FLOOD.`,
+          variant: "buff"
+        });
+      }
+      return;
+    }
+
     nextStatuses.push(statusEffect);
   });
 
@@ -437,12 +470,22 @@ function formatCombatantStatusEffects(combatant) {
       return `${normalized.label} ${normalized.duration}T`;
     }
 
-    if (normalized.type === "damage_over_time" && Number.isFinite(normalized.duration)) {
+    if (Number.isFinite(normalized.duration)) {
       return `${normalized.label} ${normalized.duration}T`;
     }
 
     return normalized.label;
   }).filter(Boolean);
+}
+
+// hasFloodStatus() checks whether a combatant is currently Flooded by hostile traffic.
+function hasFloodStatus(combatant) {
+  return hasCombatantStatus(combatant, "flood");
+}
+
+// getFocusGaugeRecoveryAmount() returns the Tactical Gauge restored by Focus after status modifiers like FLOOD.
+function getFocusGaugeRecoveryAmount(combatant) {
+  return hasFloodStatus(combatant) ? 15 : 25;
 }
 
 // hasUsableMove() checks whether the active Defender can currently execute at least one move.

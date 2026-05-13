@@ -211,15 +211,19 @@ function focusActiveDefenderTurn(engine) {
 
   const actor = currentActor.ref;
   const currentGauge = Number.isFinite(state.responseGauge) ? Math.max(0, Math.min(100, state.responseGauge)) : 0;
-  const nextGauge = currentGauge < 100 ? Math.min(100, currentGauge + 25) : currentGauge;
+  const gaugeRecovery = typeof getFocusGaugeRecoveryAmount === "function" ? getFocusGaugeRecoveryAmount(actor) : 25;
+  const nextGauge = currentGauge < 100 ? Math.min(100, currentGauge + gaugeRecovery) : currentGauge;
   const gaugeGain = nextGauge - currentGauge;
+  const isFlooded = typeof hasFloodStatus === "function" ? hasFloodStatus(actor) : false;
 
   state.actionLocked = true;
   state.commandMode = "main";
 
   if (gaugeGain > 0) {
     state.responseGauge = nextGauge;
-    state.battleMessage = `${actor.name.toUpperCase()} FOCUSES AND RECHARGES THE RESPONSE GATE.`;
+    state.battleMessage = isFlooded
+      ? `${actor.name.toUpperCase()} FOCUSES THROUGH FLOOD.`
+      : `${actor.name.toUpperCase()} FOCUSES AND RECHARGES THE RESPONSE GATE.`;
     state.battleSubmessage = `TACTICAL GAUGE +${gaugeGain}.`;
     addBattleLog(`${actor.name.toUpperCase()} FOCUSED. RESPONSE GAUGE +${gaugeGain}.`, "buff");
   } else {
@@ -587,6 +591,25 @@ class ThreatCombat {
   applyThreatEffect(threat, ability) {
     if (ability.effect === "self_level_up") {
       addBattleLog(`${threat.title.toUpperCase()} TRIED TO ESCALATE, BUT THE BATTLE LEVEL IS LOCKED.`, "buff");
+      return;
+    }
+
+    if (ability.effect === "damage_all" && String(this.state?.resolvedEnemyIntent?.intent?.id || this.state?.enemyIntent?.id || "").toLowerCase() === "overload") {
+      const livingPrograms = programs.filter((program) => program.hp > 0);
+      if (livingPrograms.length) {
+        const target = livingPrograms[getRandomInt(0, livingPrograms.length - 1)];
+        this.applyStatusEffect(target, {
+          id: "flood",
+          label: "FLOOD",
+          type: "gauge_disruption",
+          duration: 3,
+          potency: 10,
+          sourceId: threat.id || null,
+          description: "Flooded command traffic reduces Tactical Gauge recovery."
+        });
+        addBattleLog(`${target.name.toUpperCase()} IS FLOODED BY HOSTILE TRAFFIC.`, "damage");
+        addBattleLog(`FOCUS RESTORES LESS TACTICAL GAUGE WHILE FLOOD LASTS.`, "damage");
+      }
       return;
     }
 

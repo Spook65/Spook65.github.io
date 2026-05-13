@@ -11,8 +11,16 @@ function renderStatusPills(statusEffects = []) {
       ${statusEffects.map((status) => {
         const normalized = typeof normalizeCombatantStatusEffect === "function" ? normalizeCombatantStatusEffect(status) : null;
         const statusId = normalized?.id || String(status || "").toLowerCase();
-        const className = statusId === "detected" ? "is-cyan" : statusId === "isolated" ? "is-alert" : statusId === "rot" ? "is-rot" : "";
-        const label = normalized && normalized.id === "rot" && Number.isFinite(normalized.duration)
+        const className = statusId === "detected"
+          ? "is-cyan"
+          : statusId === "isolated"
+            ? "is-alert"
+            : statusId === "rot"
+              ? "is-rot"
+              : statusId === "flood"
+                ? "is-flood"
+                : "";
+        const label = normalized && Number.isFinite(normalized.duration) && normalized.duration > 0
           ? `${normalized.label} ${normalized.duration}T`
           : normalized?.label || String(status).replace(/_/g, " ").toUpperCase();
         return `<span class="status-pill ${className}">${label}</span>`;
