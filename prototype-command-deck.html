@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>THREATGRID Command Deck Prototype</title>
+  <link rel="stylesheet" href="./prototype-command-deck.css">
+</head>
+<body class="prototype-page">
+  <main class="prototype-shell">
+    <header class="prototype-header">
+      <div>
+        <div class="prototype-kicker">THREATGRID ARENA / UI PROTOTYPE</div>
+        <h1>Battle Command Deck Concepts</h1>
+      </div>
+      <div class="prototype-note">
+        Standalone comparison board. This file is not connected to the live game.
+      </div>
+    </header>
+
+    <section class="prototype-stage">
+      <div class="prototype-stage-glow" aria-hidden="true"></div>
+      <div class="prototype-stage-grid" aria-hidden="true"></div>
+      <div class="prototype-stage-label">
+        Battlefield visibility preserved. Resize to check half-screen behavior.
+      </div>
+
+      <div class="prototype-concept-grid">
+        <article class="prototype-concept concept-a">
+          <header class="concept-head">
+            <div>
+              <div class="concept-kicker">Concept 1</div>
+              <h2>Compact Tactical Strip</h2>
+            </div>
+            <div class="concept-badge">SAFE / READABLE</div>
+          </header>
+
+          <div class="concept-battlefield">
+            <div class="battle-silhouette is-player" aria-hidden="true"></div>
+            <div class="battle-silhouette is-enemy" aria-hidden="true"></div>
+
+            <div class="hud-area is-bottom-right">
+              <div class="hud-title-row">
+                <div class="hud-title">COMMAND DECK</div>
+                <div class="hud-rhythm">TACTICAL HUD</div>
+              </div>
+
+              <div class="command-strip">
+                <button class="command-button is-primary">
+                  <span class="command-index">01</span>
+                  <span class="command-copy">
+                    <span class="command-name">ATTACK</span>
+                    <span class="command-meta">OPEN MOVES / COMBAT</span>
+                  </span>
+                </button>
+                <div class="command-mini-row">
+                  <button class="command-button is-secondary">PROGRAMS</button>
+                  <button class="command-button is-secondary">ITEMS</button>
+                  <button class="command-button is-secondary">RUN</button>
+                </div>
+                <div class="utility-strip">
+                  <button class="focus-button">
+                    <span class="command-name">FOCUS</span>
+                    <span class="command-meta">RECOVER GAUGE / END TURN</span>
+                  </button>
+                  <div class="gauge-block">
+                    <div class="gauge-topline">
+                      <span class="gauge-label">TACTICAL GAUGE</span>
+                      <span class="gauge-value">35/100</span>
+                    </div>
+                    <div class="gauge-bar"><span class="gauge-fill" style="width:35%"></span></div>
+                    <div class="gauge-note">LOW GAUGE: some moves blocked. No charges: unavailable moves stay dim.</div>
+                  </div>
+                </div>
+
+                <div class="move-samples">
+                  <div class="move-sample is-ready">
+                    <span class="move-name">QUARANTINE SLASH</span>
+                    <span class="move-meta">PWR 18 / ACC 92 / CHG 2/2</span>
+                  </div>
+                  <div class="move-sample is-blocked">
+                    <span class="move-name">NULL DIVE</span>
+                    <span class="move-meta">PWR 24 / ACC 88 / CHG 0/1</span>
+                    <span class="move-note">NO CHARGES REMAINING.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="prototype-concept concept-b">
+          <header class="concept-head">
+            <div>
+              <div class="concept-kicker">Concept 2</div>
+              <h2>Stylized RPG Command Panel</h2>
+            </div>
+            <div class="concept-badge">PRIMARY ATTACK</div>
+          </header>
+
+          <div class="concept-battlefield">
+            <div class="battle-silhouette is-player" aria-hidden="true"></div>
+            <div class="battle-silhouette is-enemy" aria-hidden="true"></div>
+
+            <div class="hud-area is-bottom-right">
+              <div class="hud-title-row">
+                <div class="hud-title">COMMAND DECK</div>
+                <div class="hud-rhythm">SHARP RPG HIERARCHY</div>
+              </div>
+
+              <div class="rpg-panel">
+                <button class="rpg-attack">
+                  <span class="command-index">01</span>
+                  <span class="command-copy">
+                    <span class="command-name">ATTACK</span>
+                    <span class="command-meta">PRIMARY OFFENSE / OPEN DECK</span>
+                  </span>
+                </button>
+
+                <div class="rpg-secondary-stack">
+                  <button class="command-button is-secondary is-accent-teal">PROGRAMS</button>
+                  <button class="command-button is-secondary">ITEMS</button>
+                  <button class="command-button is-secondary is-accent-coral">RUN</button>
+                </div>
+
+                <div class="utility-strip">
+                  <button class="focus-button is-focus-needed">
+                    <span class="command-name">FOCUS</span>
+                    <span class="command-meta">RECOVER GAUGE / END TURN</span>
+                  </button>
+                  <div class="gauge-block">
+                    <div class="gauge-topline">
+                      <span class="gauge-label">TACTICAL GAUGE</span>
+                      <span class="gauge-value">35/100</span>
+                    </div>
+                    <div class="gauge-bar"><span class="gauge-fill" style="width:35%"></span></div>
+                    <div class="gauge-note">FOCUS is highlighted when the deck runs dry or the gauge is low.</div>
+                  </div>
+                </div>
+
+                <div class="move-samples is-compact">
+                  <div class="move-sample is-ready">
+                    <span class="move-name">PULSE BREAK</span>
+                    <span class="move-meta">PWR 16 / ACC 95 / CHG 3/3</span>
+                  </div>
+                  <div class="move-sample is-blocked">
+                    <span class="move-name">VIRAL REND</span>
+                    <span class="move-meta">PWR 30 / ACC 84 / CHG 1/1</span>
+                    <span class="move-note">NOT ENOUGH TACTICAL GAUGE.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="prototype-concept concept-c">
+          <header class="concept-head">
+            <div>
+              <div class="concept-kicker">Concept 3</div>
+              <h2>Split Command + Resource Design</h2>
+            </div>
+            <div class="concept-badge">CINEMATIC / COMPACT</div>
+          </header>
+
+          <div class="concept-battlefield">
+            <div class="battle-silhouette is-player" aria-hidden="true"></div>
+            <div class="battle-silhouette is-enemy" aria-hidden="true"></div>
+
+            <div class="hud-area is-bottom-right">
+              <div class="hud-title-row">
+                <div class="hud-title">COMMAND DECK</div>
+                <div class="hud-rhythm">COMMANDS / RESOURCE</div>
+              </div>
+
+              <div class="split-panel">
+                <div class="split-commands">
+                  <button class="command-button is-primary is-tall">
+                    <span class="command-index">01</span>
+                    <span class="command-copy">
+                      <span class="command-name">ATTACK</span>
+                      <span class="command-meta">OPEN MOVES / COMBAT</span>
+                    </span>
+                  </button>
+                  <button class="command-button is-secondary">PROGRAMS</button>
+                  <button class="command-button is-secondary">ITEMS</button>
+                  <button class="command-button is-secondary">RUN</button>
+                </div>
+
+                <div class="split-resource">
+                  <button class="focus-button">
+                    <span class="command-name">FOCUS</span>
+                    <span class="command-meta">RECOVER GAUGE / END TURN</span>
+                  </button>
+                  <div class="gauge-block">
+                    <div class="gauge-topline">
+                      <span class="gauge-label">TACTICAL GAUGE</span>
+                      <span class="gauge-value">35/100</span>
+                    </div>
+                    <div class="gauge-bar"><span class="gauge-fill" style="width:35%"></span></div>
+                    <div class="gauge-note">Move requirements stay readable while the battlefield remains visible.</div>
+                  </div>
+                  <div class="move-samples is-compact">
+                    <div class="move-sample is-ready">
+                      <span class="move-name">BREACH SWEEP</span>
+                      <span class="move-meta">PWR 20 / ACC 91 / CHG 2/2</span>
+                    </div>
+                    <div class="move-sample is-blocked">
+                      <span class="move-name">FRACTURE BYTE</span>
+                      <span class="move-meta">PWR 28 / ACC 86 / CHG 0/1</span>
+                      <span class="move-note">NO CHARGES REMAINING.</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
