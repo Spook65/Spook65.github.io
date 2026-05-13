@@ -8571,6 +8571,10 @@ body {
   min-width: 0;
 }
 
+.combat-command-box .battle-command-stage.is-attack-mode {
+  grid-template-columns: minmax(0, 1.24fr) minmax(11.8rem, 0.76fr);
+}
+
 .combat-command-box .battle-command-wheel,
 .combat-command-box .battle-command-side,
 .combat-command-box .battle-command-panel,
@@ -8806,6 +8810,10 @@ body {
   max-width: 17rem;
 }
 
+.combat-command-box .battle-command-stage.is-attack-mode .battle-command-side {
+  max-width: 13.75rem;
+}
+
 .combat-command-box .battle-resource-ribbon {
   display: grid;
   gap: 0.72rem;
@@ -8966,6 +8974,73 @@ body {
 
 .combat-command-box .battle-command-mini-tag {
   color: rgba(240, 210, 139, 0.82);
+}
+
+.combat-command-box .battle-attack-fan {
+  display: grid;
+  gap: 0.7rem;
+  align-content: start;
+  width: 100%;
+  min-width: 0;
+  margin-top: 0.18rem;
+}
+
+.combat-command-box .battle-attack-fan-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(8.7rem, 1fr));
+  gap: 0.72rem;
+  align-items: start;
+  overflow: visible;
+}
+
+.combat-command-box .battle-attack-fan-grid > .battle-command-empty {
+  grid-column: 1 / -1;
+}
+
+.combat-command-box .battle-attack-fan-grid > .battle-move-card {
+  width: 100%;
+  min-height: 5.65rem;
+  padding: 0.92rem 0.98rem;
+  border-radius: 1.04rem;
+  box-shadow:
+    0 16px 28px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.02);
+}
+
+.combat-command-box .battle-attack-fan-grid > .battle-move-card:nth-child(1) {
+  transform: translateY(0.46rem) rotate(-5deg);
+  transform-origin: center bottom;
+}
+
+.combat-command-box .battle-attack-fan-grid > .battle-move-card:nth-child(2) {
+  transform: translateY(0.08rem) rotate(-1.5deg);
+  transform-origin: center bottom;
+}
+
+.combat-command-box .battle-attack-fan-grid > .battle-move-card:nth-child(3) {
+  transform: translateY(0.5rem) rotate(4deg);
+  transform-origin: center bottom;
+}
+
+.combat-command-box .battle-attack-fan-grid > .battle-move-card:nth-child(n + 4) {
+  transform: none;
+}
+
+.combat-command-box .battle-attack-fan-grid > .battle-move-card .battle-move-card-name {
+  font-size: 1rem;
+}
+
+.combat-command-box .battle-attack-fan-grid > .battle-move-card .battle-move-card-cost {
+  font-size: 0.53rem;
+}
+
+.combat-command-box .battle-attack-fan-grid > .battle-move-card .battle-move-card-meta,
+.combat-command-box .battle-attack-fan-grid > .battle-move-card .battle-move-card-copy {
+  font-size: 0.6rem;
+}
+
+.combat-command-box .battle-attack-fan .battle-move-subtitle {
+  padding-inline-start: 0.2rem;
 }
 
 .combat-command-box .battle-move-lens,
@@ -9174,6 +9249,10 @@ body {
     gap: clamp(1rem, 2vw, 1.5rem);
   }
 
+  .combat-command-box .battle-command-stage.is-attack-mode {
+    grid-template-columns: minmax(0, 1.28fr) minmax(11.5rem, 0.72fr);
+  }
+
   .combat-command-box .battle-command-orbit {
     max-width: 24rem;
     aspect-ratio: 1.14 / 1;
@@ -9210,9 +9289,18 @@ body {
     gap: 0.9rem;
   }
 
+  .combat-command-box .battle-command-stage.is-attack-mode .battle-command-side {
+    max-width: 13.25rem;
+  }
+
   .combat-command-box .battle-command-list,
   .combat-command-box .battle-move-lens {
     max-height: 15.5rem;
+  }
+
+  .combat-command-box .battle-attack-fan-grid {
+    grid-template-columns: repeat(3, minmax(9rem, 1fr));
+    gap: 0.84rem;
   }
 
   .battle-command-overlay {
@@ -9229,6 +9317,10 @@ body {
 
 @media (max-width: 1160px) {
   .combat-command-box .battle-command-stage {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .combat-command-box .battle-command-stage.is-attack-mode {
     grid-template-columns: minmax(0, 1fr);
   }
 
@@ -9256,6 +9348,15 @@ body {
   .compact-intent-card {
     width: min(20rem, 100%);
     justify-self: start;
+  }
+
+  .combat-command-box .battle-attack-fan-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.68rem;
+  }
+
+  .combat-command-box .battle-attack-fan-grid > .battle-move-card {
+    transform: none;
   }
 }
 
@@ -9344,6 +9445,11 @@ body {
 
   .combat-command-box .battle-move-card {
     padding: 0.72rem 0.78rem;
+  }
+
+  .combat-command-box .battle-attack-fan-grid > .battle-move-card {
+    min-height: 5rem;
+    padding: 0.8rem 0.84rem;
   }
 
   .battle-command-overlay {

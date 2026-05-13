@@ -667,17 +667,20 @@ function buildActionButtonMarkup(state) {
     }
 
     return `
-      <div class="battle-move-lens">
-        ${actor.abilities.length ? moveCards : '<div class="battle-command-empty">NO ACTIONS AVAILABLE.</div>'}
+      <div class="battle-attack-fan">
+        <div class="battle-command-subtitle">ATTACK MOVES</div>
+        <div class="battle-attack-fan-grid">
+          ${actor.abilities.length ? moveCards : '<div class="battle-command-empty">NO ACTIONS AVAILABLE.</div>'}
+        </div>
+        ${comboButtons.length ? `
+          <div class="battle-move-subtitle">COMBO OPTIONS</div>
+          <div class="battle-move-extras">${comboButtons.join("")}</div>
+        ` : ""}
+        <div class="battle-command-back-row">
+          <button class="combat-action-button is-secondary battle-command-back" type="button" data-combat-command="back">BACK</button>
+        </div>
+        <div class="battle-command-note">${commandMode === "attack" ? `RESPONSE GAUGE ${state.responseGauge}/100` : ""}</div>
       </div>
-      ${comboButtons.length ? `
-        <div class="battle-move-subtitle">COMBO OPTIONS</div>
-        <div class="battle-move-extras">${comboButtons.join("")}</div>
-      ` : ""}
-      <div class="battle-command-back-row">
-        <button class="combat-action-button is-secondary battle-command-back" type="button" data-combat-command="back">BACK</button>
-      </div>
-      <div class="battle-command-note">${commandMode === "attack" ? `RESPONSE GAUGE ${state.responseGauge}/100` : ""}</div>
     `;
   };
 
@@ -816,14 +819,10 @@ function buildActionButtonMarkup(state) {
               <div class="battle-command-anchor-copy">${wheelCopy}</div>
             </div>
           </div>
-        </div>
-        <div class="battle-command-side">
-          ${resourceRibbon}
-          <div class="battle-command-panel">
-            <div class="battle-command-subtitle">ATTACK MOVES</div>
-            ${renderMoveLens()}
-          </div>
-        </div>
+        ${renderMoveLens()}
+      </div>
+      <div class="battle-command-side">
+        ${resourceRibbon}
       </div>
     `;
   }
