@@ -864,6 +864,69 @@ button:focus-visible {
   color: rgba(231, 220, 198, 0.74);
 }
 
+/* Desktop-only spacing: keeps the full-width command prototype from clustering while preserving the narrow layout. */
+@media (min-width: 1161px) {
+  .command-band {
+    padding-inline: clamp(1.5rem, 3.5vw, 3rem);
+  }
+
+  .command-anchor {
+    max-width: 68rem;
+    grid-template-columns: minmax(0, 25.25rem) minmax(15.5rem, 17rem);
+    column-gap: clamp(1.9rem, 3vw, 2.75rem);
+    row-gap: 1.15rem;
+    justify-content: space-between;
+  }
+
+  .wheel-shell {
+    max-width: 25.5rem;
+    aspect-ratio: 1.22 / 1;
+  }
+
+  .wheel-option {
+    min-width: 9.2rem;
+    padding: 0.7rem 0.84rem;
+  }
+
+  .is-programs {
+    left: 4%;
+    top: 16%;
+  }
+
+  .is-items {
+    right: 8%;
+    top: 12%;
+  }
+
+  .is-run {
+    right: 6%;
+    bottom: 12%;
+  }
+
+  .is-attack {
+    left: 18%;
+    bottom: 9%;
+    min-width: 10.8rem;
+  }
+
+  .command-side {
+    max-width: 17rem;
+    gap: 1.05rem;
+  }
+
+  .resource-ribbon {
+    gap: 0.95rem;
+  }
+
+  .move-lens {
+    gap: 0.95rem;
+  }
+
+  .move-slot {
+    padding: 0.78rem 0.9rem;
+  }
+}
+
 @media (max-width: 1160px) {
   .scene-frame {
     grid-template-columns: minmax(0, 1fr);
