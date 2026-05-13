@@ -826,6 +826,7 @@ function buildCombatState(sourceThreat) {
     recentEnemyIntents: [],
     resolvedEnemyIntent: null,
     lastEnemyIntentId: enemyIntent?.id || null,
+    expAwarded: false,
     pantheonBoonMessages: activeBoonMessages.concat(battleBoonMessages),
     activeBoons: activeBoons
   });

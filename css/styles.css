@@ -7215,6 +7215,31 @@ body {
   border-color: rgba(0, 204, 255, 0.12);
 }
 
+.battle-narrative-exp-panel {
+  display: grid;
+  gap: 6px;
+  padding: 11px 13px;
+  border: 1px solid rgba(0, 204, 255, 0.14);
+  background: rgba(6, 10, 16, 0.9);
+}
+
+.battle-narrative-exp-list {
+  display: grid;
+  gap: 4px;
+}
+
+.battle-narrative-exp-line {
+  color: rgba(244, 239, 227, 0.78);
+  font-size: 0.6rem;
+  line-height: 1.45;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.battle-narrative-exp-line.is-levelup {
+  color: #f5c557;
+}
+
 .battle-narrative-fragment-copy {
   color: rgba(244, 239, 227, 0.76);
   font-size: 0.68rem;

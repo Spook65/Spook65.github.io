@@ -1737,12 +1737,23 @@ function applyPantheonBoon(boon, encounter) {
   }
 }
 
-// buildPantheonEncounterMarkup() renders the entity, the dialogue, and the three boon choices in the recovered-fragment panel.
+// buildPantheonEncounterMarkup() renders the entity, the dialogue, the XP summary, and the three boon choices.
 function buildPantheonEncounterMarkup(encounter) {
   const resolvedChoice = encounter.resolvedChoice || null;
   const choiceCards = Array.isArray(encounter.boons) ? encounter.boons : [];
+  const expLines = Array.isArray(encounter.expLines) ? encounter.expLines : [];
   const accentClass = String(encounter.entityAccentClass || "is-pantheon");
   const resolvedMechanics = resolvedChoice ? formatPantheonBoonMechanics(resolvedChoice) : null;
+  const expMarkup = expLines.length
+    ? `
+      <div class="battle-narrative-exp-panel">
+        <div class="battle-narrative-result-label">EXP RECOVERED</div>
+        <div class="battle-narrative-exp-list">
+          ${expLines.map((line) => `<div class="battle-narrative-exp-line ${line.levelUp ? "is-levelup" : ""}">${line.text}</div>`).join("")}
+        </div>
+      </div>
+    `
+    : "";
 
   if (resolvedChoice) {
     return `
@@ -1771,6 +1782,7 @@ function buildPantheonEncounterMarkup(encounter) {
               <div class="battle-narrative-result-meta">${resolvedMechanics ? resolvedMechanics.durationLine : ""}${resolvedMechanics && resolvedMechanics.costLine ? ` • ${resolvedMechanics.costLine}` : ""}</div>
             </div>
           </div>
+          ${expMarkup}
           <button class="battle-narrative-button" type="button" data-narrative-continue>CONTINUE EXPEDITION</button>
         </div>
       </div>
@@ -1801,6 +1813,7 @@ function buildPantheonEncounterMarkup(encounter) {
             <div class="battle-narrative-fragment-copy">${encounter.recoveredFragment}</div>
           </div>
         </div>
+        ${expMarkup}
         <div class="battle-narrative-choice-grid">
           ${choiceCards.map((boon) => {
             const boonMechanics = formatPantheonBoonMechanics(boon);
@@ -1895,7 +1908,7 @@ function continuePantheonEncounter() {
 }
 
 // createPantheonEncounter() packages the victory into a cyber-myth encounter that remembers the run.
-function createPantheonEncounter(defeatedThreat) {
+function createPantheonEncounter(defeatedThreat, rewardLines = []) {
   const storyState = ensurePantheonStoryState();
   if (!storyState) {
     return null;
@@ -1940,6 +1953,7 @@ function createPantheonEncounter(defeatedThreat) {
     recoveredFragment,
     contextLine,
     boons,
+    expLines: Array.isArray(rewardLines) ? rewardLines : [],
     appearanceCount
   };
 
@@ -1997,10 +2011,10 @@ function recordPantheonDefeat(defeatedThreat) {
 }
 
 // showPostBattleNarrativeEncounter() becomes the pantheon handoff while keeping a safe fallback back to the globe.
-function showPostBattleNarrativeEncounter(defeatedThreat) {
+function showPostBattleNarrativeEncounter(defeatedThreat, rewardLines = []) {
   try {
     recordPantheonOutcome("victory", defeatedThreat);
-    const encounter = createPantheonEncounter(defeatedThreat);
+    const encounter = createPantheonEncounter(defeatedThreat, rewardLines);
     if (!encounter) {
       throw new Error("Pantheon encounter could not be created.");
     }
