@@ -9,8 +9,12 @@ function renderStatusPills(statusEffects = []) {
   return `
     <div class="status-pill-row">
       ${statusEffects.map((status) => {
-        const className = status === "detected" ? "is-cyan" : status === "isolated" ? "is-alert" : "";
-        const label = status.replace(/_/g, " ").toUpperCase();
+        const normalized = typeof normalizeCombatantStatusEffect === "function" ? normalizeCombatantStatusEffect(status) : null;
+        const statusId = normalized?.id || String(status || "").toLowerCase();
+        const className = statusId === "detected" ? "is-cyan" : statusId === "isolated" ? "is-alert" : statusId === "rot" ? "is-rot" : "";
+        const label = normalized && normalized.id === "rot" && Number.isFinite(normalized.duration)
+          ? `${normalized.label} ${normalized.duration}T`
+          : normalized?.label || String(status).replace(/_/g, " ").toUpperCase();
         return `<span class="status-pill ${className}">${label}</span>`;
       }).join("")}
     </div>

@@ -231,6 +231,220 @@ function getMoveUseAvailability(move, battleState = null) {
   };
 }
 
+// normalizeCombatantStatusEffect() converts old string statuses and new timed statuses into a safe display-ready shape.
+function normalizeCombatantStatusEffect(statusEffect) {
+  if (!statusEffect) {
+    return null;
+  }
+
+  if (typeof statusEffect === "string") {
+    const id = String(statusEffect).trim().toLowerCase();
+    if (!id) {
+      return null;
+    }
+
+    if (id === "rot") {
+      return {
+        id,
+        label: "ROT",
+        type: "damage_over_time",
+        duration: 3,
+        potency: 4,
+        sourceId: null,
+        description: "Corruption deals damage at the end of the affected unit's turn."
+      };
+    }
+
+    return {
+      id,
+      label: id.toUpperCase(),
+      type: "state",
+      duration: null,
+      potency: null,
+      sourceId: null,
+      description: ""
+    };
+  }
+
+  if (typeof statusEffect !== "object") {
+    return null;
+  }
+
+  const id = String(statusEffect.id || statusEffect.label || "").trim().toLowerCase();
+  if (!id) {
+    return null;
+  }
+
+  return {
+    id,
+    label: String(statusEffect.label || id).toUpperCase(),
+    type: String(statusEffect.type || "state"),
+    duration: Number.isFinite(statusEffect.duration) ? Math.max(0, statusEffect.duration) : null,
+    potency: Number.isFinite(statusEffect.potency) ? Math.max(0, statusEffect.potency) : null,
+    sourceId: typeof statusEffect.sourceId === "string" ? statusEffect.sourceId : null,
+    description: typeof statusEffect.description === "string" ? statusEffect.description : ""
+  };
+}
+
+// getCombatantStatusKey() returns the stable status id used by refresh and display helpers.
+function getCombatantStatusKey(statusEffect) {
+  return normalizeCombatantStatusEffect(statusEffect)?.id || "";
+}
+
+// hasCombatantStatus() checks for a status whether it is stored as a string or a timed status object.
+function hasCombatantStatus(combatant, statusId) {
+  const targetId = String(statusId || "").trim().toLowerCase();
+  const statuses = Array.isArray(combatant?.statusEffects) ? combatant.statusEffects : [];
+  if (!targetId || !statuses.length) {
+    return false;
+  }
+
+  return statuses.some((statusEffect) => getCombatantStatusKey(statusEffect) === targetId);
+}
+
+// applyStatusEffect() adds or refreshes a status effect without creating duplicate copies.
+function applyStatusEffect(target, statusEffect) {
+  if (!target || typeof target !== "object") {
+    return null;
+  }
+
+  const incoming = normalizeCombatantStatusEffect(statusEffect);
+  if (!incoming) {
+    return null;
+  }
+
+  target.statusEffects = Array.isArray(target.statusEffects) ? target.statusEffects : [];
+  const existingIndex = target.statusEffects.findIndex((entry) => getCombatantStatusKey(entry) === incoming.id);
+
+  if (existingIndex >= 0) {
+    const existing = normalizeCombatantStatusEffect(target.statusEffects[existingIndex]) || incoming;
+    const merged = {
+      ...existing,
+      ...incoming,
+      duration: incoming.duration == null
+        ? existing.duration
+        : existing.duration == null
+          ? incoming.duration
+          : Math.max(existing.duration, incoming.duration),
+      potency: incoming.potency == null
+        ? existing.potency
+        : existing.potency == null
+          ? incoming.potency
+          : Math.max(existing.potency, incoming.potency)
+    };
+
+    target.statusEffects[existingIndex] = merged;
+    return merged;
+  }
+
+  target.statusEffects.push(incoming);
+  return incoming;
+}
+
+// removeExpiredStatusEffects() strips timed statuses that have already run their course.
+function removeExpiredStatusEffects(combatant) {
+  if (!combatant || typeof combatant !== "object" || !Array.isArray(combatant.statusEffects)) {
+    return [];
+  }
+
+  combatant.statusEffects = combatant.statusEffects.filter((statusEffect) => {
+    const normalized = normalizeCombatantStatusEffect(statusEffect);
+    if (!normalized) {
+      return false;
+    }
+
+    if (normalized.type === "damage_over_time") {
+      return Number.isFinite(normalized.duration) ? normalized.duration > 0 : true;
+    }
+
+    return true;
+  });
+
+  return combatant.statusEffects;
+}
+
+// resolveEndOfTurnStatusEffects() applies tick-based statuses such as ROT when a combatant's turn ends.
+function resolveEndOfTurnStatusEffects(combatant, battleState = null) {
+  const actor = combatant && typeof combatant === "object" ? combatant : null;
+  const statusEffects = Array.isArray(actor?.statusEffects) ? actor.statusEffects : [];
+  const events = [];
+
+  if (!actor || !statusEffects.length) {
+    return events;
+  }
+
+  const actorName = String(actor.name || actor.title || "THE TARGET").toUpperCase();
+  const nextStatuses = [];
+
+  statusEffects.forEach((statusEffect) => {
+    const normalized = normalizeCombatantStatusEffect(statusEffect);
+    if (!normalized) {
+      return;
+    }
+
+    if (normalized.id === "rot" && normalized.type === "damage_over_time") {
+      const potency = Number.isFinite(normalized.potency) ? Math.max(1, normalized.potency) : 4;
+      const nextDuration = Number.isFinite(normalized.duration) ? normalized.duration - 1 : 0;
+      actor.hp = Math.max(0, actor.hp - potency);
+      events.push({
+        message: `ROT eats through ${actorName}. ${actorName} takes ${potency} damage.`,
+        variant: "damage"
+      });
+
+      if (nextDuration > 0) {
+        nextStatuses.push({
+          ...normalized,
+          duration: nextDuration
+        });
+      } else {
+        events.push({
+          message: `${actorName} PURGED THE ROT.`,
+          variant: "buff"
+        });
+      }
+      return;
+    }
+
+    nextStatuses.push(statusEffect);
+  });
+
+  actor.statusEffects = nextStatuses;
+
+  if (actor.hp <= 0 && battleState && typeof battleState === "object" && battleState.phase === "battle") {
+    if (actor === battleState.threat) {
+      battleState.threat.hp = 0;
+    }
+  }
+
+  removeExpiredStatusEffects(actor);
+  return events;
+}
+
+// formatCombatantStatusEffects() turns the active status list into short tactical labels.
+function formatCombatantStatusEffects(combatant) {
+  const statuses = Array.isArray(combatant?.statusEffects) ? combatant.statusEffects : [];
+  if (!statuses.length) {
+    return [];
+  }
+
+  return statuses.map((statusEffect) => {
+    const normalized = normalizeCombatantStatusEffect(statusEffect);
+    if (!normalized) {
+      return "";
+    }
+
+    if (normalized.id === "rot" && Number.isFinite(normalized.duration)) {
+      return `${normalized.label} ${normalized.duration}T`;
+    }
+
+    if (normalized.type === "damage_over_time" && Number.isFinite(normalized.duration)) {
+      return `${normalized.label} ${normalized.duration}T`;
+    }
+
+    return normalized.label;
+  }).filter(Boolean);
+}
+
 // hasUsableMove() checks whether the active Defender can currently execute at least one move.
 function hasUsableMove(defender, battleState = null) {
   const safeDefender = defender && typeof defender === "object" ? defender : null;
@@ -670,17 +884,17 @@ function calculateDamage(attacker, defender, ability) {
 
   let finalMultiplier = levelMultiplier * typeInfo.multiplier;
 
-  if (Array.isArray(attacker.statusEffects) && attacker.statusEffects.includes("encrypted")) {
-    finalMultiplier *= 0.8;
-  }
+    if (hasCombatantStatus(attacker, "encrypted")) {
+      finalMultiplier *= 0.8;
+    }
 
-  if (Array.isArray(attacker.statusEffects) && attacker.statusEffects.includes("isolated")) {
-    finalMultiplier *= 0.5;
-  }
+    if (hasCombatantStatus(attacker, "isolated")) {
+      finalMultiplier *= 0.5;
+    }
 
-  if (Array.isArray(defender.statusEffects) && defender.statusEffects.includes("detected")) {
-    finalMultiplier *= 1.15;
-  }
+    if (hasCombatantStatus(defender, "detected")) {
+      finalMultiplier *= 1.15;
+    }
 
   const finalDamage = Math.max(1, Math.round(baseDamage * finalMultiplier));
 

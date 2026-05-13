@@ -236,10 +236,7 @@ function focusActiveDefenderTurn(engine) {
       return;
     }
 
-    engine.state.actionLocked = false;
-    engine.state.battleMessage = "";
-    engine.state.battleSubmessage = "";
-    engine.advanceTurn();
+    engine.finishActedTurn(currentActor);
   }, 340);
 }
 
@@ -507,27 +504,22 @@ class ThreatCombat {
       return;
     }
 
-    target.statusEffects = Array.isArray(target.statusEffects) ? target.statusEffects : [];
-
     if (effect === "status_detected") {
-      if (!target.statusEffects.includes("detected")) {
-        target.statusEffects.push("detected");
-      }
+      applyStatusEffect(target, "detected");
       return;
     }
 
     if (effect === "status_isolated") {
-      if (!target.statusEffects.includes("isolated")) {
-        target.statusEffects.push("isolated");
-      }
+      applyStatusEffect(target, "isolated");
       return;
     }
 
     if (effect === "status_encrypted") {
-      if (!target.statusEffects.includes("encrypted")) {
-        target.statusEffects.push("encrypted");
-      }
+      applyStatusEffect(target, "encrypted");
+      return;
     }
+
+    applyStatusEffect(target, effect);
   }
 
   clearStatusEffects(target) {
@@ -606,8 +598,17 @@ class ThreatCombat {
     if (ability.effect === "status_encrypted") {
       const livingPrograms = programs.filter((program) => program.hp > 0);
       const target = livingPrograms[getRandomInt(0, livingPrograms.length - 1)];
-      this.applyStatusEffect(target, "status_encrypted");
-      addBattleLog(`${target.name.toUpperCase()} IS ENCRYPTED. DAMAGE OUTPUT REDUCED.`, "damage");
+      this.applyStatusEffect(target, {
+        id: "rot",
+        label: "ROT",
+        type: "damage_over_time",
+        duration: 3,
+        potency: 4,
+        sourceId: threat.id || null,
+        description: "Corruption deals damage at the end of the affected unit's turn."
+      });
+      addBattleLog(`${target.name.toUpperCase()} IS INFECTED WITH ROT.`, "damage");
+      addBattleLog(`CORRUPTION WILL DAMAGE ${target.name.toUpperCase()} AT THE END OF ITS TURNS.`, "damage");
       return;
     }
 
@@ -625,6 +626,55 @@ class ThreatCombat {
       this.applyStatusEffect(target, "status_isolated");
       addBattleLog(`${target.name.toUpperCase()} WAS PULLED INTO AN [ISOLATED] SEGMENT.`, "damage");
     }
+  }
+
+  // resolveTurnEndStatusEffects() applies end-of-turn status ticks for the actor whose turn just finished.
+  resolveTurnEndStatusEffects(actorEntry) {
+    const combatant = actorEntry && actorEntry.ref ? actorEntry.ref : null;
+    if (!combatant || typeof resolveEndOfTurnStatusEffects !== "function") {
+      return [];
+    }
+
+    return resolveEndOfTurnStatusEffects(combatant, this.state);
+  }
+
+  // finishActedTurn() resolves end-of-turn statuses, then clears the battle cue and advances play.
+  finishActedTurn(actorEntry) {
+    const statusEvents = this.resolveTurnEndStatusEffects(actorEntry);
+
+    if (Array.isArray(statusEvents) && statusEvents.length) {
+      statusEvents.forEach((event) => {
+        addBattleLog(event.message, event.variant || "");
+      });
+      this.setBattleCue(
+        statusEvents[0].message,
+        statusEvents[1] ? statusEvents[1].message : "STATUS RESOLVED."
+      );
+      renderCombatScreen();
+      scheduleBattleStep(this, () => {
+        if (this.checkWinCondition()) {
+          return;
+        }
+
+        this.state.battleMessage = "";
+        this.state.battleSubmessage = "";
+        this.state.actionLocked = false;
+        this.clearBattleVisual();
+        this.advanceTurn();
+      }, 420);
+      return;
+    }
+
+    if (this.checkWinCondition()) {
+      this.state.actionLocked = false;
+      return;
+    }
+
+    this.state.battleMessage = "";
+    this.state.battleSubmessage = "";
+    this.state.actionLocked = false;
+    this.clearBattleVisual();
+    this.advanceTurn();
   }
 
   resolveDamage(attacker, defender, ability, options = {}) {
@@ -646,7 +696,7 @@ class ThreatCombat {
       damage = Math.max(1, Math.round(damage * (1 - reduction)));
     }
 
-    if (defender === this.state.threat && Array.isArray(defender.statusEffects) && defender.statusEffects.includes("isolated")) {
+    if (defender === this.state.threat && hasCombatantStatus(defender, "isolated")) {
       damage = Math.max(1, Math.round(damage * 1.1));
     }
 
@@ -731,11 +781,7 @@ class ThreatCombat {
           );
 
           scheduleBattleStep(this, () => {
-            this.state.battleMessage = "";
-            this.state.battleSubmessage = "";
-            this.state.actionLocked = false;
-            this.clearBattleVisual();
-            this.advanceTurn();
+            this.finishActedTurn(actorEntry);
           }, 420);
           return;
         }
@@ -772,11 +818,7 @@ class ThreatCombat {
         }
 
         scheduleBattleStep(this, () => {
-          this.state.battleMessage = "";
-          this.state.battleSubmessage = "";
-          this.state.actionLocked = false;
-          this.clearBattleVisual();
-          this.advanceTurn();
+          this.finishActedTurn(actorEntry);
         }, 420);
       }, 220);
       return;
@@ -809,13 +851,10 @@ class ThreatCombat {
         scheduleBattleStep(this, () => {
           this.state.actionLocked = false;
           renderCombatScreen();
-          if (this.checkWinCondition()) {
-            return;
-          }
           if (typeof recordEnemyIntentHistory === "function" && resolvedEnemyIntent?.intent?.id) {
             recordEnemyIntentHistory(this.state, resolvedEnemyIntent.intent.id);
           }
-          this.advanceTurn();
+          this.finishActedTurn(actorEntry);
         }, 360);
         return;
       }
@@ -878,11 +917,7 @@ class ThreatCombat {
             recordEnemyIntentHistory(this.state, resolvedEnemyIntent.intent.id);
           }
           this.state.enemyIntent = null;
-          this.state.battleMessage = "";
-          this.state.battleSubmessage = "";
-          this.state.actionLocked = false;
-          this.clearBattleVisual();
-          this.advanceTurn();
+          this.finishActedTurn(actorEntry);
         }, 420);
       }, 260);
     }
