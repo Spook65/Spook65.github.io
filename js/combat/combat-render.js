@@ -856,15 +856,55 @@ function buildActionButtonMarkup(state) {
   `;
 }
 
+// buildCompactEnemyIntentMarkup() keeps the forecast readable without turning the overlay into a full tactical brief.
+function buildCompactEnemyIntentMarkup(state) {
+  const intent = state?.enemyIntent;
+  const threat = state?.threat;
+
+  if (!intent) {
+    return "";
+  }
+
+  const threatName = String(threat?.title || "THE THREAT").toUpperCase();
+  const intentLabel = String(intent.label || "STRIKE").toUpperCase();
+  const effectText = String(intent.effectText || "Effect: Enemy deals normal damage.");
+  const counterplayText = String(intent.counterplayText || "Counterplay: Attack, defend, or use support.");
+  const descriptionText = String(intent.description || "The threat is preparing a direct attack.");
+
+  return `
+    <aside class="compact-intent-card">
+      <div class="compact-intent-kicker">ENEMY INTENT</div>
+      <div class="compact-intent-title">${threatName}</div>
+      <div class="compact-intent-headline">${intentLabel}</div>
+      <div class="compact-intent-copy">${descriptionText}</div>
+      <div class="compact-intent-effect">${effectText}</div>
+      <div class="compact-intent-counterplay">${counterplayText}</div>
+    </aside>
+  `;
+}
+
+// buildCharacterAnchoredCommandOverlayMarkup() lifts the command deck into the battlefield as a character-anchored overlay.
+function buildCharacterAnchoredCommandOverlayMarkup(state) {
+  return `
+    <div class="battle-command-overlay">
+      <div class="combat-command-box battle-command-overlay-core">
+        ${buildActionButtonMarkup(state)}
+      </div>
+      ${buildCompactEnemyIntentMarkup(state)}
+    </div>
+  `;
+}
+
 // buildCombatMarkup() turns the battle into a battlefield scene with one featured program and one featured threat.
 function buildCombatMarkup(state) {
   const currentProgram = getActiveBattleProgram(state);
   const introStage = state.battleIntroStage || "operator";
   const introStageClass = `is-stage-${introStage}`;
   const commandBoxClass = state.battleIntroPlaying ? "is-intro-hidden" : "is-intro-revealed";
+  const useAnchoredCommandOverlay = typeof window === "undefined" || window.THREATGRID_USE_CHARACTER_ANCHORED_COMMAND_OVERLAY !== false;
 
   return `
-    <div class="combat-shell ${state.battleIntroPlaying ? "is-intro-playing" : ""}">
+    <div class="combat-shell ${state.battleIntroPlaying ? "is-intro-playing" : ""} ${useAnchoredCommandOverlay ? "is-command-overlay-active" : ""}">
       <header class="combat-header">
         <div class="combat-title-block">
           <div class="combat-panel-title">THREATGRID ARENA</div>
@@ -908,6 +948,7 @@ function buildCombatMarkup(state) {
         <div class="combat-stage-player">
           ${buildProgramBattlefieldMarkup(currentProgram, state, state.activeProgramId === currentProgram.id)}
         </div>
+        ${useAnchoredCommandOverlay ? buildCharacterAnchoredCommandOverlayMarkup(state) : ""}
         <div class="combat-reserve-strip">
           <div class="combat-reserve-row">
             ${buildReserveStripMarkup(state, currentProgram.id)}
@@ -927,10 +968,12 @@ function buildCombatMarkup(state) {
           ${buildPantheonBoonBriefMarkup(state)}
         </div>
 
-          <div class="combat-command-box ${commandBoxClass}">
-            <div class="combat-panel-title">COMMAND DECK</div>
-            ${buildActionButtonMarkup(state)}
-          </div>
+          ${useAnchoredCommandOverlay ? "" : `
+            <div class="combat-command-box ${commandBoxClass}">
+              <div class="combat-panel-title">COMMAND DECK</div>
+              ${buildActionButtonMarkup(state)}
+            </div>
+          `}
         </div>
       </footer>
     </div>

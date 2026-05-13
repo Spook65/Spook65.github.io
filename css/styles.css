@@ -9080,6 +9080,94 @@ body {
     0 0 18px rgba(240, 210, 139, 0.08);
 }
 
+.combat-shell.is-command-overlay-active .combat-stage {
+  overflow: visible;
+}
+
+.battle-command-overlay {
+  position: absolute;
+  left: clamp(1rem, 3vw, 2.3rem);
+  right: clamp(1rem, 2vw, 1.8rem);
+  bottom: clamp(3.25rem, 6.5vh, 4.75rem);
+  z-index: 8;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(15rem, 0.72fr);
+  gap: clamp(0.95rem, 2vw, 1.35rem);
+  align-items: start;
+  pointer-events: none;
+}
+
+.battle-command-overlay > * {
+  pointer-events: auto;
+}
+
+.battle-command-overlay-core {
+  width: 100%;
+  max-width: min(62rem, calc(100vw - 22rem));
+  justify-self: start;
+  background:
+    linear-gradient(180deg, rgba(10, 13, 20, 0.94), rgba(5, 7, 11, 0.92)),
+    linear-gradient(90deg, rgba(0, 255, 136, 0.05), transparent 42%, rgba(240, 210, 139, 0.05));
+}
+
+.compact-intent-card {
+  justify-self: end;
+  width: min(18rem, 100%);
+  margin-top: 0.25rem;
+  padding: 0.95rem 1rem;
+  border: 1px solid rgba(0, 204, 255, 0.18);
+  border-radius: 1rem 1.2rem 1rem 1.2rem;
+  background:
+    linear-gradient(180deg, rgba(10, 14, 22, 0.94), rgba(5, 7, 11, 0.98));
+  box-shadow:
+    0 16px 28px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(0, 204, 255, 0.03) inset;
+}
+
+.compact-intent-kicker {
+  color: rgba(0, 204, 255, 0.76);
+  font-size: 0.54rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.compact-intent-title {
+  margin-top: 0.35rem;
+  color: #f4efe3;
+  font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+  font-size: 1.05rem;
+  line-height: 1.2;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.compact-intent-headline {
+  margin-top: 0.2rem;
+  color: rgba(240, 210, 139, 0.92);
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.compact-intent-copy,
+.compact-intent-effect,
+.compact-intent-counterplay {
+  margin-top: 0.28rem;
+  color: rgba(244, 239, 227, 0.72);
+  font-size: 0.58rem;
+  line-height: 1.45;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.compact-intent-effect {
+  color: rgba(0, 255, 136, 0.72);
+}
+
+.compact-intent-counterplay {
+  color: rgba(240, 210, 139, 0.82);
+}
+
 @media (min-width: 1161px) {
   .combat-command-box .battle-command-stage {
     grid-template-columns: minmax(0, 1.2fr) minmax(14rem, 0.78fr);
@@ -9126,6 +9214,17 @@ body {
   .combat-command-box .battle-move-lens {
     max-height: 15.5rem;
   }
+
+  .battle-command-overlay {
+    left: clamp(1rem, 2.5vw, 2rem);
+    right: clamp(1rem, 2vw, 1.8rem);
+    bottom: clamp(3.5rem, 6vh, 5rem);
+    grid-template-columns: minmax(0, 1fr) minmax(16rem, 0.76fr);
+  }
+
+  .battle-command-overlay-core {
+    max-width: min(60rem, calc(100vw - 24rem));
+  }
 }
 
 @media (max-width: 1160px) {
@@ -9141,6 +9240,22 @@ body {
   .combat-command-box .battle-command-orbit {
     max-width: none;
     aspect-ratio: 1.16 / 1;
+  }
+
+  .battle-command-overlay {
+    left: clamp(0.75rem, 2vw, 1.4rem);
+    right: clamp(0.75rem, 2vw, 1.4rem);
+    bottom: clamp(3rem, 6vh, 4rem);
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .battle-command-overlay-core {
+    max-width: min(62rem, 100%);
+  }
+
+  .compact-intent-card {
+    width: min(20rem, 100%);
+    justify-self: start;
   }
 }
 
@@ -9161,6 +9276,22 @@ body {
   .combat-command-box .battle-command-list,
   .combat-command-box .battle-move-lens {
     max-height: none;
+  }
+
+  .battle-command-overlay {
+    left: 0.75rem;
+    right: 0.75rem;
+    bottom: 0.9rem;
+    gap: 0.7rem;
+  }
+
+  .battle-command-overlay-core {
+    max-width: none;
+  }
+
+  .compact-intent-card {
+    width: 100%;
+    justify-self: start;
   }
 }
 
@@ -9213,5 +9344,9 @@ body {
 
   .combat-command-box .battle-move-card {
     padding: 0.72rem 0.78rem;
+  }
+
+  .battle-command-overlay {
+    bottom: 0.75rem;
   }
 }
