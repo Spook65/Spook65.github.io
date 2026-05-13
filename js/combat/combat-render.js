@@ -514,6 +514,7 @@ function buildThreatVisualMarkup(state) {
   const statusMarkup = renderStatusPills(threat.statusEffects);
   const effect = state.visualEffect || {};
   const threatClass = `threat-${getThreatSpriteClass(threat)}`;
+  const displayLevel = Number.isFinite(threat?.battleLevel) ? threat.battleLevel : threat.level;
   const figureClass = [
     "combat-battler",
     "combat-battler-enemy",
@@ -535,7 +536,7 @@ function buildThreatVisualMarkup(state) {
       <div class="combat-status-box combat-status-box-enemy">
         <div class="combat-name-row">
           <span class="combat-name">${threat.title}</span>
-          <span class="combat-lvl">LVL ${threat.level}</span>
+          <span class="combat-lvl">LVL ${displayLevel}</span>
         </div>
         <div class="combat-subline">HP ${threat.hp}/${threat.maxHp}</div>
         ${renderBar(threat.hp, threat.maxHp, "is-hp")}

@@ -586,12 +586,7 @@ class ThreatCombat {
 
   applyThreatEffect(threat, ability) {
     if (ability.effect === "self_level_up") {
-      threat.level = Math.min(10, threat.level + 1);
-      threat.atk += 1;
-      threat.def += 1;
-      threat.maxHp += 15;
-      threat.hp = Math.min(threat.maxHp, threat.hp + 15);
-      addBattleLog(`${threat.title.toUpperCase()} ESCALATED TO LEVEL ${threat.level}.`, "buff");
+      addBattleLog(`${threat.title.toUpperCase()} TRIED TO ESCALATE, BUT THE BATTLE LEVEL IS LOCKED.`, "buff");
       return;
     }
 

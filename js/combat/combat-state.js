@@ -806,6 +806,7 @@ function buildScaledThreat(sourceThreat, targetLevel) {
   const statScale = Math.max(0.7, Math.min(1.08, 0.9 + (levelDelta * 0.04)));
 
   encounter.level = targetLevel;
+  encounter.battleLevel = targetLevel;
   encounter.maxHp = Math.max(40, Math.round((encounter.maxHp || 100) * hpScale));
   encounter.hp = encounter.maxHp;
   encounter.atk = Math.max(1, Math.round((encounter.atk || 1) * statScale));
@@ -876,7 +877,9 @@ function getTypeAdvantage(attackerType, defenderType) {
 // Example: lvl 5 vs lvl 3 = 1.2x damage (20% bonus)
 function calculateDamage(attacker, defender, ability) {
   const baseDamage = ((attacker.atk || 1) * (ability.baseDamage || 0)) / ((defender.def || 0) + 10);
-  const levelDiff = (attacker.level || 1) - (defender.level || 1);
+  const attackerLevel = Number.isFinite(attacker?.battleLevel) ? attacker.battleLevel : (attacker.level || 1);
+  const defenderLevel = Number.isFinite(defender?.battleLevel) ? defender.battleLevel : (defender.level || 1);
+  const levelDiff = attackerLevel - defenderLevel;
   const levelMultiplier = 1 + (levelDiff * 0.1);
   const attackerType = getActorCombatType(attacker);
   const defenderType = getActorCombatType(defender, true);
