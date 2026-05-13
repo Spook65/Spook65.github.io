@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>THREATGRID Expedition Command Wheel Prototype</title>
+  <link rel="stylesheet" href="./prototype-command-deck-expedition.css">
+</head>
+<body class="expedition-prototype">
+  <main class="expedition-shell">
+    <header class="expedition-topbar">
+      <div>
+        <div class="expedition-kicker">THREATGRID ARENA / STANDALONE PROTOTYPE</div>
+        <h1>Battle Wheel, Cinematic Variant</h1>
+      </div>
+      <p class="expedition-note">
+        Battlefield-first composition for a guided command ritual. This file is not connected to the live game.
+      </p>
+    </header>
+
+    <section class="expedition-stage">
+      <div class="stage-wash" aria-hidden="true"></div>
+      <div class="stage-grid" aria-hidden="true"></div>
+
+      <div class="scene-frame">
+        <article class="battlefield">
+          <div class="battle-title">CURSED DOMAIN / OBSIDIAN GATE</div>
+          <div class="battle-subtitle">PROTOCOL GOD / CORRUPTED THREAT FORECAST</div>
+
+          <div class="party-rail" aria-hidden="true">
+            <div class="party-mark is-active">
+              <span class="party-dot"></span>
+              <span class="party-copy">DEFENDER / A</span>
+            </div>
+            <div class="party-mark">
+              <span class="party-dot"></span>
+              <span class="party-copy">DEFENDER / B</span>
+            </div>
+            <div class="party-mark">
+              <span class="party-dot"></span>
+              <span class="party-copy">DEFENDER / C</span>
+            </div>
+            <div class="party-mark">
+              <span class="party-dot"></span>
+              <span class="party-copy">DEFENDER / D</span>
+            </div>
+          </div>
+
+          <div class="battle-sky" aria-hidden="true"></div>
+          <div class="battle-floor" aria-hidden="true"></div>
+          <div class="battle-rift" aria-hidden="true"></div>
+          <div class="battle-player" aria-hidden="true"></div>
+          <div class="battle-threat" aria-hidden="true"></div>
+
+          <div class="command-anchor">
+            <div class="anchor-head">
+              <div class="anchor-kicker">BATTLE WHEEL</div>
+              <div class="anchor-status">TACTICAL GAUGE 35/100</div>
+            </div>
+
+            <div class="wheel-shell">
+              <div class="wheel-ring" aria-hidden="true"></div>
+              <div class="wheel-trace" aria-hidden="true"></div>
+
+              <button class="wheel-option is-programs" type="button">
+                <span class="option-icon">△</span>
+                <span class="option-copy">
+                  <span class="option-name">PROGRAMS</span>
+                  <span class="option-meta">PARTY / STATUS</span>
+                </span>
+              </button>
+
+              <button class="wheel-option is-items" type="button">
+                <span class="option-icon">◻</span>
+                <span class="option-copy">
+                  <span class="option-name">ITEMS</span>
+                  <span class="option-meta">SUPPORT / RECOVERY</span>
+                </span>
+              </button>
+
+              <button class="wheel-option is-run" type="button">
+                <span class="option-icon">✕</span>
+                <span class="option-copy">
+                  <span class="option-name">RUN</span>
+                  <span class="option-meta">RETREAT / ABORT</span>
+                </span>
+              </button>
+
+              <button class="wheel-option is-attack is-selected" type="button">
+                <span class="option-icon">◯</span>
+                <span class="option-copy">
+                  <span class="option-name">ATTACK</span>
+                  <span class="option-meta">PRIMARY / OPEN DECK</span>
+                </span>
+              </button>
+
+              <div class="wheel-core">
+                <div class="core-kicker">PROTOCOL GOD / TURN</div>
+                <div class="core-title">ATTACK</div>
+                <div class="core-copy">Selected command. Ritualized, guided, and immediate.</div>
+              </div>
+            </div>
+
+            <div class="resource-ribbon">
+              <button class="focus-plate is-focus-needed" type="button">
+                <span class="plate-title">FOCUS</span>
+                <span class="plate-copy">Recover Gauge / End Turn</span>
+              </button>
+
+              <div class="gauge-lens">
+                <div class="gauge-head">
+                  <span class="gauge-label">TACTICAL GAUGE</span>
+                  <strong class="gauge-value">35/100</strong>
+                </div>
+                <div class="gauge-track" aria-hidden="true">
+                  <span class="gauge-fill" style="width:35%"></span>
+                </div>
+                <div class="gauge-caption">
+                  Gauge gates high-cost moves. Focus always ends the turn safely.
+                </div>
+              </div>
+            </div>
+
+            <div class="move-lens">
+              <div class="move-slot is-ready">
+                <div class="move-label">PULSE BREAK</div>
+                <div class="move-meta">AVAILABLE / PWR 16 / ACC 95 / CHG 3/3</div>
+              </div>
+              <div class="move-slot is-blocked">
+                <div class="move-label">NULL DIVE</div>
+                <div class="move-meta">BLOCKED / PWR 28 / ACC 86 / CHG 0/1</div>
+                <div class="move-note">NO CHARGES REMAINING.</div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <aside class="forecast-rail">
+          <div class="forecast-kicker">PROTOCOL GOD / FORECAST</div>
+          <h2>Enemy intent: Overload</h2>
+          <p class="forecast-copy">
+            The threat is preparing a gate-strain burst. Tactical Gauge pressure will spike. FOCUS remains the safe recovery fallback.
+          </p>
+
+          <div class="forecast-rule" aria-hidden="true"></div>
+
+          <div class="forecast-panel">
+            <div class="forecast-label">Counterplay</div>
+            <div class="forecast-text">
+              Spend gauge now for a burst strike, or focus to reopen the turn economy and keep the deck readable.
+            </div>
+          </div>
+
+          <div class="forecast-panel is-quiet">
+            <div class="forecast-label">THREAT READOUT</div>
+            <div class="forecast-text">
+              ROT / FLOOD labels stay compact, contextual, and easy to scan during battle.
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
