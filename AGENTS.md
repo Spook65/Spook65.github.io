@@ -5,7 +5,7 @@ Apply this rule to future Codex work in this repository.
 ## Scope
 
 - UI direction only.
-- Default boundary: change only the battle command deck unless the user explicitly expands the screen scope.
+- Default boundary: change only the specific screen/component named in the user’s prompt. If no screen is named, ask for clarification or make the smallest safe UI change. Do not touch unrelated screens.
 - Do not touch gameplay logic unless explicitly requested.
 
 ## Visual Direction
