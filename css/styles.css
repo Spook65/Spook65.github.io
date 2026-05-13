@@ -8742,3 +8742,161 @@ body {
     flex-basis: 30px;
   }
 }
+
+/* Final sizing guardrails keep the redesigned command deck compact enough to read as HUD, not overlay. */
+.combat-footer-left {
+  align-items: start;
+  grid-template-columns: minmax(0, 0.98fr) minmax(0, 1.02fr);
+}
+
+.combat-voice-box {
+  max-height: min(19vh, 176px);
+  overflow: auto;
+  scrollbar-width: thin;
+}
+
+.combat-command-box {
+  max-height: min(30vh, 236px);
+  overflow: auto;
+  scrollbar-width: thin;
+  max-width: 590px;
+  justify-self: end;
+}
+
+.combat-command-box .combat-panel-title,
+.combat-command-utility .combat-panel-title {
+  font-size: 0.68rem;
+}
+
+.combat-command-box .combat-ability-row,
+.combat-command-secondary-grid,
+.combat-command-utility {
+  gap: 6px;
+}
+
+.combat-command-layout {
+  gap: 8px;
+}
+
+.combat-command-layout.is-main-layout,
+.combat-command-layout.is-attack-layout,
+.combat-command-layout.is-sidecar-layout {
+  grid-template-columns: minmax(0, 1.22fr) minmax(180px, 0.58fr);
+}
+
+.combat-command-layout.is-main-layout .combat-command-column.is-primary-column {
+  gap: 6px;
+}
+
+.combat-command-layout.is-main-layout .combat-action-button.is-attack-command {
+  min-height: 84px;
+}
+
+.combat-command-layout.is-main-layout .combat-command-secondary-grid .combat-action-button {
+  min-height: 56px;
+}
+
+.combat-command-layout.is-attack-layout .combat-command-column.is-ability-column,
+.combat-command-layout.is-sidecar-layout .combat-command-column.is-library-column {
+  gap: 6px;
+}
+
+.combat-command-layout.is-attack-layout .combat-action-button.is-move-command {
+  min-height: 64px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.combat-command-layout.is-attack-layout .combat-ability-list {
+  gap: 6px;
+}
+
+.combat-command-layout.is-sidecar-layout .combat-party-grid {
+  gap: 6px;
+}
+
+.combat-command-layout.is-sidecar-layout .combat-party-card {
+  padding: 9px 10px;
+}
+
+.combat-command-utility {
+  max-width: 100%;
+  padding: 10px;
+}
+
+.combat-command-utility-head {
+  gap: 8px;
+}
+
+.combat-command-utility .combat-focus-button {
+  min-height: 56px;
+}
+
+.combat-command-utility .combat-gauge-wrap {
+  padding-top: 6px;
+}
+
+.combat-command-utility .combat-command-rhythm,
+.combat-command-rhythm,
+.combat-gauge-note,
+.combat-command-meta,
+.combat-command-cost,
+.combat-command-detail {
+  font-size: 0.5rem;
+  line-height: 1.25;
+}
+
+.combat-command-name {
+  font-size: 0.68rem;
+}
+
+.combat-command-layout.is-main-layout .combat-action-button.is-attack-command .combat-command-name {
+  font-size: 0.8rem;
+}
+
+.combat-command-index {
+  width: 30px;
+  flex-basis: 30px;
+  font-size: 0.5rem;
+}
+
+.combat-focus-row {
+  margin-top: 6px;
+}
+
+.combat-gauge-wrap {
+  padding-top: 6px;
+}
+
+@media (min-width: 921px) {
+  .combat-footer-left {
+    gap: 10px;
+  }
+
+  .combat-voice-box {
+    max-height: min(19vh, 176px);
+  }
+
+  .combat-command-box {
+    max-height: min(30vh, 236px);
+  }
+}
+
+@media (max-width: 920px) {
+  .combat-footer-left {
+    grid-template-columns: 1fr;
+  }
+
+  .combat-voice-box,
+  .combat-command-box {
+    max-height: none;
+    max-width: none;
+    justify-self: stretch;
+  }
+
+  .combat-command-layout.is-main-layout,
+  .combat-command-layout.is-attack-layout,
+  .combat-command-layout.is-sidecar-layout {
+    grid-template-columns: 1fr;
+  }
+}
