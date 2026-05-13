@@ -560,6 +560,68 @@ function buildThreatVisualMarkup(state) {
 }
 
 // buildActionButtonMarkup() renders only the current actor's moves so the bottom bar feels like a battle menu.
+function buildAttackMoveButtonMarkup(ability, index, availability) {
+  const currentCharges = availability.charges;
+  const maxCharges = availability.maxCharges;
+  const isNoCharges = availability.reason === "charges";
+  const isGaugeLow = availability.reason === "gauge";
+  const disabledClass = isNoCharges ? "is-disabled" : isGaugeLow ? "is-gauge-low" : "is-ready";
+  const moveAccuracy = Number.isFinite(ability.accuracy) ? `${ability.accuracy}% ACC` : null;
+  const moveCharges = `CHG ${currentCharges}/${maxCharges}`;
+  const moveMeta = [ability.domain, ability.category]
+    .filter(Boolean)
+    .map((value) => String(value).toUpperCase())
+    .concat([`PWR ${Number.isFinite(ability.power) ? ability.power : ability.baseDamage || 0}`, moveAccuracy, moveCharges].filter(Boolean))
+    .join(" / ");
+  const requirementMeta = isNoCharges
+    ? availability.message || "NO CHARGES REMAINING."
+    : isGaugeLow
+      ? `${availability.message || "NOT ENOUGH TACTICAL GAUGE."} CURRENT ${availability.currentGauge}.`
+      : availability.requiredGauge > 0
+        ? `REQUIRES ${availability.requiredGauge} TACTICAL GAUGE.`
+        : "NO TACTICAL GAUGE REQUIRED.";
+
+  return `
+    <button class="combat-action-button battle-move-option combat-attack-stage-card ${disabledClass}" type="button" data-combat-ability="${index}" data-combat-ability-id="${ability.id || ""}" data-ability-cost="${ability.cost}" data-availability-reason="${availability.reason}" ${isNoCharges ? 'aria-disabled="true"' : ""}>
+      <span class="combat-command-name">${ability.name.toUpperCase()}</span>
+      <span class="combat-command-meta">${moveMeta}</span>
+      <span class="combat-command-cost">${requirementMeta}</span>
+      <span class="combat-command-detail">${availability.canUse ? "READY TO EXECUTE." : availability.detail || availability.message || "SELECT ANOTHER MOVE."}</span>
+    </button>
+  `;
+}
+
+function buildAttackFanMarkup(state) {
+  const currentActor = state.turnOrder[state.turnOrder.length ? state.currentTurnIndex : 0];
+  if (!currentActor || currentActor.kind !== "program" || currentActor.ref.hp <= 0) {
+    return "";
+  }
+
+  const actor = currentActor.ref;
+
+  return `
+    <div class="combat-attack-stage-overlay" aria-label="Attack move fan">
+      <div class="combat-attack-stage-anchor">CHOOSE AN ACTION FOR ${actor.name.toUpperCase()}</div>
+      <div class="combat-attack-stage-fan">
+        ${actor.abilities.map((ability, index) => {
+          const availability = typeof getMoveUseAvailability === "function" ? getMoveUseAvailability(ability, state) : {
+            canUse: state.responseGauge >= ability.cost && getMoveChargeCount(ability) > 0,
+            reason: state.responseGauge >= ability.cost ? "ready" : "gauge",
+            message: "",
+            detail: "",
+            charges: getMoveChargeCount(ability),
+            maxCharges: Number.isFinite(ability.maxCharges) ? ability.maxCharges : getMoveChargeCount(ability),
+            requiredGauge: Number.isFinite(ability.cost) ? ability.cost : 0,
+            currentGauge: state.responseGauge
+          };
+
+          return buildAttackMoveButtonMarkup(ability, index, availability);
+        }).join("")}
+      </div>
+    </div>
+  `;
+}
+
 function buildActionButtonMarkup(state) {
   const currentActor = state.turnOrder[state.currentTurnIndex];
 
@@ -632,50 +694,8 @@ function buildActionButtonMarkup(state) {
     }
 
     return `
-      <div class="combat-attack-fan-shell">
-        <div class="combat-command-subtitle combat-attack-fan-anchor">CHOOSE AN ACTION FOR ${actor.name.toUpperCase()}</div>
-        <div class="combat-attack-fan">
-        ${actor.abilities.map((ability, index) => {
-          const availability = typeof getMoveUseAvailability === "function" ? getMoveUseAvailability(ability, state) : {
-            canUse: state.responseGauge >= ability.cost && getMoveChargeCount(ability) > 0,
-            reason: state.responseGauge >= ability.cost ? "ready" : "gauge",
-            message: "",
-            detail: "",
-            charges: getMoveChargeCount(ability),
-            maxCharges: Number.isFinite(ability.maxCharges) ? ability.maxCharges : getMoveChargeCount(ability),
-            requiredGauge: Number.isFinite(ability.cost) ? ability.cost : 0,
-            currentGauge: state.responseGauge
-          };
-          const currentCharges = availability.charges;
-          const maxCharges = availability.maxCharges;
-          const isNoCharges = availability.reason === "charges";
-          const isGaugeLow = availability.reason === "gauge";
-          const disabledClass = isNoCharges ? "is-disabled" : isGaugeLow ? "is-gauge-low" : "";
-          const moveAccuracy = Number.isFinite(ability.accuracy) ? `${ability.accuracy}% ACC` : null;
-          const moveCharges = `CHG ${currentCharges}/${maxCharges}`;
-          const moveMeta = [ability.domain, ability.category]
-            .filter(Boolean)
-            .map((value) => String(value).toUpperCase())
-            .concat([`PWR ${Number.isFinite(ability.power) ? ability.power : ability.baseDamage || 0}`, moveAccuracy, moveCharges].filter(Boolean))
-            .join(" / ");
-          const requirementMeta = isNoCharges
-            ? availability.message || "NO CHARGES REMAINING."
-            : isGaugeLow
-              ? `${availability.message || "NOT ENOUGH TACTICAL GAUGE."} CURRENT ${availability.currentGauge}.`
-              : availability.requiredGauge > 0
-                ? `REQUIRES ${availability.requiredGauge} TACTICAL GAUGE.`
-                : "NO TACTICAL GAUGE REQUIRED.";
-          return `
-            <button class="combat-action-button battle-move-option combat-attack-fan-card ${disabledClass}" type="button" data-combat-ability="${index}" data-combat-ability-id="${ability.id || ""}" data-ability-cost="${ability.cost}" data-availability-reason="${availability.reason}" ${isNoCharges ? 'aria-disabled="true"' : ""}>
-              <span class="combat-command-name">${ability.name.toUpperCase()}</span>
-              <span class="combat-command-meta">${moveMeta}</span>
-              <span class="combat-command-cost">${requirementMeta}</span>
-              <span class="combat-command-detail">${availability.canUse ? "READY TO EXECUTE." : availability.detail || availability.message || "SELECT ANOTHER MOVE."}</span>
-            </button>
-          `;
-        }).join("")}
-      </div>
-      </div>
+      <div class="combat-command-subtitle">CHOOSE AN ACTION FOR ${actor.name.toUpperCase()}</div>
+      <div class="combat-action-note">MOVE CARDS ARE STAGED IN THE BATTLEFIELD.</div>
       <div class="combat-command-back-row">
         <button class="combat-action-button is-secondary" type="button" data-combat-command="back">BACK</button>
       </div>
@@ -759,6 +779,7 @@ function buildCombatMarkup(state) {
         <div class="combat-stage-player">
           ${buildProgramBattlefieldMarkup(currentProgram, state, state.activeProgramId === currentProgram.id)}
         </div>
+        ${state.commandMode === "attack" ? buildAttackFanMarkup(state) : ""}
         <div class="combat-reserve-strip">
           <div class="combat-reserve-row">
             ${buildReserveStripMarkup(state, currentProgram.id)}
