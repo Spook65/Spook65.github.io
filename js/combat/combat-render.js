@@ -300,10 +300,12 @@ function buildFocusCommandMarkup(state) {
   const noUsableMoves = typeof hasUsableMove === "function" ? !hasUsableMove(currentActor.ref, state) : false;
 
   return `
-    <button class="combat-action-button is-secondary battle-focus-card battle-command-choice battle-command-choice--focus ${noUsableMoves ? "is-focus-needed" : ""}" type="button" data-combat-command="focus">
-      <span class="battle-focus-card-kicker">FOCUS</span>
-      <span class="battle-focus-card-copy">Recover Gauge / End Turn</span>
-    </button>
+    <div class="combat-focus-row battle-command-focus-row ${noUsableMoves ? "is-focus-needed" : ""}">
+      <button class="combat-action-button is-secondary combat-focus-button battle-command-choice battle-command-choice--focus ${noUsableMoves ? "is-focus-needed" : ""}" type="button" data-combat-command="focus">
+        <span class="combat-command-name">FOCUS</span>
+        <span class="combat-command-cost">RECOVER GAUGE / END TURN</span>
+      </button>
+    </div>
   `;
 }
 
@@ -562,334 +564,139 @@ function buildActionButtonMarkup(state) {
   const currentActor = state.turnOrder[state.currentTurnIndex];
 
   if (state.actionLocked) {
-    return '<div class="battle-command-empty-state">EXECUTING MOVE...</div>';
+    return '<div class="combat-action-note">EXECUTING MOVE...</div>';
   }
 
   if (!currentActor || currentActor.kind !== "program" || currentActor.ref.hp <= 0) {
     return `
-      <div class="battle-command-empty-state">THREAT TURN IN PROGRESS.</div>
+      <div class="combat-action-note">THREAT TURN IN PROGRESS.</div>
     `;
   }
 
   const actor = currentActor.ref;
   const commandMode = state.commandMode || "main";
-  const focusNeeded = typeof hasUsableMove === "function" ? !hasUsableMove(actor, state) : false;
   const firewall = programs.find((program) => program.id === "firewall-7" && program.hp > 0);
   const ids = programs.find((program) => program.id === "ids-4" && program.hp > 0);
   const honeypot = programs.find((program) => program.id === "honeypot-3" && program.hp > 0);
   const antivirus = programs.find((program) => program.id === "antivirus-9" && program.hp > 0);
-  const selectedOrbit = commandMode === "programs" ? "programs" : commandMode === "items" ? "items" : commandMode === "attack" ? "attack" : "attack";
-
-  const renderOrbitButton = (command, name, meta, modifier = "") => `
-    <button class="combat-action-button is-secondary battle-command-option battle-command-option--${command} ${selectedOrbit === command ? "is-selected" : ""} ${modifier}" type="button" data-combat-command="${command}">
-      <span class="battle-command-option-icon" aria-hidden="true">${command === "attack" ? "◯" : command === "programs" ? "△" : command === "items" ? "◻" : "✕"}</span>
-      <span class="battle-command-option-copy">
-        <span class="battle-command-option-name">${name}</span>
-        <span class="battle-command-option-meta">${meta}</span>
-      </span>
-    </button>
-  `;
-
-  const renderMoveCard = (ability, index, availability) => {
-    const currentCharges = availability.charges;
-    const maxCharges = availability.maxCharges;
-    const isNoCharges = availability.reason === "charges";
-    const isGaugeLow = availability.reason === "gauge";
-    const disabledClass = isNoCharges ? "is-blocked" : isGaugeLow ? "is-gauge-low" : "is-ready";
-    const moveAccuracy = Number.isFinite(ability.accuracy) ? `${ability.accuracy}% ACC` : null;
-    const moveMeta = [ability.domain, ability.category]
-      .filter(Boolean)
-      .map((value) => String(value).toUpperCase())
-      .concat([`PWR ${Number.isFinite(ability.power) ? ability.power : ability.baseDamage || 0}`, moveAccuracy, `CHG ${currentCharges}/${maxCharges}`].filter(Boolean))
-      .join(" / ");
-    const requirementMeta = isNoCharges
-      ? availability.message || "NO CHARGES REMAINING."
-      : isGaugeLow
-        ? `${availability.message || "NOT ENOUGH TACTICAL GAUGE."} CURRENT ${availability.currentGauge}.`
-        : availability.requiredGauge > 0
-          ? `REQUIRES ${availability.requiredGauge} TACTICAL GAUGE.`
-          : "NO TACTICAL GAUGE REQUIRED.";
-
-    return `
-      <button class="combat-action-button battle-move-card ${disabledClass}" type="button" data-combat-ability="${index}" data-combat-ability-id="${ability.id || ""}" data-ability-cost="${ability.cost}" data-availability-reason="${availability.reason}" ${isNoCharges ? 'aria-disabled="true"' : ""}>
-        <span class="battle-move-card-head">
-          <span class="battle-move-card-name">${ability.name.toUpperCase()}</span>
-          <span class="battle-move-card-cost">${requirementMeta}</span>
-        </span>
-        <span class="battle-move-card-meta">${moveMeta}</span>
-        <span class="battle-move-card-copy">${availability.canUse ? "READY TO EXECUTE." : availability.detail || availability.message || "SELECT ANOTHER MOVE."}</span>
-      </button>
-    `;
-  };
-
-  const renderMoveLens = () => {
-    const moveCards = actor.abilities.map((ability, index) => {
-      const availability = typeof getMoveUseAvailability === "function" ? getMoveUseAvailability(ability, state) : {
-        canUse: state.responseGauge >= ability.cost && getMoveChargeCount(ability) > 0,
-        reason: state.responseGauge >= ability.cost ? "ready" : "gauge",
-        message: "",
-        detail: "",
-        charges: getMoveChargeCount(ability),
-        maxCharges: Number.isFinite(ability.maxCharges) ? ability.maxCharges : getMoveChargeCount(ability),
-        requiredGauge: Number.isFinite(ability.cost) ? ability.cost : 0,
-        currentGauge: state.responseGauge
-      };
-
-      return renderMoveCard(ability, index, availability);
-    }).join("");
-
-    const comboButtons = [];
-
-    if (firewall && ids && state.responseGauge >= 3) {
-      comboButtons.push(`
-        <button class="combat-action-button is-secondary battle-move-card battle-move-card--combo is-ready" type="button" data-combat-combo="sync-defense">
-          <span class="battle-move-card-head">
-            <span class="battle-move-card-name">SYNCHRONIZED DEFENSE</span>
-            <span class="battle-move-card-cost">COST 3</span>
-          </span>
-          <span class="battle-move-card-meta">COMBO / DEFENSE</span>
-          <span class="battle-move-card-copy">MERGES FIREWALL AND IDS SUPPORT.</span>
-        </button>
-      `);
-    }
-
-    if (honeypot && antivirus && state.responseGauge >= 3) {
-      comboButtons.push(`
-        <button class="combat-action-button is-secondary battle-move-card battle-move-card--combo is-ready" type="button" data-combat-combo="containment-protocol">
-          <span class="battle-move-card-head">
-            <span class="battle-move-card-name">CONTAINMENT PROTOCOL</span>
-            <span class="battle-move-card-cost">COST 3</span>
-          </span>
-          <span class="battle-move-card-meta">COMBO / CONTROL</span>
-          <span class="battle-move-card-copy">MERGES HONEYPOT AND ANTIVIRUS SUPPORT.</span>
-        </button>
-      `);
-    }
-
-    return `
-      <div class="battle-attack-fan">
-        <div class="battle-command-subtitle">ATTACK MOVES</div>
-        <div class="battle-attack-fan-grid">
-          ${actor.abilities.length ? moveCards : '<div class="battle-command-empty">NO ACTIONS AVAILABLE.</div>'}
-        </div>
-        ${comboButtons.length ? `
-          <div class="battle-move-subtitle">COMBO OPTIONS</div>
-          <div class="battle-move-extras">${comboButtons.join("")}</div>
-        ` : ""}
-        <div class="battle-command-back-row">
-          <button class="combat-action-button is-secondary battle-command-back" type="button" data-combat-command="back">BACK</button>
-        </div>
-        <div class="battle-command-note">${commandMode === "attack" ? `RESPONSE GAUGE ${state.responseGauge}/100` : ""}</div>
-      </div>
-    `;
-  };
-
-  const renderProgramsPanel = () => `
-    <div class="battle-command-list">
-      ${state.playerParty.map((program) => `
-        <article class="battle-command-mini-card ${program.id === actor.id ? "is-active" : ""} ${program.hp <= 0 ? "is-down" : ""}">
-          <div class="battle-command-mini-name">${program.name}</div>
-          <div class="battle-command-mini-meta">HP ${program.hp}/${program.maxHp}</div>
-          <div class="battle-command-mini-meta">LVL ${program.level}</div>
-          ${program.id === actor.id ? '<div class="battle-command-mini-tag">ACTIVE</div>' : ""}
-        </article>
-      `).join("")}
-    </div>
-    <div class="battle-command-note">SWITCHING COMING SOON.</div>
-    <div class="battle-command-back-row">
-      <button class="combat-action-button is-secondary battle-command-back" type="button" data-combat-command="back">BACK</button>
-    </div>
-  `;
-
-  const renderItemsPanel = () => `
-    <div class="battle-command-empty">NO RECOVERY ITEMS AVAILABLE.</div>
-    <div class="battle-command-back-row">
-      <button class="combat-action-button is-secondary battle-command-back" type="button" data-combat-command="back">BACK</button>
-    </div>
-  `;
-
-  const resourceRibbon = `
-    <div class="battle-resource-ribbon ${focusNeeded ? "is-focus-needed" : ""}">
-      ${buildFocusCommandMarkup(state)}
-      <div class="battle-gauge-card ${focusNeeded ? "is-focus-needed" : ""}">
-        <div class="battle-gauge-card-head">
-          <span class="battle-gauge-card-label">TACTICAL GAUGE</span>
-          <strong class="battle-gauge-card-value">${state.responseGauge}/100</strong>
-        </div>
-        ${renderBar(state.responseGauge, 100, "is-gauge")}
-        <div class="battle-gauge-card-copy">
-          GAUGE GATES HIGH-COST MOVES. FOCUS ALWAYS ENDS THE TURN SAFELY.
-        </div>
-      </div>
-    </div>
-  `;
-
-  const wheelCopy = commandMode === "attack"
-    ? "SELECT A MOVE BELOW."
-    : commandMode === "programs"
-      ? "ACTIVE PARTY / STATUS."
-      : commandMode === "items"
-        ? "SUPPORT / RECOVERY."
-        : "GUIDED COMMAND RITUAL.";
 
   if (commandMode === "programs") {
     return `
-      <div class="battle-command-stage ${focusNeeded ? "is-focus-needed" : ""}">
-        <div class="battle-command-wheel">
-          <div class="battle-command-head">
-            <div class="combat-command-subtitle">BATTLE WHEEL</div>
-            <div class="combat-command-rhythm">TACTICAL GAUGE ${state.responseGauge}/100</div>
+      <div class="combat-command-subtitle">ACTIVE PARTY</div>
+      <div class="combat-party-grid">
+        ${state.playerParty.map((program) => `
+          <div class="combat-party-card ${program.id === actor.id ? "is-active" : ""} ${program.hp <= 0 ? "is-down" : ""}">
+            <div class="combat-party-name">${program.name}</div>
+            <div class="combat-party-meta">HP ${program.hp}/${program.maxHp}</div>
+            <div class="combat-party-meta">LVL ${program.level}</div>
+            ${program.id === actor.id ? '<div class="combat-party-tag">ACTIVE</div>' : ""}
           </div>
-          <div class="battle-command-orbit">
-            <div class="battle-command-ring" aria-hidden="true"></div>
-            <div class="battle-command-trace" aria-hidden="true"></div>
-            ${renderOrbitButton("programs", "PROGRAMS", "PARTY / STATUS")}
-            ${renderOrbitButton("items", "ITEMS", "SUPPORT / RECOVERY")}
-            ${renderOrbitButton("run", "RUN", "RETREAT / ABORT")}
-            ${renderOrbitButton("attack", "ATTACK", "PRIMARY / OPEN DECK", "is-selected")}
-            <div class="battle-command-anchor">
-              <div class="battle-command-anchor-kicker">PROTOCOL GOD / TURN</div>
-              <div class="battle-command-anchor-title">ATTACK</div>
-              <div class="battle-command-anchor-copy">${wheelCopy}</div>
-            </div>
-          </div>
-        </div>
-        <div class="battle-command-side">
-          ${resourceRibbon}
-          <div class="battle-command-panel">
-            <div class="battle-command-subtitle">ACTIVE PARTY</div>
-            ${renderProgramsPanel()}
-          </div>
-        </div>
+        `).join("")}
+      </div>
+      <div class="combat-action-note">SWITCHING COMING SOON.</div>
+      <div class="combat-command-back-row">
+        <button class="combat-action-button is-secondary" type="button" data-combat-command="back">BACK</button>
       </div>
     `;
   }
 
   if (commandMode === "items") {
     return `
-      <div class="battle-command-stage ${focusNeeded ? "is-focus-needed" : ""}">
-        <div class="battle-command-wheel">
-          <div class="battle-command-head">
-            <div class="combat-command-subtitle">BATTLE WHEEL</div>
-            <div class="combat-command-rhythm">TACTICAL GAUGE ${state.responseGauge}/100</div>
-          </div>
-          <div class="battle-command-orbit">
-            <div class="battle-command-ring" aria-hidden="true"></div>
-            <div class="battle-command-trace" aria-hidden="true"></div>
-            ${renderOrbitButton("programs", "PROGRAMS", "PARTY / STATUS")}
-            ${renderOrbitButton("items", "ITEMS", "SUPPORT / RECOVERY", "is-selected")}
-            ${renderOrbitButton("run", "RUN", "RETREAT / ABORT")}
-            ${renderOrbitButton("attack", "ATTACK", "PRIMARY / OPEN DECK")}
-            <div class="battle-command-anchor">
-              <div class="battle-command-anchor-kicker">PROTOCOL GOD / TURN</div>
-              <div class="battle-command-anchor-title">ATTACK</div>
-              <div class="battle-command-anchor-copy">${wheelCopy}</div>
-            </div>
-          </div>
-        </div>
-        <div class="battle-command-side">
-          ${resourceRibbon}
-          <div class="battle-command-panel">
-            <div class="battle-command-subtitle">ITEMS</div>
-            ${renderItemsPanel()}
-          </div>
-        </div>
+      <div class="combat-command-subtitle">ITEMS</div>
+      <div class="combat-command-empty">NO RECOVERY ITEMS AVAILABLE.</div>
+      <div class="combat-command-back-row">
+        <button class="combat-action-button is-secondary" type="button" data-combat-command="back">BACK</button>
       </div>
     `;
   }
 
   if (commandMode === "attack") {
+    const comboButtons = [];
+
+    if (firewall && ids && state.responseGauge >= 3) {
+      comboButtons.push(`
+        <button class="combat-action-button is-secondary battle-move-option" type="button" data-combat-combo="sync-defense">
+          <span class="combat-command-name">SYNCHRONIZED DEFENSE</span>
+          <span class="combat-command-cost">COST 3</span>
+        </button>
+      `);
+    }
+
+    if (honeypot && antivirus && state.responseGauge >= 3) {
+      comboButtons.push(`
+        <button class="combat-action-button is-secondary battle-move-option" type="button" data-combat-combo="containment-protocol">
+          <span class="combat-command-name">CONTAINMENT PROTOCOL</span>
+          <span class="combat-command-cost">COST 3</span>
+        </button>
+      `);
+    }
+
     return `
-      <div class="battle-command-stage is-attack-mode ${focusNeeded ? "is-focus-needed" : ""}">
-        <div class="battle-command-wheel">
-          <div class="battle-command-head">
-            <div class="combat-command-subtitle">BATTLE WHEEL</div>
-            <div class="combat-command-rhythm">TACTICAL GAUGE ${state.responseGauge}/100</div>
-          </div>
-          <div class="battle-command-orbit">
-            <div class="battle-command-ring" aria-hidden="true"></div>
-            <div class="battle-command-trace" aria-hidden="true"></div>
-            ${renderOrbitButton("programs", "PROGRAMS", "PARTY / STATUS")}
-            ${renderOrbitButton("items", "ITEMS", "SUPPORT / RECOVERY")}
-            ${renderOrbitButton("run", "RUN", "RETREAT / ABORT")}
-            ${renderOrbitButton("attack", "ATTACK", "PRIMARY / OPEN DECK", "is-selected")}
-            <div class="battle-command-anchor">
-              <div class="battle-command-anchor-kicker">PROTOCOL GOD / TURN</div>
-              <div class="battle-command-anchor-title">ATTACK</div>
-              <div class="battle-command-anchor-copy">${wheelCopy}</div>
-            </div>
-          </div>
-        ${renderMoveLens()}
+      <div class="combat-command-subtitle">CHOOSE AN ACTION FOR ${actor.name.toUpperCase()}</div>
+      <div class="combat-command-grid is-ability-grid">
+        ${actor.abilities.map((ability, index) => {
+          const availability = typeof getMoveUseAvailability === "function" ? getMoveUseAvailability(ability, state) : {
+            canUse: state.responseGauge >= ability.cost && getMoveChargeCount(ability) > 0,
+            reason: state.responseGauge >= ability.cost ? "ready" : "gauge",
+            message: "",
+            detail: "",
+            charges: getMoveChargeCount(ability),
+            maxCharges: Number.isFinite(ability.maxCharges) ? ability.maxCharges : getMoveChargeCount(ability),
+            requiredGauge: Number.isFinite(ability.cost) ? ability.cost : 0,
+            currentGauge: state.responseGauge
+          };
+          const currentCharges = availability.charges;
+          const maxCharges = availability.maxCharges;
+          const isNoCharges = availability.reason === "charges";
+          const isGaugeLow = availability.reason === "gauge";
+          const disabledClass = isNoCharges ? "is-disabled" : isGaugeLow ? "is-gauge-low" : "";
+          const moveAccuracy = Number.isFinite(ability.accuracy) ? `${ability.accuracy}% ACC` : null;
+          const moveCharges = `CHG ${currentCharges}/${maxCharges}`;
+          const moveMeta = [ability.domain, ability.category]
+            .filter(Boolean)
+            .map((value) => String(value).toUpperCase())
+            .concat([`PWR ${Number.isFinite(ability.power) ? ability.power : ability.baseDamage || 0}`, moveAccuracy, moveCharges].filter(Boolean))
+            .join(" / ");
+          const requirementMeta = isNoCharges
+            ? availability.message || "NO CHARGES REMAINING."
+            : isGaugeLow
+              ? `${availability.message || "NOT ENOUGH TACTICAL GAUGE."} CURRENT ${availability.currentGauge}.`
+              : availability.requiredGauge > 0
+                ? `REQUIRES ${availability.requiredGauge} TACTICAL GAUGE.`
+                : "NO TACTICAL GAUGE REQUIRED.";
+          return `
+            <button class="combat-action-button battle-move-option ${disabledClass}" type="button" data-combat-ability="${index}" data-combat-ability-id="${ability.id || ""}" data-ability-cost="${ability.cost}" data-availability-reason="${availability.reason}" ${isNoCharges ? 'aria-disabled="true"' : ""}>
+              <span class="combat-command-name">${ability.name.toUpperCase()}</span>
+              <span class="combat-command-meta">${moveMeta}</span>
+              <span class="combat-command-cost">${requirementMeta}</span>
+              <span class="combat-command-detail">${availability.canUse ? "READY TO EXECUTE." : availability.detail || availability.message || "SELECT ANOTHER MOVE."}</span>
+            </button>
+          `;
+        }).join("")}
+        <button class="combat-action-button is-secondary" type="button" data-combat-command="back">BACK</button>
       </div>
-      <div class="battle-command-side">
-        ${resourceRibbon}
-      </div>
+      ${comboButtons.length ? `<div class="combat-command-subtitle is-secondary">COMBO OPTIONS</div><div class="combat-ability-row">${comboButtons.join("")}</div><div class="combat-action-note">RESPONSE GAUGE ${state.responseGauge}/100</div>` : ""}
     `;
   }
 
   return `
-    <div class="battle-command-stage ${focusNeeded ? "is-focus-needed" : ""}">
-      <div class="battle-command-wheel">
-        <div class="battle-command-head">
-          <div class="combat-command-subtitle">BATTLE WHEEL</div>
-          <div class="combat-command-rhythm">TACTICAL GAUGE ${state.responseGauge}/100</div>
-        </div>
-        <div class="battle-command-orbit">
-          <div class="battle-command-ring" aria-hidden="true"></div>
-          <div class="battle-command-trace" aria-hidden="true"></div>
-          ${renderOrbitButton("programs", "PROGRAMS", "PARTY / STATUS")}
-          ${renderOrbitButton("items", "ITEMS", "SUPPORT / RECOVERY")}
-          ${renderOrbitButton("run", "RUN", "RETREAT / ABORT")}
-          ${renderOrbitButton("attack", "ATTACK", "PRIMARY / OPEN DECK", "is-selected")}
-          <div class="battle-command-anchor">
-            <div class="battle-command-anchor-kicker">PROTOCOL GOD / TURN</div>
-            <div class="battle-command-anchor-title">ATTACK</div>
-            <div class="battle-command-anchor-copy">${wheelCopy}</div>
-          </div>
-        </div>
-      </div>
-      <div class="battle-command-side">
-        ${resourceRibbon}
-      </div>
-    </div>
-  `;
-}
-
-// buildCompactEnemyIntentMarkup() keeps the forecast readable without turning the overlay into a full tactical brief.
-function buildCompactEnemyIntentMarkup(state) {
-  const intent = state?.enemyIntent;
-  const threat = state?.threat;
-
-  if (!intent) {
-    return "";
-  }
-
-  const threatName = String(threat?.title || "THE THREAT").toUpperCase();
-  const intentLabel = String(intent.label || "STRIKE").toUpperCase();
-  const effectText = String(intent.effectText || "Effect: Enemy deals normal damage.");
-  const counterplayText = String(intent.counterplayText || "Counterplay: Attack, defend, or use support.");
-  const descriptionText = String(intent.description || "The threat is preparing a direct attack.");
-
-  return `
-    <aside class="compact-intent-card">
-      <div class="compact-intent-kicker">ENEMY INTENT</div>
-      <div class="compact-intent-title">${threatName}</div>
-      <div class="compact-intent-headline">${intentLabel}</div>
-      <div class="compact-intent-copy">${descriptionText}</div>
-      <div class="compact-intent-effect">${effectText}</div>
-      <div class="compact-intent-counterplay">${counterplayText}</div>
-    </aside>
-  `;
-}
-
-// buildCharacterAnchoredCommandOverlayMarkup() lifts the command deck into the battlefield as a character-anchored overlay.
-function buildCharacterAnchoredCommandOverlayMarkup(state) {
-  return `
-    <div class="battle-command-overlay">
-      <div class="combat-command-box battle-command-overlay-core">
-        ${buildActionButtonMarkup(state)}
-      </div>
-      ${buildCompactEnemyIntentMarkup(state)}
+    <div class="combat-command-grid is-main-grid battle-command-selector">
+      <button class="combat-action-button is-primary battle-command-choice battle-command-choice--attack is-selected" type="button" data-combat-command="attack">
+        <span class="combat-command-name">ATTACK</span>
+        <span class="combat-command-cost">OPEN MOVES</span>
+      </button>
+      <button class="combat-action-button is-secondary battle-command-choice battle-command-choice--programs" type="button" data-combat-command="programs">
+        <span class="combat-command-name">PROGRAMS</span>
+        <span class="combat-command-cost">PARTY</span>
+      </button>
+      <button class="combat-action-button is-secondary battle-command-choice battle-command-choice--items" type="button" data-combat-command="items">
+        <span class="combat-command-name">ITEMS</span>
+        <span class="combat-command-cost">SUPPLIES</span>
+      </button>
+      <button class="combat-action-button is-secondary battle-command-choice battle-command-choice--run" type="button" data-combat-command="run">
+        <span class="combat-command-name">RUN</span>
+        <span class="combat-command-cost">FLEE</span>
+      </button>
     </div>
   `;
 }
@@ -900,10 +707,10 @@ function buildCombatMarkup(state) {
   const introStage = state.battleIntroStage || "operator";
   const introStageClass = `is-stage-${introStage}`;
   const commandBoxClass = state.battleIntroPlaying ? "is-intro-hidden" : "is-intro-revealed";
-  const useAnchoredCommandOverlay = typeof window === "undefined" || window.THREATGRID_USE_CHARACTER_ANCHORED_COMMAND_OVERLAY !== false;
+  const focusNeeded = typeof hasUsableMove === "function" ? !hasUsableMove(currentProgram, state) : false;
 
   return `
-    <div class="combat-shell ${state.battleIntroPlaying ? "is-intro-playing" : ""} ${useAnchoredCommandOverlay ? "is-command-overlay-active" : ""}">
+    <div class="combat-shell ${state.battleIntroPlaying ? "is-intro-playing" : ""}">
       <header class="combat-header">
         <div class="combat-title-block">
           <div class="combat-panel-title">THREATGRID ARENA</div>
@@ -947,7 +754,6 @@ function buildCombatMarkup(state) {
         <div class="combat-stage-player">
           ${buildProgramBattlefieldMarkup(currentProgram, state, state.activeProgramId === currentProgram.id)}
         </div>
-        ${useAnchoredCommandOverlay ? buildCharacterAnchoredCommandOverlayMarkup(state) : ""}
         <div class="combat-reserve-strip">
           <div class="combat-reserve-row">
             ${buildReserveStripMarkup(state, currentProgram.id)}
@@ -967,12 +773,18 @@ function buildCombatMarkup(state) {
           ${buildPantheonBoonBriefMarkup(state)}
         </div>
 
-          ${useAnchoredCommandOverlay ? "" : `
-            <div class="combat-command-box ${commandBoxClass}">
-              <div class="combat-panel-title">COMMAND DECK</div>
-              ${buildActionButtonMarkup(state)}
+          <div class="combat-command-box ${commandBoxClass}">
+            <div class="combat-panel-title">COMMAND DECK</div>
+            ${buildActionButtonMarkup(state)}
+            <div class="battle-focus-gauge-strip ${focusNeeded ? "is-focus-needed" : ""}">
+              ${buildFocusCommandMarkup(state)}
+              <div class="combat-gauge-wrap ${focusNeeded ? "is-focus-needed" : ""}">
+                <div class="combat-gauge-label">TACTICAL GAUGE</div>
+                ${renderBar(state.responseGauge, 100, "is-gauge")}
+                <div class="combat-gauge-text">${state.responseGauge}/100</div>
+              </div>
             </div>
-          `}
+          </div>
         </div>
       </footer>
     </div>
