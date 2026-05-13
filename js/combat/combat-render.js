@@ -632,8 +632,9 @@ function buildActionButtonMarkup(state) {
     }
 
     return `
-      <div class="combat-command-subtitle">CHOOSE AN ACTION FOR ${actor.name.toUpperCase()}</div>
-      <div class="combat-command-grid is-ability-grid">
+      <div class="combat-attack-fan-shell">
+        <div class="combat-command-subtitle combat-attack-fan-anchor">CHOOSE AN ACTION FOR ${actor.name.toUpperCase()}</div>
+        <div class="combat-attack-fan">
         ${actor.abilities.map((ability, index) => {
           const availability = typeof getMoveUseAvailability === "function" ? getMoveUseAvailability(ability, state) : {
             canUse: state.responseGauge >= ability.cost && getMoveChargeCount(ability) > 0,
@@ -665,7 +666,7 @@ function buildActionButtonMarkup(state) {
                 ? `REQUIRES ${availability.requiredGauge} TACTICAL GAUGE.`
                 : "NO TACTICAL GAUGE REQUIRED.";
           return `
-            <button class="combat-action-button battle-move-option ${disabledClass}" type="button" data-combat-ability="${index}" data-combat-ability-id="${ability.id || ""}" data-ability-cost="${ability.cost}" data-availability-reason="${availability.reason}" ${isNoCharges ? 'aria-disabled="true"' : ""}>
+            <button class="combat-action-button battle-move-option combat-attack-fan-card ${disabledClass}" type="button" data-combat-ability="${index}" data-combat-ability-id="${ability.id || ""}" data-ability-cost="${ability.cost}" data-availability-reason="${availability.reason}" ${isNoCharges ? 'aria-disabled="true"' : ""}>
               <span class="combat-command-name">${ability.name.toUpperCase()}</span>
               <span class="combat-command-meta">${moveMeta}</span>
               <span class="combat-command-cost">${requirementMeta}</span>
@@ -673,9 +674,13 @@ function buildActionButtonMarkup(state) {
             </button>
           `;
         }).join("")}
+      </div>
+      </div>
+      <div class="combat-command-back-row">
         <button class="combat-action-button is-secondary" type="button" data-combat-command="back">BACK</button>
       </div>
       ${comboButtons.length ? `<div class="combat-command-subtitle is-secondary">COMBO OPTIONS</div><div class="combat-ability-row">${comboButtons.join("")}</div><div class="combat-action-note">RESPONSE GAUGE ${state.responseGauge}/100</div>` : ""}
+      ${comboButtons.length ? "" : `<div class="combat-action-note">RESPONSE GAUGE ${state.responseGauge}/100</div>`}
     `;
   }
 
