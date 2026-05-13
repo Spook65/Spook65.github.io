@@ -8564,12 +8564,12 @@ body {
 /* ATTACK fan: stages the move cards near the acting Defender while leaving the stable HUD untouched. */
 .combat-command-box .combat-attack-fan-shell {
   position: fixed;
-  left: clamp(14rem, 23vw, 24rem);
-  top: clamp(48vh, 54vh, 58vh);
+  left: clamp(11rem, 22vw, 22rem);
+  top: clamp(16rem, 42vh, 26rem);
   transform: translateY(-50%);
   width: clamp(21rem, 28vw, 26rem);
   max-width: calc(100vw - 2rem);
-  z-index: 6;
+  z-index: 11;
   display: grid;
   gap: 0.62rem;
   pointer-events: none;
@@ -8667,9 +8667,9 @@ body {
 
 @media (max-width: 1160px) {
   .combat-command-box .combat-attack-fan-shell {
-    left: clamp(1rem, 5vw, 4rem);
-    top: clamp(50vh, 56vh, 60vh);
-    width: min(23rem, calc(100vw - 1.5rem));
+    left: clamp(7rem, 16vw, 13rem);
+    top: clamp(12rem, 36vh, 20rem);
+    width: min(22rem, calc(100vw - 1.5rem));
   }
 
   .combat-command-box .combat-attack-fan-card {
@@ -8688,7 +8688,7 @@ body {
 @media (max-width: 700px) {
   .combat-command-box .combat-attack-fan-shell {
     left: 0.9rem;
-    top: clamp(50vh, 57vh, 61vh);
+    top: clamp(10rem, 34vh, 16rem);
     width: min(20.5rem, calc(100vw - 1.8rem));
     gap: 0.5rem;
   }
