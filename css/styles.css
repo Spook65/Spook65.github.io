@@ -8627,12 +8627,13 @@ body {
 
 .combat-attack-utility {
   position: absolute;
-  left: clamp(36%, 40.5vw, 45%);
-  top: clamp(55%, 59%, 63%);
-  width: min(24vw, 15rem);
+  left: clamp(48%, 52vw, 57%);
+  top: clamp(47%, 51%, 55%);
+  width: min(17vw, 11rem);
   display: grid;
   gap: 6px;
   justify-items: stretch;
+  z-index: 3;
   pointer-events: none;
 }
 
@@ -8651,7 +8652,7 @@ body {
 
 .combat-attack-back {
   justify-self: start;
-  width: min(8.75rem, 100%);
+  width: min(7.5rem, 100%);
 }
 
 .combat-attack-back-button {
@@ -8681,7 +8682,7 @@ body {
 
 .combat-attack-combo-list {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 4px;
 }
 
@@ -8707,7 +8708,7 @@ body {
 
 .combat-attack-support {
   display: grid;
-  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  grid-template-columns: 1fr;
   gap: 4px;
 }
 
@@ -8787,9 +8788,9 @@ body {
   }
 
   .combat-attack-utility {
-    left: clamp(35%, 39.5vw, 44%);
-    top: clamp(56%, 60%, 65%);
-    width: min(26vw, 14.5rem);
+    left: clamp(47%, 50vw, 55%);
+    top: clamp(48%, 52%, 57%);
+    width: min(19vw, 10.5rem);
   }
 }
 
@@ -8818,15 +8819,10 @@ body {
   }
 
   .combat-attack-utility {
-    left: clamp(30%, 34vw, 39%);
-    top: clamp(57%, 61%, 66%);
-    width: min(28vw, 13rem);
+    left: clamp(44%, 47vw, 52%);
+    top: clamp(49%, 53%, 58%);
+    width: min(21vw, 10rem);
     gap: 5px;
-  }
-
-  .combat-attack-combo-list,
-  .combat-attack-support {
-    grid-template-columns: 1fr;
   }
 
   .combat-command-grid.is-main-grid,
@@ -8897,14 +8893,14 @@ body {
 
   .combat-attack-utility {
     left: clamp(18%, 21vw, 25%);
-    top: clamp(57%, 61%, 67%);
+    top: clamp(60%, 64%, 69%);
     right: auto;
-    width: min(46vw, 12.5rem);
+    width: min(42vw, 11rem);
     max-width: none;
   }
 
   .combat-attack-back {
-    width: min(8rem, 100%);
+    width: min(7.5rem, 100%);
   }
 
   .combat-command-grid.is-main-grid,
