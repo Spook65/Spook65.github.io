@@ -6660,16 +6660,12 @@ body {
 .combat-voice-box.is-attack-stage-active {
   max-height: clamp(8rem, 20vh, 10.5rem);
   padding: 8px 10px 9px;
-  opacity: 0.88;
-  box-shadow: 0 12px 22px rgba(0, 0, 0, 0.1);
+  opacity: 0.94;
 }
 
 .combat-command-box.is-attack-stage-active {
   max-height: clamp(9rem, 22vh, 12rem);
   padding: 8px 10px 10px;
-  box-shadow:
-    0 12px 22px rgba(0, 0, 0, 0.1),
-    0 0 0 1px rgba(255, 255, 255, 0.015) inset;
 }
 
 .combat-command-grid.is-main-grid,
@@ -8410,7 +8406,6 @@ body {
 .battle-focus-gauge-strip.is-attack-stage-active {
   margin-top: 6px;
   gap: 6px;
-  opacity: 0.92;
 }
 
 .battle-focus-gauge-strip.is-attack-stage-active .combat-focus-button {
@@ -8495,42 +8490,26 @@ body {
 
 .combat-attack-stage-overlay {
   position: absolute;
-  left: clamp(31%, 35vw, 40%);
-  top: clamp(32%, 35%, 39%);
-  width: min(26vw, 20rem);
-  max-width: calc(100% - 33rem);
+  left: clamp(34%, 38vw, 43%);
+  top: clamp(30%, 34%, 38%);
+  width: min(27vw, 21rem);
+  max-width: calc(100% - 34rem);
   z-index: 5;
   pointer-events: none;
 }
 
 .combat-attack-stage-fan {
   display: grid;
-  gap: 7px;
+  gap: 8px;
   justify-items: start;
 }
 
 .combat-attack-stage-card-shell {
-  position: relative;
-  width: min(100%, 18.25rem);
+  width: min(100%, 18.75rem);
   transform:
-    translateX(calc(var(--attack-fan-index, 0) * 1.55rem))
-    rotate(calc(-4deg + (var(--attack-fan-index, 0) * 2.6deg)));
+    translateX(calc(var(--attack-fan-index, 0) * 1.8rem))
+    rotate(calc(-5deg + (var(--attack-fan-index, 0) * 3deg)));
   transform-origin: left center;
-}
-
-.combat-attack-stage-card-shell:first-child {
-  z-index: 3;
-  transform: translateX(0.25rem) rotate(-5deg);
-}
-
-.combat-attack-stage-card-shell:nth-child(2) {
-  z-index: 2;
-  transform: translateX(1.65rem) rotate(-0.8deg);
-}
-
-.combat-attack-stage-card-shell:nth-child(3) {
-  z-index: 1;
-  transform: translateX(3rem) rotate(3.2deg);
 }
 
 .combat-attack-stage-card {
@@ -8557,7 +8536,6 @@ body {
     0 16px 24px rgba(0, 0, 0, 0.24),
     0 0 0 1px rgba(215, 184, 106, 0.1) inset,
     0 0 18px rgba(215, 184, 106, 0.08);
-  transform: translateY(-1px);
 }
 
 .combat-attack-stage-card.is-secondary {
@@ -8584,61 +8562,37 @@ body {
 
 @media (max-width: 1160px) {
   .combat-attack-stage-overlay {
-    left: clamp(28%, 32vw, 37%);
-    top: clamp(29%, 32%, 36%);
-    width: min(29vw, 18rem);
-    max-width: calc(100% - 26rem);
+    left: clamp(30%, 34vw, 39%);
+    top: clamp(28%, 31%, 35%);
+    width: min(31vw, 19rem);
+    max-width: calc(100% - 28rem);
   }
 
   .combat-attack-stage-card-shell {
-    width: min(100%, 16.5rem);
+    width: min(100%, 17rem);
     transform:
-      translateX(calc(var(--attack-fan-index, 0) * 1rem))
-      rotate(calc(-3.5deg + (var(--attack-fan-index, 0) * 2deg)));
-  }
-
-  .combat-attack-stage-card-shell:first-child {
-    transform: translateX(0.15rem) rotate(-4.4deg);
-  }
-
-  .combat-attack-stage-card-shell:nth-child(2) {
-    transform: translateX(1.15rem) rotate(-0.6deg);
-  }
-
-  .combat-attack-stage-card-shell:nth-child(3) {
-    transform: translateX(2.1rem) rotate(2.4deg);
+      translateX(calc(var(--attack-fan-index, 0) * 1.2rem))
+      rotate(calc(-4deg + (var(--attack-fan-index, 0) * 2.2deg)));
   }
 }
 
 @media (max-width: 920px) {
   .combat-attack-stage-overlay {
-    left: clamp(20%, 23vw, 28%);
-    top: clamp(25%, 29%, 33%);
-    width: min(36vw, 15.5rem);
-    max-width: calc(100% - 14rem);
+    left: clamp(22%, 25vw, 31%);
+    top: clamp(24%, 28%, 32%);
+    width: min(38vw, 16.5rem);
+    max-width: calc(100% - 16rem);
   }
 
   .combat-attack-stage-fan {
-    gap: 6px;
+    gap: 7px;
   }
 
   .combat-attack-stage-card-shell {
-    width: min(100%, 15rem);
+    width: min(100%, 15.5rem);
     transform:
-      translateX(calc(var(--attack-fan-index, 0) * 0.6rem))
-      rotate(calc(-2.6deg + (var(--attack-fan-index, 0) * 1.5deg)));
-  }
-
-  .combat-attack-stage-card-shell:first-child {
-    transform: translateX(0) rotate(-3deg);
-  }
-
-  .combat-attack-stage-card-shell:nth-child(2) {
-    transform: translateX(0.65rem) rotate(-0.5deg);
-  }
-
-  .combat-attack-stage-card-shell:nth-child(3) {
-    transform: translateX(1.15rem) rotate(1.8deg);
+      translateX(calc(var(--attack-fan-index, 0) * 0.7rem))
+      rotate(calc(-3deg + (var(--attack-fan-index, 0) * 1.8deg)));
   }
 
   .combat-attack-stage-card {
