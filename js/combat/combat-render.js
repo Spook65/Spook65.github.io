@@ -591,6 +591,35 @@ function buildAttackMoveButtonMarkup(ability, index, availability) {
   `;
 }
 
+function buildAttackComboButtonsMarkup(state, extraClass = "") {
+  const firewall = programs.find((program) => program.id === "firewall-7" && program.hp > 0);
+  const ids = programs.find((program) => program.id === "ids-4" && program.hp > 0);
+  const honeypot = programs.find((program) => program.id === "honeypot-3" && program.hp > 0);
+  const antivirus = programs.find((program) => program.id === "antivirus-9" && program.hp > 0);
+  const classSuffix = extraClass ? ` ${extraClass}` : "";
+  const comboButtons = [];
+
+  if (firewall && ids && state.responseGauge >= 3) {
+    comboButtons.push(`
+      <button class="combat-action-button is-secondary battle-move-option${classSuffix}" type="button" data-combat-combo="sync-defense">
+        <span class="combat-command-name">SYNCHRONIZED DEFENSE</span>
+        <span class="combat-command-cost">COST 3</span>
+      </button>
+    `);
+  }
+
+  if (honeypot && antivirus && state.responseGauge >= 3) {
+    comboButtons.push(`
+      <button class="combat-action-button is-secondary battle-move-option${classSuffix}" type="button" data-combat-combo="containment-protocol">
+        <span class="combat-command-name">CONTAINMENT PROTOCOL</span>
+        <span class="combat-command-cost">COST 3</span>
+      </button>
+    `);
+  }
+
+  return comboButtons;
+}
+
 function buildAttackStageFanMarkup(state) {
   console.log("[Attack Fan] commandMode:", state?.commandMode);
   console.log("[Attack Fan] actionLocked:", state?.actionLocked);
@@ -672,6 +701,67 @@ function buildAttackStageFanMarkup(state) {
   `;
 }
 
+function buildAttackStageUtilityMarkup(state) {
+  if (!state || state.commandMode !== "attack" || state.actionLocked || state.forceFooterAttackList) {
+    return "";
+  }
+
+  const currentActor = state.turnOrder?.[state.currentTurnIndex];
+  if (!currentActor || currentActor.kind !== "program" || currentActor.ref.hp <= 0) {
+    return "";
+  }
+
+  const focusNeeded = typeof hasUsableMove === "function" ? !hasUsableMove(currentActor.ref, state) : false;
+  const comboButtons = buildAttackComboButtonsMarkup(state, "combat-attack-combo-chip combat-attack-hitbox");
+
+  return `
+    <div class="combat-attack-utility" aria-label="Attack controls">
+      <div class="combat-attack-back">
+        <button class="combat-action-button is-secondary combat-attack-back-button combat-attack-hitbox" type="button" data-combat-command="back">
+          <span class="combat-command-name">BACK</span>
+          <span class="combat-command-cost">RETURN TO COMMANDS</span>
+        </button>
+      </div>
+      ${comboButtons.length ? `
+        <div class="combat-attack-combos">
+          <div class="combat-attack-combo-label">COMBO OPTIONS</div>
+          <div class="combat-attack-combo-list">
+            ${comboButtons.join("")}
+          </div>
+        </div>
+      ` : ""}
+      <div class="combat-attack-support">
+        <div class="combat-attack-focus">
+          <button class="combat-action-button is-secondary combat-focus-button combat-attack-focus-button combat-attack-hitbox ${focusNeeded ? "is-focus-needed" : ""}" type="button" data-combat-command="focus">
+            <span class="combat-command-name">FOCUS</span>
+            <span class="combat-command-cost">RECOVER GAUGE / END TURN</span>
+          </button>
+        </div>
+        <div class="combat-attack-gauge combat-attack-hitbox ${focusNeeded ? "is-focus-needed" : ""}">
+          <div class="combat-gauge-label">TACTICAL GAUGE</div>
+          ${renderBar(state.responseGauge, 100, "is-gauge")}
+          <div class="combat-gauge-text">${state.responseGauge}/100</div>
+          <div class="combat-gauge-note">${focusNeeded ? "FOCUS REOPENS HIGH-COST MOVES." : "ATTACK FAN ACTIVE."}</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function buildAttackStageOverlayMarkup(state) {
+  const fanMarkup = buildAttackStageFanMarkup(state);
+  if (!fanMarkup) {
+    return "";
+  }
+
+  return `
+    <div class="combat-attack-overlay" aria-label="Attack battlefield overlay">
+      ${fanMarkup}
+      ${buildAttackStageUtilityMarkup(state)}
+    </div>
+  `;
+}
+
 function syncAttackFanFallbackState(state) {
   if (!state) {
     return;
@@ -718,10 +808,6 @@ function buildActionButtonMarkup(state) {
 
   const actor = currentActor.ref;
   const commandMode = state.commandMode || "main";
-  const firewall = programs.find((program) => program.id === "firewall-7" && program.hp > 0);
-  const ids = programs.find((program) => program.id === "ids-4" && program.hp > 0);
-  const honeypot = programs.find((program) => program.id === "honeypot-3" && program.hp > 0);
-  const antivirus = programs.find((program) => program.id === "antivirus-9" && program.hp > 0);
 
   if (commandMode === "programs") {
     return `
@@ -779,25 +865,7 @@ function buildActionButtonMarkup(state) {
           : "ability count exceeds stage fan limit";
       console.log("[Attack Fan] fallback reason:", fallbackReason);
     }
-    const comboButtons = [];
-
-    if (firewall && ids && state.responseGauge >= 3) {
-      comboButtons.push(`
-        <button class="combat-action-button is-secondary battle-move-option" type="button" data-combat-combo="sync-defense">
-          <span class="combat-command-name">SYNCHRONIZED DEFENSE</span>
-          <span class="combat-command-cost">COST 3</span>
-        </button>
-      `);
-    }
-
-    if (honeypot && antivirus && state.responseGauge >= 3) {
-      comboButtons.push(`
-        <button class="combat-action-button is-secondary battle-move-option" type="button" data-combat-combo="containment-protocol">
-          <span class="combat-command-name">CONTAINMENT PROTOCOL</span>
-          <span class="combat-command-cost">COST 3</span>
-        </button>
-      `);
-    }
+    const comboButtons = buildAttackComboButtonsMarkup(state);
 
     if (!useStageAttackFan) {
       return `
@@ -813,14 +881,7 @@ function buildActionButtonMarkup(state) {
       `;
     }
 
-    return `
-      <div class="combat-command-subtitle">ATTACK MOVES STAGED NEAR ${actor.name.toUpperCase()}</div>
-      <div class="combat-command-back-row">
-        <button class="combat-action-button is-secondary" type="button" data-combat-command="back">BACK</button>
-      </div>
-      ${comboButtons.length ? `<div class="combat-command-subtitle is-secondary">COMBO OPTIONS</div><div class="combat-ability-row">${comboButtons.join("")}</div><div class="combat-action-note">RESPONSE GAUGE ${state.responseGauge}/100</div>` : ""}
-      ${comboButtons.length ? "" : `<div class="combat-action-note">RESPONSE GAUGE ${state.responseGauge}/100</div>`}
-    `;
+    return "";
   }
 
   return `
@@ -852,10 +913,10 @@ function buildCombatMarkup(state) {
   const introStageClass = `is-stage-${introStage}`;
   const commandBoxClass = state.battleIntroPlaying ? "is-intro-hidden" : "is-intro-revealed";
   const focusNeeded = typeof hasUsableMove === "function" ? !hasUsableMove(currentProgram, state) : false;
-  const attackStageFanMarkup = buildAttackStageFanMarkup(state);
-  const attackStageFanActive = Boolean(attackStageFanMarkup);
+  const attackStageOverlayMarkup = buildAttackStageOverlayMarkup(state);
+  const attackStageFanActive = Boolean(attackStageOverlayMarkup);
   if (state?.commandMode === "attack") {
-    console.log("[Attack Fan] stage markup generated:", Boolean(attackStageFanMarkup));
+    console.log("[Attack Fan] stage markup generated:", Boolean(attackStageOverlayMarkup));
   }
 
   return `
@@ -903,7 +964,7 @@ function buildCombatMarkup(state) {
         <div class="combat-stage-player">
           ${buildProgramBattlefieldMarkup(currentProgram, state, state.activeProgramId === currentProgram.id)}
         </div>
-        ${attackStageFanMarkup}
+        ${attackStageOverlayMarkup}
         <div class="combat-reserve-strip">
           <div class="combat-reserve-row">
             ${buildReserveStripMarkup(state, currentProgram.id)}
@@ -999,15 +1060,15 @@ function renderCombatScreen() {
   }
 
   if (combatState.commandMode === "attack" && !combatState.forceFooterAttackList) {
-    const attackStageOverlay = threatPanelContent.querySelector(".combat-attack-stage-overlay");
+    const attackStageOverlay = threatPanelContent.querySelector(".combat-attack-overlay");
     const stage = threatPanelContent.querySelector(".combat-stage");
     console.log("[Attack Fan] stage overlay found:", Boolean(attackStageOverlay));
     console.log("[Attack Fan] stage found:", Boolean(stage));
 
     if (attackStageOverlay && stage) {
       const stageRect = stage.getBoundingClientRect();
-      const attackCards = Array.from(attackStageOverlay.querySelectorAll(".combat-attack-stage-card"));
-      console.log("[Attack Fan] stage card count:", attackCards.length);
+      const attackNodes = Array.from(attackStageOverlay.querySelectorAll(".combat-attack-stage-card, .combat-attack-hitbox"));
+      console.log("[Attack Fan] stage card count:", attackNodes.length);
       const forbiddenRects = [
         { name: "player status", node: threatPanelContent.querySelector(".combat-status-box-player") },
         { name: "enemy status", node: threatPanelContent.querySelector(".combat-status-box-enemy") },
@@ -1018,7 +1079,7 @@ function renderCombatScreen() {
         rect: entry.node.getBoundingClientRect()
       }));
 
-      const hasCollision = attackCards.some((card) => {
+      const hasCollision = attackNodes.some((card) => {
         const cardRect = card.getBoundingClientRect();
         const outOfBounds = (
           cardRect.left < stageRect.left + 10 ||
