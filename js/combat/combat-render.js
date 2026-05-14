@@ -672,6 +672,37 @@ function buildAttackStageFanMarkup(state) {
   `;
 }
 
+function syncAttackFanFallbackState(state) {
+  if (!state) {
+    return;
+  }
+
+  const currentActor = state.turnOrder?.[state.currentTurnIndex];
+  const actorId = currentActor?.kind === "program"
+    ? String(currentActor.ref?.id || currentActor.ref?.name || "")
+    : "";
+
+  console.log("[Attack Fan] active actor:", currentActor?.ref?.name);
+  console.log("[Attack Fan] forceFooterAttackList:", state.forceFooterAttackList);
+
+  if (state.commandMode !== "attack") {
+    state.forceFooterAttackList = false;
+    state.attackFanFallbackActorId = "";
+    state.attackFanFallbackReason = "";
+    state.attackFanActiveActorId = actorId;
+    return;
+  }
+
+  if (state.attackFanFallbackActorId && actorId && state.attackFanFallbackActorId !== actorId) {
+    console.log("[Attack Fan] resetting fallback for new actor:", currentActor?.ref?.name);
+    state.forceFooterAttackList = false;
+    state.attackFanFallbackActorId = "";
+    state.attackFanFallbackReason = "";
+  }
+
+  state.attackFanActiveActorId = actorId;
+}
+
 function buildActionButtonMarkup(state) {
   const currentActor = state.turnOrder[state.currentTurnIndex];
 
@@ -822,12 +853,13 @@ function buildCombatMarkup(state) {
   const commandBoxClass = state.battleIntroPlaying ? "is-intro-hidden" : "is-intro-revealed";
   const focusNeeded = typeof hasUsableMove === "function" ? !hasUsableMove(currentProgram, state) : false;
   const attackStageFanMarkup = buildAttackStageFanMarkup(state);
+  const attackStageFanActive = Boolean(attackStageFanMarkup);
   if (state?.commandMode === "attack") {
     console.log("[Attack Fan] stage markup generated:", Boolean(attackStageFanMarkup));
   }
 
   return `
-    <div class="combat-shell ${state.battleIntroPlaying ? "is-intro-playing" : ""}">
+    <div class="combat-shell ${state.battleIntroPlaying ? "is-intro-playing" : ""} ${attackStageFanActive ? "is-attack-stage-active" : ""}">
       <header class="combat-header">
         <div class="combat-title-block">
           <div class="combat-panel-title">THREATGRID ARENA</div>
@@ -879,9 +911,9 @@ function buildCombatMarkup(state) {
         </div>
       </section>
 
-      <footer class="combat-footer">
-        <div class="combat-footer-left">
-          <div class="combat-voice-box">
+      <footer class="combat-footer ${attackStageFanActive ? "is-attack-stage-active" : ""}">
+        <div class="combat-footer-left ${attackStageFanActive ? "is-attack-stage-active" : ""}">
+          <div class="combat-voice-box ${attackStageFanActive ? "is-attack-stage-active" : ""}">
             <div class="combat-panel-title">TACTICAL BRIEF</div>
           <div id="battle-message" class="combat-voice-text">${getBattleMessageText(state)}</div>
           <div id="battle-submessage" class="combat-voice-subtext">${getBattleSubmessageText(state)}</div>
@@ -891,10 +923,10 @@ function buildCombatMarkup(state) {
           ${buildPantheonBoonBriefMarkup(state)}
         </div>
 
-          <div class="combat-command-box ${commandBoxClass}">
+          <div class="combat-command-box ${commandBoxClass} ${attackStageFanActive ? "is-attack-stage-active" : ""}">
             <div class="combat-panel-title">COMMAND DECK</div>
             ${buildActionButtonMarkup(state)}
-            <div class="battle-focus-gauge-strip ${focusNeeded ? "is-focus-needed" : ""}">
+            <div class="battle-focus-gauge-strip ${focusNeeded ? "is-focus-needed" : ""} ${attackStageFanActive ? "is-attack-stage-active" : ""}">
               ${buildFocusCommandMarkup(state)}
               <div class="combat-gauge-wrap ${focusNeeded ? "is-focus-needed" : ""}">
                 <div class="combat-gauge-label">TACTICAL GAUGE</div>
@@ -954,6 +986,8 @@ function renderCombatScreen() {
     return;
   }
 
+  syncAttackFanFallbackState(combatState);
+
   threatPanelContent.innerHTML = buildCombatMarkup(combatState);
   threatPanelContent.scrollTop = 0;
   threatPanel.classList.add("is-open", "is-combat");
@@ -1011,6 +1045,11 @@ function renderCombatScreen() {
       });
 
       if (hasCollision) {
+        const currentActor = combatState.turnOrder?.[combatState.currentTurnIndex];
+        combatState.attackFanFallbackActorId = currentActor?.kind === "program"
+          ? String(currentActor.ref?.id || currentActor.ref?.name || "")
+          : "";
+        combatState.attackFanFallbackReason = "collision";
         console.log("[Attack Fan] forceFooterAttackList set to true after collision");
         combatState.forceFooterAttackList = true;
         renderCombatScreen();
@@ -1056,6 +1095,8 @@ function bindCombatButtons() {
 
       if (command === "back") {
         combatState.forceFooterAttackList = false;
+        combatState.attackFanFallbackActorId = "";
+        combatState.attackFanFallbackReason = "";
         combatState.commandMode = "main";
         combatState.battleMessage = "";
         combatState.battleSubmessage = "";
@@ -1065,6 +1106,8 @@ function bindCombatButtons() {
 
       if (command === "attack") {
         combatState.forceFooterAttackList = false;
+        combatState.attackFanFallbackActorId = "";
+        combatState.attackFanFallbackReason = "";
         combatState.commandMode = "attack";
         combatState.battleMessage = "";
         combatState.battleSubmessage = "";
@@ -1074,6 +1117,8 @@ function bindCombatButtons() {
 
       if (command === "programs") {
         combatState.forceFooterAttackList = false;
+        combatState.attackFanFallbackActorId = "";
+        combatState.attackFanFallbackReason = "";
         combatState.commandMode = "programs";
         combatState.battleMessage = "";
         combatState.battleSubmessage = "";
@@ -1083,6 +1128,8 @@ function bindCombatButtons() {
 
       if (command === "items") {
         combatState.forceFooterAttackList = false;
+        combatState.attackFanFallbackActorId = "";
+        combatState.attackFanFallbackReason = "";
         combatState.commandMode = "items";
         combatState.battleMessage = "";
         combatState.battleSubmessage = "";
