@@ -591,6 +591,58 @@ function buildAttackMoveButtonMarkup(ability, index, availability) {
   `;
 }
 
+function buildAttackStageFanMarkup(state) {
+  if (!state || state.commandMode !== "attack" || state.actionLocked || state.forceFooterAttackList) {
+    return "";
+  }
+
+  const currentActor = state.turnOrder[state.currentTurnIndex];
+  if (!currentActor || currentActor.kind !== "program" || currentActor.ref.hp <= 0) {
+    return "";
+  }
+
+  const actor = currentActor.ref;
+  if (!Array.isArray(actor.abilities) || !actor.abilities.length || actor.abilities.length > 4) {
+    return "";
+  }
+
+  const moveCards = actor.abilities.map((ability, index) => {
+    const availability = typeof getMoveUseAvailability === "function" ? getMoveUseAvailability(ability, state) : {
+      canUse: state.responseGauge >= ability.cost && getMoveChargeCount(ability) > 0,
+      reason: state.responseGauge >= ability.cost ? "ready" : "gauge",
+      message: "",
+      detail: "",
+      charges: getMoveChargeCount(ability),
+      maxCharges: Number.isFinite(ability.maxCharges) ? ability.maxCharges : getMoveChargeCount(ability),
+      requiredGauge: Number.isFinite(ability.cost) ? ability.cost : 0,
+      currentGauge: state.responseGauge
+    };
+    const availabilityClass = availability.canUse
+      ? "is-ready"
+      : availability.reason === "gauge"
+        ? "is-gauge-low"
+        : "is-blocked";
+    const fanClass = index === 0 ? "is-primary" : "is-secondary";
+
+    return `
+      <div class="combat-attack-stage-card-shell" style="--attack-fan-index:${index}">
+        ${buildAttackMoveButtonMarkup(ability, index, availability).replace(
+          'class="combat-action-button battle-move-option',
+          `class="combat-action-button battle-move-option combat-attack-stage-card ${fanClass} ${availabilityClass}`
+        )}
+      </div>
+    `;
+  }).join("");
+
+  return `
+    <div class="combat-attack-stage-overlay" aria-label="Attack move fan">
+      <div class="combat-attack-stage-fan">
+        ${moveCards}
+      </div>
+    </div>
+  `;
+}
+
 function buildActionButtonMarkup(state) {
   const currentActor = state.turnOrder[state.currentTurnIndex];
 
@@ -656,6 +708,7 @@ function buildActionButtonMarkup(state) {
 
       return buildAttackMoveButtonMarkup(ability, index, availability);
     }).join("");
+    const useStageAttackFan = !state.forceFooterAttackList && actor.abilities.length > 0 && actor.abilities.length <= 4;
     const comboButtons = [];
 
     if (firewall && ids && state.responseGauge >= 3) {
@@ -676,11 +729,22 @@ function buildActionButtonMarkup(state) {
       `);
     }
 
+    if (!useStageAttackFan) {
+      return `
+        <div class="combat-command-subtitle">CHOOSE AN ACTION FOR ${actor.name.toUpperCase()}</div>
+        <div class="combat-command-grid is-ability-grid">
+          ${moveButtons}
+        </div>
+        <div class="combat-command-back-row">
+          <button class="combat-action-button is-secondary" type="button" data-combat-command="back">BACK</button>
+        </div>
+        ${comboButtons.length ? `<div class="combat-command-subtitle is-secondary">COMBO OPTIONS</div><div class="combat-ability-row">${comboButtons.join("")}</div><div class="combat-action-note">RESPONSE GAUGE ${state.responseGauge}/100</div>` : ""}
+        ${comboButtons.length ? "" : `<div class="combat-action-note">RESPONSE GAUGE ${state.responseGauge}/100</div>`}
+      `;
+    }
+
     return `
-      <div class="combat-command-subtitle">CHOOSE AN ACTION FOR ${actor.name.toUpperCase()}</div>
-      <div class="combat-command-grid is-ability-grid">
-        ${moveButtons}
-      </div>
+      <div class="combat-command-subtitle">ATTACK MOVES STAGED NEAR ${actor.name.toUpperCase()}</div>
       <div class="combat-command-back-row">
         <button class="combat-action-button is-secondary" type="button" data-combat-command="back">BACK</button>
       </div>
@@ -718,6 +782,7 @@ function buildCombatMarkup(state) {
   const introStageClass = `is-stage-${introStage}`;
   const commandBoxClass = state.battleIntroPlaying ? "is-intro-hidden" : "is-intro-revealed";
   const focusNeeded = typeof hasUsableMove === "function" ? !hasUsableMove(currentProgram, state) : false;
+  const attackStageFanMarkup = buildAttackStageFanMarkup(state);
 
   return `
     <div class="combat-shell ${state.battleIntroPlaying ? "is-intro-playing" : ""}">
@@ -764,6 +829,7 @@ function buildCombatMarkup(state) {
         <div class="combat-stage-player">
           ${buildProgramBattlefieldMarkup(currentProgram, state, state.activeProgramId === currentProgram.id)}
         </div>
+        ${attackStageFanMarkup}
         <div class="combat-reserve-strip">
           <div class="combat-reserve-row">
             ${buildReserveStripMarkup(state, currentProgram.id)}
@@ -856,6 +922,46 @@ function renderCombatScreen() {
     battleLog.scrollTop = battleLog.scrollHeight;
   }
 
+  if (combatState.commandMode === "attack" && !combatState.forceFooterAttackList) {
+    const attackStageOverlay = threatPanelContent.querySelector(".combat-attack-stage-overlay");
+    const stage = threatPanelContent.querySelector(".combat-stage");
+
+    if (attackStageOverlay && stage) {
+      const stageRect = stage.getBoundingClientRect();
+      const attackCards = Array.from(attackStageOverlay.querySelectorAll(".combat-attack-stage-card"));
+      const forbiddenRects = [
+        threatPanelContent.querySelector(".combat-status-box-player"),
+        threatPanelContent.querySelector(".combat-status-box-enemy"),
+        threatPanelContent.querySelector(".combat-voice-box"),
+        threatPanelContent.querySelector(".combat-command-box")
+      ].filter(Boolean).map((node) => node.getBoundingClientRect());
+
+      const hasCollision = attackCards.some((card) => {
+        const cardRect = card.getBoundingClientRect();
+        const outOfBounds = (
+          cardRect.left < stageRect.left + 10 ||
+          cardRect.top < stageRect.top + 10 ||
+          cardRect.right > stageRect.right - 10 ||
+          cardRect.bottom > stageRect.bottom - 10
+        );
+        const overlapsForbidden = forbiddenRects.some((rect) => !(
+          cardRect.right <= rect.left ||
+          cardRect.left >= rect.right ||
+          cardRect.bottom <= rect.top ||
+          cardRect.top >= rect.bottom
+        ));
+
+        return outOfBounds || overlapsForbidden;
+      });
+
+      if (hasCollision) {
+        combatState.forceFooterAttackList = true;
+        renderCombatScreen();
+        return;
+      }
+    }
+  }
+
   bindCombatButtons();
 }
 
@@ -890,6 +996,7 @@ function bindCombatButtons() {
       const command = button.getAttribute("data-combat-command");
 
       if (command === "back") {
+        combatState.forceFooterAttackList = false;
         combatState.commandMode = "main";
         combatState.battleMessage = "";
         combatState.battleSubmessage = "";
@@ -898,6 +1005,7 @@ function bindCombatButtons() {
       }
 
       if (command === "attack") {
+        combatState.forceFooterAttackList = false;
         combatState.commandMode = "attack";
         combatState.battleMessage = "";
         combatState.battleSubmessage = "";
@@ -906,6 +1014,7 @@ function bindCombatButtons() {
       }
 
       if (command === "programs") {
+        combatState.forceFooterAttackList = false;
         combatState.commandMode = "programs";
         combatState.battleMessage = "";
         combatState.battleSubmessage = "";
@@ -914,6 +1023,7 @@ function bindCombatButtons() {
       }
 
       if (command === "items") {
+        combatState.forceFooterAttackList = false;
         combatState.commandMode = "items";
         combatState.battleMessage = "";
         combatState.battleSubmessage = "";
