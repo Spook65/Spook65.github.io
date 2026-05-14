@@ -592,19 +592,48 @@ function buildAttackMoveButtonMarkup(ability, index, availability) {
 }
 
 function buildAttackStageFanMarkup(state) {
+  console.log("[Attack Fan] commandMode:", state?.commandMode);
+  console.log("[Attack Fan] actionLocked:", state?.actionLocked);
+  console.log("[Attack Fan] forceFooterAttackList:", state?.forceFooterAttackList);
   if (!state || state.commandMode !== "attack" || state.actionLocked || state.forceFooterAttackList) {
+    let fallbackReason = "missing state";
+    if (state) {
+      if (state.commandMode !== "attack") {
+        fallbackReason = "commandMode is not attack";
+      } else if (state.actionLocked) {
+        fallbackReason = "action locked";
+      } else if (state.forceFooterAttackList) {
+        fallbackReason = "forceFooterAttackList enabled";
+      }
+    }
+    console.log("[Attack Fan] fan enabled:", false);
+    console.log("[Attack Fan] fallback reason:", fallbackReason);
     return "";
   }
 
   const currentActor = state.turnOrder[state.currentTurnIndex];
   if (!currentActor || currentActor.kind !== "program" || currentActor.ref.hp <= 0) {
+    console.log("[Attack Fan] actor invalid for stage fan:", currentActor?.kind, currentActor?.ref?.hp);
+    console.log("[Attack Fan] fan enabled:", false);
+    console.log("[Attack Fan] fallback reason:", "active actor missing or not a living program");
     return "";
   }
 
   const actor = currentActor.ref;
+  console.log("[Attack Fan] actor:", actor?.name);
+  console.log("[Attack Fan] ability count:", actor?.abilities?.length);
   if (!Array.isArray(actor.abilities) || !actor.abilities.length || actor.abilities.length > 4) {
+    const fallbackReason = !Array.isArray(actor.abilities)
+      ? "abilities missing"
+      : !actor.abilities.length
+        ? "no abilities"
+        : "ability count exceeds stage fan limit";
+    console.log("[Attack Fan] fan enabled:", false);
+    console.log("[Attack Fan] fallback reason:", fallbackReason);
     return "";
   }
+
+  console.log("[Attack Fan] fan enabled:", true);
 
   const moveCards = actor.abilities.map((ability, index) => {
     const availability = typeof getMoveUseAvailability === "function" ? getMoveUseAvailability(ability, state) : {
@@ -709,6 +738,16 @@ function buildActionButtonMarkup(state) {
       return buildAttackMoveButtonMarkup(ability, index, availability);
     }).join("");
     const useStageAttackFan = !state.forceFooterAttackList && actor.abilities.length > 0 && actor.abilities.length <= 4;
+    console.log("[Attack Fan] footer attack branch actor:", actor?.name);
+    console.log("[Attack Fan] footer branch fan enabled:", useStageAttackFan);
+    if (!useStageAttackFan) {
+      const fallbackReason = state.forceFooterAttackList
+        ? "forceFooterAttackList enabled"
+        : actor.abilities.length <= 0
+          ? "no abilities"
+          : "ability count exceeds stage fan limit";
+      console.log("[Attack Fan] fallback reason:", fallbackReason);
+    }
     const comboButtons = [];
 
     if (firewall && ids && state.responseGauge >= 3) {
@@ -783,6 +822,9 @@ function buildCombatMarkup(state) {
   const commandBoxClass = state.battleIntroPlaying ? "is-intro-hidden" : "is-intro-revealed";
   const focusNeeded = typeof hasUsableMove === "function" ? !hasUsableMove(currentProgram, state) : false;
   const attackStageFanMarkup = buildAttackStageFanMarkup(state);
+  if (state?.commandMode === "attack") {
+    console.log("[Attack Fan] stage markup generated:", Boolean(attackStageFanMarkup));
+  }
 
   return `
     <div class="combat-shell ${state.battleIntroPlaying ? "is-intro-playing" : ""}">
@@ -925,16 +967,22 @@ function renderCombatScreen() {
   if (combatState.commandMode === "attack" && !combatState.forceFooterAttackList) {
     const attackStageOverlay = threatPanelContent.querySelector(".combat-attack-stage-overlay");
     const stage = threatPanelContent.querySelector(".combat-stage");
+    console.log("[Attack Fan] stage overlay found:", Boolean(attackStageOverlay));
+    console.log("[Attack Fan] stage found:", Boolean(stage));
 
     if (attackStageOverlay && stage) {
       const stageRect = stage.getBoundingClientRect();
       const attackCards = Array.from(attackStageOverlay.querySelectorAll(".combat-attack-stage-card"));
+      console.log("[Attack Fan] stage card count:", attackCards.length);
       const forbiddenRects = [
-        threatPanelContent.querySelector(".combat-status-box-player"),
-        threatPanelContent.querySelector(".combat-status-box-enemy"),
-        threatPanelContent.querySelector(".combat-voice-box"),
-        threatPanelContent.querySelector(".combat-command-box")
-      ].filter(Boolean).map((node) => node.getBoundingClientRect());
+        { name: "player status", node: threatPanelContent.querySelector(".combat-status-box-player") },
+        { name: "enemy status", node: threatPanelContent.querySelector(".combat-status-box-enemy") },
+        { name: "combat-voice-box", node: threatPanelContent.querySelector(".combat-voice-box") },
+        { name: "combat-command-box", node: threatPanelContent.querySelector(".combat-command-box") }
+      ].filter((entry) => entry.node).map((entry) => ({
+        name: entry.name,
+        rect: entry.node.getBoundingClientRect()
+      }));
 
       const hasCollision = attackCards.some((card) => {
         const cardRect = card.getBoundingClientRect();
@@ -944,21 +992,32 @@ function renderCombatScreen() {
           cardRect.right > stageRect.right - 10 ||
           cardRect.bottom > stageRect.bottom - 10
         );
-        const overlapsForbidden = forbiddenRects.some((rect) => !(
+        const overlapsForbidden = forbiddenRects.find(({ rect }) => !(
           cardRect.right <= rect.left ||
           cardRect.left >= rect.right ||
           cardRect.bottom <= rect.top ||
           cardRect.top >= rect.bottom
         ));
 
-        return outOfBounds || overlapsForbidden;
+        if (outOfBounds) {
+          console.log("[Attack Fan] fallback: card out of stage bounds");
+        }
+
+        if (overlapsForbidden) {
+          console.log(`[Attack Fan] fallback: overlaps ${overlapsForbidden.name}`);
+        }
+
+        return outOfBounds || Boolean(overlapsForbidden);
       });
 
       if (hasCollision) {
+        console.log("[Attack Fan] forceFooterAttackList set to true after collision");
         combatState.forceFooterAttackList = true;
         renderCombatScreen();
         return;
       }
+
+      console.log("[Attack Fan] stage fan rendered without collision fallback");
     }
   }
 
