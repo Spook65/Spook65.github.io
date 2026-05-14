@@ -8541,7 +8541,7 @@ body {
   position: absolute;
   left: clamp(34%, 38vw, 43%);
   top: clamp(30%, 34%, 38%);
-  width: min(27vw, 21rem);
+  width: min(22vw, 16.5rem);
   max-width: calc(100% - 34rem);
   z-index: 1;
   pointer-events: none;
@@ -8549,22 +8549,22 @@ body {
 
 .combat-attack-stage-fan {
   display: grid;
-  gap: 8px;
+  gap: 10px;
   justify-items: start;
 }
 
 .combat-attack-stage-card-shell {
-  width: min(100%, 18.75rem);
+  width: min(100%, 15.5rem);
   transform:
-    translateX(calc(var(--attack-fan-index, 0) * 1.8rem))
-    rotate(calc(-5deg + (var(--attack-fan-index, 0) * 3deg)));
+    translateX(calc(var(--attack-fan-index, 0) * 1.1rem))
+    rotate(calc(-4deg + (var(--attack-fan-index, 0) * 2deg)));
   transform-origin: left center;
 }
 
 .combat-attack-stage-card {
   width: 100%;
-  min-height: 70px;
-  padding: 11px 13px;
+  min-height: 58px;
+  padding: 8px 10px;
   pointer-events: auto;
   align-items: flex-start;
   text-align: left;
@@ -8573,7 +8573,7 @@ body {
   background:
     linear-gradient(180deg, rgba(13, 13, 17, 0.98), rgba(6, 7, 10, 0.98));
   box-shadow:
-    0 16px 24px rgba(0, 0, 0, 0.24),
+    0 12px 20px rgba(0, 0, 0, 0.22),
     inset 0 0 0 1px rgba(255, 255, 255, 0.03);
 }
 
@@ -8582,9 +8582,9 @@ body {
   background:
     linear-gradient(180deg, rgba(30, 24, 15, 0.98), rgba(8, 9, 12, 0.98));
   box-shadow:
-    0 16px 24px rgba(0, 0, 0, 0.24),
+    0 12px 20px rgba(0, 0, 0, 0.22),
     0 0 0 1px rgba(215, 184, 106, 0.1) inset,
-    0 0 18px rgba(215, 184, 106, 0.08);
+    0 0 14px rgba(215, 184, 106, 0.08);
 }
 
 .combat-attack-stage-card.is-secondary {
@@ -8607,6 +8607,22 @@ body {
 
 .combat-attack-stage-card.is-gauge-low {
   border-color: rgba(215, 184, 106, 0.42);
+}
+
+.combat-attack-stage-card .combat-command-name {
+  font-size: 0.62rem;
+  letter-spacing: 0.16em;
+}
+
+.combat-attack-stage-card .combat-command-meta {
+  font-size: 0.44rem;
+  line-height: 1.28;
+}
+
+.combat-attack-stage-card .combat-command-cost,
+.combat-attack-stage-card .combat-command-detail {
+  font-size: 0.42rem;
+  line-height: 1.28;
 }
 
 .combat-attack-utility {
@@ -8759,15 +8775,15 @@ body {
   .combat-attack-stage-overlay {
     left: clamp(30%, 34vw, 39%);
     top: clamp(28%, 31%, 35%);
-    width: min(31vw, 19rem);
+    width: min(24vw, 15.25rem);
     max-width: calc(100% - 28rem);
   }
 
   .combat-attack-stage-card-shell {
-    width: min(100%, 17rem);
+    width: min(100%, 14.25rem);
     transform:
-      translateX(calc(var(--attack-fan-index, 0) * 1.2rem))
-      rotate(calc(-4deg + (var(--attack-fan-index, 0) * 2.2deg)));
+      translateX(calc(var(--attack-fan-index, 0) * 0.95rem))
+      rotate(calc(-3.5deg + (var(--attack-fan-index, 0) * 1.8deg)));
   }
 
   .combat-attack-utility {
@@ -8781,24 +8797,24 @@ body {
   .combat-attack-stage-overlay {
     left: clamp(22%, 25vw, 31%);
     top: clamp(24%, 28%, 32%);
-    width: min(38vw, 16.5rem);
+    width: min(30vw, 13.5rem);
     max-width: calc(100% - 16rem);
   }
 
   .combat-attack-stage-fan {
-    gap: 7px;
+    gap: 8px;
   }
 
   .combat-attack-stage-card-shell {
-    width: min(100%, 15.5rem);
+    width: min(100%, 12.75rem);
     transform:
-      translateX(calc(var(--attack-fan-index, 0) * 0.7rem))
-      rotate(calc(-3deg + (var(--attack-fan-index, 0) * 1.8deg)));
+      translateX(calc(var(--attack-fan-index, 0) * 0.65rem))
+      rotate(calc(-2.5deg + (var(--attack-fan-index, 0) * 1.4deg)));
   }
 
   .combat-attack-stage-card {
-    min-height: 66px;
-    padding: 10px 12px;
+    min-height: 54px;
+    padding: 8px 9px;
   }
 
   .combat-attack-utility {
@@ -8866,7 +8882,7 @@ body {
   .combat-attack-stage-overlay {
     left: clamp(16%, 18vw, 23%);
     top: clamp(21%, 24%, 28%);
-    width: min(44vw, 14rem);
+    width: min(38vw, 12rem);
     max-width: calc(100% - 11rem);
   }
 
@@ -8876,7 +8892,7 @@ body {
   }
 
   .combat-attack-stage-card {
-    min-height: 64px;
+    min-height: 52px;
   }
 
   .combat-attack-utility {
