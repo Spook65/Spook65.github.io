@@ -8611,11 +8611,11 @@ body {
 
 .combat-attack-utility {
   position: absolute;
-  left: clamp(35%, 40vw, 46%);
-  bottom: clamp(8%, 11%, 14%);
-  width: min(28vw, 18rem);
+  left: clamp(36%, 40.5vw, 45%);
+  top: clamp(55%, 59%, 63%);
+  width: min(24vw, 15rem);
   display: grid;
-  gap: 8px;
+  gap: 6px;
   justify-items: stretch;
   pointer-events: none;
 }
@@ -8635,12 +8635,12 @@ body {
 
 .combat-attack-back {
   justify-self: start;
-  width: min(11rem, 100%);
+  width: min(8.75rem, 100%);
 }
 
 .combat-attack-back-button {
-  min-height: 44px;
-  padding: 8px 10px;
+  min-height: 40px;
+  padding: 7px 9px;
   justify-content: flex-start;
   text-align: left;
   border-color: rgba(242, 239, 227, 0.16);
@@ -8653,7 +8653,7 @@ body {
 
 .combat-attack-combos {
   display: grid;
-  gap: 5px;
+  gap: 4px;
 }
 
 .combat-attack-combo-label {
@@ -8666,12 +8666,12 @@ body {
 .combat-attack-combo-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 5px;
+  gap: 4px;
 }
 
 .combat-attack-combo-chip {
-  min-height: 42px;
-  padding: 8px 9px;
+  min-height: 38px;
+  padding: 7px 8px;
   align-content: start;
   justify-content: start;
   text-align: left;
@@ -8681,18 +8681,18 @@ body {
 }
 
 .combat-attack-combo-chip .combat-command-name {
-  font-size: 0.58rem;
+  font-size: 0.54rem;
   letter-spacing: 0.15em;
 }
 
 .combat-attack-combo-chip .combat-command-cost {
-  font-size: 0.44rem;
+  font-size: 0.42rem;
 }
 
 .combat-attack-support {
   display: grid;
   grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
-  gap: 6px;
+  gap: 4px;
 }
 
 .combat-attack-focus,
@@ -8701,19 +8701,19 @@ body {
 }
 
 .combat-attack-focus-button {
-  min-height: 56px;
-  padding: 8px 10px;
+  min-height: 46px;
+  padding: 7px 9px;
   justify-content: flex-start;
   text-align: left;
 }
 
 .combat-attack-focus-button .combat-command-name {
-  font-size: 0.62rem;
+  font-size: 0.58rem;
   letter-spacing: 0.17em;
 }
 
 .combat-attack-focus-button .combat-command-cost {
-  font-size: 0.45rem;
+  font-size: 0.42rem;
 }
 
 .combat-attack-gauge {
@@ -8721,7 +8721,7 @@ body {
   grid-template-columns: 1fr auto;
   gap: 4px 6px;
   align-items: center;
-  padding: 8px 10px;
+  padding: 7px 9px;
   border: 1px solid rgba(135, 228, 255, 0.18);
   border-radius: 0;
   background:
@@ -8732,11 +8732,11 @@ body {
 }
 
 .combat-attack-gauge .combat-gauge-label {
-  font-size: 0.46rem;
+  font-size: 0.44rem;
 }
 
 .combat-attack-gauge .combat-gauge-text {
-  font-size: 0.48rem;
+  font-size: 0.46rem;
   padding: 1px 5px;
 }
 
@@ -8746,7 +8746,7 @@ body {
 
 .combat-attack-gauge .combat-gauge-note {
   grid-column: 1 / -1;
-  font-size: 0.43rem;
+  font-size: 0.4rem;
   letter-spacing: 0.12em;
   color: rgba(214, 236, 255, 0.58);
 }
@@ -8771,9 +8771,9 @@ body {
   }
 
   .combat-attack-utility {
-    left: clamp(34%, 39vw, 45%);
-    bottom: clamp(8%, 10%, 13%);
-    width: min(31vw, 17rem);
+    left: clamp(35%, 39.5vw, 44%);
+    top: clamp(56%, 60%, 65%);
+    width: min(26vw, 14.5rem);
   }
 }
 
@@ -8802,10 +8802,10 @@ body {
   }
 
   .combat-attack-utility {
-    left: clamp(27%, 31vw, 37%);
-    bottom: clamp(7%, 9%, 12%);
-    width: min(35vw, 15rem);
-    gap: 6px;
+    left: clamp(30%, 34vw, 39%);
+    top: clamp(57%, 61%, 66%);
+    width: min(28vw, 13rem);
+    gap: 5px;
   }
 
   .combat-attack-combo-list,
@@ -8880,15 +8880,15 @@ body {
   }
 
   .combat-attack-utility {
-    left: clamp(10%, 12vw, 16%);
-    right: clamp(8%, 10vw, 14%);
-    bottom: clamp(6%, 8%, 11%);
-    width: auto;
-    max-width: min(58vw, 15rem);
+    left: clamp(18%, 21vw, 25%);
+    top: clamp(57%, 61%, 67%);
+    right: auto;
+    width: min(46vw, 12.5rem);
+    max-width: none;
   }
 
   .combat-attack-back {
-    width: min(9rem, 100%);
+    width: min(8rem, 100%);
   }
 
   .combat-command-grid.is-main-grid,
