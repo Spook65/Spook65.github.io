@@ -5195,7 +5195,7 @@ body {
 
 /* The next pass opens the battlefield up vertically, softens the UI slabs, and gives the battlers more character silhouette. */
 .combat-stage {
-  min-height: clamp(640px, 76vh, 980px);
+  min-height: clamp(520px, 64vh, 780px);
   border-radius: 20px;
 }
 
@@ -6623,7 +6623,7 @@ body {
 }
 
 .combat-footer {
-  min-height: 148px;
+  min-height: 128px;
 }
 
 .combat-footer-left {
@@ -6633,10 +6633,18 @@ body {
 
 .combat-voice-box {
   padding: 9px 11px 10px;
+  max-height: clamp(10rem, 24vh, 14rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
 }
 
 .combat-command-box {
   padding: 9px 11px 11px;
+  max-height: clamp(13rem, 30vh, 18rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
 }
 
 .combat-command-grid.is-main-grid,
@@ -8159,7 +8167,7 @@ body {
 .combat-command-box .combat-ability-row .combat-action-button,
 .combat-command-grid.is-main-grid .combat-action-button,
 .combat-command-grid.is-ability-grid .combat-action-button {
-  min-height: 78px;
+  min-height: 64px;
 }
 
 .combat-action-button {
@@ -8186,7 +8194,7 @@ body {
 }
 
 .combat-action-button.is-primary {
-  min-height: 72px;
+  min-height: 66px;
 }
 
 .combat-action-button.is-secondary {
@@ -8417,10 +8425,13 @@ body {
 
 @media (max-width: 920px) {
   .combat-command-grid.is-main-grid,
-  .combat-command-grid.is-ability-grid,
   .combat-party-grid,
   .combat-ability-row {
     grid-template-columns: 1fr;
+  }
+
+  .combat-command-grid.is-ability-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .combat-command-topline,
@@ -8434,7 +8445,7 @@ body {
   }
 
   .combat-action-button {
-    min-height: 70px;
+    min-height: 64px;
   }
 
   .combat-command-name {
@@ -8446,6 +8457,23 @@ body {
   .combat-command-detail,
   .combat-gauge-note {
     max-width: 100%;
+  }
+}
+
+@media (max-width: 700px) {
+  .combat-command-grid.is-main-grid,
+  .combat-command-grid.is-ability-grid,
+  .combat-party-grid,
+  .combat-ability-row {
+    grid-template-columns: 1fr;
+  }
+
+  .combat-voice-box {
+    max-height: clamp(9rem, 28vh, 12rem);
+  }
+
+  .combat-command-box {
+    max-height: clamp(11rem, 34vh, 16rem);
   }
 }
 
@@ -8467,7 +8495,7 @@ body {
 
   .combat-command-box .battle-command-choice--attack {
     grid-column: 1 / -1;
-    min-height: 78px;
+    min-height: 68px;
     border-color: rgba(215, 184, 106, 0.42);
     background:
       linear-gradient(180deg, rgba(28, 25, 17, 0.98), rgba(8, 10, 14, 0.98));
@@ -8539,7 +8567,7 @@ body {
       "detail detail";
     gap: 4px 10px;
     align-items: start;
-    min-height: 68px;
+    min-height: 60px;
     padding: 10px 12px;
   }
 
