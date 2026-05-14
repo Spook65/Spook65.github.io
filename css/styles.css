@@ -6664,8 +6664,8 @@ body {
 }
 
 .combat-command-box.is-attack-stage-active {
-  max-height: clamp(9rem, 22vh, 12rem);
-  padding: 8px 10px 10px;
+  max-height: clamp(7.5rem, 18vh, 9.5rem);
+  padding: 6px 8px 8px;
 }
 
 .combat-command-grid.is-main-grid,
@@ -8186,7 +8186,13 @@ body {
 }
 
 .combat-command-box.is-attack-stage-active .combat-ability-row {
-  gap: 6px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.combat-command-box.is-attack-stage-active .combat-command-back-row {
+  grid-template-columns: minmax(0, 10.5rem);
+  justify-content: start;
 }
 
 .combat-command-box .combat-ability-row .combat-action-button,
@@ -8197,8 +8203,8 @@ body {
 
 .combat-command-box.is-attack-stage-active .combat-command-back-row .combat-action-button,
 .combat-command-box.is-attack-stage-active .combat-ability-row .combat-action-button {
-  min-height: 52px;
-  padding: 9px 11px;
+  min-height: 46px;
+  padding: 7px 10px;
 }
 
 .combat-action-button {
@@ -8322,8 +8328,36 @@ body {
 
 .combat-command-box.is-attack-stage-active .combat-command-subtitle,
 .combat-command-box.is-attack-stage-active .combat-action-note {
-  font-size: 0.5rem;
+  font-size: 0.46rem;
+  letter-spacing: 0.14em;
+}
+
+.combat-command-box.is-attack-stage-active .combat-panel-title {
+  margin-bottom: 4px;
+}
+
+.combat-command-box.is-attack-stage-active .combat-command-subtitle {
+  margin-bottom: 4px;
+  opacity: 0.78;
+}
+
+.combat-command-box.is-attack-stage-active .combat-command-subtitle.is-secondary {
+  margin-top: 4px;
+}
+
+.combat-command-box.is-attack-stage-active .combat-action-note {
+  margin-top: 3px;
+  opacity: 0.72;
+}
+
+.combat-command-box.is-attack-stage-active .combat-action-button .combat-command-name {
+  font-size: 0.66rem;
   letter-spacing: 0.16em;
+}
+
+.combat-command-box.is-attack-stage-active .combat-action-button .combat-command-cost,
+.combat-command-box.is-attack-stage-active .combat-action-button .combat-command-detail {
+  font-size: 0.48rem;
 }
 
 .combat-command-empty {
@@ -8404,31 +8438,31 @@ body {
 }
 
 .battle-focus-gauge-strip.is-attack-stage-active {
-  margin-top: 6px;
-  gap: 6px;
+  margin-top: 4px;
+  gap: 4px;
 }
 
 .battle-focus-gauge-strip.is-attack-stage-active .combat-focus-button {
-  min-height: 54px;
-  padding: 8px 10px;
+  min-height: 46px;
+  padding: 6px 9px;
 }
 
 .battle-focus-gauge-strip.is-attack-stage-active .combat-focus-button .combat-command-name {
-  font-size: 0.66rem;
+  font-size: 0.62rem;
 }
 
 .battle-focus-gauge-strip.is-attack-stage-active .combat-focus-button .combat-command-cost,
 .battle-focus-gauge-strip.is-attack-stage-active .combat-gauge-label,
 .battle-focus-gauge-strip.is-attack-stage-active .combat-gauge-note {
-  font-size: 0.48rem;
+  font-size: 0.44rem;
 }
 
 .battle-focus-gauge-strip.is-attack-stage-active .combat-gauge-text {
-  font-size: 0.54rem;
+  font-size: 0.5rem;
 }
 
 .battle-focus-gauge-strip.is-attack-stage-active .combat-bar.is-gauge {
-  height: 8px;
+  height: 7px;
 }
 
 .combat-gauge-wrap {
@@ -8643,6 +8677,10 @@ body {
   .combat-command-box.is-attack-stage-active {
     max-height: clamp(8rem, 22vh, 10rem);
   }
+
+  .combat-command-box.is-attack-stage-active {
+    max-height: clamp(7rem, 18vh, 8.5rem);
+  }
 }
 
 @media (max-width: 700px) {
@@ -8686,7 +8724,7 @@ body {
   }
 
   .combat-command-box.is-attack-stage-active {
-    max-height: clamp(8.5rem, 26vh, 10.5rem);
+    max-height: clamp(7.5rem, 22vh, 9rem);
   }
 }
 
