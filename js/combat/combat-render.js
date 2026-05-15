@@ -620,49 +620,65 @@ function buildAttackComboButtonsMarkup(state, extraClass = "") {
   return comboButtons;
 }
 
+function shouldAllowFooterAttackFallback() {
+  if (typeof window === "undefined") {
+    return true;
+  }
+
+  if (typeof window.matchMedia === "function") {
+    return window.matchMedia("(max-width: 700px)").matches;
+  }
+
+  return window.innerWidth <= 700;
+}
+
 function buildAttackStageFanMarkup(state) {
-  console.log("[Attack Fan] commandMode:", state?.commandMode);
-  console.log("[Attack Fan] actionLocked:", state?.actionLocked);
-  console.log("[Attack Fan] forceFooterAttackList:", state?.forceFooterAttackList);
-  if (!state || state.commandMode !== "attack" || state.actionLocked || state.forceFooterAttackList) {
+  const allowFooterFallback = shouldAllowFooterAttackFallback();
+  const shouldForceFooterFallback = Boolean(state?.forceFooterAttackList && allowFooterFallback);
+  console.log("[Attack Prototype] commandMode:", state?.commandMode);
+  console.log("[Attack Prototype] overlay helper called:", true);
+  console.log("[Attack Prototype] actionLocked:", state?.actionLocked);
+  console.log("[Attack Prototype] forceFooterAttackList:", state?.forceFooterAttackList);
+  console.log("[Attack Prototype] footer fallback allowed:", allowFooterFallback);
+  if (!state || state.commandMode !== "attack" || state.actionLocked || shouldForceFooterFallback) {
     let fallbackReason = "missing state";
     if (state) {
       if (state.commandMode !== "attack") {
         fallbackReason = "commandMode is not attack";
       } else if (state.actionLocked) {
         fallbackReason = "action locked";
-      } else if (state.forceFooterAttackList) {
-        fallbackReason = "forceFooterAttackList enabled";
+      } else if (shouldForceFooterFallback) {
+        fallbackReason = "forceFooterAttackList enabled in narrow fallback mode";
       }
     }
-    console.log("[Attack Fan] fan enabled:", false);
-    console.log("[Attack Fan] fallback reason:", fallbackReason);
+    console.log("[Attack Prototype] fan enabled:", false);
+    console.log("[Attack Prototype] fallback reason:", fallbackReason);
     return "";
   }
 
   const currentActor = state.turnOrder[state.currentTurnIndex];
   if (!currentActor || currentActor.kind !== "program" || currentActor.ref.hp <= 0) {
-    console.log("[Attack Fan] actor invalid for stage fan:", currentActor?.kind, currentActor?.ref?.hp);
-    console.log("[Attack Fan] fan enabled:", false);
-    console.log("[Attack Fan] fallback reason:", "active actor missing or not a living program");
+    console.log("[Attack Prototype] actor invalid for stage fan:", currentActor?.kind, currentActor?.ref?.hp);
+    console.log("[Attack Prototype] fan enabled:", false);
+    console.log("[Attack Prototype] fallback reason:", "active actor missing or not a living program");
     return "";
   }
 
   const actor = currentActor.ref;
-  console.log("[Attack Fan] actor:", actor?.name);
-  console.log("[Attack Fan] ability count:", actor?.abilities?.length);
+  console.log("[Attack Prototype] actor:", actor?.name);
+  console.log("[Attack Prototype] ability count:", actor?.abilities?.length);
   if (!Array.isArray(actor.abilities) || !actor.abilities.length || actor.abilities.length > 4) {
     const fallbackReason = !Array.isArray(actor.abilities)
       ? "abilities missing"
       : !actor.abilities.length
         ? "no abilities"
         : "ability count exceeds stage fan limit";
-    console.log("[Attack Fan] fan enabled:", false);
-    console.log("[Attack Fan] fallback reason:", fallbackReason);
+    console.log("[Attack Prototype] fan enabled:", false);
+    console.log("[Attack Prototype] fallback reason:", fallbackReason);
     return "";
   }
 
-  console.log("[Attack Fan] fan enabled:", true);
+  console.log("[Attack Prototype] fan enabled:", true);
 
   const moveCards = actor.abilities.map((ability, index) => {
     const availability = typeof getMoveUseAvailability === "function" ? getMoveUseAvailability(ability, state) : {
@@ -683,18 +699,18 @@ function buildAttackStageFanMarkup(state) {
     const fanClass = index === 0 ? "is-primary" : "is-secondary";
 
     return `
-      <div class="combat-attack-stage-card-shell" style="--attack-fan-index:${index}">
+      <div class="combat-attack-move-shell" style="--attack-fan-index:${index}">
         ${buildAttackMoveButtonMarkup(ability, index, availability).replace(
           'class="combat-action-button battle-move-option',
-          `class="combat-action-button battle-move-option combat-attack-stage-card ${fanClass} ${availabilityClass}`
+          `class="combat-action-button battle-move-option move-slot combat-attack-stage-card ${fanClass} ${availabilityClass}`
         )}
       </div>
     `;
   }).join("");
 
   return `
-    <div class="combat-attack-stage-overlay" aria-label="Attack move fan">
-      <div class="combat-attack-stage-fan">
+    <div class="combat-attack-stage-overlay move-lens" aria-label="Attack move fan" data-prototype-attack-overlay="true">
+      <div class="combat-attack-stage-fan combat-attack-move-lens">
         ${moveCards}
       </div>
     </div>
@@ -702,7 +718,8 @@ function buildAttackStageFanMarkup(state) {
 }
 
 function buildAttackStageUtilityMarkup(state) {
-  if (!state || state.commandMode !== "attack" || state.actionLocked || state.forceFooterAttackList) {
+  const allowFooterFallback = shouldAllowFooterAttackFallback();
+  if (!state || state.commandMode !== "attack" || state.actionLocked || (state.forceFooterAttackList && allowFooterFallback)) {
     return "";
   }
 
@@ -712,38 +729,33 @@ function buildAttackStageUtilityMarkup(state) {
   }
 
   const focusNeeded = typeof hasUsableMove === "function" ? !hasUsableMove(currentActor.ref, state) : false;
-  const comboButtons = buildAttackComboButtonsMarkup(state, "combat-attack-combo-chip combat-attack-hitbox");
+  const comboButtons = buildAttackComboButtonsMarkup(state, "combat-attack-prompt combat-attack-combo-prompt combat-attack-hitbox");
 
   return `
-    <div class="combat-attack-utility" aria-label="Attack controls">
-      <div class="combat-attack-utility-row">
-        <div class="combat-attack-back">
-          <button class="combat-action-button is-secondary combat-attack-back-button combat-attack-hitbox" type="button" data-combat-command="back">
-            <span class="combat-attack-chip-key">BACK</span>
-            <span class="combat-attack-chip-copy">RETURN</span>
-          </button>
-        </div>
-        <div class="combat-attack-focus">
-          <button class="combat-action-button is-secondary combat-focus-button combat-attack-focus-button combat-attack-hitbox ${focusNeeded ? "is-focus-needed" : ""}" type="button" data-combat-command="focus">
-            <span class="combat-attack-chip-key">FOCUS</span>
-            <span class="combat-attack-chip-copy">END TURN / RECOVER</span>
-          </button>
-        </div>
+    <div class="combat-attack-utility-strip" aria-label="Attack controls">
+      <div class="combat-attack-prompt-rail">
+        <button class="combat-action-button is-secondary combat-attack-prompt combat-attack-back-prompt combat-attack-hitbox" type="button" data-combat-command="back">
+          <span class="combat-attack-prompt-key">BACK</span>
+          <span class="combat-attack-prompt-copy">RETURN</span>
+        </button>
+        ${comboButtons.join("")}
       </div>
-      <div class="combat-attack-gauge combat-attack-hitbox ${focusNeeded ? "is-focus-needed" : ""}">
-        <div class="combat-gauge-label">TACTICAL GAUGE</div>
-        ${renderBar(state.responseGauge, 100, "is-gauge")}
-        <div class="combat-gauge-text">${state.responseGauge}/100</div>
-        <div class="combat-gauge-note">${focusNeeded ? "FOCUS REOPENS HIGH-COST MOVES." : "ATTACK FAN ACTIVE."}</div>
-      </div>
-      ${comboButtons.length ? `
-        <div class="combat-attack-combos">
-          <div class="combat-attack-combo-label">COMBO OPTIONS</div>
-          <div class="combat-attack-combo-list">
-            ${comboButtons.join("")}
+      <div class="resource-ribbon combat-attack-resource-ribbon">
+        <button class="combat-action-button is-secondary combat-focus-button focus-plate combat-attack-focus-prompt combat-attack-hitbox ${focusNeeded ? "is-focus-needed" : ""}" type="button" data-combat-command="focus">
+          <span class="plate-title">FOCUS</span>
+          <span class="plate-copy">Recover Gauge / End Turn</span>
+        </button>
+        <div class="gauge-lens combat-attack-gauge-lens combat-attack-hitbox ${focusNeeded ? "is-focus-needed" : ""}">
+          <div class="gauge-head">
+            <span class="gauge-label">TACTICAL GAUGE</span>
+            <strong class="gauge-value">${state.responseGauge}/100</strong>
           </div>
+          <div class="gauge-track" aria-hidden="true">
+            <span class="gauge-fill" style="width:${state.responseGauge}%"></span>
+          </div>
+          <div class="gauge-caption">${focusNeeded ? "Focus reopens high-cost moves." : "Gauge gates high-cost moves."}</div>
         </div>
-      ` : ""}
+      </div>
     </div>
   `;
 }
@@ -755,11 +767,11 @@ function buildAttackPartyRailMarkup(state) {
   }
 
   return `
-    <div class="combat-attack-party-rail combat-attack-hitbox" aria-label="Defender lineup">
+    <div class="party-rail combat-attack-party-rail combat-attack-hitbox" aria-label="Defender lineup">
       ${state.playerParty.map((program) => `
-        <div class="combat-attack-party-mark ${program.id === currentActor.ref.id ? "is-active" : ""} ${program.hp <= 0 ? "is-down" : ""}">
-          <span class="combat-attack-party-dot"></span>
-          <span class="combat-attack-party-copy">${program.name}</span>
+        <div class="party-mark combat-attack-party-mark ${program.id === currentActor.ref.id ? "is-active" : ""} ${program.hp <= 0 ? "is-down" : ""}">
+          <span class="party-dot combat-attack-party-dot"></span>
+          <span class="party-copy combat-attack-party-copy">${program.name}</span>
         </div>
       `).join("")}
     </div>
@@ -768,6 +780,7 @@ function buildAttackPartyRailMarkup(state) {
 
 function buildAttackStageOverlayMarkup(state) {
   const fanMarkup = buildAttackStageFanMarkup(state);
+  console.log("[Attack Prototype] overlay markup inserted:", Boolean(fanMarkup));
   if (!fanMarkup) {
     return "";
   }
@@ -775,11 +788,9 @@ function buildAttackStageOverlayMarkup(state) {
   return `
     <div class="combat-attack-overlay" aria-label="Attack battlefield overlay">
       ${buildAttackPartyRailMarkup(state)}
-      <div class="combat-attack-cluster">
-        <div class="combat-attack-move-fan">
+      <div class="combat-attack-cluster command-anchor">
+        <div class="combat-attack-main">
           ${fanMarkup}
-        </div>
-        <div class="combat-attack-utility-strip">
           ${buildAttackStageUtilityMarkup(state)}
         </div>
       </div>
@@ -797,8 +808,10 @@ function syncAttackFanFallbackState(state) {
     ? String(currentActor.ref?.id || currentActor.ref?.name || "")
     : "";
 
-  console.log("[Attack Fan] active actor:", currentActor?.ref?.name);
-  console.log("[Attack Fan] forceFooterAttackList:", state.forceFooterAttackList);
+  const allowFooterFallback = shouldAllowFooterAttackFallback();
+  console.log("[Attack Prototype] active actor:", currentActor?.ref?.name);
+  console.log("[Attack Prototype] forceFooterAttackList:", state.forceFooterAttackList);
+  console.log("[Attack Prototype] footer fallback allowed:", allowFooterFallback);
 
   if (state.commandMode !== "attack") {
     state.forceFooterAttackList = false;
@@ -806,6 +819,13 @@ function syncAttackFanFallbackState(state) {
     state.attackFanFallbackReason = "";
     state.attackFanActiveActorId = actorId;
     return;
+  }
+
+  if (!allowFooterFallback && state.forceFooterAttackList) {
+    console.log("[Attack Prototype] clearing desktop forceFooterAttackList");
+    state.forceFooterAttackList = false;
+    state.attackFanFallbackActorId = "";
+    state.attackFanFallbackReason = "";
   }
 
   if (state.attackFanFallbackActorId && actorId && state.attackFanFallbackActorId !== actorId) {
@@ -865,6 +885,7 @@ function buildActionButtonMarkup(state) {
   }
 
   if (commandMode === "attack") {
+    const allowFooterFallback = shouldAllowFooterAttackFallback();
     const moveButtons = actor.abilities.map((ability, index) => {
       const availability = typeof getMoveUseAvailability === "function" ? getMoveUseAvailability(ability, state) : {
         canUse: state.responseGauge >= ability.cost && getMoveChargeCount(ability) > 0,
@@ -879,16 +900,18 @@ function buildActionButtonMarkup(state) {
 
       return buildAttackMoveButtonMarkup(ability, index, availability);
     }).join("");
-    const useStageAttackFan = !state.forceFooterAttackList && actor.abilities.length > 0 && actor.abilities.length <= 4;
-    console.log("[Attack Fan] footer attack branch actor:", actor?.name);
-    console.log("[Attack Fan] footer branch fan enabled:", useStageAttackFan);
+    const useStageAttackFan = (!state.forceFooterAttackList || !allowFooterFallback) && actor.abilities.length > 0 && actor.abilities.length <= 4;
+    const renderingOldFooterAttackList = !useStageAttackFan;
+    console.log("[Attack Prototype] footer attack branch actor:", actor?.name);
+    console.log("[Attack Prototype] attackStageActive:", useStageAttackFan);
+    console.log("[Attack Prototype] rendering old footer attack list:", renderingOldFooterAttackList);
     if (!useStageAttackFan) {
       const fallbackReason = state.forceFooterAttackList
         ? "forceFooterAttackList enabled"
         : actor.abilities.length <= 0
           ? "no abilities"
           : "ability count exceeds stage fan limit";
-      console.log("[Attack Fan] fallback reason:", fallbackReason);
+      console.log("[Attack Prototype] fallback reason:", fallbackReason);
     }
     const comboButtons = buildAttackComboButtonsMarkup(state);
 
@@ -941,7 +964,8 @@ function buildCombatMarkup(state) {
   const attackStageOverlayMarkup = buildAttackStageOverlayMarkup(state);
   const attackStageFanActive = Boolean(attackStageOverlayMarkup);
   if (state?.commandMode === "attack") {
-    console.log("[Attack Fan] stage markup generated:", Boolean(attackStageOverlayMarkup));
+    console.log("[Attack Prototype] stage markup generated:", Boolean(attackStageOverlayMarkup));
+    console.log("[Attack Prototype] attackStageActive:", attackStageFanActive);
   }
 
   return `
@@ -1085,15 +1109,17 @@ function renderCombatScreen() {
   }
 
   if (combatState.commandMode === "attack" && !combatState.forceFooterAttackList) {
+    const allowFooterFallback = shouldAllowFooterAttackFallback();
     const attackStageOverlay = threatPanelContent.querySelector(".combat-attack-overlay");
     const stage = threatPanelContent.querySelector(".combat-stage");
-    console.log("[Attack Fan] stage overlay found:", Boolean(attackStageOverlay));
-    console.log("[Attack Fan] stage found:", Boolean(stage));
+    console.log("[Attack Prototype] stage overlay found:", Boolean(attackStageOverlay));
+    console.log("[Attack Prototype] stage found:", Boolean(stage));
+    console.log("[Attack Prototype] overlay markup inserted:", Boolean(attackStageOverlay?.querySelector("[data-prototype-attack-overlay='true']")));
 
     if (attackStageOverlay && stage) {
       const stageRect = stage.getBoundingClientRect();
       const attackNodes = Array.from(attackStageOverlay.querySelectorAll(".combat-attack-stage-card, .combat-attack-hitbox"));
-      console.log("[Attack Fan] stage card count:", attackNodes.length);
+      console.log("[Attack Prototype] stage card count:", attackNodes.length);
       const forbiddenRects = [
         { name: "player status", node: threatPanelContent.querySelector(".combat-status-box-player") },
         { name: "enemy status", node: threatPanelContent.querySelector(".combat-status-box-enemy") },
@@ -1120,29 +1146,34 @@ function renderCombatScreen() {
         ));
 
         if (outOfBounds) {
-          console.log("[Attack Fan] fallback: card out of stage bounds");
+          console.log("[Attack Prototype] fallback: card out of stage bounds");
         }
 
         if (overlapsForbidden) {
-          console.log(`[Attack Fan] fallback: overlaps ${overlapsForbidden.name}`);
+          console.log(`[Attack Prototype] fallback: overlaps ${overlapsForbidden.name}`);
         }
 
         return outOfBounds || Boolean(overlapsForbidden);
       });
 
       if (hasCollision) {
+        console.log("[Attack Prototype] fallback reason:", "collision");
         const currentActor = combatState.turnOrder?.[combatState.currentTurnIndex];
-        combatState.attackFanFallbackActorId = currentActor?.kind === "program"
-          ? String(currentActor.ref?.id || currentActor.ref?.name || "")
-          : "";
-        combatState.attackFanFallbackReason = "collision";
-        console.log("[Attack Fan] forceFooterAttackList set to true after collision");
-        combatState.forceFooterAttackList = true;
-        renderCombatScreen();
-        return;
+        if (allowFooterFallback) {
+          combatState.attackFanFallbackActorId = currentActor?.kind === "program"
+            ? String(currentActor.ref?.id || currentActor.ref?.name || "")
+            : "";
+          combatState.attackFanFallbackReason = "collision";
+          console.log("[Attack Prototype] forceFooterAttackList set to true after collision");
+          combatState.forceFooterAttackList = true;
+          renderCombatScreen();
+          return;
+        }
+
+        console.log("[Attack Prototype] collision detected but desktop prototype overlay remains active");
       }
 
-      console.log("[Attack Fan] stage fan rendered without collision fallback");
+      console.log("[Attack Prototype] stage fan rendered without collision fallback");
     }
   }
 
