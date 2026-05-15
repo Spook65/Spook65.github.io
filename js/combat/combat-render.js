@@ -756,8 +756,14 @@ function buildAttackStageOverlayMarkup(state) {
 
   return `
     <div class="combat-attack-overlay" aria-label="Attack battlefield overlay">
-      ${fanMarkup}
-      ${buildAttackStageUtilityMarkup(state)}
+      <div class="combat-attack-cluster">
+        <div class="combat-attack-move-fan">
+          ${fanMarkup}
+        </div>
+        <div class="combat-attack-utility-strip">
+          ${buildAttackStageUtilityMarkup(state)}
+        </div>
+      </div>
     </div>
   `;
 }
