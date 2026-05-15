@@ -716,11 +716,25 @@ function buildAttackStageUtilityMarkup(state) {
 
   return `
     <div class="combat-attack-utility" aria-label="Attack controls">
-      <div class="combat-attack-back">
-        <button class="combat-action-button is-secondary combat-attack-back-button combat-attack-hitbox" type="button" data-combat-command="back">
-          <span class="combat-command-name">BACK</span>
-          <span class="combat-command-cost">RETURN TO COMMANDS</span>
-        </button>
+      <div class="combat-attack-utility-row">
+        <div class="combat-attack-back">
+          <button class="combat-action-button is-secondary combat-attack-back-button combat-attack-hitbox" type="button" data-combat-command="back">
+            <span class="combat-attack-chip-key">BACK</span>
+            <span class="combat-attack-chip-copy">RETURN</span>
+          </button>
+        </div>
+        <div class="combat-attack-focus">
+          <button class="combat-action-button is-secondary combat-focus-button combat-attack-focus-button combat-attack-hitbox ${focusNeeded ? "is-focus-needed" : ""}" type="button" data-combat-command="focus">
+            <span class="combat-attack-chip-key">FOCUS</span>
+            <span class="combat-attack-chip-copy">END TURN / RECOVER</span>
+          </button>
+        </div>
+      </div>
+      <div class="combat-attack-gauge combat-attack-hitbox ${focusNeeded ? "is-focus-needed" : ""}">
+        <div class="combat-gauge-label">TACTICAL GAUGE</div>
+        ${renderBar(state.responseGauge, 100, "is-gauge")}
+        <div class="combat-gauge-text">${state.responseGauge}/100</div>
+        <div class="combat-gauge-note">${focusNeeded ? "FOCUS REOPENS HIGH-COST MOVES." : "ATTACK FAN ACTIVE."}</div>
       </div>
       ${comboButtons.length ? `
         <div class="combat-attack-combos">
@@ -730,20 +744,24 @@ function buildAttackStageUtilityMarkup(state) {
           </div>
         </div>
       ` : ""}
-      <div class="combat-attack-support">
-        <div class="combat-attack-focus">
-          <button class="combat-action-button is-secondary combat-focus-button combat-attack-focus-button combat-attack-hitbox ${focusNeeded ? "is-focus-needed" : ""}" type="button" data-combat-command="focus">
-            <span class="combat-command-name">FOCUS</span>
-            <span class="combat-command-cost">RECOVER GAUGE / END TURN</span>
-          </button>
+    </div>
+  `;
+}
+
+function buildAttackPartyRailMarkup(state) {
+  const currentActor = state?.turnOrder?.[state.currentTurnIndex];
+  if (!currentActor || currentActor.kind !== "program") {
+    return "";
+  }
+
+  return `
+    <div class="combat-attack-party-rail combat-attack-hitbox" aria-label="Defender lineup">
+      ${state.playerParty.map((program) => `
+        <div class="combat-attack-party-mark ${program.id === currentActor.ref.id ? "is-active" : ""} ${program.hp <= 0 ? "is-down" : ""}">
+          <span class="combat-attack-party-dot"></span>
+          <span class="combat-attack-party-copy">${program.name}</span>
         </div>
-        <div class="combat-attack-gauge combat-attack-hitbox ${focusNeeded ? "is-focus-needed" : ""}">
-          <div class="combat-gauge-label">TACTICAL GAUGE</div>
-          ${renderBar(state.responseGauge, 100, "is-gauge")}
-          <div class="combat-gauge-text">${state.responseGauge}/100</div>
-          <div class="combat-gauge-note">${focusNeeded ? "FOCUS REOPENS HIGH-COST MOVES." : "ATTACK FAN ACTIVE."}</div>
-        </div>
-      </div>
+      `).join("")}
     </div>
   `;
 }
@@ -756,6 +774,7 @@ function buildAttackStageOverlayMarkup(state) {
 
   return `
     <div class="combat-attack-overlay" aria-label="Attack battlefield overlay">
+      ${buildAttackPartyRailMarkup(state)}
       <div class="combat-attack-cluster">
         <div class="combat-attack-move-fan">
           ${fanMarkup}
