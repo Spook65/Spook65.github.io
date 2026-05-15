@@ -778,6 +778,58 @@ function buildAttackPartyRailMarkup(state) {
   `;
 }
 
+function buildAttackPartyStatusClusterMarkup(state) {
+  if (!state || state.commandMode !== "attack") {
+    return "";
+  }
+
+  const currentActor = state?.turnOrder?.[state.currentTurnIndex];
+  if (!currentActor || currentActor.kind !== "program") {
+    return "";
+  }
+
+  return `
+    <div class="combat-attack-party-status-cluster combat-attack-hitbox" aria-label="Party status">
+      ${state.playerParty.map((program) => `
+        <div class="combat-attack-party-status ${program.id === currentActor.ref.id ? "is-active" : ""} ${program.hp <= 0 ? "is-down" : ""}">
+          <div class="combat-attack-party-status-head">
+            <span class="combat-attack-party-status-name">${program.name}</span>
+            <span class="combat-attack-party-status-hp">HP ${program.hp}/${program.maxHp}</span>
+          </div>
+          ${renderBar(program.hp, program.maxHp, "is-hp")}
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
+function buildAttackEnemyStatusPanelMarkup(state) {
+  if (!state || state.commandMode !== "attack" || !state.threat) {
+    return "";
+  }
+
+  const threat = state.threat;
+  const displayLevel = Number.isFinite(threat?.battleLevel) ? threat.battleLevel : threat.level;
+  const statusMarkup = renderStatusPills(threat.statusEffects);
+
+  return `
+    <div class="combat-attack-enemy-panel combat-attack-hitbox" aria-label="Target status">
+      <div class="combat-name-row">
+        <span class="combat-name">${threat.title}</span>
+        <span class="combat-lvl">LVL ${displayLevel}</span>
+      </div>
+      <div class="combat-subline">HP ${threat.hp}/${threat.maxHp}</div>
+      ${renderBar(threat.hp, threat.maxHp, "is-hp")}
+      <div class="combat-subline">WEAK TO: ${String(getActorCombatType(threat, true) || "UNKNOWN").toUpperCase()}</div>
+      ${state.enemyIntent ? `
+        <div class="combat-subline is-intent">INTENT: ${String(state.enemyIntent.label || "STRIKE").toUpperCase()}</div>
+        <div class="combat-subline is-intent-hint">${String(state.enemyIntent.iconLabel || state.enemyIntent.severity || "").toUpperCase()}</div>
+      ` : ""}
+      ${statusMarkup}
+    </div>
+  `;
+}
+
 function buildAttackStageOverlayMarkup(state) {
   const fanMarkup = buildAttackStageFanMarkup(state);
   console.log("[Attack Prototype] overlay markup inserted:", Boolean(fanMarkup));
@@ -788,12 +840,14 @@ function buildAttackStageOverlayMarkup(state) {
   return `
     <div class="combat-attack-overlay" aria-label="Attack battlefield overlay">
       ${buildAttackPartyRailMarkup(state)}
+      ${buildAttackEnemyStatusPanelMarkup(state)}
       <div class="combat-attack-cluster command-anchor">
         <div class="combat-attack-main">
           ${fanMarkup}
           ${buildAttackStageUtilityMarkup(state)}
         </div>
       </div>
+      ${buildAttackPartyStatusClusterMarkup(state)}
     </div>
   `;
 }
