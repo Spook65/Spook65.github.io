@@ -8541,6 +8541,43 @@ body {
   pointer-events: none;
 }
 
+.combat-stage-attack-launcher {
+  position: absolute;
+  left: clamp(22%, 24vw, 28%);
+  top: clamp(56%, 60%, 64%);
+  z-index: 4;
+  pointer-events: none;
+}
+
+.combat-stage-attack-launcher-button {
+  min-height: 0;
+  padding: 0.52rem 0.78rem 0.56rem;
+  border-color: rgba(215, 184, 106, 0.34);
+  background:
+    linear-gradient(180deg, rgba(24, 20, 13, 0.82), rgba(8, 10, 14, 0.88));
+  box-shadow:
+    0 10px 18px rgba(0, 0, 0, 0.18),
+    0 0 0 1px rgba(215, 184, 106, 0.08) inset;
+  display: grid;
+  gap: 0.18rem;
+  justify-items: start;
+  pointer-events: auto;
+}
+
+.combat-stage-attack-launcher-button .combat-stage-attack-launcher-kicker {
+  color: rgba(231, 220, 198, 0.96);
+  font-size: 0.66rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.combat-stage-attack-launcher-button .combat-stage-attack-launcher-copy {
+  color: rgba(215, 184, 106, 0.82);
+  font-size: 0.44rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
 .combat-shell.is-attack-stage-active .combat-status-box-player,
 .combat-shell.is-attack-stage-active .combat-status-box-enemy {
   display: none;
@@ -9084,6 +9121,11 @@ body {
 }
 
 @media (max-width: 1160px) {
+  .combat-stage-attack-launcher {
+    left: clamp(20%, 21vw, 25%);
+    top: clamp(58%, 61%, 65%);
+  }
+
   .combat-attack-enemy-readout {
     width: min(12.4rem, 18vw);
     top: clamp(0.9rem, 2vh, 1.3rem);
@@ -9116,6 +9158,15 @@ body {
 }
 
 @media (max-width: 920px) {
+  .combat-stage-attack-launcher {
+    left: clamp(15%, 16vw, 20%);
+    top: clamp(60%, 63%, 67%);
+  }
+
+  .combat-stage-attack-launcher-button {
+    padding: 0.46rem 0.64rem 0.5rem;
+  }
+
   .combat-attack-enemy-readout {
     width: min(11.5rem, 24vw);
     right: 0.8rem;
@@ -9215,6 +9266,19 @@ body {
 }
 
 @media (max-width: 700px) {
+  .combat-stage-attack-launcher {
+    left: clamp(11%, 10vw, 14%);
+    top: clamp(64%, 67%, 72%);
+  }
+
+  .combat-stage-attack-launcher-button .combat-stage-attack-launcher-kicker {
+    font-size: 0.58rem;
+  }
+
+  .combat-stage-attack-launcher-button .combat-stage-attack-launcher-copy {
+    font-size: 0.4rem;
+  }
+
   .combat-attack-enemy-readout {
     width: min(10rem, 38vw);
     top: auto;

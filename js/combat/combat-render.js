@@ -899,6 +899,26 @@ function buildAttackStageOverlayMarkup(state) {
   `;
 }
 
+function buildAttackEntryLauncherMarkup(state) {
+  if (!state || state.commandMode !== "main" || state.actionLocked || state.battleIntroPlaying) {
+    return "";
+  }
+
+  const currentActor = state.turnOrder?.[state.currentTurnIndex];
+  if (!currentActor || currentActor.kind !== "program" || currentActor.ref.hp <= 0) {
+    return "";
+  }
+
+  return `
+    <div class="combat-stage-attack-launcher" aria-label="Attack entry">
+      <button class="combat-action-button is-primary combat-stage-attack-launcher-button" type="button" data-combat-command="attack">
+        <span class="combat-stage-attack-launcher-kicker">ATTACK</span>
+        <span class="combat-stage-attack-launcher-copy">OPEN MOVES NEAR ${String(currentActor.ref.name || "DEFENDER").toUpperCase()}</span>
+      </button>
+    </div>
+  `;
+}
+
 function syncAttackFanFallbackState(state) {
   if (!state) {
     return;
@@ -1115,6 +1135,7 @@ function buildCombatMarkup(state) {
           ${buildProgramBattlefieldMarkup(currentProgram, state, state.activeProgramId === currentProgram.id)}
         </div>
         ${attackStageOverlayMarkup}
+        ${buildAttackEntryLauncherMarkup(state)}
         <div class="combat-reserve-strip">
           <div class="combat-reserve-row">
             ${buildReserveStripMarkup(state, currentProgram.id)}
