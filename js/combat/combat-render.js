@@ -968,13 +968,43 @@ function buildStageCommandPromptMarkup(state) {
   `;
 }
 
-function shouldCollapseTacticalBrief(state) {
-  if (!state || state.actionLocked || state.battleIntroPlaying) {
+function buildStageFeedbackToastMarkup(state) {
+  if (!state || state.battleIntroPlaying) {
+    return "";
+  }
+
+  const currentActor = state.turnOrder?.[state.currentTurnIndex];
+  const shouldShowFeedback = state.actionLocked || currentActor?.kind === "threat";
+  const primaryLine = String(state.battleMessage || "").trim();
+  const secondaryLine = String(state.battleSubmessage || "").trim();
+
+  if (!shouldShowFeedback || (!primaryLine && !secondaryLine)) {
+    return "";
+  }
+
+  return `
+    <div class="combat-stage-feedback-toast" aria-label="Combat feedback">
+      ${primaryLine ? `<div class="combat-stage-feedback-line">${primaryLine}</div>` : ""}
+      ${secondaryLine ? `<div class="combat-stage-feedback-subline">${secondaryLine}</div>` : ""}
+    </div>
+  `;
+}
+
+function shouldCollapseActiveHud(state) {
+  if (!state || state.battleIntroPlaying) {
     return false;
   }
 
   const currentActor = state.turnOrder?.[state.currentTurnIndex];
-  if (!currentActor || currentActor.kind !== "program" || currentActor.ref.hp <= 0) {
+  if (!currentActor) {
+    return false;
+  }
+
+  if (state.actionLocked || currentActor.kind === "threat") {
+    return true;
+  }
+
+  if (currentActor.kind !== "program" || currentActor.ref.hp <= 0) {
     return false;
   }
 
@@ -1149,14 +1179,16 @@ function buildCombatMarkup(state) {
   const attackStageFanActive = Boolean(attackStageOverlayMarkup);
   const stageCommandClusterMarkup = buildStageCommandClusterMarkup(state);
   const stageCommandClusterActive = Boolean(stageCommandClusterMarkup);
-  const collapseTacticalBrief = shouldCollapseTacticalBrief(state);
+  const stageFeedbackToastMarkup = buildStageFeedbackToastMarkup(state);
+  const stageFeedbackActive = Boolean(stageFeedbackToastMarkup);
+  const collapseActiveHud = shouldCollapseActiveHud(state);
   if (state?.commandMode === "attack") {
     console.log("[Attack Prototype] stage markup generated:", Boolean(attackStageOverlayMarkup));
     console.log("[Attack Prototype] attackStageActive:", attackStageFanActive);
   }
 
   return `
-    <div class="combat-shell ${state.battleIntroPlaying ? "is-intro-playing" : ""} ${attackStageFanActive ? "is-attack-stage-active" : ""} ${stageCommandClusterActive ? "is-stage-command-active" : ""}">
+    <div class="combat-shell ${state.battleIntroPlaying ? "is-intro-playing" : ""} ${attackStageFanActive ? "is-attack-stage-active" : ""} ${stageCommandClusterActive ? "is-stage-command-active" : ""} ${stageFeedbackActive ? "is-stage-feedback-active" : ""}">
       <header class="combat-header">
         <div class="combat-title-block">
           <div class="combat-panel-title">THREATGRID ARENA</div>
@@ -1202,6 +1234,7 @@ function buildCombatMarkup(state) {
         </div>
         ${attackStageOverlayMarkup}
         ${stageCommandClusterMarkup}
+        ${stageFeedbackToastMarkup}
         <div class="combat-reserve-strip">
           <div class="combat-reserve-row">
             ${buildReserveStripMarkup(state, currentProgram.id)}
@@ -1211,7 +1244,7 @@ function buildCombatMarkup(state) {
 
       <footer class="combat-footer ${attackStageFanActive ? "is-attack-stage-active" : ""} ${stageCommandClusterActive ? "is-stage-command-active" : ""}">
         <div class="combat-footer-left ${attackStageFanActive ? "is-attack-stage-active" : ""} ${stageCommandClusterActive ? "is-stage-command-active" : ""}">
-          ${collapseTacticalBrief ? "" : `
+          ${collapseActiveHud ? "" : `
           <div class="combat-voice-box ${attackStageFanActive ? "is-attack-stage-active" : ""} ${stageCommandClusterActive ? "is-stage-command-active" : ""}">
             <div class="combat-panel-title">TACTICAL BRIEF</div>
           <div id="battle-message" class="combat-voice-text">${getBattleMessageText(state)}</div>
@@ -1223,7 +1256,7 @@ function buildCombatMarkup(state) {
         </div>
           `}
 
-          ${stageCommandClusterActive ? "" : `
+          ${stageCommandClusterActive || collapseActiveHud ? "" : `
           <div class="combat-command-box ${commandBoxClass} ${attackStageFanActive ? "is-attack-stage-active" : ""}">
             <div class="combat-panel-title">COMMAND DECK</div>
             ${buildActionButtonMarkup(state)}

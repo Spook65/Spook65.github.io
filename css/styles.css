@@ -8679,6 +8679,37 @@ body {
   font-size: 0.38rem;
 }
 
+.combat-stage-feedback-toast {
+  position: absolute;
+  left: clamp(23%, 25vw, 29%);
+  top: clamp(56%, 59%, 63%);
+  z-index: 4;
+  max-width: min(18rem, 26vw);
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.42rem 0.56rem 0.46rem;
+  border-left: 2px solid rgba(215, 184, 106, 0.64);
+  background:
+    linear-gradient(180deg, rgba(12, 15, 22, 0.74), rgba(6, 8, 12, 0.84));
+  box-shadow:
+    0 10px 18px rgba(0, 0, 0, 0.14),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+  pointer-events: none;
+}
+
+.combat-stage-feedback-line,
+.combat-stage-feedback-subline {
+  color: rgba(231, 220, 198, 0.84);
+  font-size: 0.45rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.combat-stage-feedback-subline {
+  color: rgba(127, 183, 176, 0.72);
+  font-size: 0.39rem;
+}
+
 .combat-shell.is-stage-command-active .combat-footer {
   min-height: 0;
 }
@@ -8690,6 +8721,15 @@ body {
 
 .combat-shell.is-stage-command-active .combat-voice-box {
   max-height: clamp(8.5rem, 22vh, 10.5rem);
+}
+
+.combat-shell.is-stage-feedback-active .combat-footer {
+  min-height: 0;
+  gap: 0;
+}
+
+.combat-shell.is-stage-feedback-active .combat-footer-left {
+  display: none;
 }
 
 .combat-shell.is-attack-stage-active .combat-status-box-player,
@@ -9291,12 +9331,24 @@ body {
     font-size: 0.36rem;
   }
 
+  .combat-stage-feedback-toast {
+    left: clamp(20%, 21vw, 25%);
+    top: clamp(58%, 61%, 65%);
+    max-width: min(16rem, 30vw);
+  }
+
   .combat-stage-command-chip-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .combat-stage-command-utility {
     grid-template-columns: 1fr;
+  }
+
+  .combat-stage-feedback-toast {
+    left: clamp(16%, 17vw, 21%);
+    top: clamp(60%, 63%, 68%);
+    max-width: min(13rem, 36vw);
   }
 
   .combat-attack-enemy-readout {
@@ -9414,6 +9466,21 @@ body {
 
   .combat-stage-command-prompt {
     gap: 0.1rem;
+  }
+
+  .combat-stage-feedback-toast {
+    left: clamp(12%, 11vw, 16%);
+    top: clamp(64%, 68%, 73%);
+    max-width: min(11rem, 48vw);
+    padding: 0.34rem 0.44rem 0.38rem;
+  }
+
+  .combat-stage-feedback-line {
+    font-size: 0.4rem;
+  }
+
+  .combat-stage-feedback-subline {
+    font-size: 0.35rem;
   }
 
   .combat-stage-command-chip-row {
