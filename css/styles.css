@@ -8610,31 +8610,52 @@ body {
 
 .combat-attack-enemy-panel {
   position: absolute;
-  top: clamp(1.2rem, 3vh, 1.9rem);
-  right: clamp(0.9rem, 1.8vw, 1.4rem);
+  top: clamp(0.9rem, 2.2vh, 1.45rem);
+  right: clamp(0.7rem, 1.4vw, 1.1rem);
   z-index: 3;
-  width: min(15rem, 18vw);
+  width: min(12.8rem, 15vw);
   display: grid;
-  gap: 0.24rem;
-  padding: 0.56rem 0.68rem;
-  border: 1px solid rgba(198, 111, 97, 0.18);
+  gap: 0.18rem;
+  padding: 0.34rem 0.46rem 0.38rem 0.62rem;
+  border: 1px solid rgba(198, 111, 97, 0.12);
+  border-right-color: transparent;
   background:
-    linear-gradient(180deg, rgba(18, 0, 4, 0.64), rgba(8, 8, 10, 0.82));
+    linear-gradient(90deg, rgba(12, 4, 7, 0.5), rgba(8, 8, 10, 0.18));
   box-shadow:
-    0 14px 26px rgba(0, 0, 0, 0.24),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    0 8px 18px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.combat-attack-enemy-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 2px;
+  background: linear-gradient(180deg, rgba(198, 111, 97, 0.82), rgba(198, 111, 97, 0.18));
+}
+
+.combat-attack-enemy-panel::after {
+  content: "";
+  position: absolute;
+  left: 0.62rem;
+  right: 0.38rem;
+  top: 0.32rem;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(198, 111, 97, 0.46), transparent);
 }
 
 .combat-attack-enemy-panel .combat-name-row {
-  font-size: 0.62rem;
+  font-size: 0.56rem;
   gap: 0.45rem;
+  align-items: baseline;
+  padding-top: 0.06rem;
 }
 
 .combat-attack-enemy-panel .combat-lvl,
 .combat-attack-enemy-panel .combat-subline,
 .combat-attack-enemy-panel .combat-matchup-hint {
   color: rgba(231, 220, 198, 0.74);
-  font-size: 0.47rem;
+  font-size: 0.42rem;
   letter-spacing: 0.12em;
 }
 
@@ -8644,16 +8665,29 @@ body {
 }
 
 .combat-attack-enemy-panel .combat-bar {
-  height: 7px;
+  height: 5px;
+  margin-top: 0.04rem;
+}
+
+.combat-attack-enemy-panel .combat-name {
+  max-width: 9.25rem;
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+}
+
+.combat-attack-enemy-panel .combat-lvl {
+  font-size: 0.4rem;
+  opacity: 0.82;
 }
 
 .combat-attack-enemy-panel .status-pill-row {
   gap: 0.22rem;
+  padding-top: 0.08rem;
 }
 
 .combat-attack-enemy-panel .status-pill {
-  padding: 0.1rem 0.24rem;
-  font-size: 0.42rem;
+  padding: 0.08rem 0.2rem;
+  font-size: 0.38rem;
   letter-spacing: 0.12em;
 }
 
@@ -9024,8 +9058,8 @@ body {
 
 @media (max-width: 1160px) {
   .combat-attack-enemy-panel {
-    width: min(13.5rem, 22vw);
-    top: clamp(1.1rem, 2.8vh, 1.8rem);
+    width: min(12rem, 18vw);
+    top: clamp(0.9rem, 2vh, 1.3rem);
   }
 
   .combat-attack-party-status-cluster {
@@ -9052,10 +9086,10 @@ body {
 
 @media (max-width: 920px) {
   .combat-attack-enemy-panel {
-    width: min(12.5rem, 27vw);
-    right: 0.9rem;
-    top: clamp(1rem, 2.6vh, 1.6rem);
-    padding: 0.5rem 0.58rem;
+    width: min(11.25rem, 24vw);
+    right: 0.8rem;
+    top: clamp(0.82rem, 1.8vh, 1.15rem);
+    padding: 0.3rem 0.4rem 0.34rem 0.54rem;
   }
 
   .combat-attack-party-status-cluster {
@@ -9147,11 +9181,11 @@ body {
 
 @media (max-width: 700px) {
   .combat-attack-enemy-panel {
-    width: min(11rem, 40vw);
+    width: min(9.8rem, 38vw);
     top: auto;
-    bottom: clamp(6rem, 14vh, 7.2rem);
+    bottom: clamp(5.6rem, 13vh, 6.6rem);
     right: 0.7rem;
-    padding: 0.46rem 0.52rem;
+    padding: 0.28rem 0.34rem 0.32rem 0.48rem;
   }
 
   .combat-attack-party-status-cluster {
