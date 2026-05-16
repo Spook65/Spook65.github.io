@@ -46,6 +46,25 @@ function getProgramSpriteClass(program) {
   return String(program && program.id ? program.id : "firewall-7").split("-")[0];
 }
 
+function getProgramMonogram(program) {
+  const spriteKey = getProgramSpriteClass(program);
+  const monogramMap = {
+    firewall: "FW",
+    ids: "ID",
+    honeypot: "HP",
+    antivirus: "AV"
+  };
+
+  if (monogramMap[spriteKey]) {
+    return monogramMap[spriteKey];
+  }
+
+  return String(program?.name || "DF")
+    .replace(/[^A-Za-z0-9]/g, "")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
 // getThreatSpriteClass() maps the threat type to a simple pixel-art silhouette class.
 function getThreatSpriteClass(threat) {
   const threatType = String(threat && threat.type ? threat.type : "ransomware");
@@ -790,15 +809,36 @@ function buildAttackPartyStatusClusterMarkup(state) {
 
   return `
     <div class="combat-attack-party-status-cluster combat-attack-hitbox" aria-label="Party status">
-      ${state.playerParty.map((program) => `
-        <div class="combat-attack-party-status ${program.id === currentActor.ref.id ? "is-active" : ""} ${program.hp <= 0 ? "is-down" : ""}">
-          <div class="combat-attack-party-status-head">
-            <span class="combat-attack-party-status-name">${program.name}</span>
-            <span class="combat-attack-party-status-hp">HP ${program.hp}/${program.maxHp}</span>
+      ${state.playerParty.map((program) => {
+        const isActive = program.id === currentActor.ref.id;
+        const roleLabel = String(program.type || "program").toUpperCase();
+
+        return `
+          <div class="combat-attack-party-status ${isActive ? "is-active" : ""} ${program.hp <= 0 ? "is-down" : ""}" style="--attack-party-accent: ${program.color};">
+            <div class="combat-attack-party-status-avatar" aria-hidden="true">
+              <span class="combat-attack-party-status-glyph">${getProgramMonogram(program)}</span>
+            </div>
+            <div class="combat-attack-party-status-body">
+              <div class="combat-attack-party-status-head">
+                <span class="combat-attack-party-status-name">${program.name}</span>
+                <span class="combat-attack-party-status-hp">${program.hp}/${program.maxHp}</span>
+              </div>
+              ${renderBar(program.hp, program.maxHp, "is-hp")}
+              <div class="combat-attack-party-status-foot">
+                <span class="combat-attack-party-status-meta">LVL ${program.level} / ${roleLabel}</span>
+                ${isActive ? `<span class="combat-attack-party-status-active-tag">ACTIVE</span>` : ""}
+              </div>
+              ${isActive ? `
+                <div class="combat-attack-party-status-response">
+                  <span class="combat-attack-party-status-response-label">TACTICAL GAUGE</span>
+                  <span class="combat-attack-party-status-response-value">${state.responseGauge}/100</span>
+                </div>
+                ${renderBar(state.responseGauge, 100, "is-gauge")}
+              ` : ""}
+            </div>
           </div>
-          ${renderBar(program.hp, program.maxHp, "is-hp")}
-        </div>
-      `).join("")}
+        `;
+      }).join("")}
     </div>
   `;
 }
