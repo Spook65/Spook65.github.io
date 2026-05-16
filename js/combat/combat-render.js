@@ -899,7 +899,7 @@ function buildAttackStageOverlayMarkup(state) {
   `;
 }
 
-function buildAttackEntryLauncherMarkup(state) {
+function buildStageCommandClusterMarkup(state) {
   if (!state || state.commandMode !== "main" || state.actionLocked || state.battleIntroPlaying) {
     return "";
   }
@@ -910,11 +910,38 @@ function buildAttackEntryLauncherMarkup(state) {
   }
 
   return `
-    <div class="combat-stage-attack-launcher" aria-label="Attack entry">
-      <button class="combat-action-button is-primary combat-stage-attack-launcher-button" type="button" data-combat-command="attack">
-        <span class="combat-stage-attack-launcher-kicker">ATTACK</span>
-        <span class="combat-stage-attack-launcher-copy">OPEN MOVES NEAR ${String(currentActor.ref.name || "DEFENDER").toUpperCase()}</span>
+    <div class="combat-stage-command-cluster" aria-label="Battlefield command cluster">
+      <button class="combat-action-button is-primary combat-stage-command-primary" type="button" data-combat-command="attack">
+        <span class="combat-stage-command-kicker">ATTACK</span>
+        <span class="combat-stage-command-copy">OPEN MOVES NEAR ${String(currentActor.ref.name || "DEFENDER").toUpperCase()}</span>
       </button>
+      <div class="combat-stage-command-chip-row">
+        <button class="combat-action-button is-secondary combat-stage-command-chip" type="button" data-combat-command="programs">
+          <span class="combat-stage-command-chip-name">PROGRAMS</span>
+          <span class="combat-stage-command-chip-copy">PARTY</span>
+        </button>
+        <button class="combat-action-button is-secondary combat-stage-command-chip" type="button" data-combat-command="items">
+          <span class="combat-stage-command-chip-name">ITEMS</span>
+          <span class="combat-stage-command-chip-copy">SUPPLIES</span>
+        </button>
+        <button class="combat-action-button is-secondary combat-stage-command-chip" type="button" data-combat-command="run">
+          <span class="combat-stage-command-chip-name">RUN</span>
+          <span class="combat-stage-command-chip-copy">FLEE</span>
+        </button>
+      </div>
+      <div class="combat-stage-command-utility">
+        <button class="combat-action-button is-secondary combat-stage-command-focus" type="button" data-combat-command="focus">
+          <span class="combat-stage-command-chip-name">FOCUS</span>
+          <span class="combat-stage-command-chip-copy">RECOVER / END TURN</span>
+        </button>
+        <div class="combat-stage-command-gauge" aria-label="Tactical Gauge">
+          <div class="combat-stage-command-gauge-head">
+            <span class="combat-stage-command-gauge-label">TACTICAL GAUGE</span>
+            <span class="combat-stage-command-gauge-value">${state.responseGauge}/100</span>
+          </div>
+          ${renderBar(state.responseGauge, 100, "is-gauge")}
+        </div>
+      </div>
     </div>
   `;
 }
@@ -1084,13 +1111,15 @@ function buildCombatMarkup(state) {
   const focusNeeded = typeof hasUsableMove === "function" ? !hasUsableMove(currentProgram, state) : false;
   const attackStageOverlayMarkup = buildAttackStageOverlayMarkup(state);
   const attackStageFanActive = Boolean(attackStageOverlayMarkup);
+  const stageCommandClusterMarkup = buildStageCommandClusterMarkup(state);
+  const stageCommandClusterActive = Boolean(stageCommandClusterMarkup);
   if (state?.commandMode === "attack") {
     console.log("[Attack Prototype] stage markup generated:", Boolean(attackStageOverlayMarkup));
     console.log("[Attack Prototype] attackStageActive:", attackStageFanActive);
   }
 
   return `
-    <div class="combat-shell ${state.battleIntroPlaying ? "is-intro-playing" : ""} ${attackStageFanActive ? "is-attack-stage-active" : ""}">
+    <div class="combat-shell ${state.battleIntroPlaying ? "is-intro-playing" : ""} ${attackStageFanActive ? "is-attack-stage-active" : ""} ${stageCommandClusterActive ? "is-stage-command-active" : ""}">
       <header class="combat-header">
         <div class="combat-title-block">
           <div class="combat-panel-title">THREATGRID ARENA</div>
@@ -1135,7 +1164,7 @@ function buildCombatMarkup(state) {
           ${buildProgramBattlefieldMarkup(currentProgram, state, state.activeProgramId === currentProgram.id)}
         </div>
         ${attackStageOverlayMarkup}
-        ${buildAttackEntryLauncherMarkup(state)}
+        ${stageCommandClusterMarkup}
         <div class="combat-reserve-strip">
           <div class="combat-reserve-row">
             ${buildReserveStripMarkup(state, currentProgram.id)}
@@ -1143,9 +1172,9 @@ function buildCombatMarkup(state) {
         </div>
       </section>
 
-      <footer class="combat-footer ${attackStageFanActive ? "is-attack-stage-active" : ""}">
-        <div class="combat-footer-left ${attackStageFanActive ? "is-attack-stage-active" : ""}">
-          <div class="combat-voice-box ${attackStageFanActive ? "is-attack-stage-active" : ""}">
+      <footer class="combat-footer ${attackStageFanActive ? "is-attack-stage-active" : ""} ${stageCommandClusterActive ? "is-stage-command-active" : ""}">
+        <div class="combat-footer-left ${attackStageFanActive ? "is-attack-stage-active" : ""} ${stageCommandClusterActive ? "is-stage-command-active" : ""}">
+          <div class="combat-voice-box ${attackStageFanActive ? "is-attack-stage-active" : ""} ${stageCommandClusterActive ? "is-stage-command-active" : ""}">
             <div class="combat-panel-title">TACTICAL BRIEF</div>
           <div id="battle-message" class="combat-voice-text">${getBattleMessageText(state)}</div>
           <div id="battle-submessage" class="combat-voice-subtext">${getBattleSubmessageText(state)}</div>
@@ -1155,6 +1184,7 @@ function buildCombatMarkup(state) {
           ${buildPantheonBoonBriefMarkup(state)}
         </div>
 
+          ${stageCommandClusterActive ? "" : `
           <div class="combat-command-box ${commandBoxClass} ${attackStageFanActive ? "is-attack-stage-active" : ""}">
             <div class="combat-panel-title">COMMAND DECK</div>
             ${buildActionButtonMarkup(state)}
@@ -1167,6 +1197,7 @@ function buildCombatMarkup(state) {
               </div>
             </div>
           </div>
+          `}
         </div>
       </footer>
     </div>

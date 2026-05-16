@@ -8541,17 +8541,20 @@ body {
   pointer-events: none;
 }
 
-.combat-stage-attack-launcher {
+.combat-stage-command-cluster {
   position: absolute;
   left: clamp(22%, 24vw, 28%);
-  top: clamp(56%, 60%, 64%);
+  top: clamp(54%, 58%, 62%);
   z-index: 4;
+  width: min(15rem, 20vw);
+  display: grid;
+  gap: 0.46rem;
   pointer-events: none;
 }
 
-.combat-stage-attack-launcher-button {
+.combat-stage-command-primary {
   min-height: 0;
-  padding: 0.52rem 0.78rem 0.56rem;
+  padding: 0.5rem 0.7rem 0.54rem;
   border-color: rgba(215, 184, 106, 0.34);
   background:
     linear-gradient(180deg, rgba(24, 20, 13, 0.82), rgba(8, 10, 14, 0.88));
@@ -8564,18 +8567,110 @@ body {
   pointer-events: auto;
 }
 
-.combat-stage-attack-launcher-button .combat-stage-attack-launcher-kicker {
+.combat-stage-command-kicker {
   color: rgba(231, 220, 198, 0.96);
   font-size: 0.66rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
 }
 
-.combat-stage-attack-launcher-button .combat-stage-attack-launcher-copy {
+.combat-stage-command-copy {
   color: rgba(215, 184, 106, 0.82);
   font-size: 0.44rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
+}
+
+.combat-stage-command-chip-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.32rem;
+  pointer-events: auto;
+}
+
+.combat-stage-command-chip,
+.combat-stage-command-focus {
+  min-height: 0;
+  padding: 0.34rem 0.44rem 0.38rem;
+  background:
+    linear-gradient(180deg, rgba(12, 15, 22, 0.82), rgba(6, 8, 12, 0.9));
+  box-shadow:
+    0 8px 16px rgba(0, 0, 0, 0.14),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+  pointer-events: auto;
+}
+
+.combat-stage-command-chip-row .combat-stage-command-chip {
+  justify-items: start;
+}
+
+.combat-stage-command-chip-name {
+  color: rgba(231, 220, 198, 0.9);
+  font-size: 0.49rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.combat-stage-command-chip-copy {
+  color: rgba(127, 183, 176, 0.7);
+  font-size: 0.39rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.combat-stage-command-utility {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  gap: 0.34rem;
+  align-items: stretch;
+  pointer-events: auto;
+}
+
+.combat-stage-command-focus {
+  justify-items: start;
+}
+
+.combat-stage-command-gauge {
+  padding: 0.34rem 0.46rem 0.4rem;
+  border: 1px solid rgba(242, 239, 227, 0.12);
+  background:
+    linear-gradient(180deg, rgba(10, 13, 20, 0.72), rgba(5, 7, 11, 0.84));
+  box-shadow:
+    0 8px 16px rgba(0, 0, 0, 0.12),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+}
+
+.combat-stage-command-gauge-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.35rem;
+  margin-bottom: 0.22rem;
+}
+
+.combat-stage-command-gauge-label,
+.combat-stage-command-gauge-value {
+  color: rgba(231, 220, 198, 0.78);
+  font-size: 0.4rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.combat-stage-command-gauge .combat-bar {
+  height: 6px;
+}
+
+.combat-shell.is-stage-command-active .combat-footer {
+  min-height: 0;
+}
+
+.combat-shell.is-stage-command-active .combat-footer-left {
+  grid-template-columns: 1fr;
+  width: min(44rem, 45vw);
+}
+
+.combat-shell.is-stage-command-active .combat-voice-box {
+  max-height: clamp(8.5rem, 22vh, 10.5rem);
 }
 
 .combat-shell.is-attack-stage-active .combat-status-box-player,
@@ -9121,9 +9216,10 @@ body {
 }
 
 @media (max-width: 1160px) {
-  .combat-stage-attack-launcher {
+  .combat-stage-command-cluster {
     left: clamp(20%, 21vw, 25%);
-    top: clamp(58%, 61%, 65%);
+    top: clamp(56%, 60%, 64%);
+    width: min(13.75rem, 23vw);
   }
 
   .combat-attack-enemy-readout {
@@ -9158,13 +9254,22 @@ body {
 }
 
 @media (max-width: 920px) {
-  .combat-stage-attack-launcher {
+  .combat-stage-command-cluster {
     left: clamp(15%, 16vw, 20%);
-    top: clamp(60%, 63%, 67%);
+    top: clamp(58%, 61%, 66%);
+    width: min(12rem, 30vw);
   }
 
-  .combat-stage-attack-launcher-button {
+  .combat-stage-command-primary {
     padding: 0.46rem 0.64rem 0.5rem;
+  }
+
+  .combat-stage-command-chip-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .combat-stage-command-utility {
+    grid-template-columns: 1fr;
   }
 
   .combat-attack-enemy-readout {
@@ -9266,17 +9371,22 @@ body {
 }
 
 @media (max-width: 700px) {
-  .combat-stage-attack-launcher {
+  .combat-stage-command-cluster {
     left: clamp(11%, 10vw, 14%);
-    top: clamp(64%, 67%, 72%);
+    top: clamp(62%, 66%, 71%);
+    width: min(11.2rem, 44vw);
   }
 
-  .combat-stage-attack-launcher-button .combat-stage-attack-launcher-kicker {
+  .combat-stage-command-kicker {
     font-size: 0.58rem;
   }
 
-  .combat-stage-attack-launcher-button .combat-stage-attack-launcher-copy {
+  .combat-stage-command-copy {
     font-size: 0.4rem;
+  }
+
+  .combat-stage-command-chip-row {
+    grid-template-columns: 1fr;
   }
 
   .combat-attack-enemy-readout {
@@ -9347,6 +9457,10 @@ body {
 
   .combat-voice-box {
     max-height: clamp(9rem, 28vh, 12rem);
+  }
+
+  .combat-shell.is-stage-command-active .combat-footer-left {
+    width: 100%;
   }
 
   .combat-command-box {
