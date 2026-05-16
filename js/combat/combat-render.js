@@ -851,21 +851,28 @@ function buildAttackEnemyStatusPanelMarkup(state) {
   const threat = state.threat;
   const displayLevel = Number.isFinite(threat?.battleLevel) ? threat.battleLevel : threat.level;
   const statusMarkup = renderStatusPills(threat.statusEffects);
+  const weaknessLabel = String(getActorCombatType(threat, true) || "UNKNOWN").toUpperCase();
+  const intentLabel = state.enemyIntent ? String(state.enemyIntent.label || "STRIKE").toUpperCase() : "";
+  const intentIcon = state.enemyIntent ? String(state.enemyIntent.iconLabel || state.enemyIntent.severity || "").toUpperCase() : "";
 
   return `
-    <div class="combat-attack-enemy-panel combat-attack-hitbox" aria-label="Target status">
-      <div class="combat-name-row">
-        <span class="combat-name">${threat.title}</span>
-        <span class="combat-lvl">LVL ${displayLevel}</span>
+    <div class="combat-attack-enemy-readout combat-attack-hitbox" aria-label="Target status">
+      <div class="combat-attack-enemy-panel">
+        <div class="combat-name-row">
+          <span class="combat-name">${threat.title}</span>
+          <span class="combat-lvl">LVL ${displayLevel}</span>
+        </div>
+        <div class="combat-attack-enemy-hp-row">
+          <span class="combat-attack-enemy-hp-label">HP</span>
+          <span class="combat-attack-enemy-hp-value">${threat.hp}/${threat.maxHp}</span>
+        </div>
+        ${renderBar(threat.hp, threat.maxHp, "is-hp")}
+        ${statusMarkup}
       </div>
-      <div class="combat-subline">HP ${threat.hp}/${threat.maxHp}</div>
-      ${renderBar(threat.hp, threat.maxHp, "is-hp")}
-      <div class="combat-subline">WEAK TO: ${String(getActorCombatType(threat, true) || "UNKNOWN").toUpperCase()}</div>
-      ${state.enemyIntent ? `
-        <div class="combat-subline is-intent">INTENT: ${String(state.enemyIntent.label || "STRIKE").toUpperCase()}</div>
-        <div class="combat-subline is-intent-hint">${String(state.enemyIntent.iconLabel || state.enemyIntent.severity || "").toUpperCase()}</div>
-      ` : ""}
-      ${statusMarkup}
+      <div class="combat-attack-enemy-meta">
+        <span class="combat-attack-enemy-meta-item">WEAK: ${weaknessLabel}</span>
+        ${state.enemyIntent ? `<span class="combat-attack-enemy-meta-item">INTENT: ${intentLabel}${intentIcon ? ` / ${intentIcon}` : ""}</span>` : ""}
+      </div>
     </div>
   `;
 }
