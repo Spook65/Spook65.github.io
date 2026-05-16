@@ -942,8 +942,44 @@ function buildStageCommandClusterMarkup(state) {
           ${renderBar(state.responseGauge, 100, "is-gauge")}
         </div>
       </div>
+      ${buildStageCommandPromptMarkup(state)}
     </div>
   `;
+}
+
+function buildStageCommandPromptMarkup(state) {
+  if (!state || state.commandMode !== "main") {
+    return "";
+  }
+
+  const currentActor = state.turnOrder?.[state.currentTurnIndex];
+  if (!currentActor || currentActor.kind !== "program" || currentActor.ref.hp <= 0) {
+    return "";
+  }
+
+  const actorName = String(currentActor.ref.name || "DEFENDER").toUpperCase();
+  const intentLabel = state.enemyIntent ? String(state.enemyIntent.label || "STRIKE").toUpperCase() : "";
+
+  return `
+    <div class="combat-stage-command-prompt" aria-label="Active battle prompt">
+      <div class="combat-stage-command-prompt-line">${actorName} READY. CHOOSE COMMAND.</div>
+      ${intentLabel ? `<div class="combat-stage-command-prompt-subline">THREAT INTENT: ${intentLabel}</div>` : ""}
+    </div>
+  `;
+}
+
+function shouldCollapseTacticalBrief(state) {
+  if (!state || state.actionLocked || state.battleIntroPlaying) {
+    return false;
+  }
+
+  const currentActor = state.turnOrder?.[state.currentTurnIndex];
+  if (!currentActor || currentActor.kind !== "program" || currentActor.ref.hp <= 0) {
+    return false;
+  }
+
+  const commandMode = state.commandMode || "main";
+  return commandMode === "main" || commandMode === "attack" || commandMode === "programs" || commandMode === "items";
 }
 
 function syncAttackFanFallbackState(state) {
@@ -1113,6 +1149,7 @@ function buildCombatMarkup(state) {
   const attackStageFanActive = Boolean(attackStageOverlayMarkup);
   const stageCommandClusterMarkup = buildStageCommandClusterMarkup(state);
   const stageCommandClusterActive = Boolean(stageCommandClusterMarkup);
+  const collapseTacticalBrief = shouldCollapseTacticalBrief(state);
   if (state?.commandMode === "attack") {
     console.log("[Attack Prototype] stage markup generated:", Boolean(attackStageOverlayMarkup));
     console.log("[Attack Prototype] attackStageActive:", attackStageFanActive);
@@ -1174,6 +1211,7 @@ function buildCombatMarkup(state) {
 
       <footer class="combat-footer ${attackStageFanActive ? "is-attack-stage-active" : ""} ${stageCommandClusterActive ? "is-stage-command-active" : ""}">
         <div class="combat-footer-left ${attackStageFanActive ? "is-attack-stage-active" : ""} ${stageCommandClusterActive ? "is-stage-command-active" : ""}">
+          ${collapseTacticalBrief ? "" : `
           <div class="combat-voice-box ${attackStageFanActive ? "is-attack-stage-active" : ""} ${stageCommandClusterActive ? "is-stage-command-active" : ""}">
             <div class="combat-panel-title">TACTICAL BRIEF</div>
           <div id="battle-message" class="combat-voice-text">${getBattleMessageText(state)}</div>
@@ -1183,6 +1221,7 @@ function buildCombatMarkup(state) {
           ${buildFocusAvailabilityBrief(state)}
           ${buildPantheonBoonBriefMarkup(state)}
         </div>
+          `}
 
           ${stageCommandClusterActive ? "" : `
           <div class="combat-command-box ${commandBoxClass} ${attackStageFanActive ? "is-attack-stage-active" : ""}">

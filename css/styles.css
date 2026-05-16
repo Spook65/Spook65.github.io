@@ -8660,6 +8660,25 @@ body {
   height: 6px;
 }
 
+.combat-stage-command-prompt {
+  display: grid;
+  gap: 0.14rem;
+  padding-left: 0.08rem;
+}
+
+.combat-stage-command-prompt-line,
+.combat-stage-command-prompt-subline {
+  color: rgba(231, 220, 198, 0.72);
+  font-size: 0.42rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.combat-stage-command-prompt-subline {
+  color: rgba(215, 184, 106, 0.74);
+  font-size: 0.38rem;
+}
+
 .combat-shell.is-stage-command-active .combat-footer {
   min-height: 0;
 }
@@ -9264,6 +9283,14 @@ body {
     padding: 0.46rem 0.64rem 0.5rem;
   }
 
+  .combat-stage-command-prompt-line {
+    font-size: 0.4rem;
+  }
+
+  .combat-stage-command-prompt-subline {
+    font-size: 0.36rem;
+  }
+
   .combat-stage-command-chip-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -9383,6 +9410,10 @@ body {
 
   .combat-stage-command-copy {
     font-size: 0.4rem;
+  }
+
+  .combat-stage-command-prompt {
+    gap: 0.1rem;
   }
 
   .combat-stage-command-chip-row {
