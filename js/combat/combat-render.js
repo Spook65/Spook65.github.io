@@ -947,6 +947,64 @@ function buildStageCommandClusterMarkup(state) {
   `;
 }
 
+function buildStageCommandSubmenuMarkup(state) {
+  if (!state || state.actionLocked || state.battleIntroPlaying) {
+    return "";
+  }
+
+  const currentActor = state.turnOrder?.[state.currentTurnIndex];
+  if (!currentActor || currentActor.kind !== "program" || currentActor.ref.hp <= 0) {
+    return "";
+  }
+
+  const commandMode = state.commandMode || "main";
+  if (commandMode !== "programs" && commandMode !== "items") {
+    return "";
+  }
+
+  if (commandMode === "programs") {
+    return `
+      <div class="combat-stage-command-submenu is-programs" aria-label="Battlefield programs menu">
+        <div class="combat-stage-command-submenu-header">
+          <div class="combat-stage-command-submenu-title">PROGRAMS</div>
+          <div class="combat-stage-command-submenu-copy">ACTIVE DEFENDER REVIEW</div>
+        </div>
+        <div class="combat-stage-command-submenu-body">
+          <div class="combat-stage-program-grid combat-party-grid">
+            ${state.playerParty.map((program) => `
+              <div class="combat-stage-program-card combat-party-card ${program.id === currentActor.ref.id ? "is-active" : ""} ${program.hp <= 0 ? "is-down" : ""}">
+                <div class="combat-party-name">${program.name}</div>
+                <div class="combat-party-meta">HP ${program.hp}/${program.maxHp}</div>
+                <div class="combat-party-meta">LVL ${program.level}</div>
+                ${program.id === currentActor.ref.id ? '<div class="combat-party-tag">ACTIVE</div>' : ""}
+              </div>
+            `).join("")}
+          </div>
+          <div class="combat-stage-command-submenu-note">SWITCHING COMING SOON.</div>
+        </div>
+        <div class="combat-stage-command-submenu-actions">
+          <button class="combat-action-button is-secondary combat-stage-command-submenu-back" type="button" data-combat-command="back">BACK</button>
+        </div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="combat-stage-command-submenu is-items" aria-label="Battlefield items menu">
+      <div class="combat-stage-command-submenu-header">
+        <div class="combat-stage-command-submenu-title">ITEMS</div>
+        <div class="combat-stage-command-submenu-copy">RECOVERY CACHE</div>
+      </div>
+      <div class="combat-stage-command-submenu-body">
+        <div class="combat-stage-command-submenu-empty combat-command-empty">NO RECOVERY ITEMS AVAILABLE.</div>
+      </div>
+      <div class="combat-stage-command-submenu-actions">
+        <button class="combat-action-button is-secondary combat-stage-command-submenu-back" type="button" data-combat-command="back">BACK</button>
+      </div>
+    </div>
+  `;
+}
+
 function buildStageCommandPromptMarkup(state) {
   if (!state || state.commandMode !== "main") {
     return "";
@@ -1179,6 +1237,8 @@ function buildCombatMarkup(state) {
   const attackStageFanActive = Boolean(attackStageOverlayMarkup);
   const stageCommandClusterMarkup = buildStageCommandClusterMarkup(state);
   const stageCommandClusterActive = Boolean(stageCommandClusterMarkup);
+  const stageCommandSubmenuMarkup = buildStageCommandSubmenuMarkup(state);
+  const stageCommandSubmenuActive = Boolean(stageCommandSubmenuMarkup);
   const stageFeedbackToastMarkup = buildStageFeedbackToastMarkup(state);
   const stageFeedbackActive = Boolean(stageFeedbackToastMarkup);
   const collapseActiveHud = shouldCollapseActiveHud(state);
@@ -1188,7 +1248,7 @@ function buildCombatMarkup(state) {
   }
 
   return `
-    <div class="combat-shell ${state.battleIntroPlaying ? "is-intro-playing" : ""} ${attackStageFanActive ? "is-attack-stage-active" : ""} ${stageCommandClusterActive ? "is-stage-command-active" : ""} ${stageFeedbackActive ? "is-stage-feedback-active" : ""}">
+    <div class="combat-shell ${state.battleIntroPlaying ? "is-intro-playing" : ""} ${attackStageFanActive ? "is-attack-stage-active" : ""} ${stageCommandClusterActive ? "is-stage-command-active" : ""} ${stageCommandSubmenuActive ? "is-stage-submenu-active" : ""} ${stageFeedbackActive ? "is-stage-feedback-active" : ""}">
       <header class="combat-header">
         <div class="combat-title-block">
           <div class="combat-panel-title">THREATGRID ARENA</div>
@@ -1234,6 +1294,7 @@ function buildCombatMarkup(state) {
         </div>
         ${attackStageOverlayMarkup}
         ${stageCommandClusterMarkup}
+        ${stageCommandSubmenuMarkup}
         ${stageFeedbackToastMarkup}
         <div class="combat-reserve-strip">
           <div class="combat-reserve-row">
@@ -1242,8 +1303,8 @@ function buildCombatMarkup(state) {
         </div>
       </section>
 
-      <footer class="combat-footer ${attackStageFanActive ? "is-attack-stage-active" : ""} ${stageCommandClusterActive ? "is-stage-command-active" : ""}">
-        <div class="combat-footer-left ${attackStageFanActive ? "is-attack-stage-active" : ""} ${stageCommandClusterActive ? "is-stage-command-active" : ""}">
+      <footer class="combat-footer ${attackStageFanActive ? "is-attack-stage-active" : ""} ${stageCommandClusterActive ? "is-stage-command-active" : ""} ${stageCommandSubmenuActive ? "is-stage-submenu-active" : ""}">
+        <div class="combat-footer-left ${attackStageFanActive ? "is-attack-stage-active" : ""} ${stageCommandClusterActive ? "is-stage-command-active" : ""} ${stageCommandSubmenuActive ? "is-stage-submenu-active" : ""}">
           ${collapseActiveHud ? "" : `
           <div class="combat-voice-box ${attackStageFanActive ? "is-attack-stage-active" : ""} ${stageCommandClusterActive ? "is-stage-command-active" : ""}">
             <div class="combat-panel-title">TACTICAL BRIEF</div>

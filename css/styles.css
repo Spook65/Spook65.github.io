@@ -8546,9 +8546,9 @@ body {
   left: clamp(22%, 24vw, 28%);
   top: clamp(54%, 58%, 62%);
   z-index: 4;
-  width: min(14rem, 19vw);
+  width: min(14.75rem, 20vw);
   display: grid;
-  gap: 0.34rem;
+  gap: 0.38rem;
   pointer-events: none;
 }
 
@@ -8557,7 +8557,7 @@ body {
   width: fit-content;
   max-width: 100%;
   min-height: 0;
-  padding: 0.42rem 1.05rem 0.46rem 0.88rem;
+  padding: 0.46rem 1.1rem 0.5rem 0.92rem;
   border-color: rgba(215, 184, 106, 0.34);
   background:
     linear-gradient(180deg, rgba(24, 20, 13, 0.76), rgba(8, 10, 14, 0.78));
@@ -8591,7 +8591,7 @@ body {
 
 .combat-stage-command-kicker {
   color: rgba(231, 220, 198, 0.96);
-  font-size: 0.62rem;
+  font-size: 0.64rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   padding-left: 0.4rem;
@@ -8599,7 +8599,7 @@ body {
 
 .combat-stage-command-copy {
   color: rgba(215, 184, 106, 0.82);
-  font-size: 0.39rem;
+  font-size: 0.41rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   padding-left: 0.4rem;
@@ -8617,7 +8617,7 @@ body {
   width: fit-content;
   min-width: 0;
   min-height: 0;
-  padding: 0.28rem 0.58rem 0.3rem;
+  padding: 0.32rem 0.62rem 0.34rem;
   background:
     linear-gradient(180deg, rgba(12, 15, 22, 0.66), rgba(6, 8, 12, 0.74));
   box-shadow:
@@ -8636,14 +8636,14 @@ body {
 
 .combat-stage-command-chip-name {
   color: rgba(231, 220, 198, 0.9);
-  font-size: 0.45rem;
+  font-size: 0.47rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 
 .combat-stage-command-chip-copy {
   color: rgba(127, 183, 176, 0.7);
-  font-size: 0.34rem;
+  font-size: 0.36rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -8664,7 +8664,7 @@ body {
 
 .combat-stage-command-gauge {
   flex: 1 1 8rem;
-  min-width: 7.25rem;
+  min-width: 7.75rem;
   padding: 0.18rem 0.12rem 0.04rem;
   border: 0;
   background: transparent;
@@ -8682,7 +8682,7 @@ body {
 .combat-stage-command-gauge-label,
 .combat-stage-command-gauge-value {
   color: rgba(231, 220, 198, 0.78);
-  font-size: 0.35rem;
+  font-size: 0.37rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -8711,6 +8711,84 @@ body {
 .combat-stage-command-prompt-subline {
   color: rgba(215, 184, 106, 0.74);
   font-size: 0.38rem;
+}
+
+.combat-stage-command-submenu {
+  position: absolute;
+  left: clamp(22%, 24vw, 28%);
+  top: clamp(53%, 57%, 61%);
+  z-index: 4;
+  width: min(15.5rem, 22vw);
+  display: grid;
+  gap: 0.42rem;
+  padding: 0.46rem 0.56rem 0.54rem;
+  border: 1px solid rgba(231, 220, 198, 0.12);
+  background:
+    linear-gradient(180deg, rgba(11, 14, 20, 0.78), rgba(6, 8, 12, 0.84));
+  box-shadow:
+    0 12px 22px rgba(0, 0, 0, 0.14),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+  pointer-events: auto;
+}
+
+.combat-stage-command-submenu-header {
+  display: grid;
+  gap: 0.12rem;
+}
+
+.combat-stage-command-submenu-title {
+  color: rgba(231, 220, 198, 0.94);
+  font-size: 0.58rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.combat-stage-command-submenu-copy,
+.combat-stage-command-submenu-note {
+  color: rgba(127, 183, 176, 0.74);
+  font-size: 0.38rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.combat-stage-command-submenu-body {
+  display: grid;
+  gap: 0.34rem;
+}
+
+.combat-stage-program-grid {
+  grid-template-columns: 1fr;
+  gap: 0.34rem;
+}
+
+.combat-stage-program-card {
+  padding: 0.42rem 0.46rem 0.44rem;
+  background: rgba(242, 239, 227, 0.028);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.018);
+}
+
+.combat-stage-command-submenu-empty {
+  padding: 0.48rem 0.52rem;
+  font-size: 0.42rem;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.combat-stage-command-submenu-actions {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.combat-stage-command-submenu-back {
+  width: fit-content;
+  min-height: 0;
+  padding: 0.3rem 0.64rem 0.34rem;
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, rgba(12, 15, 22, 0.68), rgba(6, 8, 12, 0.76));
+  box-shadow:
+    0 6px 12px rgba(0, 0, 0, 0.12),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.02);
 }
 
 .combat-stage-command-primary:hover,
@@ -8774,9 +8852,17 @@ body {
   min-height: 0;
 }
 
+.combat-shell.is-stage-submenu-active .combat-footer {
+  min-height: 0;
+}
+
 .combat-shell.is-stage-command-active .combat-footer-left {
   grid-template-columns: 1fr;
   width: min(44rem, 45vw);
+}
+
+.combat-shell.is-stage-submenu-active .combat-footer-left {
+  display: none;
 }
 
 .combat-shell.is-stage-command-active .combat-voice-box {
@@ -9341,6 +9427,12 @@ body {
     width: min(13.75rem, 23vw);
   }
 
+  .combat-stage-command-submenu {
+    left: clamp(20%, 21vw, 25%);
+    top: clamp(55%, 59%, 63%);
+    width: min(15rem, 25vw);
+  }
+
   .combat-attack-enemy-readout {
     width: min(12.4rem, 18vw);
     top: clamp(0.9rem, 2vh, 1.3rem);
@@ -9389,6 +9481,14 @@ body {
 
   .combat-stage-command-prompt-subline {
     font-size: 0.36rem;
+  }
+
+  .combat-stage-command-submenu {
+    left: clamp(15%, 16vw, 20%);
+    top: clamp(57%, 60%, 65%);
+    width: min(13rem, 34vw);
+    gap: 0.34rem;
+    padding: 0.42rem 0.48rem 0.5rem;
   }
 
   .combat-stage-feedback-toast {
@@ -9526,6 +9626,14 @@ body {
 
   .combat-stage-command-prompt {
     gap: 0.1rem;
+  }
+
+  .combat-stage-command-submenu {
+    left: clamp(10%, 9vw, 14%);
+    top: clamp(61%, 65%, 70%);
+    width: min(11.5rem, 54vw);
+    gap: 0.28rem;
+    padding: 0.38rem 0.42rem 0.46rem;
   }
 
   .combat-stage-feedback-toast {
