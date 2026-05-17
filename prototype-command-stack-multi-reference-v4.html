@@ -73,6 +73,7 @@
         <div class="scene-wash" aria-hidden="true"></div>
         <div class="scene-haze is-gold" aria-hidden="true"></div>
         <div class="scene-haze is-violet" aria-hidden="true"></div>
+        <div class="action-lane-guide" aria-hidden="true"></div>
 
         <div class="party-rail" aria-label="Party order">
           <div class="party-mark is-active"><span class="party-dot"></span><span class="party-copy">HONEYPOT</span></div>
@@ -108,14 +109,18 @@
           <div class="enemy-arm is-right"></div>
         </div>
 
-        <article class="enemy-readout">
-          <div class="enemy-row">
-            <span class="enemy-name">HOSPITAL NETWORK LOCKOUT</span>
-            <span class="enemy-level">LVL 1</span>
+        <div class="enemy-lockline">
+          <div class="enemy-lockline-label">
+            <span class="enemy-lock-name">HOSPITAL NETWORK LOCKOUT</span>
+            <span class="enemy-lock-hp">16/55</span>
           </div>
-          <div class="enemy-hp-row"><span>HP</span><span>16/55</span></div>
-          <div class="enemy-bar"><span class="enemy-fill" style="width:29%"></span></div>
-          <div class="enemy-meta">INTENT: SWARM / WEAK TO: DEFENSE</div>
+          <div class="enemy-lock-track"><span class="enemy-lock-fill" style="width:29%"></span></div>
+        </div>
+
+        <article class="enemy-detail-box">
+          <div class="enemy-detail-line"><span>LVL</span><strong>1</strong></div>
+          <div class="enemy-detail-line"><span>INTENT</span><strong>SWARM</strong></div>
+          <div class="enemy-detail-line"><span>WEAK TO</span><strong>DEFENSE</strong></div>
         </article>
 
         <aside class="party-tile-cluster">
@@ -124,6 +129,7 @@
             <div class="tile-copy">
               <div class="tile-name">FIREWALL-7</div>
               <div class="tile-meta">130/130</div>
+              <div class="tile-bar"><span class="tile-bar-fill" style="width:100%"></span></div>
             </div>
           </div>
           <div class="party-tile is-active">
@@ -131,6 +137,7 @@
             <div class="tile-copy">
               <div class="tile-name">HONEYPOT</div>
               <div class="tile-meta">96/96</div>
+              <div class="tile-bar"><span class="tile-bar-fill is-active" style="width:100%"></span></div>
             </div>
           </div>
           <div class="party-tile">
@@ -138,6 +145,7 @@
             <div class="tile-copy">
               <div class="tile-name">ANTIVIRUS</div>
               <div class="tile-meta">108/108</div>
+              <div class="tile-bar"><span class="tile-bar-fill" style="width:100%"></span></div>
             </div>
           </div>
           <div class="party-tile">
@@ -145,6 +153,7 @@
             <div class="tile-copy">
               <div class="tile-name">IDS</div>
               <div class="tile-meta">92/92</div>
+              <div class="tile-bar"><span class="tile-bar-fill" style="width:100%"></span></div>
             </div>
           </div>
         </aside>

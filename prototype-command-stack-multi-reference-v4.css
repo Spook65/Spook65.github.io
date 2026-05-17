@@ -265,6 +265,20 @@ label:focus-visible {
   background: radial-gradient(closest-side at 82% 22%, rgba(142, 132, 201, 0.12), transparent 58%);
 }
 
+.action-lane-guide {
+  position: absolute;
+  left: 20.8rem;
+  top: 23.4rem;
+  width: 24rem;
+  height: 16rem;
+  border-radius: 50%;
+  background:
+    linear-gradient(120deg, rgba(121, 181, 187, 0.08), transparent 46%),
+    radial-gradient(circle at 14% 44%, rgba(209, 179, 116, 0.1), transparent 58%);
+  filter: blur(12px);
+  opacity: 0.9;
+}
+
 .party-rail {
   position: absolute;
   top: 1rem;
@@ -384,6 +398,16 @@ label:focus-visible {
   height: 16rem;
 }
 
+.defender-figure::after {
+  content: "";
+  position: absolute;
+  inset: 2.4rem 1.6rem 1.8rem;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(121, 181, 187, 0.14), transparent 68%);
+  filter: blur(10px);
+  animation: defenderPulse 3.4s ease-in-out infinite;
+}
+
 .figure-ring {
   position: absolute;
   inset: 0.3rem;
@@ -492,43 +516,88 @@ label:focus-visible {
   right: 1.6rem;
 }
 
-.enemy-readout {
+.enemy-lockline {
+  position: absolute;
+  z-index: 4;
+  right: 4.8rem;
+  top: 20.2rem;
+  width: min(17rem, 22vw);
+}
+
+.enemy-lockline::before {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(184, 101, 89, 0), rgba(184, 101, 89, 0.44), rgba(184, 101, 89, 0));
+}
+
+.enemy-lockline-label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.enemy-lock-name {
+  font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(236, 220, 186, 0.9);
+}
+
+.enemy-lock-hp {
+  color: rgba(233, 188, 178, 0.78);
+  font-size: 0.58rem;
+  letter-spacing: 0.14em;
+}
+
+.enemy-lock-track {
+  height: 0.24rem;
+  margin-top: 0.38rem;
+  background: rgba(45, 16, 18, 0.46);
+  border-radius: 999px;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(184, 101, 89, 0.16);
+}
+
+.enemy-lock-fill {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, rgba(221, 83, 99, 0.98), rgba(255, 142, 111, 0.92));
+  box-shadow: 0 0 12px rgba(221, 83, 99, 0.26);
+}
+
+.enemy-detail-box {
   position: absolute;
   z-index: 4;
   right: 2.6rem;
-  top: 18.4rem;
-  width: min(19rem, 25vw);
-  padding: 0.78rem 0.88rem 0.86rem;
-  border: 1px solid rgba(184, 101, 89, 0.26);
-  border-radius: 1rem;
-  background: linear-gradient(180deg, rgba(14, 10, 14, 0.74), rgba(9, 7, 11, 0.84));
-  box-shadow: 0 18px 32px rgba(0, 0, 0, 0.26);
+  top: 22rem;
+  display: grid;
+  gap: 0.36rem;
+  width: min(11rem, 15vw);
+  padding: 0.56rem 0.68rem;
+  border: 1px solid rgba(184, 101, 89, 0.16);
+  border-radius: 0.9rem;
+  background: linear-gradient(180deg, rgba(12, 10, 13, 0.44), rgba(7, 6, 9, 0.62));
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.16);
 }
 
-.enemy-name {
-  font-size: 0.9rem;
+.enemy-detail-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+  color: rgba(223, 189, 177, 0.82);
+  font-size: 0.5rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
 }
 
-.enemy-hp-row,
-.enemy-meta {
-  margin-top: 0.48rem;
-  color: rgba(223, 189, 177, 0.84);
+.enemy-detail-line strong {
+  color: rgba(236, 220, 186, 0.9);
   font-size: 0.56rem;
-}
-
-.enemy-bar {
-  height: 0.56rem;
-  margin-top: 0.28rem;
-  border: 1px solid rgba(107, 189, 147, 0.24);
-  background: rgba(0, 0, 0, 0.32);
-  overflow: hidden;
-}
-
-.enemy-fill {
-  display: block;
-  width: 29%;
-  height: 100%;
-  background: linear-gradient(90deg, #7dd7e0, #e0d384);
 }
 
 .party-tile-cluster {
@@ -586,6 +655,7 @@ label:focus-visible {
 
 .tile-name {
   font-size: 0.66rem;
+  color: rgba(236, 220, 186, 0.92);
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -594,6 +664,25 @@ label:focus-visible {
   margin-top: 0.14rem;
   color: var(--text-soft);
   font-size: 0.46rem;
+}
+
+.tile-bar {
+  width: 100%;
+  height: 0.18rem;
+  margin-top: 0.34rem;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.tile-bar-fill {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, rgba(121, 181, 187, 0.92), rgba(209, 179, 116, 0.82));
+}
+
+.tile-bar-fill.is-active {
+  background: linear-gradient(90deg, rgba(209, 179, 116, 0.98), rgba(121, 181, 187, 0.88));
 }
 
 .proto-state {
@@ -647,16 +736,33 @@ label:focus-visible {
   align-items: center;
   text-align: left;
   transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.command-slip::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0.18rem;
+  background: linear-gradient(180deg, rgba(121, 181, 187, 0.54), rgba(121, 181, 187, 0));
+  opacity: 0.6;
 }
 
 .command-slip:hover {
   transform: translateX(4px);
-  border-color: rgba(121, 181, 187, 0.42);
+  border-color: rgba(121, 181, 187, 0.48);
+  box-shadow: 0 0 0 1px rgba(121, 181, 187, 0.1), 0 18px 32px rgba(0, 0, 0, 0.32);
 }
 
 .command-slip.is-primary {
   border-color: rgba(209, 179, 116, 0.5);
-  box-shadow: 0 0 0 1px rgba(209, 179, 116, 0.12), 0 18px 34px rgba(0, 0, 0, 0.32);
+  box-shadow: 0 0 0 1px rgba(209, 179, 116, 0.16), 0 18px 34px rgba(0, 0, 0, 0.32), 0 0 18px rgba(209, 179, 116, 0.08);
+}
+
+.command-slip.is-primary::before {
+  background: linear-gradient(180deg, rgba(209, 179, 116, 0.86), rgba(209, 179, 116, 0));
+  opacity: 1;
 }
 
 .command-glyph {
@@ -674,7 +780,7 @@ label:focus-visible {
 .command-slip.is-primary .command-glyph {
   border-color: rgba(209, 179, 116, 0.54);
   color: var(--gold);
-  box-shadow: 0 0 20px rgba(209, 179, 116, 0.12);
+  box-shadow: 0 0 20px rgba(209, 179, 116, 0.18);
 }
 
 .command-copy {
@@ -684,6 +790,7 @@ label:focus-visible {
 
 .command-name {
   font-size: 0.96rem;
+  color: rgba(236, 220, 186, 0.96);
 }
 
 .command-meta {
@@ -726,6 +833,7 @@ label:focus-visible {
   gap: 0.48rem;
   width: 100%;
   padding: 0 0.1rem;
+  opacity: 0.92;
 }
 
 .gauge-label {
@@ -765,6 +873,7 @@ label:focus-visible {
 .move-card {
   min-height: 4.15rem;
   transform: rotate(-1.4deg);
+  box-shadow: 0 18px 30px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .move-stack .move-card:nth-child(2) {
@@ -844,6 +953,10 @@ label:focus-visible {
   box-shadow: 0 0 0 1px rgba(209, 179, 116, 0.12), 0 16px 30px rgba(0, 0, 0, 0.3);
 }
 
+.review-row:not(.is-active) {
+  opacity: 0.82;
+}
+
 .review-title {
   font-size: 0.86rem;
 }
@@ -865,6 +978,8 @@ label:focus-visible {
 .submenu-note {
   color: var(--text-soft);
   font-size: 0.44rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
 }
 
 .submenu-anchor.is-items-mode {
@@ -900,9 +1015,14 @@ label:focus-visible {
     bottom: 6.8rem;
   }
 
-  .enemy-readout {
+  .enemy-lockline {
+    right: 3.2rem;
+    width: min(15rem, 24vw);
+  }
+
+  .enemy-detail-box {
     right: 1.8rem;
-    width: min(17rem, 28vw);
+    width: min(10rem, 16vw);
   }
 }
 
@@ -942,10 +1062,16 @@ label:focus-visible {
     transform: scale(0.78);
   }
 
-  .enemy-readout {
+  .enemy-lockline {
+    right: 1.4rem;
+    top: 18.2rem;
+    width: min(14rem, calc(100vw - 3rem));
+  }
+
+  .enemy-detail-box {
     right: 1.2rem;
-    top: 18.8rem;
-    width: min(16rem, calc(100vw - 3rem));
+    top: 19.9rem;
+    width: min(11rem, calc(100vw - 3rem));
   }
 
   .local-ui-anchor,
@@ -993,11 +1119,18 @@ label:focus-visible {
     transform: scale(0.66);
   }
 
-  .enemy-readout {
-    top: 17.4rem;
-    right: 0.8rem;
-    left: 0.8rem;
+  .enemy-lockline {
+    top: 17.1rem;
+    right: 1rem;
+    left: 1rem;
     width: auto;
+  }
+
+  .enemy-detail-box {
+    top: 18.6rem;
+    right: 1rem;
+    left: auto;
+    width: 9.8rem;
   }
 
   .local-ui-anchor,
@@ -1018,5 +1151,18 @@ label:focus-visible {
     left: 0.8rem;
     right: 0.8rem;
     grid-template-columns: 1fr 1fr;
+  }
+}
+
+@keyframes defenderPulse {
+  0%,
+  100% {
+    opacity: 0.62;
+    transform: scale(0.96);
+  }
+
+  50% {
+    opacity: 0.92;
+    transform: scale(1.02);
   }
 }
