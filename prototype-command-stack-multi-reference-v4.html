@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>THREATGRID Command Stack Prototype V4</title>
+  <link rel="stylesheet" href="./prototype-command-stack-multi-reference-v4.css">
+</head>
+<body class="stack-prototype">
+  <main class="proto-shell">
+    <header class="proto-topbar">
+      <div>
+        <div class="proto-kicker">THREATGRID ARENA / STANDALONE PROTOTYPE V4</div>
+        <h1>Battlefield-Local Command Stack</h1>
+      </div>
+      <p class="proto-note">
+        This concept uses Expedition 33 for battlefield-first command placement, Baldur&rsquo;s Gate 3 for turn clarity,
+        Persona/Metaphor for hierarchy, and Hades/Elden Ring for restraint. The command layout is deliberately linear,
+        compact, and non-radial.
+      </p>
+    </header>
+
+    <section class="proto-stage-shell" aria-label="Command stack prototype">
+      <input type="radio" name="proto-state" id="tab-main" checked>
+      <input type="radio" name="proto-state" id="tab-attack">
+      <input type="radio" name="proto-state" id="tab-programs">
+      <input type="radio" name="proto-state" id="tab-items">
+
+      <div class="proto-tabs" role="tablist" aria-label="Prototype states">
+        <label for="tab-main" role="tab">Main Command</label>
+        <label for="tab-attack" role="tab">Attack</label>
+        <label for="tab-programs" role="tab">Programs</label>
+        <label for="tab-items" role="tab">Items</label>
+      </div>
+
+      <div class="proto-copy">
+        <div class="proto-copy-panel is-main">
+          <div class="copy-kicker">State 1</div>
+          <h2>Linear Command Stack</h2>
+          <p>
+            Four same-size command slips form one readable action stack near the acting Defender. Focus and the Tactical
+            Gauge stay nearby as quieter support controls.
+          </p>
+        </div>
+        <div class="proto-copy-panel is-attack">
+          <div class="copy-kicker">State 2</div>
+          <h2>Attack Move Selection</h2>
+          <p>
+            The main command stack quiets down while a clean move stack opens from the same local origin. BACK remains a
+            small prompt instead of a box.
+          </p>
+        </div>
+        <div class="proto-copy-panel is-programs">
+          <div class="copy-kicker">State 3</div>
+          <h2>Programs Review</h2>
+          <p>
+            Defender review appears as a compact list of equal rows. It stays close to the command origin and avoids
+            becoming a dashboard panel.
+          </p>
+        </div>
+        <div class="proto-copy-panel is-items">
+          <div class="copy-kicker">State 4</div>
+          <h2>Items Empty State</h2>
+          <p>
+            The no-items state reads like a tactical note with a clear BACK prompt. No oversized inventory shell
+            appears.
+          </p>
+        </div>
+      </div>
+
+      <section class="battlefield" aria-label="Prototype battlefield">
+        <div class="scene-grid" aria-hidden="true"></div>
+        <div class="scene-wash" aria-hidden="true"></div>
+        <div class="scene-haze is-gold" aria-hidden="true"></div>
+        <div class="scene-haze is-violet" aria-hidden="true"></div>
+
+        <div class="party-rail" aria-label="Party order">
+          <div class="party-mark is-active"><span class="party-dot"></span><span class="party-copy">HONEYPOT</span></div>
+          <div class="party-mark"><span class="party-dot"></span><span class="party-copy">ANTIVIRUS</span></div>
+          <div class="party-mark"><span class="party-dot"></span><span class="party-copy">FIREWALL-7</span></div>
+          <div class="party-mark"><span class="party-dot"></span><span class="party-copy">IDS</span></div>
+        </div>
+
+        <article class="status-card player-card">
+          <div class="status-row">
+            <span class="status-name">HONEYPOT</span>
+            <span class="status-level">LVL 1</span>
+          </div>
+          <div class="status-line">HP 96/96</div>
+          <div class="status-bar"><span class="status-fill is-hp" style="width:100%"></span></div>
+          <div class="status-line">XP 0/100</div>
+          <div class="status-bar"><span class="status-fill is-xp" style="width:0%"></span></div>
+        </article>
+
+        <div class="defender-figure" aria-hidden="true">
+          <div class="figure-ring"></div>
+          <div class="figure-shell"></div>
+          <div class="figure-core"></div>
+          <div class="figure-crown"></div>
+          <div class="figure-wing is-left"></div>
+          <div class="figure-wing is-right"></div>
+        </div>
+
+        <div class="enemy-figure" aria-hidden="true">
+          <div class="enemy-arm is-left"></div>
+          <div class="enemy-shell"></div>
+          <div class="enemy-eye"></div>
+          <div class="enemy-arm is-right"></div>
+        </div>
+
+        <article class="enemy-readout">
+          <div class="enemy-row">
+            <span class="enemy-name">HOSPITAL NETWORK LOCKOUT</span>
+            <span class="enemy-level">LVL 1</span>
+          </div>
+          <div class="enemy-hp-row"><span>HP</span><span>16/55</span></div>
+          <div class="enemy-bar"><span class="enemy-fill" style="width:29%"></span></div>
+          <div class="enemy-meta">INTENT: SWARM / WEAK TO: DEFENSE</div>
+        </article>
+
+        <aside class="party-tile-cluster">
+          <div class="party-tile">
+            <span class="tile-emblem is-firewall">FW</span>
+            <div class="tile-copy">
+              <div class="tile-name">FIREWALL-7</div>
+              <div class="tile-meta">130/130</div>
+            </div>
+          </div>
+          <div class="party-tile is-active">
+            <span class="tile-emblem is-honeypot">HP</span>
+            <div class="tile-copy">
+              <div class="tile-name">HONEYPOT</div>
+              <div class="tile-meta">96/96</div>
+            </div>
+          </div>
+          <div class="party-tile">
+            <span class="tile-emblem is-antivirus">AV</span>
+            <div class="tile-copy">
+              <div class="tile-name">ANTIVIRUS</div>
+              <div class="tile-meta">108/108</div>
+            </div>
+          </div>
+          <div class="party-tile">
+            <span class="tile-emblem is-ids">ID</span>
+            <div class="tile-copy">
+              <div class="tile-name">IDS</div>
+              <div class="tile-meta">92/92</div>
+            </div>
+          </div>
+        </aside>
+
+        <section class="proto-state proto-main" aria-label="Main command state">
+          <div class="local-ui-anchor">
+            <div class="command-stack">
+              <button class="command-slip is-primary" type="button">
+                <span class="command-glyph">A</span>
+                <span class="command-copy">
+                  <span class="command-name">ATTACK</span>
+                  <span class="command-meta">OPEN MOVES</span>
+                </span>
+              </button>
+              <button class="command-slip" type="button">
+                <span class="command-glyph">Y</span>
+                <span class="command-copy">
+                  <span class="command-name">PROGRAMS</span>
+                  <span class="command-meta">PARTY / STATUS</span>
+                </span>
+              </button>
+              <button class="command-slip" type="button">
+                <span class="command-glyph">X</span>
+                <span class="command-copy">
+                  <span class="command-name">ITEMS</span>
+                  <span class="command-meta">RECOVERY / CACHE</span>
+                </span>
+              </button>
+              <button class="command-slip" type="button">
+                <span class="command-glyph">B</span>
+                <span class="command-copy">
+                  <span class="command-name">RUN</span>
+                  <span class="command-meta">RETREAT / ABORT</span>
+                </span>
+              </button>
+            </div>
+            <div class="support-lane">
+              <button class="support-slip" type="button">
+                <span class="support-title">FOCUS</span>
+                <span class="support-copy">Recover Gauge / End Turn</span>
+              </button>
+              <div class="gauge-line">
+                <span class="gauge-label">TACTICAL GAUGE</span>
+                <div class="gauge-track"><span class="gauge-fill" style="width:71%"></span></div>
+                <strong class="gauge-value">71/100</strong>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="proto-state proto-attack" aria-label="Attack move state">
+          <div class="attack-anchor">
+            <div class="move-stack">
+              <article class="move-card">
+                <div class="move-title">LURE TRAFFIC</div>
+                <div class="move-meta">ILLUSION / SUPPORT / PWR 0 / 100% ACC / CHG 15/15</div>
+                <div class="move-note">NO TACTICAL GAUGE REQUIRED.</div>
+              </article>
+              <article class="move-card">
+                <div class="move-title">DECOY MESH</div>
+                <div class="move-meta">ILLUSION / SUPPORT / PWR 65 / 85% ACC / CHG 6/6</div>
+                <div class="move-note">REQUIRES 1 TACTICAL GAUGE.</div>
+              </article>
+              <article class="move-card is-blocked">
+                <div class="move-title">FALSE POSITIVE</div>
+                <div class="move-meta">SPECIAL / PWR 90 / 20% ACC / CHG 0/1</div>
+                <div class="move-note">NO CHARGES REMAINING.</div>
+              </article>
+            </div>
+            <div class="attack-support">
+              <button class="tiny-prompt" type="button">B BACK</button>
+              <button class="tiny-prompt" type="button">FOCUS</button>
+              <div class="tiny-gauge">TACTICAL GAUGE <strong>71/100</strong></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="proto-state proto-programs" aria-label="Programs state">
+          <div class="submenu-anchor">
+            <div class="submenu-stack">
+              <article class="review-row is-active">
+                <div class="review-title">HONEYPOT</div>
+                <div class="review-meta">HP 96/96 / LVL 1</div>
+                <div class="review-tag">ACTIVE DEFENDER</div>
+              </article>
+              <article class="review-row">
+                <div class="review-title">FIREWALL-7</div>
+                <div class="review-meta">HP 130/130 / LVL 3</div>
+              </article>
+              <article class="review-row">
+                <div class="review-title">ANTIVIRUS</div>
+                <div class="review-meta">HP 108/108 / LVL 1</div>
+              </article>
+              <article class="review-row">
+                <div class="review-title">IDS</div>
+                <div class="review-meta">HP 92/92 / LVL 1</div>
+              </article>
+            </div>
+            <div class="submenu-support">
+              <div class="submenu-note">SWITCHING COMING SOON.</div>
+              <button class="tiny-prompt" type="button">B BACK</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="proto-state proto-items" aria-label="Items state">
+          <div class="submenu-anchor is-items-mode">
+            <article class="item-note">
+              <div class="review-title">NO RECOVERY ITEMS AVAILABLE</div>
+              <div class="review-meta">CACHE DEPLETED. SUPPORT STOCK RETURNS IN FUTURE ENCOUNTERS.</div>
+            </article>
+            <button class="tiny-prompt" type="button">B BACK</button>
+          </div>
+        </section>
+      </section>
+    </section>
+  </main>
+</body>
+</html>
