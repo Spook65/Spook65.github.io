@@ -267,10 +267,10 @@ label:focus-visible {
 
 .action-lane-guide {
   position: absolute;
-  left: 20.8rem;
-  top: 23.4rem;
-  width: 24rem;
-  height: 16rem;
+  left: 18.2rem;
+  top: 22.6rem;
+  width: 28rem;
+  height: 18rem;
   border-radius: 50%;
   background:
     linear-gradient(120deg, rgba(121, 181, 187, 0.08), transparent 46%),
@@ -411,20 +411,70 @@ label:focus-visible {
   background: linear-gradient(90deg, #78cfd4, #7e75d6);
 }
 
-.defender-figure,
-.enemy-figure {
+.defender-formation,
+.enemy-formation {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.defender-node,
+.enemy-node {
   position: absolute;
   z-index: 2;
 }
 
-.defender-figure {
-  left: 4.6rem;
-  bottom: 7rem;
-  width: 13rem;
-  height: 16rem;
+.defender-node {
+  color: #79b5bb;
 }
 
-.defender-figure::after {
+.defender-node.is-active {
+  left: 8.2rem;
+  bottom: 6.8rem;
+  width: 11rem;
+  height: 13.8rem;
+  z-index: 3;
+}
+
+.defender-node.is-support {
+  opacity: 0.62;
+  filter: saturate(0.75) brightness(0.82);
+  transform: scale(0.72);
+}
+
+.defender-node.is-firewall {
+  left: 1.8rem;
+  bottom: 7.1rem;
+  width: 8.4rem;
+  height: 10.8rem;
+  color: #72d1eb;
+  transform-origin: bottom left;
+}
+
+.defender-node.is-ids {
+  left: 14.2rem;
+  bottom: 7.4rem;
+  width: 7.9rem;
+  height: 10rem;
+  color: #74d89f;
+  transform-origin: bottom left;
+}
+
+.defender-node.is-antivirus {
+  left: 18.3rem;
+  bottom: 9rem;
+  width: 8.5rem;
+  height: 10.8rem;
+  color: #de7a90;
+  transform-origin: bottom left;
+}
+
+.defender-node.is-honeypot {
+  color: #e0c669;
+}
+
+.defender-node.is-active::after {
   content: "";
   position: absolute;
   inset: 2.4rem 1.6rem 1.8rem;
@@ -448,7 +498,7 @@ label:focus-visible {
   bottom: 0;
   width: 7rem;
   height: 11.4rem;
-  background: linear-gradient(180deg, rgba(43, 49, 72, 0.96), rgba(8, 12, 18, 0.98));
+  background: linear-gradient(180deg, color-mix(in srgb, currentColor 20%, rgba(43, 49, 72, 0.96)), rgba(8, 12, 18, 0.98));
   clip-path: polygon(18% 7%, 82% 7%, 100% 35%, 88% 100%, 12% 100%, 0% 35%);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 22px 48px rgba(0, 0, 0, 0.42);
 }
@@ -460,8 +510,8 @@ label:focus-visible {
   width: 3rem;
   height: 5rem;
   border-radius: 999px;
-  background: radial-gradient(circle at 50% 35%, rgba(255, 255, 255, 0.95), rgba(136, 204, 224, 0.94) 32%, rgba(34, 61, 81, 0.96) 72%, rgba(10, 11, 14, 0.98) 100%);
-  box-shadow: 0 0 30px rgba(140, 208, 228, 0.24), 0 0 0 1px rgba(209, 179, 116, 0.28);
+  background: radial-gradient(circle at 50% 35%, rgba(255, 255, 255, 0.95), color-mix(in srgb, currentColor 72%, white 16%) 32%, rgba(34, 61, 81, 0.96) 72%, rgba(10, 11, 14, 0.98) 100%);
+  box-shadow: 0 0 30px color-mix(in srgb, currentColor 28%, transparent), 0 0 0 1px rgba(209, 179, 116, 0.2);
 }
 
 .figure-crown {
@@ -480,7 +530,7 @@ label:focus-visible {
   bottom: 3rem;
   width: 2.5rem;
   height: 5.8rem;
-  background: linear-gradient(180deg, rgba(94, 139, 167, 0.72), rgba(26, 38, 54, 0.9));
+  background: linear-gradient(180deg, color-mix(in srgb, currentColor 34%, rgba(94, 139, 167, 0.72)), rgba(26, 38, 54, 0.9));
   clip-path: polygon(14% 10%, 100% 0%, 86% 100%, 0% 78%);
   opacity: 0.84;
 }
@@ -494,11 +544,38 @@ label:focus-visible {
   right: 1rem;
 }
 
-.enemy-figure {
-  right: 8rem;
-  top: 7.9rem;
-  width: 14rem;
-  height: 15rem;
+.enemy-node {
+  color: #d9687c;
+}
+
+.enemy-node.is-active {
+  right: 10.6rem;
+  top: 8.8rem;
+  width: 11.6rem;
+  height: 12.8rem;
+  z-index: 3;
+}
+
+.enemy-node.is-support {
+  opacity: 0.46;
+  filter: saturate(0.72) brightness(0.8);
+  transform: scale(0.68);
+}
+
+.enemy-node.is-swarm-left {
+  right: 19rem;
+  top: 11.8rem;
+  width: 8.2rem;
+  height: 9.4rem;
+  transform-origin: top right;
+}
+
+.enemy-node.is-swarm-right {
+  right: 2.6rem;
+  top: 10.7rem;
+  width: 8.6rem;
+  height: 9.8rem;
+  transform-origin: top right;
 }
 
 .enemy-shell {
@@ -507,9 +584,9 @@ label:focus-visible {
   top: 2.5rem;
   width: 7rem;
   height: 10.5rem;
-  background: linear-gradient(180deg, rgba(44, 35, 62, 0.96), rgba(18, 10, 25, 0.98));
+  background: linear-gradient(180deg, color-mix(in srgb, currentColor 26%, rgba(44, 35, 62, 0.96)), rgba(18, 10, 25, 0.98));
   clip-path: polygon(20% 12%, 80% 12%, 100% 45%, 82% 100%, 18% 100%, 0% 45%);
-  box-shadow: 0 0 42px rgba(213, 71, 94, 0.24);
+  box-shadow: 0 0 42px color-mix(in srgb, currentColor 22%, transparent);
 }
 
 .enemy-eye {
@@ -519,8 +596,8 @@ label:focus-visible {
   width: 3.3rem;
   height: 5rem;
   border-radius: 999px;
-  background: radial-gradient(circle at 50% 35%, rgba(255, 255, 255, 0.95), rgba(255, 210, 238, 0.95) 26%, rgba(215, 102, 154, 0.9) 52%, rgba(54, 26, 70, 0.98) 100%);
-  box-shadow: 0 0 34px rgba(233, 95, 144, 0.36);
+  background: radial-gradient(circle at 50% 35%, rgba(255, 255, 255, 0.95), color-mix(in srgb, currentColor 34%, white 26%) 26%, color-mix(in srgb, currentColor 72%, rgba(215, 102, 154, 0.9)) 52%, rgba(54, 26, 70, 0.98) 100%);
+  box-shadow: 0 0 34px color-mix(in srgb, currentColor 34%, transparent);
 }
 
 .enemy-arm {
@@ -528,7 +605,7 @@ label:focus-visible {
   top: 2.5rem;
   width: 2.1rem;
   height: 5.2rem;
-  background: linear-gradient(180deg, rgba(156, 106, 210, 0.84), rgba(48, 33, 76, 0.96));
+  background: linear-gradient(180deg, color-mix(in srgb, currentColor 38%, rgba(156, 106, 210, 0.84)), rgba(48, 33, 76, 0.96));
   clip-path: polygon(18% 0%, 100% 8%, 82% 100%, 0% 82%);
   opacity: 0.9;
 }
@@ -545,8 +622,8 @@ label:focus-visible {
 .enemy-lockline {
   position: absolute;
   z-index: 4;
-  right: 4.8rem;
-  top: 20.2rem;
+  right: 7.8rem;
+  top: 18.2rem;
   width: min(17rem, 22vw);
 }
 
@@ -598,8 +675,8 @@ label:focus-visible {
 .enemy-detail-box {
   position: absolute;
   z-index: 4;
-  right: 2.6rem;
-  top: 22rem;
+  right: 4.3rem;
+  top: 20rem;
   display: grid;
   gap: 0.36rem;
   width: min(11rem, 15vw);
@@ -1143,17 +1220,43 @@ label:focus-visible {
     width: min(16rem, 36vw);
   }
 
-  .defender-figure {
-    left: 3.2rem;
-    bottom: 7.2rem;
-    transform: scale(0.92);
+  .defender-node.is-active {
+    left: 6.8rem;
+    bottom: 7rem;
+    transform: scale(0.9);
     transform-origin: bottom left;
   }
 
-  .enemy-figure {
-    right: 5.4rem;
-    transform: scale(0.9);
+  .defender-node.is-firewall {
+    left: 0.9rem;
+    bottom: 7rem;
+  }
+
+  .defender-node.is-ids {
+    left: 11.8rem;
+    bottom: 7.1rem;
+  }
+
+  .defender-node.is-antivirus {
+    left: 15.8rem;
+    bottom: 8.6rem;
+  }
+
+  .enemy-node.is-active {
+    right: 8.4rem;
+    top: 8.8rem;
+    transform: scale(0.92);
     transform-origin: top right;
+  }
+
+  .enemy-node.is-swarm-left {
+    right: 15.8rem;
+    top: 11.2rem;
+  }
+
+  .enemy-node.is-swarm-right {
+    right: 1rem;
+    top: 10.6rem;
   }
 
   .local-ui-anchor,
@@ -1198,16 +1301,48 @@ label:focus-visible {
     width: auto;
   }
 
-  .defender-figure {
-    left: 1rem;
-    bottom: 17rem;
-    transform: scale(0.84);
+  .defender-node.is-active {
+    left: 2.2rem;
+    bottom: 20.4rem;
+    transform: scale(0.8);
+    transform-origin: bottom left;
   }
 
-  .enemy-figure {
-    right: 1.2rem;
-    top: 8rem;
-    transform: scale(0.78);
+  .defender-node.is-firewall {
+    left: -0.2rem;
+    bottom: 20.1rem;
+    transform: scale(0.58);
+  }
+
+  .defender-node.is-ids {
+    left: 9rem;
+    bottom: 20.2rem;
+    transform: scale(0.58);
+  }
+
+  .defender-node.is-antivirus {
+    left: 12.8rem;
+    bottom: 21.8rem;
+    transform: scale(0.6);
+  }
+
+  .enemy-node.is-active {
+    right: 1.8rem;
+    top: 8.4rem;
+    transform: scale(0.76);
+    transform-origin: top right;
+  }
+
+  .enemy-node.is-swarm-left {
+    right: 9.4rem;
+    top: 10.9rem;
+    transform: scale(0.56);
+  }
+
+  .enemy-node.is-swarm-right {
+    right: -0.2rem;
+    top: 10.2rem;
+    transform: scale(0.58);
   }
 
   .enemy-lockline {
@@ -1256,16 +1391,48 @@ label:focus-visible {
     width: calc(100vw - 3rem);
   }
 
-  .defender-figure {
-    left: -0.2rem;
-    bottom: 18rem;
-    transform: scale(0.72);
+  .defender-node.is-active {
+    left: 0.8rem;
+    bottom: 21.6rem;
+    transform: scale(0.68);
+    transform-origin: bottom left;
   }
 
-  .enemy-figure {
-    right: -1rem;
-    top: 7.2rem;
-    transform: scale(0.66);
+  .defender-node.is-firewall {
+    left: -1.2rem;
+    bottom: 21.2rem;
+    transform: scale(0.48);
+  }
+
+  .defender-node.is-ids {
+    left: 6.3rem;
+    bottom: 21.1rem;
+    transform: scale(0.48);
+  }
+
+  .defender-node.is-antivirus {
+    left: 9.8rem;
+    bottom: 22.2rem;
+    transform: scale(0.5);
+  }
+
+  .enemy-node.is-active {
+    right: -0.4rem;
+    top: 7.6rem;
+    transform: scale(0.64);
+    transform-origin: top right;
+  }
+
+  .enemy-node.is-swarm-left {
+    right: 6rem;
+    top: 9.8rem;
+    transform: scale(0.46);
+  }
+
+  .enemy-node.is-swarm-right {
+    right: -2.4rem;
+    top: 9.6rem;
+    transform: scale(0.48);
   }
 
   .enemy-lockline {
