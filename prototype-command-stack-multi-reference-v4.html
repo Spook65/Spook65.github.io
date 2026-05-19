@@ -75,23 +75,34 @@
         <div class="scene-haze is-violet" aria-hidden="true"></div>
         <div class="action-lane-guide" aria-hidden="true"></div>
 
-        <div class="party-rail" aria-label="Party order">
-          <div class="party-mark is-active"><span class="party-dot"></span><span class="party-copy">HONEYPOT</span></div>
-          <div class="party-mark"><span class="party-dot"></span><span class="party-copy">ANTIVIRUS</span></div>
-          <div class="party-mark"><span class="party-dot"></span><span class="party-copy">FIREWALL-7</span></div>
-          <div class="party-mark"><span class="party-dot"></span><span class="party-copy">IDS</span></div>
-        </div>
-
-        <article class="status-card player-card">
-          <div class="status-row">
-            <span class="status-name">HONEYPOT</span>
-            <span class="status-level">LVL 1</span>
+        <div class="turn-queue" aria-label="Turn order queue">
+          <div class="turn-queue-kicker">TURN ORDER</div>
+          <div class="turn-chip is-active is-ally">
+            <span class="turn-dot"></span>
+            <span class="turn-name">HP</span>
+            <span class="turn-state">NOW</span>
           </div>
-          <div class="status-line">HP 96/96</div>
-          <div class="status-bar"><span class="status-fill is-hp" style="width:100%"></span></div>
-          <div class="status-line">XP 0/100</div>
-          <div class="status-bar"><span class="status-fill is-xp" style="width:0%"></span></div>
-        </article>
+          <div class="turn-chip is-enemy">
+            <span class="turn-dot"></span>
+            <span class="turn-name">LOCKOUT</span>
+          </div>
+          <div class="turn-chip is-ally">
+            <span class="turn-dot"></span>
+            <span class="turn-name">AV</span>
+          </div>
+          <div class="turn-chip is-ally">
+            <span class="turn-dot"></span>
+            <span class="turn-name">FW-7</span>
+          </div>
+          <div class="turn-chip is-enemy">
+            <span class="turn-dot"></span>
+            <span class="turn-name">SWARM</span>
+          </div>
+          <div class="turn-chip is-ally">
+            <span class="turn-dot"></span>
+            <span class="turn-name">IDS</span>
+          </div>
+        </div>
 
         <div class="defender-figure" aria-hidden="true">
           <div class="figure-ring"></div>
