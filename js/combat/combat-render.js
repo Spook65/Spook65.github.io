@@ -356,11 +356,24 @@ function buildReserveStripMarkup(state, activeProgramId) {
   return state.playerParty.map((program) => {
     const isActive = program.id === activeProgramId;
     const isTargeted = state.visualEffect && state.visualEffect.targetId === program.id && state.visualEffect.phase !== "recover";
+    const spriteKey = getProgramSpriteClass(program);
+    const hpPct = Math.max(0, Math.min(100, Math.round((program.hp / Math.max(1, program.maxHp)) * 100)));
 
     return `
-      <article class="combat-reserve-card ${isActive ? "is-active" : ""} ${program.hp <= 0 ? "is-down" : ""} ${isTargeted ? "is-targeted" : ""}" style="color: ${program.color};">
-        <div class="combat-reserve-name">${program.name}</div>
-        <div class="combat-reserve-meta">HP ${program.hp}/${program.maxHp}</div>
+      <article class="combat-reserve-card ${isActive ? "is-active" : ""} ${program.hp <= 0 ? "is-down" : ""} ${isTargeted ? "is-targeted" : ""}" style="--reserve-accent: ${program.color}; color: ${program.color};">
+        <span class="combat-reserve-emblem is-${spriteKey}" aria-hidden="true">
+          <span class="combat-reserve-mark">${getProgramMonogram(program)}</span>
+        </span>
+        <div class="combat-reserve-copy">
+          <div class="combat-reserve-head">
+            <div class="combat-reserve-name">${program.name}</div>
+            ${isActive ? '<div class="combat-reserve-active-dot" aria-label="Active defender"></div>' : ""}
+          </div>
+          <div class="combat-reserve-meta">HP ${program.hp}/${program.maxHp}</div>
+          <div class="combat-reserve-bar" aria-hidden="true">
+            <span class="combat-reserve-bar-fill ${isActive ? "is-active" : ""}" style="width:${hpPct}%"></span>
+          </div>
+        </div>
       </article>
     `;
   }).join("");
