@@ -8544,7 +8544,8 @@ body {
 .combat-stage-command-cluster {
   position: absolute;
   left: clamp(22%, 24vw, 28%);
-  top: clamp(54%, 58%, 62%);
+  /* Main command stack safe-zone anchor: keep above party HUD. */
+  top: clamp(46%, 50%, 55%);
   z-index: 4;
   width: min(15rem, 20vw);
   display: grid;
@@ -9449,7 +9450,7 @@ body {
 @media (max-width: 1160px) {
   .combat-stage-command-cluster {
     left: clamp(20%, 21vw, 25%);
-    top: clamp(56%, 60%, 64%);
+    top: clamp(48%, 52%, 57%);
     width: min(14.2rem, 24vw);
   }
 
@@ -9493,7 +9494,7 @@ body {
 @media (max-width: 920px) {
   .combat-stage-command-cluster {
     left: clamp(15%, 16vw, 20%);
-    top: clamp(58%, 61%, 66%);
+    top: clamp(50%, 54%, 59%);
     width: min(13.4rem, 33vw);
   }
 
@@ -9650,7 +9651,7 @@ body {
 @media (max-width: 700px) {
   .combat-stage-command-cluster {
     left: clamp(11%, 10vw, 14%);
-    top: clamp(62%, 66%, 71%);
+    top: clamp(54%, 58%, 63%);
     width: min(12.4rem, 48vw);
   }
 
