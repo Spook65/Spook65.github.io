@@ -8531,6 +8531,12 @@ body {
 }
 
 .combat-shell.is-attack-stage-active .combat-reserve-strip {
+  display: grid;
+  z-index: 6;
+}
+
+.combat-attack-party-rail,
+.combat-attack-party-status-cluster {
   display: none;
 }
 
@@ -8820,16 +8826,15 @@ body {
 }
 
 .combat-stage-command-slip.is-primary {
-  border-color: rgba(209, 179, 116, 0.5);
+  border-color: rgba(236, 220, 186, 0.2);
   box-shadow:
-    0 0 0 1px rgba(209, 179, 116, 0.16),
-    0 18px 34px rgba(0, 0, 0, 0.32),
-    0 0 18px rgba(209, 179, 116, 0.08);
+    0 16px 30px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .combat-stage-command-slip.is-primary::before {
-  background: linear-gradient(180deg, rgba(209, 179, 116, 0.86), rgba(209, 179, 116, 0));
-  opacity: 1;
+  background: linear-gradient(180deg, rgba(121, 181, 187, 0.54), rgba(121, 181, 187, 0));
+  opacity: 0.6;
 }
 
 .combat-stage-command-glyph {
@@ -8848,9 +8853,9 @@ body {
 }
 
 .combat-stage-command-slip.is-primary .combat-stage-command-glyph {
-  border-color: rgba(209, 179, 116, 0.54);
-  color: rgba(209, 179, 116, 0.96);
-  box-shadow: 0 0 20px rgba(209, 179, 116, 0.18);
+  border-color: rgba(236, 220, 186, 0.28);
+  color: rgba(231, 220, 198, 0.88);
+  box-shadow: none;
 }
 
 .combat-stage-command-body {
@@ -9105,19 +9110,28 @@ body {
 .combat-stage-command-focus:hover,
 .combat-stage-command-focus:focus-visible {
   transform: translateX(4px);
-  border-color: rgba(127, 183, 176, 0.42);
+  border-color: rgba(209, 179, 116, 0.72);
   box-shadow:
-    0 0 0 1px rgba(127, 183, 176, 0.1),
-    0 18px 32px rgba(0, 0, 0, 0.32);
+    0 0 0 1px rgba(209, 179, 116, 0.16),
+    0 18px 32px rgba(0, 0, 0, 0.32),
+    0 0 18px rgba(209, 179, 116, 0.1);
 }
 
-.combat-stage-command-slip.is-primary:hover,
-.combat-stage-command-slip.is-primary:focus-visible {
-  border-color: rgba(209, 179, 116, 0.76);
-  box-shadow:
-    0 0 0 1px rgba(209, 179, 116, 0.18),
-    0 18px 34px rgba(0, 0, 0, 0.34),
-    0 0 18px rgba(209, 179, 116, 0.12);
+.combat-stage-command-slip:hover::before,
+.combat-stage-command-slip:focus-visible::before,
+.combat-stage-command-focus:hover::before,
+.combat-stage-command-focus:focus-visible::before {
+  background: linear-gradient(180deg, rgba(209, 179, 116, 0.86), rgba(209, 179, 116, 0));
+  opacity: 1;
+}
+
+.combat-stage-command-slip:hover .combat-stage-command-glyph,
+.combat-stage-command-slip:focus-visible .combat-stage-command-glyph,
+.combat-stage-command-focus:hover .combat-stage-command-glyph,
+.combat-stage-command-focus:focus-visible .combat-stage-command-glyph {
+  border-color: rgba(209, 179, 116, 0.54);
+  color: rgba(209, 179, 116, 0.96);
+  box-shadow: 0 0 20px rgba(209, 179, 116, 0.16);
 }
 
 .combat-stage-feedback-toast {
