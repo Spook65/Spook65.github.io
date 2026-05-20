@@ -8762,6 +8762,16 @@ body {
   pointer-events: auto;
 }
 
+/* Local submenu safe-zone anchors: keep Programs above the party HUD and
+   keep Items tied to the command origin instead of floating too high. */
+.combat-stage-command-submenu.is-programs {
+  top: clamp(41%, 45%, 50%);
+}
+
+.combat-stage-command-submenu.is-items {
+  top: clamp(50%, 54%, 59%);
+}
+
 .combat-stage-command-submenu-header {
   display: grid;
   gap: 0.08rem;
@@ -9500,6 +9510,14 @@ body {
     width: min(14rem, 24vw);
   }
 
+  .combat-stage-command-submenu.is-programs {
+    top: clamp(43%, 47%, 52%);
+  }
+
+  .combat-stage-command-submenu.is-items {
+    top: clamp(52%, 56%, 60%);
+  }
+
   .combat-attack-enemy-readout {
     width: min(12.4rem, 18vw);
     top: clamp(0.9rem, 2vh, 1.3rem);
@@ -9575,6 +9593,14 @@ body {
     top: clamp(50%, 54%, 59%);
     width: min(12.8rem, 31vw);
     gap: 0.46rem;
+  }
+
+  .combat-stage-command-submenu.is-programs {
+    top: clamp(45%, 49%, 54%);
+  }
+
+  .combat-stage-command-submenu.is-items {
+    top: clamp(53%, 57%, 62%);
   }
 
   .combat-stage-feedback-toast {
@@ -9736,6 +9762,14 @@ body {
     top: clamp(54%, 58%, 63%);
     width: min(11.8rem, 46vw);
     gap: 0.38rem;
+  }
+
+  .combat-stage-command-submenu.is-programs {
+    top: clamp(48%, 52%, 57%);
+  }
+
+  .combat-stage-command-submenu.is-items {
+    top: clamp(56%, 60%, 65%);
   }
 
   .combat-stage-feedback-toast {
