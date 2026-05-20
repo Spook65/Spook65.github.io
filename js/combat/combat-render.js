@@ -911,28 +911,40 @@ function buildStageCommandClusterMarkup(state) {
 
   return `
     <div class="combat-stage-command-cluster" aria-label="Battlefield command cluster">
-      <button class="combat-action-button is-primary combat-stage-command-primary" type="button" data-combat-command="attack">
-        <span class="combat-stage-command-kicker">ATTACK</span>
-        <span class="combat-stage-command-copy">OPEN MOVES NEAR ${String(currentActor.ref.name || "DEFENDER").toUpperCase()}</span>
-      </button>
-      <div class="combat-stage-command-chip-row">
-        <button class="combat-action-button is-secondary combat-stage-command-chip" type="button" data-combat-command="programs">
-          <span class="combat-stage-command-chip-name">PROGRAMS</span>
-          <span class="combat-stage-command-chip-copy">PARTY</span>
+      <div class="combat-stage-command-stack">
+        <button class="combat-action-button is-primary combat-stage-command-slip is-primary" type="button" data-combat-command="attack">
+          <span class="combat-stage-command-glyph">A</span>
+          <span class="combat-stage-command-body">
+            <span class="combat-stage-command-name">ATTACK</span>
+            <span class="combat-stage-command-meta">OPEN MOVES</span>
+          </span>
         </button>
-        <button class="combat-action-button is-secondary combat-stage-command-chip" type="button" data-combat-command="items">
-          <span class="combat-stage-command-chip-name">ITEMS</span>
-          <span class="combat-stage-command-chip-copy">SUPPLIES</span>
+        <button class="combat-action-button is-secondary combat-stage-command-slip" type="button" data-combat-command="programs">
+          <span class="combat-stage-command-glyph">Y</span>
+          <span class="combat-stage-command-body">
+            <span class="combat-stage-command-name">PROGRAMS</span>
+            <span class="combat-stage-command-meta">PARTY / STATUS</span>
+          </span>
         </button>
-        <button class="combat-action-button is-secondary combat-stage-command-chip" type="button" data-combat-command="run">
-          <span class="combat-stage-command-chip-name">RUN</span>
-          <span class="combat-stage-command-chip-copy">FLEE</span>
+        <button class="combat-action-button is-secondary combat-stage-command-slip" type="button" data-combat-command="items">
+          <span class="combat-stage-command-glyph">X</span>
+          <span class="combat-stage-command-body">
+            <span class="combat-stage-command-name">ITEMS</span>
+            <span class="combat-stage-command-meta">RECOVERY / CACHE</span>
+          </span>
+        </button>
+        <button class="combat-action-button is-secondary combat-stage-command-slip" type="button" data-combat-command="run">
+          <span class="combat-stage-command-glyph">B</span>
+          <span class="combat-stage-command-body">
+            <span class="combat-stage-command-name">RUN</span>
+            <span class="combat-stage-command-meta">RETREAT / ABORT</span>
+          </span>
         </button>
       </div>
-      <div class="combat-stage-command-utility">
+      <div class="combat-stage-command-support">
         <button class="combat-action-button is-secondary combat-stage-command-focus" type="button" data-combat-command="focus">
-          <span class="combat-stage-command-chip-name">FOCUS</span>
-          <span class="combat-stage-command-chip-copy">RECOVER / END TURN</span>
+          <span class="combat-stage-command-focus-title">FOCUS</span>
+          <span class="combat-stage-command-focus-copy">RECOVER GAUGE / END TURN</span>
         </button>
         <div class="combat-stage-command-gauge" aria-label="Tactical Gauge">
           <div class="combat-stage-command-gauge-head">
