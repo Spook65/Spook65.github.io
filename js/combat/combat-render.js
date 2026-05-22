@@ -876,14 +876,6 @@ function buildAttackPartyStatusClusterMarkup(state) {
   `;
 }
 
-function buildAttackEnemyStatusPanelMarkup(state) {
-  if (!state || state.commandMode !== "attack" || !state.threat) {
-    return "";
-  }
-
-  return buildEnemyTargetReadoutMarkup(state, { attackMode: true });
-}
-
 function buildAttackStageOverlayMarkup(state) {
   const fanMarkup = buildAttackStageFanMarkup(state);
   console.log("[Attack Prototype] overlay markup inserted:", Boolean(fanMarkup));
@@ -893,7 +885,6 @@ function buildAttackStageOverlayMarkup(state) {
 
   return `
     <div class="combat-attack-overlay" aria-label="Attack battlefield overlay">
-      ${buildAttackEnemyStatusPanelMarkup(state)}
       <div class="combat-attack-cluster command-anchor">
         <div class="combat-attack-main">
           ${fanMarkup}
