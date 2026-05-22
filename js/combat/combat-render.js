@@ -94,6 +94,41 @@ function getActiveBattleProgram(state) {
   return state.playerParty.find((program) => program.hp > 0) || state.playerParty[0];
 }
 
+function buildEnemyTargetReadoutMarkup(state, options = {}) {
+  const threat = state?.threat;
+  if (!threat) {
+    return "";
+  }
+
+  const displayLevel = Number.isFinite(threat?.battleLevel) ? threat.battleLevel : threat.level;
+  const weaknessLabel = String(getActorCombatType(threat, true) || "UNKNOWN").toUpperCase();
+  const intentLabel = state.enemyIntent ? String(state.enemyIntent.label || "STRIKE").toUpperCase() : "";
+  const intentIcon = state.enemyIntent ? String(state.enemyIntent.iconLabel || state.enemyIntent.severity || "").toUpperCase() : "";
+  const statusMarkup = renderStatusPills(threat.statusEffects);
+  const readoutClasses = [
+    "combat-enemy-target-readout",
+    options.attackMode ? "combat-attack-enemy-readout combat-attack-hitbox is-attack-mode" : ""
+  ].filter(Boolean).join(" ");
+
+  return `
+    <div class="${readoutClasses}" aria-label="Target status">
+      <div class="combat-enemy-lockline">
+        <div class="combat-enemy-lockline-label">
+          <span class="combat-enemy-lock-name">${threat.title}</span>
+          <span class="combat-enemy-lock-hp">${threat.hp}/${threat.maxHp}</span>
+        </div>
+        ${renderBar(threat.hp, threat.maxHp, "is-hp")}
+      </div>
+      <div class="combat-enemy-detail-box">
+        <div class="combat-enemy-detail-line"><span>LVL</span><strong>${displayLevel}</strong></div>
+        <div class="combat-enemy-detail-line"><span>WEAK</span><strong>${weaknessLabel}</strong></div>
+        ${state.enemyIntent ? `<div class="combat-enemy-detail-line"><span>INTENT</span><strong>${intentLabel}${intentIcon ? ` / ${intentIcon}` : ""}</strong></div>` : ""}
+        ${statusMarkup ? `<div class="combat-enemy-detail-status">${statusMarkup}</div>` : ""}
+      </div>
+    </div>
+  `;
+}
+
 // buildTurnOrderMarkup() keeps the turn queue compact so it reads like a tactical preview instead of a table.
 function buildTurnOrderMarkup(state) {
   const previewCount = Math.min(3, state.turnOrder.length);
@@ -551,10 +586,8 @@ function buildProgramBenchMarkup(program, isCurrentTurn) {
 // buildThreatVisualMarkup() keeps the enemy side theatrical while still showing the threat's combat stats.
 function buildThreatVisualMarkup(state) {
   const threat = state.threat;
-  const statusMarkup = renderStatusPills(threat.statusEffects);
   const effect = state.visualEffect || {};
   const threatClass = `threat-${getThreatSpriteClass(threat)}`;
-  const displayLevel = Number.isFinite(threat?.battleLevel) ? threat.battleLevel : threat.level;
   const figureClass = [
     "combat-battler",
     "combat-battler-enemy",
@@ -573,20 +606,7 @@ function buildThreatVisualMarkup(state) {
           <div class="combat-damage-pop">-${effect.damage || 0}</div>
         ` : ""}
       </div>
-      <div class="combat-status-box combat-status-box-enemy">
-        <div class="combat-name-row">
-          <span class="combat-name">${threat.title}</span>
-          <span class="combat-lvl">LVL ${displayLevel}</span>
-        </div>
-        <div class="combat-subline">HP ${threat.hp}/${threat.maxHp}</div>
-        ${renderBar(threat.hp, threat.maxHp, "is-hp")}
-        <div class="combat-subline">WEAK TO: ${String(getActorCombatType(threat, true) || "UNKNOWN").toUpperCase()}</div>
-        ${state.enemyIntent ? `
-          <div class="combat-subline is-intent">INTENT: ${String(state.enemyIntent.label || "STRIKE").toUpperCase()}</div>
-          <div class="combat-subline is-intent-hint">${String(state.enemyIntent.iconLabel || state.enemyIntent.severity || "").toUpperCase()}</div>
-        ` : ""}
-        ${statusMarkup}
-      </div>
+      ${buildEnemyTargetReadoutMarkup(state)}
     </article>
   `;
 }
@@ -861,33 +881,7 @@ function buildAttackEnemyStatusPanelMarkup(state) {
     return "";
   }
 
-  const threat = state.threat;
-  const displayLevel = Number.isFinite(threat?.battleLevel) ? threat.battleLevel : threat.level;
-  const statusMarkup = renderStatusPills(threat.statusEffects);
-  const weaknessLabel = String(getActorCombatType(threat, true) || "UNKNOWN").toUpperCase();
-  const intentLabel = state.enemyIntent ? String(state.enemyIntent.label || "STRIKE").toUpperCase() : "";
-  const intentIcon = state.enemyIntent ? String(state.enemyIntent.iconLabel || state.enemyIntent.severity || "").toUpperCase() : "";
-
-  return `
-    <div class="combat-attack-enemy-readout combat-attack-hitbox" aria-label="Target status">
-      <div class="combat-attack-enemy-panel">
-        <div class="combat-name-row">
-          <span class="combat-name">${threat.title}</span>
-          <span class="combat-lvl">LVL ${displayLevel}</span>
-        </div>
-        <div class="combat-attack-enemy-hp-row">
-          <span class="combat-attack-enemy-hp-label">HP</span>
-          <span class="combat-attack-enemy-hp-value">${threat.hp}/${threat.maxHp}</span>
-        </div>
-        ${renderBar(threat.hp, threat.maxHp, "is-hp")}
-        ${statusMarkup}
-      </div>
-      <div class="combat-attack-enemy-meta">
-        <span class="combat-attack-enemy-meta-item">WEAK: ${weaknessLabel}</span>
-        ${state.enemyIntent ? `<span class="combat-attack-enemy-meta-item">INTENT: ${intentLabel}${intentIcon ? ` / ${intentIcon}` : ""}</span>` : ""}
-      </div>
-    </div>
-  `;
+  return buildEnemyTargetReadoutMarkup(state, { attackMode: true });
 }
 
 function buildAttackStageOverlayMarkup(state) {

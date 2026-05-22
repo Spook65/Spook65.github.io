@@ -8773,6 +8773,111 @@ body {
   pointer-events: none;
 }
 
+.combat-enemy-target-readout {
+  position: absolute;
+  top: clamp(0.85rem, 2vh, 1.25rem);
+  right: clamp(0.55rem, 1.2vw, 0.95rem);
+  z-index: 3;
+  width: min(12.8rem, 15vw);
+  display: grid;
+  gap: 0.26rem;
+  pointer-events: none;
+}
+
+.combat-enemy-lockline {
+  position: relative;
+  display: grid;
+  gap: 0.18rem;
+  padding-left: 0.58rem;
+}
+
+.combat-enemy-lockline::before {
+  content: "";
+  position: absolute;
+  inset: 0.04rem auto 0.04rem 0;
+  width: 2px;
+  background: linear-gradient(180deg, rgba(198, 111, 97, 0.82), rgba(198, 111, 97, 0.18));
+}
+
+.combat-enemy-lockline-label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.42rem;
+}
+
+.combat-enemy-lock-name {
+  color: rgba(236, 220, 186, 0.92);
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  min-width: 0;
+}
+
+.combat-enemy-lock-hp {
+  color: rgba(233, 188, 178, 0.78);
+  font-size: 0.42rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.combat-enemy-lockline .combat-bar {
+  height: 5px;
+  margin-top: 0;
+  border-color: rgba(184, 101, 89, 0.16);
+  background: rgba(45, 16, 18, 0.34);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.combat-enemy-lockline .combat-bar-fill.is-hp {
+  background: linear-gradient(90deg, rgba(221, 83, 99, 0.98), rgba(255, 142, 111, 0.92));
+  box-shadow: 0 0 12px rgba(221, 83, 99, 0.22);
+}
+
+.combat-enemy-detail-box {
+  margin-left: 0.58rem;
+  display: grid;
+  gap: 0.24rem;
+  width: fit-content;
+  max-width: 100%;
+  padding: 0.34rem 0.46rem;
+  border: 1px solid rgba(184, 101, 89, 0.12);
+  border-radius: 0.82rem;
+  background: linear-gradient(180deg, rgba(12, 10, 13, 0.22), rgba(7, 6, 9, 0.36));
+  box-shadow: none;
+  pointer-events: auto;
+}
+
+.combat-enemy-detail-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.56rem;
+  color: rgba(223, 189, 177, 0.76);
+  font-size: 0.38rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.combat-enemy-detail-line strong {
+  color: rgba(236, 220, 186, 0.88);
+  font-size: 0.42rem;
+}
+
+.combat-enemy-detail-status .status-pill-row {
+  gap: 0.18rem;
+  padding-top: 0.04rem;
+}
+
+.combat-enemy-detail-status .status-pill {
+  padding: 0.07rem 0.18rem;
+  font-size: 0.34rem;
+  letter-spacing: 0.12em;
+  opacity: 0.82;
+}
+
 .combat-stage-command-cluster {
   position: absolute;
   left: clamp(22%, 24vw, 28%);
@@ -9267,109 +9372,10 @@ body {
   top: clamp(0.9rem, 2.2vh, 1.45rem);
   right: clamp(0.7rem, 1.4vw, 1.1rem);
   z-index: 3;
-  width: min(13.5rem, 16vw);
-  display: grid;
-  gap: 0.28rem;
-}
-
-.combat-attack-enemy-panel {
-  position: relative;
-  width: 100%;
   width: min(12.8rem, 15vw);
   display: grid;
-  gap: 0.18rem;
-  padding: 0.34rem 0.46rem 0.38rem 0.62rem;
-  border: 0;
-  background: transparent;
-  box-shadow:
-    none;
-}
-
-.combat-attack-enemy-panel::before {
-  content: "";
-  position: absolute;
-  inset: 0.04rem auto 0.04rem 0;
-  width: 2px;
-  background: linear-gradient(180deg, rgba(198, 111, 97, 0.82), rgba(198, 111, 97, 0.18));
-}
-
-.combat-attack-enemy-panel::after {
-  content: "";
-  position: absolute;
-  left: 0.62rem;
-  right: 0.38rem;
-  top: 0.32rem;
-  height: 1px;
-  background: linear-gradient(90deg, rgba(198, 111, 97, 0.46), transparent);
-}
-
-.combat-attack-enemy-hp-row {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.32rem;
-}
-
-.combat-attack-enemy-hp-label,
-.combat-attack-enemy-hp-value {
-  color: rgba(231, 220, 198, 0.7);
-  font-size: 0.4rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-.combat-attack-enemy-panel .combat-name-row {
-  font-size: 0.56rem;
-  gap: 0.45rem;
-  align-items: baseline;
-  padding-top: 0.06rem;
-}
-
-.combat-attack-enemy-panel .combat-lvl {
-  color: rgba(231, 220, 198, 0.74);
-  font-size: 0.4rem;
-  letter-spacing: 0.12em;
-}
-
-.combat-attack-enemy-panel .combat-bar {
-  height: 5px;
-  margin-top: 0.04rem;
-}
-
-.combat-attack-enemy-panel .combat-name {
-  max-width: 9.25rem;
-  font-size: 0.6rem;
-  letter-spacing: 0.12em;
-}
-
-.combat-attack-enemy-panel .combat-lvl {
-  font-size: 0.4rem;
-  opacity: 0.82;
-}
-
-.combat-attack-enemy-panel .status-pill-row {
-  gap: 0.22rem;
-  padding-top: 0.08rem;
-}
-
-.combat-attack-enemy-panel .status-pill {
-  padding: 0.08rem 0.2rem;
-  font-size: 0.38rem;
-  letter-spacing: 0.12em;
-}
-
-.combat-attack-enemy-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.24rem 0.5rem;
-  padding-left: 0.62rem;
-}
-
-.combat-attack-enemy-meta-item {
-  color: rgba(231, 220, 198, 0.64);
-  font-size: 0.38rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  gap: 0.28rem;
+  pointer-events: auto;
 }
 
 .combat-attack-party-status-cluster {
