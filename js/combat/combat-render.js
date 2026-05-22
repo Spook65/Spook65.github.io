@@ -899,7 +899,6 @@ function buildAttackStageOverlayMarkup(state) {
 
   return `
     <div class="combat-attack-overlay" aria-label="Attack battlefield overlay">
-      ${buildAttackPartyRailMarkup(state)}
       ${buildAttackEnemyStatusPanelMarkup(state)}
       <div class="combat-attack-cluster command-anchor">
         <div class="combat-attack-main">
@@ -907,7 +906,6 @@ function buildAttackStageOverlayMarkup(state) {
           ${buildAttackStageUtilityMarkup(state)}
         </div>
       </div>
-      ${buildAttackPartyStatusClusterMarkup(state)}
     </div>
   `;
 }
