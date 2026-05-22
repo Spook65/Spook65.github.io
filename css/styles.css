@@ -10235,3 +10235,131 @@ body {
     grid-area: detail;
   }
 }
+
+/* Milestone 5 correction: use the live staging pockets that actually affect
+   visible spacing instead of broad end-of-file overrides. */
+.combat-stage {
+  min-height: clamp(620px, 74vh, 900px);
+}
+
+.combat-stage-player {
+  left: 1%;
+  bottom: 9%;
+  width: min(39vw, 520px);
+}
+
+.combat-stage-enemy {
+  top: 6%;
+  right: 2.5%;
+  width: min(33vw, 450px);
+}
+
+.combat-battler-player .combat-battler-sprite-wrap {
+  min-height: 320px;
+}
+
+.combat-battler-enemy .combat-battler-sprite-wrap {
+  min-height: 285px;
+}
+
+.combat-stage-player .battle-sprite {
+  transform: scaleX(-1) translateY(-10px) scale(0.92);
+  transform-origin: left bottom;
+}
+
+.combat-stage-enemy .battle-sprite {
+  transform: scale(0.92);
+  transform-origin: right center;
+}
+
+.combat-stage-command-cluster,
+.combat-stage-command-submenu {
+  left: clamp(28%, 30vw, 34%);
+  top: clamp(42%, 46%, 50%);
+}
+
+.combat-stage-command-submenu.is-programs {
+  top: clamp(38%, 42%, 47%);
+}
+
+.combat-stage-command-submenu.is-items {
+  top: clamp(48%, 52%, 57%);
+}
+
+.combat-stage-feedback-toast {
+  left: clamp(29%, 31vw, 35%);
+  top: clamp(54%, 58%, 62%);
+}
+
+.combat-attack-cluster.command-anchor {
+  left: clamp(30%, 32vw, 36%);
+  top: clamp(29%, 33%, 37%);
+  width: min(17rem, 21vw);
+}
+
+@media (max-width: 1160px) {
+  .combat-stage-player {
+    width: min(41vw, 520px);
+  }
+
+  .combat-stage-enemy {
+    width: min(34vw, 450px);
+  }
+
+  .combat-stage-command-cluster,
+  .combat-stage-command-submenu {
+    left: clamp(25%, 27vw, 31%);
+    top: clamp(44%, 48%, 53%);
+  }
+
+  .combat-stage-command-submenu.is-programs {
+    top: clamp(40%, 44%, 49%);
+  }
+
+  .combat-stage-command-submenu.is-items {
+    top: clamp(49%, 53%, 58%);
+  }
+
+  .combat-attack-cluster.command-anchor {
+    left: clamp(27%, 29vw, 33%);
+    top: clamp(28%, 32%, 36%);
+    width: min(15.8rem, 23vw);
+  }
+}
+
+@media (max-width: 920px) {
+  .combat-stage-player {
+    left: 0%;
+    width: min(44vw, 500px);
+  }
+
+  .combat-stage-enemy {
+    right: 2%;
+    width: min(36vw, 420px);
+  }
+
+  .combat-stage-command-cluster,
+  .combat-stage-command-submenu {
+    left: clamp(20%, 22vw, 26%);
+    top: clamp(46%, 50%, 55%);
+  }
+
+  .combat-stage-command-submenu.is-programs {
+    top: clamp(42%, 46%, 51%);
+  }
+
+  .combat-stage-command-submenu.is-items {
+    top: clamp(50%, 54%, 59%);
+  }
+
+  .combat-stage-feedback-toast {
+    left: clamp(21%, 23vw, 27%);
+    top: clamp(56%, 60%, 64%);
+  }
+
+  .combat-attack-cluster.command-anchor {
+    left: clamp(22%, 24vw, 28%);
+    top: clamp(24%, 28%, 32%);
+    width: min(13.4rem, 28vw);
+  }
+}
