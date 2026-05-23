@@ -10305,6 +10305,54 @@ body {
   z-index: 1;
 }
 
+.combat-stage-support-lane {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.combat-support-battler {
+  position: absolute;
+  display: grid;
+  align-items: end;
+  opacity: 0.34;
+  filter: saturate(0.72) brightness(0.84);
+  transform-origin: left bottom;
+  animation: battle-idle-player 1.6s ease-in-out infinite;
+}
+
+.combat-stage-support-lane .combat-battler-sprite-wrap {
+  min-height: 224px;
+  display: grid;
+  justify-items: start;
+  align-items: end;
+}
+
+.combat-stage-support-lane .battle-sprite {
+  width: clamp(150px, 13vw, 210px);
+  height: clamp(168px, 14vw, 236px);
+  transform: scaleX(-1) translateY(0);
+  filter: drop-shadow(0 0 14px rgba(121, 181, 187, 0.08));
+}
+
+.combat-support-battler.is-slot-1 {
+  left: -0.2rem;
+  bottom: 6.6rem;
+}
+
+.combat-support-battler.is-slot-2 {
+  left: 8.2rem;
+  bottom: 11.2rem;
+  opacity: 0.28;
+}
+
+.combat-support-battler.is-slot-3 {
+  left: 2.4rem;
+  bottom: 0.2rem;
+  opacity: 0.26;
+}
+
 .combat-battler-player .combat-battler-sprite-wrap {
   min-height: 340px;
 }
@@ -10392,6 +10440,21 @@ body {
 
   .combat-stage-command-submenu.is-items {
     top: clamp(50%, 54%, 59%);
+  }
+
+  .combat-support-battler.is-slot-1 {
+    left: -1.1rem;
+    bottom: 6rem;
+  }
+
+  .combat-support-battler.is-slot-2 {
+    left: 6.2rem;
+    bottom: 10.2rem;
+  }
+
+  .combat-support-battler.is-slot-3 {
+    left: 1.2rem;
+    bottom: -0.2rem;
   }
 
   .combat-stage-feedback-toast {

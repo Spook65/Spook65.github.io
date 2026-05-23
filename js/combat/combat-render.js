@@ -570,6 +570,35 @@ function buildProgramBattlefieldMarkup(program, state, isCurrentTurn) {
   `;
 }
 
+// buildSupportFormationMarkup() renders subdued background Defenders from the
+// existing party data so the battlefield reads like a formation without
+// changing any targeting or turn behavior.
+function buildSupportFormationMarkup(state, activeProgramId) {
+  if (!state || !Array.isArray(state.playerParty)) {
+    return "";
+  }
+
+  const supportPrograms = state.playerParty
+    .filter((program) => program && program.id !== activeProgramId && program.hp > 0)
+    .slice(0, 3);
+
+  if (!supportPrograms.length) {
+    return "";
+  }
+
+  return `
+    <div class="combat-stage-support-lane" aria-hidden="true">
+      ${supportPrograms.map((program, index) => `
+        <article class="combat-support-battler is-slot-${index + 1} program-${getProgramSpriteClass(program)}" style="color: ${program.color};">
+          <div class="combat-battler-sprite-wrap">
+            ${renderCombatantSprite(program, "program")}
+          </div>
+        </article>
+      `).join("")}
+    </div>
+  `;
+}
+
 // buildProgramBenchMarkup() shows the rest of the party as smaller cards so the active fighter stays readable.
 function buildProgramBenchMarkup(program, isCurrentTurn) {
   const statusMarkup = renderStatusPills(program.statusEffects);
@@ -1298,6 +1327,7 @@ function buildCombatMarkup(state) {
           ${buildThreatVisualMarkup(state)}
         </div>
         <div class="combat-stage-player">
+          ${buildSupportFormationMarkup(state, currentProgram.id)}
           ${buildProgramBattlefieldMarkup(currentProgram, state, state.activeProgramId === currentProgram.id)}
         </div>
         ${attackStageOverlayMarkup}
