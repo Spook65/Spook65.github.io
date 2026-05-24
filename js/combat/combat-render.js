@@ -1323,11 +1323,11 @@ function buildCombatMarkup(state) {
         ${state.visualEffect && state.visualEffect.style === "buff" ? `
           <div class="combat-aura ${state.visualEffect.attackerKind === "program" ? "from-player" : "from-enemy"} ${state.visualEffect.phase === "impact" ? "is-impact" : ""}"></div>
         ` : ""}
+        ${buildSupportFormationMarkup(state, currentProgram.id)}
         <div class="combat-stage-enemy">
           ${buildThreatVisualMarkup(state)}
         </div>
         <div class="combat-stage-player">
-          ${buildSupportFormationMarkup(state, currentProgram.id)}
           ${buildProgramBattlefieldMarkup(currentProgram, state, state.activeProgramId === currentProgram.id)}
         </div>
         ${attackStageOverlayMarkup}
