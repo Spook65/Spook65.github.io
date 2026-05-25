@@ -529,9 +529,28 @@ function renderThreatCombatantDetails(spriteKey) {
   }
 }
 
-// buildProgramBattlefieldMarkup() renders the active program as the foreground fighter on the left side.
-function buildProgramBattlefieldMarkup(program, state, isCurrentTurn) {
+function buildProgramStatusPanelMarkup(program) {
   const statusMarkup = renderStatusPills(program.statusEffects);
+
+  return `
+    <div class="combat-status-box combat-status-box-player">
+      <div class="combat-name-row">
+        <span class="combat-name">${program.name}</span>
+        <span class="combat-lvl">LVL ${program.level}</span>
+      </div>
+      <div class="combat-subline">HP ${program.hp}/${program.maxHp}</div>
+      ${renderBar(program.hp, program.maxHp, "is-hp")}
+      <div class="combat-subline">XP ${program.xp}/${program.level * 100}</div>
+      ${renderBar(program.xp, program.level * 100, "is-xp")}
+      ${statusMarkup}
+    </div>
+  `;
+}
+
+// buildProgramBattlefieldMarkup() renders a Defender battler while letting the
+// caller decide whether that battler should also carry the status slab.
+function buildProgramBattlefieldMarkup(program, state, isCurrentTurn, options = {}) {
+  const { showStatusBox = false, extraClasses = "" } = options;
   const effect = state.visualEffect || {};
   const programClass = `program-${getProgramSpriteClass(program)}`;
   const introClass = state.battleIntroPlaying ? `is-summoning is-stage-${state.battleIntroStage || "operator"}` : "";
@@ -540,6 +559,7 @@ function buildProgramBattlefieldMarkup(program, state, isCurrentTurn) {
     "combat-battler-player",
     programClass,
     introClass,
+    extraClasses,
     isCurrentTurn ? "is-current" : "",
     effect.attackerKind === "program" && effect.attackerId === program.id ? `is-${effect.phase || "windup"}` : "",
     effect.targetKind === "program" && effect.targetId === program.id ? "is-hit" : "",
@@ -548,17 +568,7 @@ function buildProgramBattlefieldMarkup(program, state, isCurrentTurn) {
 
   return `
     <article class="${figureClass}" style="color: ${program.color};">
-      <div class="combat-status-box combat-status-box-player">
-        <div class="combat-name-row">
-          <span class="combat-name">${program.name}</span>
-          <span class="combat-lvl">LVL ${program.level}</span>
-        </div>
-        <div class="combat-subline">HP ${program.hp}/${program.maxHp}</div>
-        ${renderBar(program.hp, program.maxHp, "is-hp")}
-        <div class="combat-subline">XP ${program.xp}/${program.level * 100}</div>
-        ${renderBar(program.xp, program.level * 100, "is-xp")}
-        ${statusMarkup}
-      </div>
+      ${showStatusBox ? buildProgramStatusPanelMarkup(program) : ""}
       <div class="combat-battler-sprite-wrap">
         ${renderCombatantSprite(program, "program")}
         ${effect.phase === "impact" && effect.targetKind === "program" && effect.targetId === program.id ? `
@@ -570,31 +580,38 @@ function buildProgramBattlefieldMarkup(program, state, isCurrentTurn) {
   `;
 }
 
-// buildSupportFormationMarkup() renders subdued background Defenders from the
-// existing party data so the battlefield reads like a formation without
-// changing any targeting or turn behavior.
-function buildSupportFormationMarkup(state, activeProgramId) {
+// buildAllyFormationMarkup() keeps every living Defender in a stable slot so the
+// active actor is emphasized in-place instead of being promoted to a separate hero layer.
+function buildAllyFormationMarkup(state, activeProgramId) {
   if (!state || !Array.isArray(state.playerParty)) {
     return "";
   }
 
-  const supportPrograms = state.playerParty
-    .filter((program) => program && program.id !== activeProgramId && program.hp > 0)
-    .slice(0, 3);
+  const activeProgram = state.playerParty.find((program) => program && program.id === activeProgramId && program.hp > 0)
+    || state.playerParty.find((program) => program && program.hp > 0)
+    || null;
 
-  if (!supportPrograms.length) {
+  const livingPrograms = state.playerParty
+    .map((program, index) => ({ program, slot: index + 1 }))
+    .filter(({ program }) => program && program.hp > 0)
+    .slice(0, 4);
+
+  if (!livingPrograms.length) {
     return "";
   }
 
   return `
-    <div class="combat-stage-support-lane" aria-hidden="true">
-      ${supportPrograms.map((program, index) => `
-        <article class="combat-support-battler is-slot-${index + 1} program-${getProgramSpriteClass(program)}" style="color: ${program.color};">
-          <div class="combat-battler-sprite-wrap">
-            ${renderCombatantSprite(program, "program")}
-          </div>
-        </article>
-      `).join("")}
+    ${activeProgram ? `<div class="combat-stage-player-status">${buildProgramStatusPanelMarkup(activeProgram)}</div>` : ""}
+    <div class="combat-ally-formation" aria-hidden="true">
+      ${livingPrograms.map(({ program, slot }) => buildProgramBattlefieldMarkup(
+        program,
+        state,
+        activeProgramId === program.id,
+        {
+          extraClasses: `combat-ally-battler is-slot-${slot} ${activeProgramId === program.id ? "is-active" : "is-support"}`,
+          showStatusBox: false
+        }
+      )).join("")}
     </div>
   `;
 }
@@ -1323,12 +1340,9 @@ function buildCombatMarkup(state) {
         ${state.visualEffect && state.visualEffect.style === "buff" ? `
           <div class="combat-aura ${state.visualEffect.attackerKind === "program" ? "from-player" : "from-enemy"} ${state.visualEffect.phase === "impact" ? "is-impact" : ""}"></div>
         ` : ""}
-        ${buildSupportFormationMarkup(state, currentProgram.id)}
+        ${buildAllyFormationMarkup(state, currentProgram.id)}
         <div class="combat-stage-enemy">
           ${buildThreatVisualMarkup(state)}
-        </div>
-        <div class="combat-stage-player">
-          ${buildProgramBattlefieldMarkup(currentProgram, state, state.activeProgramId === currentProgram.id)}
         </div>
         ${attackStageOverlayMarkup}
         ${stageCommandClusterMarkup}
