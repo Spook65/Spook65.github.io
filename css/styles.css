@@ -10284,6 +10284,7 @@ body {
   left: 2%;
   bottom: 8%;
   width: min(42vw, 560px);
+  z-index: 2;
 }
 
 .combat-stage-enemy {
@@ -10309,9 +10310,9 @@ body {
   position: absolute;
   left: clamp(0.6rem, 1.4vw, 1.2rem);
   bottom: clamp(2rem, 4vh, 3.2rem);
-  width: min(21rem, 29vw);
-  height: min(26rem, 54vh);
-  z-index: 2;
+  width: min(24rem, 33vw);
+  height: min(27rem, 56vh);
+  z-index: 1;
   pointer-events: none;
 }
 
@@ -10319,41 +10320,41 @@ body {
   position: absolute;
   display: grid;
   align-items: end;
-  opacity: 0.3;
-  filter: saturate(0.68) brightness(0.8);
+  opacity: 0.42;
+  filter: saturate(0.78) brightness(0.88);
   transform-origin: left bottom;
   animation: battle-idle-player 1.6s ease-in-out infinite;
 }
 
 .combat-stage-support-lane .combat-battler-sprite-wrap {
-  min-height: 224px;
+  min-height: 200px;
   display: grid;
   justify-items: start;
   align-items: end;
 }
 
 .combat-stage-support-lane .battle-sprite {
-  width: clamp(150px, 13vw, 210px);
-  height: clamp(168px, 14vw, 236px);
+  width: clamp(126px, 10.5vw, 176px);
+  height: clamp(142px, 11.8vw, 198px);
   transform: scaleX(-1) translateY(0);
   filter: drop-shadow(0 0 12px rgba(121, 181, 187, 0.06));
 }
 
 .combat-support-battler.is-slot-1 {
-  left: 0;
-  bottom: 11.8rem;
+  left: 0.2rem;
+  bottom: 11rem;
 }
 
 .combat-support-battler.is-slot-2 {
-  left: 10.4rem;
+  left: 7.8rem;
   bottom: 15rem;
-  opacity: 0.26;
+  opacity: 0.38;
 }
 
 .combat-support-battler.is-slot-3 {
-  left: -0.8rem;
-  bottom: 0.8rem;
-  opacity: 0.24;
+  left: 16rem;
+  bottom: 6.4rem;
+  opacity: 0.36;
 }
 
 .combat-battler-player .combat-battler-sprite-wrap {
@@ -10445,19 +10446,24 @@ body {
     top: clamp(50%, 54%, 59%);
   }
 
+  .combat-stage-support-lane {
+    width: min(21rem, 37vw);
+    height: min(24rem, 52vh);
+  }
+
   .combat-support-battler.is-slot-1 {
-    left: -0.2rem;
-    bottom: 10.6rem;
+    left: 0rem;
+    bottom: 9.8rem;
   }
 
   .combat-support-battler.is-slot-2 {
-    left: 7.8rem;
-    bottom: 13.4rem;
+    left: 5.8rem;
+    bottom: 13.2rem;
   }
 
   .combat-support-battler.is-slot-3 {
-    left: -1rem;
-    bottom: 0.6rem;
+    left: 11.8rem;
+    bottom: 5.6rem;
   }
 
   .combat-stage-feedback-toast {
