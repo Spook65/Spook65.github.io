@@ -267,8 +267,8 @@ label:focus-visible {
 
 .action-lane-guide {
   position: absolute;
-  left: 38.2rem;
-  top: 18.2rem;
+  left: 36.8rem;
+  top: 17.9rem;
   width: 21.8rem;
   height: 15rem;
   border-radius: 50%;
@@ -431,7 +431,7 @@ label:focus-visible {
 
 .defender-node.is-active {
   left: 10.8rem;
-  bottom: 5.8rem;
+  bottom: 6.2rem;
   width: 9.8rem;
   height: 12.1rem;
   z-index: 3;
@@ -440,13 +440,13 @@ label:focus-visible {
 }
 
 .defender-node.is-support {
-  opacity: 0.7;
-  filter: saturate(0.82) brightness(0.88);
+  opacity: 0.76;
+  filter: saturate(0.86) brightness(0.92);
 }
 
 .defender-node.is-firewall {
   left: 0.8rem;
-  bottom: 11.8rem;
+  bottom: 12.2rem;
   width: 8.4rem;
   height: 10.8rem;
   color: #72d1eb;
@@ -456,7 +456,7 @@ label:focus-visible {
 
 .defender-node.is-ids {
   left: 20.2rem;
-  bottom: 12.4rem;
+  bottom: 12.9rem;
   width: 7.9rem;
   height: 10rem;
   color: #74d89f;
@@ -466,7 +466,7 @@ label:focus-visible {
 
 .defender-node.is-antivirus {
   left: 28.8rem;
-  bottom: 8.6rem;
+  bottom: 9.1rem;
   width: 8.5rem;
   height: 10.8rem;
   color: #de7a90;
@@ -933,7 +933,7 @@ label:focus-visible {
 .submenu-anchor {
   position: absolute;
   z-index: 5;
-  left: 40.8rem;
+  left: 38.7rem;
   bottom: 9.8rem;
 }
 
@@ -1229,24 +1229,24 @@ label:focus-visible {
 
   .defender-node.is-active {
     left: 8.6rem;
-    bottom: 6.3rem;
+    bottom: 6.7rem;
     transform: scale(0.62);
     transform-origin: bottom left;
   }
 
   .defender-node.is-firewall {
     left: 0.2rem;
-    bottom: 11.2rem;
+    bottom: 11.6rem;
   }
 
   .defender-node.is-ids {
     left: 16.2rem;
-    bottom: 11.3rem;
+    bottom: 11.8rem;
   }
 
   .defender-node.is-antivirus {
     left: 23.4rem;
-    bottom: 8.2rem;
+    bottom: 8.7rem;
   }
 
   .enemy-node.is-active {
@@ -1271,7 +1271,7 @@ label:focus-visible {
   .local-ui-anchor,
   .attack-anchor,
   .submenu-anchor {
-    left: 33.4rem;
+    left: 31.8rem;
     bottom: 9rem;
   }
 
@@ -1312,26 +1312,26 @@ label:focus-visible {
 
   .defender-node.is-active {
     left: 4.8rem;
-    bottom: 20.4rem;
+    bottom: 20.8rem;
     transform: scale(0.56);
     transform-origin: bottom left;
   }
 
   .defender-node.is-firewall {
     left: 0rem;
-    bottom: 24rem;
+    bottom: 24.4rem;
     transform: scale(0.46);
   }
 
   .defender-node.is-ids {
     left: 11.8rem;
-    bottom: 23rem;
+    bottom: 23.5rem;
     transform: scale(0.46);
   }
 
   .defender-node.is-antivirus {
     left: 17.2rem;
-    bottom: 19.8rem;
+    bottom: 20.3rem;
     transform: scale(0.44);
   }
 
@@ -1369,7 +1369,7 @@ label:focus-visible {
   .local-ui-anchor,
   .attack-anchor,
   .submenu-anchor {
-    left: 27.4rem;
+    left: 25.8rem;
     bottom: 11rem;
     width: min(15.6rem, calc(100vw - 4rem));
   }
@@ -1402,26 +1402,26 @@ label:focus-visible {
 
   .defender-node.is-active {
     left: 3.2rem;
-    bottom: 22.4rem;
+    bottom: 22.8rem;
     transform: scale(0.5);
     transform-origin: bottom left;
   }
 
   .defender-node.is-firewall {
     left: 0rem;
-    bottom: 26rem;
+    bottom: 26.4rem;
     transform: scale(0.42);
   }
 
   .defender-node.is-ids {
     left: 9.6rem;
-    bottom: 24.5rem;
+    bottom: 24.9rem;
     transform: scale(0.4);
   }
 
   .defender-node.is-antivirus {
     left: 14rem;
-    bottom: 20.7rem;
+    bottom: 21.1rem;
     transform: scale(0.39);
   }
 
@@ -1461,7 +1461,7 @@ label:focus-visible {
   .local-ui-anchor,
   .attack-anchor,
   .submenu-anchor {
-    left: 20.8rem;
+    left: 19.4rem;
     right: 1.1rem;
     width: auto;
     bottom: 10.8rem;
