@@ -10286,19 +10286,6 @@ body {
   width: min(31vw, 430px);
 }
 
-.combat-stage-player-status {
-  position: absolute;
-  left: clamp(1rem, 1.8vw, 1.8rem);
-  top: clamp(11.6rem, 18vh, 13.4rem);
-  width: min(18rem, 31vw);
-  z-index: 4;
-  pointer-events: none;
-}
-
-.combat-stage-player-status .combat-status-box-player {
-  width: 100%;
-}
-
 .combat-stage-enemy::before,
 .combat-stage-enemy::after {
   z-index: 0;
@@ -10448,10 +10435,6 @@ body {
   .combat-stage-enemy {
     right: 2%;
     width: min(34vw, 390px);
-  }
-
-  .combat-stage-player-status {
-    width: min(16rem, 34vw);
   }
 
   .combat-stage-command-cluster,

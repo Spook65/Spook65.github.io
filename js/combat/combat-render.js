@@ -587,10 +587,6 @@ function buildAllyFormationMarkup(state, activeProgramId) {
     return "";
   }
 
-  const activeProgram = state.playerParty.find((program) => program && program.id === activeProgramId && program.hp > 0)
-    || state.playerParty.find((program) => program && program.hp > 0)
-    || null;
-
   const livingPrograms = state.playerParty
     .map((program, index) => ({ program, slot: index + 1 }))
     .filter(({ program }) => program && program.hp > 0)
@@ -601,7 +597,6 @@ function buildAllyFormationMarkup(state, activeProgramId) {
   }
 
   return `
-    ${activeProgram ? `<div class="combat-stage-player-status">${buildProgramStatusPanelMarkup(activeProgram)}</div>` : ""}
     <div class="combat-ally-formation" aria-hidden="true">
       ${livingPrograms.map(({ program, slot }) => buildProgramBattlefieldMarkup(
         program,
