@@ -61,7 +61,7 @@ label:focus-visible {
 }
 
 .proto-shell {
-  width: min(1480px, calc(100vw - 2rem));
+  width: min(100vw - 0.75rem, 1560px);
   margin: 0 auto;
   padding: clamp(1rem, 2vw, 1.5rem) 0 clamp(1.25rem, 2vw, 1.75rem);
 }
@@ -210,16 +210,16 @@ label:focus-visible {
 
 .battlefield {
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   min-height: clamp(44rem, 82vh, 58rem);
-  border: 1px solid var(--line);
-  border-radius: 2rem 1.1rem 2.3rem 1.2rem;
+  border: 1px solid transparent;
+  border-radius: 0;
   background:
-    linear-gradient(180deg, rgba(18, 18, 21, 0.7), rgba(7, 7, 8, 0.88)),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.02), transparent 28%, rgba(0, 0, 0, 0.18));
-  box-shadow:
-    0 24px 60px var(--shadow-deep),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    radial-gradient(1200px 560px at 28% 62%, rgba(255, 255, 255, 0.045), transparent 62%),
+    radial-gradient(900px 420px at 82% 24%, rgba(120, 106, 182, 0.06), transparent 60%),
+    linear-gradient(180deg, rgba(15, 16, 19, 0.22), rgba(5, 6, 8, 0.46)),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.012), transparent 34%, rgba(0, 0, 0, 0.1) 72%, rgba(0, 0, 0, 0.22));
+  box-shadow: none;
 }
 
 .battlefield::before {
@@ -227,9 +227,9 @@ label:focus-visible {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(1000px 560px at 34% 24%, rgba(255, 255, 255, 0.08), transparent 58%),
-    radial-gradient(600px 400px at 46% 74%, rgba(201, 146, 104, 0.08), transparent 60%),
-    linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.12) 58%, rgba(0, 0, 0, 0.6) 100%);
+    radial-gradient(1000px 560px at 34% 24%, rgba(255, 255, 255, 0.06), transparent 58%),
+    radial-gradient(600px 400px at 46% 74%, rgba(201, 146, 104, 0.06), transparent 60%),
+    linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.08) 58%, rgba(0, 0, 0, 0.24) 100%);
   pointer-events: none;
 }
 
@@ -247,14 +247,14 @@ label:focus-visible {
     linear-gradient(90deg, rgba(255, 255, 255, 0.022) 1px, transparent 1px);
   background-size: 100% 120px, 96px 100%;
   mask-image: linear-gradient(180deg, transparent, black 10%, black 80%, transparent 100%);
-  opacity: 0.45;
+  opacity: 0.28;
 }
 
 .scene-wash {
   background:
-    radial-gradient(closest-side at 20% 58%, rgba(255, 255, 255, 0.042), transparent 76%),
-    radial-gradient(closest-side at 82% 24%, rgba(120, 106, 182, 0.075), transparent 74%),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.02), transparent 36%, rgba(0, 0, 0, 0.24) 72%, rgba(0, 0, 0, 0.48));
+    radial-gradient(closest-side at 20% 58%, rgba(255, 255, 255, 0.035), transparent 76%),
+    radial-gradient(closest-side at 82% 24%, rgba(120, 106, 182, 0.06), transparent 74%),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.012), transparent 38%, rgba(0, 0, 0, 0.14) 72%, rgba(0, 0, 0, 0.26));
 }
 
 .scene-haze.is-gold {
@@ -1384,7 +1384,7 @@ label:focus-visible {
 
 @media (max-width: 700px) {
   .proto-shell {
-    width: min(100vw - 1rem, 100%);
+    width: min(100vw - 0.35rem, 100%);
   }
 
   .proto-copy {
@@ -1393,7 +1393,7 @@ label:focus-visible {
 
   .battlefield {
     min-height: 70rem;
-    border-radius: 1.4rem;
+    border-radius: 0;
   }
 
   .status-card {
