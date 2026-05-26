@@ -10324,9 +10324,9 @@ body {
 .combat-ally-formation {
   position: absolute;
   left: clamp(0.35rem, 1vw, 0.9rem);
-  bottom: clamp(2.6rem, 5vh, 3.9rem);
-  width: min(30rem, 35vw);
-  height: min(28rem, 58vh);
+  bottom: clamp(2.4rem, 4.6vh, 3.6rem);
+  width: min(31rem, 36vw);
+  height: min(23rem, 48vh);
   z-index: 2;
   pointer-events: none;
 }
@@ -10335,8 +10335,8 @@ body {
   position: absolute;
   display: grid;
   align-items: end;
-  opacity: 0.79;
-  filter: saturate(0.88) brightness(0.94);
+  opacity: 0.8;
+  filter: saturate(0.89) brightness(0.95);
   transform-origin: left bottom;
   animation: battle-idle-player 1.6s ease-in-out infinite;
 }
@@ -10344,7 +10344,7 @@ body {
 .combat-ally-battler.is-active {
   z-index: 3;
   opacity: 1;
-  filter: saturate(1.03) brightness(1.03);
+  filter: saturate(1.04) brightness(1.04);
 }
 
 .combat-ally-battler.is-support {
@@ -10368,28 +10368,28 @@ body {
 }
 
 .combat-ally-battler.is-active.combat-battler-player .battle-sprite {
-  width: clamp(146px, 11.4vw, 188px);
-  height: clamp(166px, 13.4vw, 214px);
+  width: clamp(140px, 10.9vw, 180px);
+  height: clamp(160px, 12.8vw, 206px);
 }
 
 .combat-ally-battler.is-slot-1 {
-  left: -1.4rem;
-  bottom: 12.3rem;
+  left: -0.8rem;
+  bottom: 4.6rem;
 }
 
 .combat-ally-battler.is-slot-2 {
   left: 5.8rem;
-  bottom: 1.6rem;
+  bottom: 5.4rem;
 }
 
 .combat-ally-battler.is-slot-3 {
-  left: 12.6rem;
-  bottom: 15.2rem;
+  left: 12.4rem;
+  bottom: 4.9rem;
 }
 
 .combat-ally-battler.is-slot-4 {
-  left: 17.6rem;
-  bottom: 8.2rem;
+  left: 18.6rem;
+  bottom: 5.8rem;
 }
 
 .combat-battler-player .combat-battler-sprite-wrap {
@@ -10477,28 +10477,28 @@ body {
   }
 
   .combat-ally-formation {
-    width: min(23.5rem, 39vw);
-    height: min(23.2rem, 49vh);
+    width: min(24.2rem, 40vw);
+    height: min(19.8rem, 42vh);
   }
 
   .combat-ally-battler.is-slot-1 {
-    left: -0.7rem;
-    bottom: 9.8rem;
+    left: -0.5rem;
+    bottom: 4.2rem;
   }
 
   .combat-ally-battler.is-slot-2 {
-    left: 3.9rem;
-    bottom: 0.8rem;
+    left: 4.1rem;
+    bottom: 4.8rem;
   }
 
   .combat-ally-battler.is-slot-3 {
-    left: 9.1rem;
-    bottom: 12.2rem;
+    left: 8.8rem;
+    bottom: 4.4rem;
   }
 
   .combat-ally-battler.is-slot-4 {
-    left: 13.9rem;
-    bottom: 5.4rem;
+    left: 13.2rem;
+    bottom: 5rem;
   }
 
   .combat-stage-feedback-toast {
