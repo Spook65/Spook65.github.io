@@ -94,6 +94,48 @@ function getActiveBattleProgram(state) {
   return state.playerParty.find((program) => program.hp > 0) || state.playerParty[0];
 }
 
+function getActiveAllySlotIndex(state, activeProgramId) {
+  if (!state || !Array.isArray(state.playerParty) || !activeProgramId) {
+    return null;
+  }
+
+  const slotIndex = state.playerParty.findIndex((program) => program && program.id === activeProgramId);
+  if (slotIndex < 0) {
+    return null;
+  }
+
+  const activeProgram = state.playerParty[slotIndex];
+  if (!activeProgram || activeProgram.hp <= 0) {
+    return null;
+  }
+
+  return slotIndex + 1;
+}
+
+function isAllyCommandFocusState(state) {
+  if (!state || state.battleIntroPlaying || state.actionLocked) {
+    return false;
+  }
+
+  const commandMode = state.commandMode || "main";
+  return commandMode === "main" || commandMode === "attack" || commandMode === "programs" || commandMode === "items";
+}
+
+function buildActiveAllyCameraStateClasses(state, activeProgramId) {
+  const classes = [];
+  const activeSlot = getActiveAllySlotIndex(state, activeProgramId);
+
+  if (activeSlot) {
+    classes.push(`is-active-ally-slot-${activeSlot}`);
+  }
+
+  if (activeSlot && isAllyCommandFocusState(state)) {
+    classes.push("is-ally-command-focus");
+  }
+
+  return classes.join(" ");
+}
+
 function buildEnemyTargetReadoutMarkup(state, options = {}) {
   const threat = state?.threat;
   if (!threat) {
@@ -1278,6 +1320,7 @@ function buildActionButtonMarkup(state) {
 // buildCombatMarkup() turns the battle into a battlefield scene with one featured program and one featured threat.
 function buildCombatMarkup(state) {
   const currentProgram = getActiveBattleProgram(state);
+  const activeAllyCameraStateClasses = buildActiveAllyCameraStateClasses(state, currentProgram?.id);
   const introStage = state.battleIntroStage || "operator";
   const introStageClass = `is-stage-${introStage}`;
   const commandBoxClass = state.battleIntroPlaying ? "is-intro-hidden" : "is-intro-revealed";
@@ -1297,7 +1340,7 @@ function buildCombatMarkup(state) {
   }
 
   return `
-    <div class="combat-shell ${state.battleIntroPlaying ? "is-intro-playing" : ""} ${attackStageFanActive ? "is-attack-stage-active" : ""} ${stageCommandClusterActive ? "is-stage-command-active" : ""} ${stageCommandSubmenuActive ? "is-stage-submenu-active" : ""} ${stageFeedbackActive ? "is-stage-feedback-active" : ""}">
+    <div class="combat-shell ${state.battleIntroPlaying ? "is-intro-playing" : ""} ${attackStageFanActive ? "is-attack-stage-active" : ""} ${stageCommandClusterActive ? "is-stage-command-active" : ""} ${stageCommandSubmenuActive ? "is-stage-submenu-active" : ""} ${stageFeedbackActive ? "is-stage-feedback-active" : ""} ${activeAllyCameraStateClasses}">
       <header class="combat-header">
         <div class="combat-title-block">
           <div class="combat-panel-title">THREATGRID ARENA</div>
@@ -1311,7 +1354,7 @@ function buildCombatMarkup(state) {
         </div>
       </header>
 
-      <section class="combat-stage">
+      <section class="combat-stage ${activeAllyCameraStateClasses}">
         <div class="combat-floor-grid" aria-hidden="true"></div>
         <div class="combat-stage-glow" aria-hidden="true"></div>
         ${state.battleIntroPlaying ? `
