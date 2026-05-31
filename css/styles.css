@@ -10281,9 +10281,9 @@ body {
 }
 
 .combat-stage-enemy {
-  top: 3.8%;
-  right: 0.8%;
-  width: min(37vw, 540px);
+  top: 4.4%;
+  right: 1.4%;
+  width: min(34.8vw, 500px);
 }
 
 .combat-stage-enemy::before,
@@ -10303,7 +10303,7 @@ body {
   height: clamp(4.1rem, 7vw, 6.6rem);
   background:
     radial-gradient(circle, rgba(255, 102, 121, 0.11), rgba(255, 102, 121, 0) 72%);
-  opacity: 0.48;
+  opacity: 0.36;
 }
 
 .combat-stage-enemy::after {
@@ -10313,7 +10313,7 @@ body {
   height: clamp(3.4rem, 6.2vw, 5.8rem);
   background:
     radial-gradient(circle, rgba(141, 116, 255, 0.08), rgba(141, 116, 255, 0) 74%);
-  opacity: 0.36;
+  opacity: 0.27;
 }
 
 .combat-stage-enemy .combat-battler-enemy {
@@ -10323,10 +10323,10 @@ body {
 
 .combat-ally-formation {
   position: absolute;
-  left: clamp(-0.6rem, 0.2vw, 0.2rem);
+  left: clamp(-1rem, -0.2vw, 0.1rem);
   bottom: clamp(2.2rem, 4.3vh, 3.4rem);
-  width: min(37rem, 43vw);
-  height: min(26rem, 55vh);
+  width: min(35.8rem, 41.5vw);
+  height: min(25.2rem, 53vh);
   z-index: 2;
   pointer-events: none;
 }
@@ -10352,15 +10352,15 @@ body {
 }
 
 .combat-ally-battler .combat-battler-sprite-wrap {
-  min-height: 204px;
+  min-height: 192px;
   display: grid;
   justify-items: start;
   align-items: end;
 }
 
 .combat-ally-battler.combat-battler-player .battle-sprite {
-  width: clamp(126px, 9.8vw, 162px);
-  height: clamp(146px, 11.8vw, 188px);
+  width: clamp(118px, 9.1vw, 152px);
+  height: clamp(136px, 10.9vw, 176px);
   transform: scaleX(-1) translateY(0);
   filter:
     drop-shadow(0 0 10px rgba(121, 181, 187, 0.07))
@@ -10368,8 +10368,8 @@ body {
 }
 
 .combat-ally-battler.is-active.combat-battler-player .battle-sprite {
-  width: clamp(140px, 10.9vw, 180px);
-  height: clamp(160px, 12.8vw, 206px);
+  width: clamp(131px, 10.1vw, 169px);
+  height: clamp(150px, 11.9vw, 193px);
 }
 
 .combat-ally-battler.is-slot-1 {
@@ -10393,22 +10393,22 @@ body {
 }
 
 .combat-battler-player .combat-battler-sprite-wrap {
-  min-height: 340px;
+  min-height: 314px;
 }
 
 .combat-battler-enemy .combat-battler-sprite-wrap {
-  min-height: 288px;
+  min-height: 268px;
 }
 
 .combat-battler-player .battle-sprite {
-  width: clamp(228px, 20vw, 308px);
-  height: clamp(248px, 22vw, 348px);
+  width: clamp(212px, 18.8vw, 286px);
+  height: clamp(230px, 20.8vw, 320px);
   transform: scaleX(-1) translateY(0);
 }
 
 .combat-battler-enemy .battle-sprite {
-  width: clamp(182px, 15vw, 258px);
-  height: clamp(182px, 15vw, 258px);
+  width: clamp(170px, 14.2vw, 238px);
+  height: clamp(170px, 14.2vw, 238px);
 }
 
 .combat-stage-command-cluster,
@@ -10759,8 +10759,8 @@ body {
 
 @media (max-width: 920px) {
   .combat-stage-enemy {
-    right: 1.5%;
-    width: min(36vw, 408px);
+    right: 2%;
+    width: min(34vw, 388px);
   }
 
   .combat-stage-command-cluster,
@@ -10778,9 +10778,9 @@ body {
   }
 
   .combat-ally-formation {
-    left: clamp(-0.4rem, 0.2vw, 0.4rem);
-    width: min(27rem, 44vw);
-    height: min(22rem, 46vh);
+    left: clamp(-0.8rem, -0.1vw, 0.25rem);
+    width: min(26rem, 42vw);
+    height: min(21rem, 44vh);
   }
 
   .combat-ally-battler.is-slot-1 {
