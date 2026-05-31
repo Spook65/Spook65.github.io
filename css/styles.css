@@ -10383,13 +10383,13 @@ body {
 }
 
 .combat-ally-battler.is-slot-3 {
-  left: 19rem;
-  bottom: 9.5rem;
+  left: 18rem;
+  bottom: 9.3rem;
 }
 
 .combat-ally-battler.is-slot-4 {
-  left: 29rem;
-  bottom: 3.8rem;
+  left: 22.8rem;
+  bottom: 3.2rem;
 }
 
 .combat-battler-player .combat-battler-sprite-wrap {
@@ -10451,32 +10451,32 @@ body {
 }
 
 .combat-stage.is-ally-command-focus.is-active-ally-slot-1 .combat-ally-battler.is-slot-3 {
-  left: 22.3rem;
-  bottom: 10.4rem;
+  left: 19rem;
+  bottom: 10rem;
 }
 
 .combat-stage.is-ally-command-focus.is-active-ally-slot-1 .combat-ally-battler.is-slot-4 {
-  left: 24.6rem;
+  left: 22.2rem;
   bottom: 2rem;
 }
 
 .combat-stage.is-ally-command-focus.is-active-ally-slot-1 .combat-stage-command-cluster,
 .combat-stage.is-ally-command-focus.is-active-ally-slot-1 .combat-stage-command-submenu {
-  left: clamp(24.5%, 27.5vw, 30.5%);
-  top: clamp(43%, 47%, 51%);
+  left: clamp(29%, 30.5vw, 33.5%);
+  top: clamp(44%, 48%, 52%);
 }
 
 .combat-stage.is-ally-command-focus.is-active-ally-slot-1 .combat-stage-command-submenu.is-programs {
-  top: clamp(39%, 43%, 48%);
+  top: clamp(40%, 44%, 49%);
 }
 
 .combat-stage.is-ally-command-focus.is-active-ally-slot-1 .combat-stage-command-submenu.is-items {
-  top: clamp(48%, 52%, 57%);
+  top: clamp(49%, 53%, 58%);
 }
 
 .combat-stage.is-ally-command-focus.is-active-ally-slot-1 .combat-attack-cluster.command-anchor {
-  left: clamp(27.5%, 30.5vw, 33.5%);
-  top: clamp(28%, 32%, 36%);
+  left: clamp(32%, 34vw, 37%);
+  top: clamp(29%, 33%, 37%);
 }
 
 .combat-stage.is-ally-command-focus.is-active-ally-slot-2 .combat-ally-formation {
@@ -10494,24 +10494,24 @@ body {
 }
 
 .combat-stage.is-ally-command-focus.is-active-ally-slot-2 .combat-ally-battler.is-slot-3 {
-  left: 21.8rem;
-  bottom: 10.5rem;
+  left: 19.4rem;
+  bottom: 10.1rem;
 }
 
 .combat-stage.is-ally-command-focus.is-active-ally-slot-2 .combat-ally-battler.is-slot-4 {
-  left: 25.2rem;
+  left: 22.4rem;
   bottom: 1.8rem;
 }
 
 .combat-stage.is-ally-command-focus.is-active-ally-slot-2 .combat-stage-command-cluster,
 .combat-stage.is-ally-command-focus.is-active-ally-slot-2 .combat-stage-command-submenu {
-  left: clamp(29.2%, 32vw, 34.6%);
+  left: clamp(29%, 30.5vw, 33.5%);
   top: clamp(44%, 48%, 52%);
 }
 
 .combat-stage.is-ally-command-focus.is-active-ally-slot-2 .combat-attack-cluster.command-anchor {
-  left: clamp(32.8%, 35.6vw, 38.2%);
-  top: clamp(28%, 32%, 36%);
+  left: clamp(32%, 34vw, 37%);
+  top: clamp(29%, 33%, 37%);
 }
 
 .combat-stage.is-ally-command-focus.is-active-ally-slot-3 .combat-ally-formation {
@@ -10529,32 +10529,32 @@ body {
 }
 
 .combat-stage.is-ally-command-focus.is-active-ally-slot-3 .combat-ally-battler.is-slot-3 {
-  left: 19.2rem;
+  left: 17.8rem;
   bottom: 9.6rem;
 }
 
 .combat-stage.is-ally-command-focus.is-active-ally-slot-3 .combat-ally-battler.is-slot-4 {
-  left: 25.6rem;
-  bottom: 1.3rem;
+  left: 21rem;
+  bottom: 1rem;
 }
 
 .combat-stage.is-ally-command-focus.is-active-ally-slot-3 .combat-stage-command-cluster,
 .combat-stage.is-ally-command-focus.is-active-ally-slot-3 .combat-stage-command-submenu {
-  left: clamp(31.5%, 34vw, 37%);
-  top: clamp(40%, 44%, 48%);
+  left: clamp(29%, 30.5vw, 33.5%);
+  top: clamp(44%, 48%, 52%);
 }
 
 .combat-stage.is-ally-command-focus.is-active-ally-slot-3 .combat-stage-command-submenu.is-programs {
-  top: clamp(36%, 40%, 45%);
+  top: clamp(40%, 44%, 49%);
 }
 
 .combat-stage.is-ally-command-focus.is-active-ally-slot-3 .combat-stage-command-submenu.is-items {
-  top: clamp(45%, 49%, 54%);
+  top: clamp(49%, 53%, 58%);
 }
 
 .combat-stage.is-ally-command-focus.is-active-ally-slot-3 .combat-attack-cluster.command-anchor {
-  left: clamp(34.5%, 37.5vw, 40.5%);
-  top: clamp(25%, 29%, 33%);
+  left: clamp(32%, 34vw, 37%);
+  top: clamp(29%, 33%, 37%);
 }
 
 .combat-stage.is-ally-command-focus.is-active-ally-slot-4 .combat-ally-formation {
@@ -10572,18 +10572,18 @@ body {
 }
 
 .combat-stage.is-ally-command-focus.is-active-ally-slot-4 .combat-ally-battler.is-slot-3 {
-  left: 12.9rem;
-  bottom: 10.5rem;
+  left: 11rem;
+  bottom: 10.1rem;
 }
 
 .combat-stage.is-ally-command-focus.is-active-ally-slot-4 .combat-ally-battler.is-slot-4 {
-  left: 24.2rem;
-  bottom: 3.5rem;
+  left: 20.8rem;
+  bottom: 3rem;
 }
 
 .combat-stage.is-ally-command-focus.is-active-ally-slot-4 .combat-stage-command-cluster,
 .combat-stage.is-ally-command-focus.is-active-ally-slot-4 .combat-stage-command-submenu {
-  left: clamp(22.8%, 25.2vw, 28.5%);
+  left: clamp(29%, 30.5vw, 33.5%);
   top: clamp(44%, 48%, 52%);
 }
 
@@ -10596,8 +10596,8 @@ body {
 }
 
 .combat-stage.is-ally-command-focus.is-active-ally-slot-4 .combat-attack-cluster.command-anchor {
-  left: clamp(25.5%, 28.4vw, 31.4%);
-  top: clamp(26%, 30%, 34%);
+  left: clamp(32%, 34vw, 37%);
+  top: clamp(29%, 33%, 37%);
 }
 
 @media (max-width: 1160px) {
@@ -10635,24 +10635,24 @@ body {
   }
 
   .combat-stage.is-ally-command-focus.is-active-ally-slot-1 .combat-ally-battler.is-slot-3 {
-    left: 20.8rem;
-    bottom: 9.8rem;
+    left: 18.1rem;
+    bottom: 9.5rem;
   }
 
   .combat-stage.is-ally-command-focus.is-active-ally-slot-1 .combat-ally-battler.is-slot-4 {
-    left: 23.6rem;
+    left: 20.9rem;
     bottom: 1.9rem;
   }
 
   .combat-stage.is-ally-command-focus.is-active-ally-slot-1 .combat-stage-command-cluster,
   .combat-stage.is-ally-command-focus.is-active-ally-slot-1 .combat-stage-command-submenu {
-    left: clamp(23.5%, 25.8vw, 29.2%);
-    top: clamp(44%, 48%, 53%);
+    left: clamp(25.5%, 27.5vw, 31.5%);
+    top: clamp(45%, 49%, 54%);
   }
 
   .combat-stage.is-ally-command-focus.is-active-ally-slot-1 .combat-attack-cluster.command-anchor {
-    left: clamp(26.5%, 28.8vw, 32.2%);
-    top: clamp(27%, 31%, 35%);
+    left: clamp(29%, 31vw, 35%);
+    top: clamp(28%, 32%, 36%);
   }
 
   .combat-stage.is-ally-command-focus.is-active-ally-slot-2 .combat-ally-battler.is-slot-1 {
@@ -10666,24 +10666,24 @@ body {
   }
 
   .combat-stage.is-ally-command-focus.is-active-ally-slot-2 .combat-ally-battler.is-slot-3 {
-    left: 20.2rem;
-    bottom: 9.8rem;
+    left: 18.4rem;
+    bottom: 9.5rem;
   }
 
   .combat-stage.is-ally-command-focus.is-active-ally-slot-2 .combat-ally-battler.is-slot-4 {
-    left: 24.2rem;
+    left: 21.2rem;
     bottom: 1.7rem;
   }
 
   .combat-stage.is-ally-command-focus.is-active-ally-slot-2 .combat-stage-command-cluster,
   .combat-stage.is-ally-command-focus.is-active-ally-slot-2 .combat-stage-command-submenu {
-    left: clamp(28.4%, 31.2vw, 34.2%);
-    top: clamp(44%, 48%, 53%);
+    left: clamp(25.5%, 27.5vw, 31.5%);
+    top: clamp(45%, 49%, 54%);
   }
 
   .combat-stage.is-ally-command-focus.is-active-ally-slot-2 .combat-attack-cluster.command-anchor {
-    left: clamp(31.8%, 34.4vw, 37.4%);
-    top: clamp(27%, 31%, 35%);
+    left: clamp(29%, 31vw, 35%);
+    top: clamp(28%, 32%, 36%);
   }
 
   .combat-stage.is-ally-command-focus.is-active-ally-slot-3 .combat-ally-formation {
@@ -10701,24 +10701,24 @@ body {
   }
 
   .combat-stage.is-ally-command-focus.is-active-ally-slot-3 .combat-ally-battler.is-slot-3 {
-    left: 18.4rem;
+    left: 16.7rem;
     bottom: 9.2rem;
   }
 
   .combat-stage.is-ally-command-focus.is-active-ally-slot-3 .combat-ally-battler.is-slot-4 {
-    left: 24.6rem;
+    left: 20.6rem;
     bottom: 1.2rem;
   }
 
   .combat-stage.is-ally-command-focus.is-active-ally-slot-3 .combat-stage-command-cluster,
   .combat-stage.is-ally-command-focus.is-active-ally-slot-3 .combat-stage-command-submenu {
-    left: clamp(30.6%, 33.4vw, 36.4%);
-    top: clamp(41%, 45%, 50%);
+    left: clamp(25.5%, 27.5vw, 31.5%);
+    top: clamp(45%, 49%, 54%);
   }
 
   .combat-stage.is-ally-command-focus.is-active-ally-slot-3 .combat-attack-cluster.command-anchor {
-    left: clamp(33.6%, 36.6vw, 39.6%);
-    top: clamp(24%, 28%, 32%);
+    left: clamp(29%, 31vw, 35%);
+    top: clamp(28%, 32%, 36%);
   }
 
   .combat-stage.is-ally-command-focus.is-active-ally-slot-4 .combat-ally-formation {
@@ -10736,24 +10736,24 @@ body {
   }
 
   .combat-stage.is-ally-command-focus.is-active-ally-slot-4 .combat-ally-battler.is-slot-3 {
-    left: 12.2rem;
-    bottom: 9.9rem;
+    left: 10.6rem;
+    bottom: 9.6rem;
   }
 
   .combat-stage.is-ally-command-focus.is-active-ally-slot-4 .combat-ally-battler.is-slot-4 {
-    left: 22.9rem;
-    bottom: 3.4rem;
+    left: 19.8rem;
+    bottom: 2.9rem;
   }
 
   .combat-stage.is-ally-command-focus.is-active-ally-slot-4 .combat-stage-command-cluster,
   .combat-stage.is-ally-command-focus.is-active-ally-slot-4 .combat-stage-command-submenu {
-    left: clamp(21.8%, 24.4vw, 27.8%);
-    top: clamp(43%, 47%, 52%);
+    left: clamp(25.5%, 27.5vw, 31.5%);
+    top: clamp(45%, 49%, 54%);
   }
 
   .combat-stage.is-ally-command-focus.is-active-ally-slot-4 .combat-attack-cluster.command-anchor {
-    left: clamp(24.7%, 27.5vw, 31.2%);
-    top: clamp(25%, 29%, 33%);
+    left: clamp(29%, 31vw, 35%);
+    top: clamp(28%, 32%, 36%);
   }
 }
 
@@ -10794,13 +10794,13 @@ body {
   }
 
   .combat-ally-battler.is-slot-3 {
-    left: 13.1rem;
+    left: 12rem;
     bottom: 7.8rem;
   }
 
   .combat-ally-battler.is-slot-4 {
-    left: 19.2rem;
-    bottom: 3.2rem;
+    left: 15.8rem;
+    bottom: 2.8rem;
   }
 
   .combat-stage-feedback-toast {
@@ -10828,24 +10828,24 @@ body {
   }
 
   .combat-stage.is-ally-command-focus.is-active-ally-slot-1 .combat-ally-battler.is-slot-3 {
-    left: 14.7rem;
-    bottom: 8.1rem;
+    left: 13.2rem;
+    bottom: 7.8rem;
   }
 
   .combat-stage.is-ally-command-focus.is-active-ally-slot-1 .combat-ally-battler.is-slot-4 {
-    left: 17.4rem;
+    left: 14.8rem;
     bottom: 1.8rem;
   }
 
   .combat-stage.is-ally-command-focus.is-active-ally-slot-1 .combat-stage-command-cluster,
   .combat-stage.is-ally-command-focus.is-active-ally-slot-1 .combat-stage-command-submenu {
-    left: clamp(18%, 20vw, 24%);
-    top: clamp(46%, 50%, 55%);
+    left: clamp(20.5%, 22.5vw, 26.5%);
+    top: clamp(47%, 51%, 56%);
   }
 
   .combat-stage.is-ally-command-focus.is-active-ally-slot-1 .combat-attack-cluster.command-anchor {
-    left: clamp(20%, 22vw, 26%);
-    top: clamp(23%, 27%, 31%);
+    left: clamp(24%, 26vw, 30%);
+    top: clamp(24%, 28%, 32%);
   }
 
   .combat-stage.is-ally-command-focus.is-active-ally-slot-2 .combat-ally-battler.is-slot-1 {
@@ -10859,24 +10859,24 @@ body {
   }
 
   .combat-stage.is-ally-command-focus.is-active-ally-slot-2 .combat-ally-battler.is-slot-3 {
-    left: 14.2rem;
-    bottom: 8.1rem;
+    left: 12.8rem;
+    bottom: 7.8rem;
   }
 
   .combat-stage.is-ally-command-focus.is-active-ally-slot-2 .combat-ally-battler.is-slot-4 {
-    left: 18.1rem;
+    left: 15.1rem;
     bottom: 1.7rem;
   }
 
   .combat-stage.is-ally-command-focus.is-active-ally-slot-2 .combat-stage-command-cluster,
   .combat-stage.is-ally-command-focus.is-active-ally-slot-2 .combat-stage-command-submenu {
-    left: clamp(21.4%, 23.8vw, 27.4%);
-    top: clamp(45%, 49%, 54%);
+    left: clamp(20.5%, 22.5vw, 26.5%);
+    top: clamp(47%, 51%, 56%);
   }
 
   .combat-stage.is-ally-command-focus.is-active-ally-slot-2 .combat-attack-cluster.command-anchor {
-    left: clamp(24.2%, 26.2vw, 30%);
-    top: clamp(22%, 26%, 30%);
+    left: clamp(24%, 26vw, 30%);
+    top: clamp(24%, 28%, 32%);
   }
 
   .combat-stage.is-ally-command-focus.is-active-ally-slot-3 .combat-ally-formation {
@@ -10894,24 +10894,24 @@ body {
   }
 
   .combat-stage.is-ally-command-focus.is-active-ally-slot-3 .combat-ally-battler.is-slot-3 {
-    left: 12.7rem;
+    left: 11.4rem;
     bottom: 7.2rem;
   }
 
   .combat-stage.is-ally-command-focus.is-active-ally-slot-3 .combat-ally-battler.is-slot-4 {
-    left: 18.4rem;
+    left: 14.4rem;
     bottom: 1rem;
   }
 
   .combat-stage.is-ally-command-focus.is-active-ally-slot-3 .combat-stage-command-cluster,
   .combat-stage.is-ally-command-focus.is-active-ally-slot-3 .combat-stage-command-submenu {
-    left: clamp(23.2%, 25.4vw, 29%);
-    top: clamp(43%, 47%, 52%);
+    left: clamp(20.5%, 22.5vw, 26.5%);
+    top: clamp(47%, 51%, 56%);
   }
 
   .combat-stage.is-ally-command-focus.is-active-ally-slot-3 .combat-attack-cluster.command-anchor {
-    left: clamp(25.5%, 27.8vw, 31.8%);
-    top: clamp(21%, 25%, 29%);
+    left: clamp(24%, 26vw, 30%);
+    top: clamp(24%, 28%, 32%);
   }
 
   .combat-stage.is-ally-command-focus.is-active-ally-slot-4 .combat-ally-formation {
@@ -10929,23 +10929,23 @@ body {
   }
 
   .combat-stage.is-ally-command-focus.is-active-ally-slot-4 .combat-ally-battler.is-slot-3 {
-    left: 8.2rem;
-    bottom: 8.2rem;
+    left: 7.1rem;
+    bottom: 8rem;
   }
 
   .combat-stage.is-ally-command-focus.is-active-ally-slot-4 .combat-ally-battler.is-slot-4 {
-    left: 16.1rem;
-    bottom: 2.6rem;
+    left: 13.8rem;
+    bottom: 2.2rem;
   }
 
   .combat-stage.is-ally-command-focus.is-active-ally-slot-4 .combat-stage-command-cluster,
   .combat-stage.is-ally-command-focus.is-active-ally-slot-4 .combat-stage-command-submenu {
-    left: clamp(17.8%, 20vw, 24%);
-    top: clamp(44%, 48%, 53%);
+    left: clamp(20.5%, 22.5vw, 26.5%);
+    top: clamp(47%, 51%, 56%);
   }
 
   .combat-stage.is-ally-command-focus.is-active-ally-slot-4 .combat-attack-cluster.command-anchor {
-    left: clamp(20.2%, 22.6vw, 26.6%);
-    top: clamp(22%, 26%, 30%);
+    left: clamp(24%, 26vw, 30%);
+    top: clamp(24%, 28%, 32%);
   }
 }
