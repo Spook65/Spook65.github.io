@@ -34,6 +34,7 @@ const defenderCatalog = [
     starter: true,
     color: "#00ccff",
     statusEffects: [],
+    responseTags: ["guard", "mitigate", "isolate"],
     summary: "A shield guardian built to absorb direct intrusion.",
     moves: [
       {
@@ -127,6 +128,7 @@ const defenderCatalog = [
     starter: true,
     color: "#00ff88",
     statusEffects: [],
+    responseTags: ["scan", "countertrace", "reveal"],
     summary: "A precision scout that spots exploits before they bloom.",
     moves: [
       {
@@ -220,6 +222,7 @@ const defenderCatalog = [
     starter: true,
     color: "#ffcc00",
     statusEffects: [],
+    responseTags: ["decoy", "redirect", "bait"],
     summary: "A decoy construct that tempts threats into exposed positions.",
     moves: [
       {
@@ -313,6 +316,7 @@ const defenderCatalog = [
     starter: true,
     color: "#ff2233",
     statusEffects: [],
+    responseTags: ["cleanse", "purge", "recover"],
     summary: "A cleansing warrior that burns corruption out of the frame.",
     moves: [
       {
@@ -394,6 +398,7 @@ const defenderCatalog = [
     spd: 5,
     color: "#74e6ff",
     statusEffects: [],
+    responseTags: ["guard", "mitigate", "isolate"],
     starter: false,
     summary: "A heavier shield unit forged for frontline containment.",
     moveList: [
@@ -425,6 +430,7 @@ const defenderCatalog = [
     spd: 9,
     color: "#7effc2",
     statusEffects: [],
+    responseTags: ["scan", "countertrace", "reveal"],
     starter: false,
     summary: "A faster analyzer tuned to expose hidden weaknesses.",
     moveList: [
@@ -456,6 +462,7 @@ const defenderCatalog = [
     spd: 8,
     color: "#ffd966",
     statusEffects: [],
+    responseTags: ["decoy", "redirect", "bait"],
     starter: false,
     summary: "A more elusive trickster that leaves false trails behind.",
     moveList: [
@@ -487,6 +494,7 @@ const defenderCatalog = [
     spd: 6,
     color: "#ff6677",
     statusEffects: [],
+    responseTags: ["cleanse", "purge", "recover"],
     starter: false,
     summary: "A brighter purifier that cuts deeper into hostile code.",
     moveList: [
@@ -609,6 +617,38 @@ function resetMoveChargesForRun(defender) {
   return nextDefender;
 }
 
+function normalizeDefenderResponseTags(defender) {
+  const tagSources = [];
+  if (Array.isArray(defender?.responseTags)) {
+    tagSources.push(defender.responseTags);
+  }
+  if (Array.isArray(defender?.defenseProfile?.tags)) {
+    tagSources.push(defender.defenseProfile.tags);
+  }
+
+  if (!tagSources.length) {
+    return [];
+  }
+
+  const seen = new Set();
+  const normalizedTags = [];
+  tagSources.flat().forEach((tag) => {
+    if (typeof tag !== "string") {
+      return;
+    }
+
+    const normalizedTag = tag.trim().toLowerCase();
+    if (!normalizedTag || seen.has(normalizedTag)) {
+      return;
+    }
+
+    seen.add(normalizedTag);
+    normalizedTags.push(normalizedTag);
+  });
+
+  return normalizedTags;
+}
+
 // buildCombatProgramFromDefender() maps the new defender save model into the legacy combat roster format.
 function buildCombatProgramFromDefender(defender) {
   // The run copy gets fresh charges here so charge loss only ever mutates live battle state.
@@ -643,7 +683,8 @@ function buildCombatProgramFromDefender(defender) {
     coreTrait: battleDefender.coreTrait,
     passiveModule: battleDefender.passiveModule,
     unlocked: battleDefender.unlocked,
-    selected: battleDefender.selected
+    selected: battleDefender.selected,
+    responseTags: normalizeDefenderResponseTags(battleDefender)
   };
 }
 

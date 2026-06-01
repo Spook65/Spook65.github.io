@@ -15,6 +15,7 @@ const programs = [
     color: "#00ccff",
     xp: 0,
     statusEffects: [],
+    responseTags: ["guard", "mitigate", "isolate"],
     abilities: [
       {
         name: "Block Network",
@@ -49,6 +50,7 @@ const programs = [
     color: "#00ff88",
     xp: 0,
     statusEffects: [],
+    responseTags: ["scan", "countertrace", "reveal"],
     abilities: [
       {
         name: "Deep Packet Scan",
@@ -83,6 +85,7 @@ const programs = [
     color: "#ffcc00",
     xp: 0,
     statusEffects: [],
+    responseTags: ["decoy", "redirect", "bait"],
     abilities: [
       {
         name: "Lure Traffic",
@@ -117,6 +120,7 @@ const programs = [
     color: "#ff2233",
     xp: 0,
     statusEffects: [],
+    responseTags: ["cleanse", "purge", "recover"],
     abilities: [
       {
         name: "Signature Sweep",
@@ -488,6 +492,123 @@ function getFocusGaugeRecoveryAmount(combatant) {
   return hasFloodStatus(combatant) ? 15 : 25;
 }
 
+// normalizeResponseTagList() keeps response-tag matching resilient across current and future roster data.
+function normalizeResponseTagList(tags = []) {
+  const source = Array.isArray(tags) ? tags : [tags];
+  const seen = new Set();
+  const normalizedTags = [];
+
+  source.forEach((tag) => {
+    if (typeof tag !== "string") {
+      return;
+    }
+
+    const normalizedTag = tag.trim().toLowerCase();
+    if (!normalizedTag || seen.has(normalizedTag)) {
+      return;
+    }
+
+    seen.add(normalizedTag);
+    normalizedTags.push(normalizedTag);
+  });
+
+  return normalizedTags;
+}
+
+// getDefenderResponseTags() exposes a stable response-tag list without hardcoding starter names.
+function getDefenderResponseTags(defender) {
+  if (!defender || typeof defender !== "object") {
+    return [];
+  }
+
+  const rawTags = [];
+  if (Array.isArray(defender.responseTags)) {
+    rawTags.push(...defender.responseTags);
+  }
+  if (Array.isArray(defender.defenseProfile?.tags)) {
+    rawTags.push(...defender.defenseProfile.tags);
+  }
+
+  return normalizeResponseTagList(rawTags);
+}
+
+// hasResponseTag() checks a single normalized response tag on a Defender.
+function hasResponseTag(defender, tag) {
+  const [normalizedTag] = normalizeResponseTagList([tag]);
+  if (!normalizedTag) {
+    return false;
+  }
+
+  return getDefenderResponseTags(defender).includes(normalizedTag);
+}
+
+// getLivingPartyResponseTags() aggregates unique response tags from living allies only.
+function getLivingPartyResponseTags(battleState = null) {
+  const party = Array.isArray(battleState?.playerParty)
+    ? battleState.playerParty
+    : Array.isArray(programs)
+      ? programs
+      : [];
+
+  const allTags = party
+    .filter((program) => program && (!Number.isFinite(program.hp) || program.hp > 0))
+    .flatMap((program) => getDefenderResponseTags(program));
+
+  return normalizeResponseTagList(allTags);
+}
+
+function getThreatResponseTagList(threat, key) {
+  if (!threat || typeof threat !== "object") {
+    return [];
+  }
+
+  const directTags = normalizeResponseTagList(threat[key]);
+  if (directTags.length) {
+    return directTags;
+  }
+
+  if (key === "weakTo") {
+    return normalizeResponseTagList(threat.weakPoint);
+  }
+
+  return [];
+}
+
+// getThreatIntentTags() returns normalized tactical-intent tags for future response matching.
+function getThreatIntentTags(threat) {
+  return getThreatResponseTagList(threat, "intentTags");
+}
+
+// isThreatWeakToResponse() reports whether a response tag gets bonus effect against the threat.
+function isThreatWeakToResponse(threat, responseTag) {
+  const [normalizedTag] = normalizeResponseTagList([responseTag]);
+  if (!normalizedTag) {
+    return false;
+  }
+
+  return getThreatResponseTagList(threat, "weakTo").includes(normalizedTag);
+}
+
+// isThreatResistantToResponse() reports whether a response tag is reduced against the threat.
+function isThreatResistantToResponse(threat, responseTag) {
+  const [normalizedTag] = normalizeResponseTagList([responseTag]);
+  if (!normalizedTag) {
+    return false;
+  }
+
+  return getThreatResponseTagList(threat, "resists").includes(normalizedTag);
+}
+
+// isThreatImmuneToResponse() reports whether a response tag should fail against the threat.
+function isThreatImmuneToResponse(threat, responseTag) {
+  const [normalizedTag] = normalizeResponseTagList([responseTag]);
+  if (!normalizedTag) {
+    return false;
+  }
+
+  return getThreatResponseTagList(threat, "immuneTo").includes(normalizedTag);
+}
+
 // hasUsableMove() checks whether the active Defender can currently execute at least one move.
 function hasUsableMove(defender, battleState = null) {
   const safeDefender = defender && typeof defender === "object" ? defender : null;
@@ -856,6 +977,10 @@ function buildScaledThreat(sourceThreat, targetLevel) {
   encounter.def = Math.max(1, Math.round((encounter.def || 1) * statScale));
   encounter.spd = Math.max(1, Math.round((encounter.spd || 1) * Math.max(0.7, 1 + (levelDelta * 0.04))));
   encounter.statusEffects = [];
+  encounter.intentTags = getThreatIntentTags(encounter);
+  encounter.weakTo = getThreatResponseTagList(encounter, "weakTo");
+  encounter.resists = getThreatResponseTagList(encounter, "resists");
+  encounter.immuneTo = getThreatResponseTagList(encounter, "immuneTo");
 
   return encounter;
 }
