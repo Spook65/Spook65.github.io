@@ -9607,6 +9607,80 @@ body {
   text-transform: uppercase;
 }
 
+.combat-attack-stage-card .combat-command-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.combat-attack-stage-card .combat-command-state {
+  font-size: 0.5rem;
+  line-height: 1.35;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(231, 220, 198, 0.74);
+}
+
+.combat-attack-stage-card.is-ready .combat-command-state {
+  color: rgba(127, 183, 176, 0.92);
+}
+
+.combat-attack-stage-card.is-gauge-low .combat-command-state,
+.combat-attack-stage-card.is-blocked .combat-command-state {
+  color: rgba(209, 179, 116, 0.9);
+}
+
+.combat-attack-move-preview {
+  width: min(12.8rem, 100%);
+  display: grid;
+  gap: 0.24rem;
+  padding: 0.42rem 0.5rem 0.44rem;
+  border: 1px solid rgba(121, 181, 187, 0.18);
+  border-radius: 0.68rem;
+  background: linear-gradient(180deg, rgba(9, 10, 13, 0.68), rgba(7, 8, 11, 0.82));
+  box-shadow: 0 8px 14px rgba(0, 0, 0, 0.16);
+}
+
+.combat-attack-move-preview-name {
+  color: rgba(231, 220, 198, 0.92);
+  font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.combat-attack-move-preview-meta {
+  color: rgba(231, 220, 198, 0.62);
+  font-size: 0.45rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.combat-attack-move-preview-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.16rem 0.46rem;
+  color: rgba(127, 183, 176, 0.88);
+  font-size: 0.45rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.combat-attack-move-preview-status {
+  color: rgba(231, 220, 198, 0.84);
+  font-size: 0.5rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.combat-attack-move-preview-note {
+  color: rgba(231, 220, 198, 0.58);
+  font-size: 0.43rem;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
 .combat-attack-utility-strip {
   position: relative;
   z-index: 1;
@@ -9782,6 +9856,10 @@ body {
   .combat-attack-resource-ribbon {
     width: min(12.2rem, 100%);
   }
+
+  .combat-attack-move-preview {
+    width: min(12.2rem, 100%);
+  }
 }
 
 @media (max-width: 920px) {
@@ -9895,6 +9973,19 @@ body {
 
   .combat-attack-stage-card .combat-command-name {
     font-size: 0.74rem;
+  }
+
+  .combat-attack-stage-card .combat-command-state {
+    font-size: 0.46rem;
+  }
+
+  .combat-attack-move-preview {
+    width: min(11.3rem, 100%);
+    padding: 0.36rem 0.44rem 0.4rem;
+  }
+
+  .combat-attack-move-preview-name {
+    font-size: 0.66rem;
   }
 
   .combat-command-grid.is-main-grid,
@@ -10063,6 +10154,17 @@ body {
 
   .combat-attack-stage-card.move-slot {
     min-height: 3.2rem;
+  }
+
+  .combat-attack-move-preview {
+    width: min(10.8rem, 100%);
+    padding: 0.32rem 0.4rem 0.36rem;
+  }
+
+  .combat-attack-move-preview-meta,
+  .combat-attack-move-preview-stats,
+  .combat-attack-move-preview-note {
+    font-size: 0.4rem;
   }
 
   .combat-attack-overlay .party-rail {

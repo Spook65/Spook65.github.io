@@ -696,33 +696,69 @@ function buildThreatVisualMarkup(state) {
 
 // buildActionButtonMarkup() renders only the current actor's moves so the bottom bar feels like a battle menu.
 function buildAttackMoveButtonMarkup(ability, index, availability) {
-  const currentCharges = availability.charges;
-  const maxCharges = availability.maxCharges;
+  const requiredGauge = Number.isFinite(availability.requiredGauge) ? availability.requiredGauge : 0;
   const isNoCharges = availability.reason === "charges";
   const isGaugeLow = availability.reason === "gauge";
   const disabledClass = isNoCharges ? "is-disabled" : isGaugeLow ? "is-gauge-low" : "is-ready";
-  const moveAccuracy = Number.isFinite(ability.accuracy) ? `${ability.accuracy}% ACC` : null;
-  const moveCharges = `CHG ${currentCharges}/${maxCharges}`;
-  const moveMeta = [ability.domain, ability.category]
+  const moveTypeLabel = [ability.domain, ability.category, ability.effect]
     .filter(Boolean)
     .map((value) => String(value).toUpperCase())
-    .concat([`PWR ${Number.isFinite(ability.power) ? ability.power : ability.baseDamage || 0}`, moveAccuracy, moveCharges].filter(Boolean))
-    .join(" / ");
-  const requirementMeta = isNoCharges
-    ? availability.message || "NO CHARGES REMAINING."
+    .join(" / ") || "STANDARD";
+  const stateLabel = availability.canUse
+    ? "READY"
     : isGaugeLow
-      ? `${availability.message || "NOT ENOUGH TACTICAL GAUGE."} CURRENT ${availability.currentGauge}.`
-      : availability.requiredGauge > 0
-        ? `REQUIRES ${availability.requiredGauge} TACTICAL GAUGE.`
-        : "NO TACTICAL GAUGE REQUIRED.";
+      ? "LOW GAUGE"
+      : isNoCharges
+        ? "NO CHARGE"
+        : "BLOCKED";
 
   return `
     <button class="combat-action-button battle-move-option ${disabledClass}" type="button" data-combat-ability="${index}" data-combat-ability-id="${ability.id || ""}" data-ability-cost="${ability.cost}" data-availability-reason="${availability.reason}" ${isNoCharges ? 'aria-disabled="true"' : ""}>
       <span class="combat-command-name">${ability.name.toUpperCase()}</span>
-      <span class="combat-command-meta">${moveMeta}</span>
-      <span class="combat-command-cost">${requirementMeta}</span>
-      <span class="combat-command-detail">${availability.canUse ? "READY TO EXECUTE." : availability.detail || availability.message || "SELECT ANOTHER MOVE."}</span>
+      <span class="combat-command-meta">${moveTypeLabel}</span>
+      <span class="combat-command-foot">
+        <span class="combat-command-cost">COST ${requiredGauge}</span>
+        <span class="combat-command-state">${stateLabel}</span>
+      </span>
     </button>
+  `;
+}
+
+function buildAttackMovePreviewMarkup(ability, availability) {
+  if (!ability || !availability) {
+    return "";
+  }
+
+  const moveTypeLabel = [ability.domain, ability.category, ability.effect]
+    .filter(Boolean)
+    .map((value) => String(value).toUpperCase())
+    .join(" / ") || "STANDARD";
+  const movePower = Number.isFinite(ability.power) ? ability.power : Number.isFinite(ability.baseDamage) ? ability.baseDamage : 0;
+  const moveAccuracy = Number.isFinite(ability.accuracy) ? `${ability.accuracy}%` : "100%";
+  const moveCharges = `${availability.charges}/${availability.maxCharges}`;
+  const requiredGauge = Number.isFinite(availability.requiredGauge) ? availability.requiredGauge : 0;
+  const shortStatus = availability.canUse
+    ? "READY TO EXECUTE."
+    : availability.reason === "gauge"
+      ? `NEEDS ${requiredGauge} GAUGE · HAVE ${availability.currentGauge}.`
+      : availability.reason === "charges"
+        ? "NO CHARGES REMAINING."
+        : availability.message || "SELECT ANOTHER MOVE.";
+  const detailCopy = availability.detail || availability.message || "";
+
+  return `
+    <aside class="combat-attack-move-preview" aria-live="polite" aria-label="Selected move detail">
+      <div class="combat-attack-move-preview-name">${ability.name.toUpperCase()}</div>
+      <div class="combat-attack-move-preview-meta">${moveTypeLabel}</div>
+      <div class="combat-attack-move-preview-stats">
+        <span>PWR ${movePower}</span>
+        <span>ACC ${moveAccuracy}</span>
+        <span>CHG ${moveCharges}</span>
+        <span>COST ${requiredGauge}</span>
+      </div>
+      <div class="combat-attack-move-preview-status">${shortStatus}</div>
+      ${detailCopy ? `<div class="combat-attack-move-preview-note">${detailCopy}</div>` : ""}
+    </aside>
   `;
 }
 
@@ -815,7 +851,7 @@ function buildAttackStageFanMarkup(state) {
 
   console.log("[Attack Prototype] fan enabled:", true);
 
-  const moveCards = actor.abilities.map((ability, index) => {
+  const moveEntries = actor.abilities.map((ability, index) => {
     const availability = typeof getMoveUseAvailability === "function" ? getMoveUseAvailability(ability, state) : {
       canUse: state.responseGauge >= ability.cost && getMoveChargeCount(ability) > 0,
       reason: state.responseGauge >= ability.cost ? "ready" : "gauge",
@@ -833,6 +869,11 @@ function buildAttackStageFanMarkup(state) {
         : "is-blocked";
     const fanClass = index === 0 ? "is-primary" : "is-secondary";
 
+    return { ability, index, availability, availabilityClass, fanClass };
+  });
+
+  const moveCards = moveEntries.map(({ ability, index, availability, availabilityClass, fanClass }) => {
+
     return `
       <div class="combat-attack-move-shell" style="--attack-fan-index:${index}">
         ${buildAttackMoveButtonMarkup(ability, index, availability).replace(
@@ -843,11 +884,15 @@ function buildAttackStageFanMarkup(state) {
     `;
   }).join("");
 
+  const previewEntry = moveEntries.find(({ availability }) => availability.canUse) || moveEntries[0];
+  const previewMarkup = buildAttackMovePreviewMarkup(previewEntry?.ability, previewEntry?.availability);
+
   return `
     <div class="combat-attack-stage-overlay move-lens" aria-label="Attack move fan" data-prototype-attack-overlay="true">
       <div class="combat-attack-stage-fan combat-attack-move-lens">
         ${moveCards}
       </div>
+      ${previewMarkup}
     </div>
   `;
 }
