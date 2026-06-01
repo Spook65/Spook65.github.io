@@ -864,8 +864,6 @@ function buildAttackStageUtilityMarkup(state) {
   }
 
   const focusNeeded = typeof hasUsableMove === "function" ? !hasUsableMove(currentActor.ref, state) : false;
-  const comboButtons = buildAttackComboButtonsMarkup(state, "combat-attack-prompt combat-attack-combo-prompt combat-attack-hitbox");
-
   return `
     <div class="combat-attack-utility-strip" aria-label="Attack controls">
       <div class="combat-attack-prompt-rail">
@@ -873,13 +871,12 @@ function buildAttackStageUtilityMarkup(state) {
           <span class="combat-attack-prompt-key">BACK</span>
           <span class="combat-attack-prompt-copy">RETURN</span>
         </button>
-        ${comboButtons.join("")}
+        <button class="combat-action-button is-secondary combat-focus-button combat-attack-prompt combat-attack-focus-prompt combat-attack-hitbox ${focusNeeded ? "is-focus-needed" : ""}" type="button" data-combat-command="focus">
+          <span class="combat-attack-prompt-key">FOCUS</span>
+          <span class="combat-attack-prompt-copy">RECOVER / END TURN</span>
+        </button>
       </div>
       <div class="resource-ribbon combat-attack-resource-ribbon">
-        <button class="combat-action-button is-secondary combat-focus-button focus-plate combat-attack-focus-prompt combat-attack-hitbox ${focusNeeded ? "is-focus-needed" : ""}" type="button" data-combat-command="focus">
-          <span class="plate-title">FOCUS</span>
-          <span class="plate-copy">Recover Gauge / End Turn</span>
-        </button>
         <div class="gauge-lens combat-attack-gauge-lens combat-attack-hitbox ${focusNeeded ? "is-focus-needed" : ""}">
           <div class="gauge-head">
             <span class="gauge-label">TACTICAL GAUGE</span>
@@ -888,7 +885,6 @@ function buildAttackStageUtilityMarkup(state) {
           <div class="gauge-track" aria-hidden="true">
             <span class="gauge-fill" style="width:${state.responseGauge}%"></span>
           </div>
-          <div class="gauge-caption">${focusNeeded ? "Focus reopens high-cost moves." : "Gauge gates high-cost moves."}</div>
         </div>
       </div>
     </div>
