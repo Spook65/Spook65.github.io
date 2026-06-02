@@ -146,6 +146,7 @@ function buildEnemyTargetReadoutMarkup(state, options = {}) {
   const weaknessLabel = String(getActorCombatType(threat, true) || "UNKNOWN").toUpperCase();
   const intentLabel = state.enemyIntent ? String(state.enemyIntent.label || "STRIKE").toUpperCase() : "";
   const intentIcon = state.enemyIntent ? String(state.enemyIntent.iconLabel || state.enemyIntent.severity || "").toUpperCase() : "";
+  const responseHint = typeof getThreatResponseHint === "function" ? getThreatResponseHint(state) : null;
   const statusMarkup = renderStatusPills(threat.statusEffects);
   const readoutClasses = [
     "combat-enemy-target-readout",
@@ -165,6 +166,7 @@ function buildEnemyTargetReadoutMarkup(state, options = {}) {
         <div class="combat-enemy-detail-line"><span>LVL</span><strong>${displayLevel}</strong></div>
         <div class="combat-enemy-detail-line"><span>WEAK</span><strong>${weaknessLabel}</strong></div>
         ${state.enemyIntent ? `<div class="combat-enemy-detail-line"><span>INTENT</span><strong>${intentLabel}${intentIcon ? ` / ${intentIcon}` : ""}</strong></div>` : ""}
+        ${responseHint ? `<div class="combat-enemy-response-hint is-${responseHint.tone || "neutral"}"><span>${responseHint.label}</span><strong>${responseHint.text}</strong></div>` : ""}
         ${statusMarkup ? `<div class="combat-enemy-detail-status">${statusMarkup}</div>` : ""}
       </div>
     </div>

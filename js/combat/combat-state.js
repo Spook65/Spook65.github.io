@@ -609,6 +609,76 @@ function isThreatImmuneToResponse(threat, responseTag) {
   return getThreatResponseTagList(threat, "immuneTo").includes(normalizedTag);
 }
 
+function formatResponseHintTag(tag) {
+  return String(tag || "").trim().toUpperCase();
+}
+
+// getThreatResponseHint() surfaces the best current response match without changing combat outcomes.
+function getThreatResponseHint(battleState = null) {
+  const threat = battleState?.threat;
+  if (!battleState?.enemyIntent || !threat) {
+    return null;
+  }
+
+  const livingTags = getLivingPartyResponseTags(battleState);
+  if (!livingTags.length) {
+    return {
+      label: "RESPONSE HINT",
+      text: "No strong response detected.",
+      tag: "",
+      tone: "neutral"
+    };
+  }
+
+  const weakMatch = livingTags.find((tag) => isThreatWeakToResponse(threat, tag) && !isThreatImmuneToResponse(threat, tag));
+  if (weakMatch) {
+    return {
+      label: "RESPONSE HINT",
+      text: `Recommended response: ${formatResponseHintTag(weakMatch)}`,
+      tag: weakMatch,
+      tone: "strong"
+    };
+  }
+
+  const intentTags = getThreatIntentTags(threat);
+  const intentMatch = livingTags.find((tag) => intentTags.includes(tag) && !isThreatResistantToResponse(threat, tag) && !isThreatImmuneToResponse(threat, tag));
+  if (intentMatch) {
+    return {
+      label: "RESPONSE HINT",
+      text: `Available counter: ${formatResponseHintTag(intentMatch)}`,
+      tag: intentMatch,
+      tone: "counter"
+    };
+  }
+
+  const resistedMatch = livingTags.find((tag) => isThreatResistantToResponse(threat, tag) && !isThreatImmuneToResponse(threat, tag));
+  if (resistedMatch) {
+    return {
+      label: "RESPONSE HINT",
+      text: `${formatResponseHintTag(resistedMatch)} has reduced effect.`,
+      tag: resistedMatch,
+      tone: "caution"
+    };
+  }
+
+  const immuneMatch = livingTags.find((tag) => isThreatImmuneToResponse(threat, tag));
+  if (immuneMatch) {
+    return {
+      label: "RESPONSE HINT",
+      text: `${formatResponseHintTag(immuneMatch)} ineffective.`,
+      tag: immuneMatch,
+      tone: "blocked"
+    };
+  }
+
+  return {
+    label: "RESPONSE HINT",
+    text: "No strong response detected.",
+    tag: "",
+    tone: "neutral"
+  };
+}
+
 // hasUsableMove() checks whether the active Defender can currently execute at least one move.
 function hasUsableMove(defender, battleState = null) {
   const safeDefender = defender && typeof defender === "object" ? defender : null;

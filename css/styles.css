@@ -8866,6 +8866,32 @@ body {
   font-size: 0.42rem;
 }
 
+.combat-enemy-response-hint {
+  display: grid;
+  gap: 0.12rem;
+  max-width: 12rem;
+  padding-top: 0.1rem;
+  color: rgba(145, 198, 255, 0.72);
+  font-size: 0.36rem;
+  letter-spacing: 0.14em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.combat-enemy-response-hint strong {
+  color: rgba(215, 184, 106, 0.92);
+  font-size: 0.39rem;
+}
+
+.combat-enemy-response-hint.is-caution strong,
+.combat-enemy-response-hint.is-blocked strong {
+  color: rgba(255, 142, 111, 0.9);
+}
+
+.combat-enemy-response-hint.is-neutral strong {
+  color: rgba(220, 223, 231, 0.72);
+}
+
 .combat-enemy-detail-status .status-pill-row {
   gap: 0.18rem;
   padding-top: 0.04rem;
