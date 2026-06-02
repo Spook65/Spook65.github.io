@@ -447,43 +447,43 @@ class ThreatCombat {
         status: "NORMAL",
         damageReduction: 0,
         gaugeGain: 0,
-        message: "NO RESPONSE SELECTED.",
-        submessage: "PAYLOAD LANDS WITHOUT COUNTERPLAY.",
-        logMessage: "NO RESPONSE SELECTED. PAYLOAD LANDED WITHOUT COUNTERPLAY.",
+        message: "NO DEFENSIVE RESPONSE SELECTED.",
+        submessage: "INCOMING PAYLOAD LANDS WITHOUT MITIGATION.",
+        logMessage: "NO DEFENSIVE RESPONSE SELECTED. PAYLOAD LANDED WITHOUT MITIGATION.",
         variant: "damage"
       };
     }
 
-    const gaugeText = safeEvaluation.gaugeGain > 0 ? ` Tactical Gauge +${safeEvaluation.gaugeGain}.` : "";
-    const reducedText = safeEvaluation.damageReduction > 0 ? " Damage reduced." : "";
+    const gaugeText = safeEvaluation.gaugeGain > 0 ? ` Tactical Gauge restored +${safeEvaluation.gaugeGain}.` : "";
+    const reducedText = safeEvaluation.damageReduction > 0 ? " Incoming damage reduced." : "";
     const responseCopy = {
       isolate: {
-        normal: `ISOLATE contained part of the spread.${reducedText}`,
-        resisted: `ISOLATE met resistance.${reducedText}`,
-        ineffective: "ISOLATE failed. Target ignored containment.",
-        recommended: `ISOLATE contained the spread.${reducedText}`,
-        empowered: `ISOLATE contained the spread.${reducedText}`
+        normal: `ISOLATE contained part of the payload.${reducedText}`,
+        resisted: `Response resisted. ISOLATE applied only minor mitigation.${reducedText}`,
+        ineffective: "Response ineffective. Threat ignored this countermeasure.",
+        recommended: `ISOLATE contained the payload.${reducedText}`,
+        empowered: `ISOLATE contained the payload.${reducedText}`
       },
       countertrace: {
-        normal: `COUNTERTRACE traced part of the route.${reducedText}${gaugeText}`,
-        resisted: `COUNTERTRACE was partially blocked.${reducedText}${gaugeText}`,
-        ineffective: "COUNTERTRACE failed. Source route stayed hidden.",
-        recommended: `COUNTERTRACE found the attack route.${reducedText}${gaugeText}`,
-        empowered: `COUNTERTRACE found the attack route.${reducedText}${gaugeText}`
+        normal: `COUNTERTRACE mapped part of the route.${reducedText}${gaugeText}`,
+        resisted: `Response resisted. COUNTERTRACE recovered only a partial route.${reducedText}${gaugeText}`,
+        ineffective: "Response ineffective. Threat kept the route hidden.",
+        recommended: `COUNTERTRACE mapped the route.${reducedText}${gaugeText}`,
+        empowered: `COUNTERTRACE mapped the route.${reducedText}${gaugeText}`
       },
       redirect: {
-        normal: `REDIRECT routed part of the payload into decoy space.${reducedText}`,
-        resisted: `REDIRECT was resisted.${reducedText}`,
+        normal: `REDIRECT diverted part of the incoming payload.${reducedText}`,
+        resisted: `Response resisted. REDIRECT applied only minor mitigation.${reducedText}`,
         ineffective: "REDIRECT failed. Target ignored decoy routing.",
-        recommended: `REDIRECT routed the payload into decoy space.${reducedText}`,
-        empowered: `REDIRECT routed the payload into decoy space.${reducedText}`
+        recommended: `REDIRECT diverted the incoming payload.${reducedText}`,
+        empowered: `REDIRECT diverted the incoming payload.${reducedText}`
       },
       purge: {
         normal: `PURGE cleaned hostile residue.${reducedText}`,
-        resisted: `PURGE was resisted.${reducedText}`,
-        ineffective: "PURGE failed. Hostile residue remained active.",
-        recommended: `PURGE cleaned hostile residue.${reducedText}`,
-        empowered: `PURGE cleaned hostile residue.${reducedText}`
+        resisted: `Response resisted. PURGE applied only minor mitigation.${reducedText}`,
+        ineffective: "Response ineffective. Hostile residue remained active.",
+        recommended: `PURGE cleaned hostile residue. Incoming effect reduced.`,
+        empowered: `PURGE cleaned hostile residue. Incoming effect reduced.`
       }
     };
     const copyKey = safeEvaluation.status === "INEFFECTIVE"
@@ -496,14 +496,14 @@ class ThreatCombat {
             ? "empowered"
             : "normal";
     const message = responseCopy[safeEvaluation.id]?.[copyKey]
-      || (safeEvaluation.damageReduction > 0 ? "Payload partially mitigated." : "No strong counter. Payload continues.");
+      || (safeEvaluation.damageReduction > 0 ? "Incoming payload partially mitigated." : "No strong counter. Payload continues.");
 
     return {
       ...safeEvaluation,
       message,
       submessage: safeEvaluation.status === "INEFFECTIVE"
-        ? "NO MITIGATION APPLIED."
-        : `${Math.round(safeEvaluation.damageReduction * 100)}% DAMAGE MITIGATION${safeEvaluation.gaugeGain > 0 ? ` / GAUGE +${safeEvaluation.gaugeGain}` : ""}.`,
+        ? "RESPONSE INEFFECTIVE - NO MITIGATION APPLIED."
+        : `INCOMING DAMAGE MITIGATED ${Math.round(safeEvaluation.damageReduction * 100)}%${safeEvaluation.gaugeGain > 0 ? ` / GAUGE +${safeEvaluation.gaugeGain}` : ""}.`,
       logMessage: message.toUpperCase(),
       variant: safeEvaluation.status === "INEFFECTIVE" ? "damage" : "buff"
     };
@@ -543,8 +543,8 @@ class ThreatCombat {
     this.state.responseResult = null;
     this.state.actionLocked = false;
     this.state.commandMode = "response";
-    this.state.battleMessage = "ENEMY RESPONSE.";
-    this.state.battleSubmessage = "CHOOSE A COUNTER BEFORE THE PAYLOAD LANDS.";
+    this.state.battleMessage = "DEFEND PHASE.";
+    this.state.battleSubmessage = "ENEMY PAYLOAD INCOMING. CHOOSE ONE RESPONSE BEFORE IMPACT.";
     this.state.visualEffect = null;
     renderCombatScreen();
   }

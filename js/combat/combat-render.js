@@ -1136,13 +1136,13 @@ function buildEnemyResponseMenuMarkup(state) {
     : "NONE - CHOOSE MITIGATION";
 
   return `
-    <section class="combat-response-panel" aria-label="Enemy response">
+    <section class="combat-response-panel" aria-label="Defend phase">
       <div class="combat-response-header">
-        <span class="combat-response-eyebrow">ENEMY RESPONSE</span>
-        <span class="combat-response-intent">THREAT INTENT: ${intentLabel}${intentIcon ? ` / ${intentIcon}` : ""}</span>
+        <span class="combat-response-eyebrow">DEFEND PHASE</span>
+        <span class="combat-response-intent">INCOMING INTENT: ${intentLabel}${intentIcon ? ` / ${intentIcon}` : ""}</span>
       </div>
-      <div class="combat-response-copy">Choose a counter before the payload lands.</div>
-      <div class="combat-response-recommendation">RECOMMENDED: ${recommendedLabel}</div>
+      <div class="combat-response-copy">Enemy payload incoming. Choose one response before impact.</div>
+      <div class="combat-response-recommendation">RECOMMENDED COUNTER: ${recommendedLabel}</div>
       <div class="combat-response-grid">
         ${responseOptions.map((option) => `
           <button class="combat-action-button combat-response-card is-${String(option.status || "normal").toLowerCase()}" type="button" data-combat-command="response:${option.id}">

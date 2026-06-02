@@ -617,7 +617,7 @@ const enemyResponseActions = [
   {
     id: "isolate",
     name: "ISOLATE",
-    shortText: "Contain spread damage.",
+    shortText: "Reduce incoming spread damage.",
     responseTags: ["isolate"],
     empowerTags: ["isolate"],
     intentTags: ["swarm", "spread", "multi", "flood", "overload"],
@@ -639,7 +639,7 @@ const enemyResponseActions = [
   {
     id: "countertrace",
     name: "COUNTERTRACE",
-    shortText: "Trace the attack route.",
+    shortText: "Reduce damage and gain gauge.",
     responseTags: ["countertrace"],
     empowerTags: ["countertrace"],
     intentTags: ["deceive", "harvest", "stealth", "escalate", "breach", "persist"],
@@ -661,7 +661,7 @@ const enemyResponseActions = [
   {
     id: "redirect",
     name: "REDIRECT",
-    shortText: "Route payload into decoy.",
+    shortText: "Divert incoming payload.",
     responseTags: ["redirect", "decoy", "bait"],
     empowerTags: ["decoy", "redirect", "bait"],
     intentTags: ["deceive", "redirect", "harvest", "beacon"],
@@ -683,7 +683,7 @@ const enemyResponseActions = [
   {
     id: "purge",
     name: "PURGE",
-    shortText: "Clean hostile residue.",
+    shortText: "Cleanse status pressure.",
     responseTags: ["purge", "cleanse", "recover"],
     empowerTags: ["purge", "cleanse", "recover"],
     intentTags: ["corrupt", "shield", "persist", "status"],
