@@ -623,8 +623,8 @@ function getThreatResponseHint(battleState = null) {
   const livingTags = getLivingPartyResponseTags(battleState);
   if (!livingTags.length) {
     return {
-      label: "RESPONSE HINT",
-      text: "No strong response detected.",
+      label: "COUNTERPLAY",
+      text: "NO STRONG COUNTER",
       tag: "",
       tone: "neutral"
     };
@@ -633,8 +633,8 @@ function getThreatResponseHint(battleState = null) {
   const weakMatch = livingTags.find((tag) => isThreatWeakToResponse(threat, tag) && !isThreatImmuneToResponse(threat, tag));
   if (weakMatch) {
     return {
-      label: "RESPONSE HINT",
-      text: `Recommended response: ${formatResponseHintTag(weakMatch)}`,
+      label: "COUNTERPLAY",
+      text: formatResponseHintTag(weakMatch),
       tag: weakMatch,
       tone: "strong"
     };
@@ -644,8 +644,8 @@ function getThreatResponseHint(battleState = null) {
   const intentMatch = livingTags.find((tag) => intentTags.includes(tag) && !isThreatResistantToResponse(threat, tag) && !isThreatImmuneToResponse(threat, tag));
   if (intentMatch) {
     return {
-      label: "RESPONSE HINT",
-      text: `Available counter: ${formatResponseHintTag(intentMatch)}`,
+      label: "COUNTERPLAY",
+      text: formatResponseHintTag(intentMatch),
       tag: intentMatch,
       tone: "counter"
     };
@@ -654,8 +654,8 @@ function getThreatResponseHint(battleState = null) {
   const resistedMatch = livingTags.find((tag) => isThreatResistantToResponse(threat, tag) && !isThreatImmuneToResponse(threat, tag));
   if (resistedMatch) {
     return {
-      label: "RESPONSE HINT",
-      text: `${formatResponseHintTag(resistedMatch)} has reduced effect.`,
+      label: "COUNTERPLAY",
+      text: `${formatResponseHintTag(resistedMatch)} RESISTED`,
       tag: resistedMatch,
       tone: "caution"
     };
@@ -664,16 +664,16 @@ function getThreatResponseHint(battleState = null) {
   const immuneMatch = livingTags.find((tag) => isThreatImmuneToResponse(threat, tag));
   if (immuneMatch) {
     return {
-      label: "RESPONSE HINT",
-      text: `${formatResponseHintTag(immuneMatch)} ineffective.`,
+      label: "COUNTERPLAY",
+      text: `${formatResponseHintTag(immuneMatch)} INEFFECTIVE`,
       tag: immuneMatch,
       tone: "blocked"
     };
   }
 
   return {
-    label: "RESPONSE HINT",
-    text: "No strong response detected.",
+    label: "COUNTERPLAY",
+    text: "NO STRONG COUNTER",
     tag: "",
     tone: "neutral"
   };

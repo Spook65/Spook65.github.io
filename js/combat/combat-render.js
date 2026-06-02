@@ -726,44 +726,6 @@ function buildAttackMoveButtonMarkup(ability, index, availability) {
   `;
 }
 
-function buildAttackMovePreviewMarkup(ability, availability) {
-  if (!ability || !availability) {
-    return "";
-  }
-
-  const moveTypeLabel = [ability.domain, ability.category, ability.effect]
-    .filter(Boolean)
-    .map((value) => String(value).toUpperCase())
-    .join(" / ") || "STANDARD";
-  const movePower = Number.isFinite(ability.power) ? ability.power : Number.isFinite(ability.baseDamage) ? ability.baseDamage : 0;
-  const moveAccuracy = Number.isFinite(ability.accuracy) ? `${ability.accuracy}%` : "100%";
-  const moveCharges = `${availability.charges}/${availability.maxCharges}`;
-  const requiredGauge = Number.isFinite(availability.requiredGauge) ? availability.requiredGauge : 0;
-  const shortStatus = availability.canUse
-    ? "READY TO EXECUTE."
-    : availability.reason === "gauge"
-      ? `NEEDS ${requiredGauge} GAUGE · HAVE ${availability.currentGauge}.`
-      : availability.reason === "charges"
-        ? "NO CHARGES REMAINING."
-        : availability.message || "SELECT ANOTHER MOVE.";
-  const detailCopy = availability.detail || availability.message || "";
-
-  return `
-    <aside class="combat-attack-move-preview" aria-live="polite" aria-label="Selected move detail">
-      <div class="combat-attack-move-preview-name">${ability.name.toUpperCase()}</div>
-      <div class="combat-attack-move-preview-meta">${moveTypeLabel}</div>
-      <div class="combat-attack-move-preview-stats">
-        <span>PWR ${movePower}</span>
-        <span>ACC ${moveAccuracy}</span>
-        <span>CHG ${moveCharges}</span>
-        <span>COST ${requiredGauge}</span>
-      </div>
-      <div class="combat-attack-move-preview-status">${shortStatus}</div>
-      ${detailCopy ? `<div class="combat-attack-move-preview-note">${detailCopy}</div>` : ""}
-    </aside>
-  `;
-}
-
 function buildAttackComboButtonsMarkup(state, extraClass = "") {
   const firewall = programs.find((program) => program.id === "firewall-7" && program.hp > 0);
   const ids = programs.find((program) => program.id === "ids-4" && program.hp > 0);
@@ -886,15 +848,11 @@ function buildAttackStageFanMarkup(state) {
     `;
   }).join("");
 
-  const previewEntry = moveEntries.find(({ availability }) => availability.canUse) || moveEntries[0];
-  const previewMarkup = buildAttackMovePreviewMarkup(previewEntry?.ability, previewEntry?.availability);
-
   return `
     <div class="combat-attack-stage-overlay move-lens" aria-label="Attack move fan" data-prototype-attack-overlay="true">
       <div class="combat-attack-stage-fan combat-attack-move-lens">
         ${moveCards}
       </div>
-      ${previewMarkup}
     </div>
   `;
 }
