@@ -613,6 +613,197 @@ function formatResponseHintTag(tag) {
   return String(tag || "").trim().toUpperCase();
 }
 
+const enemyResponseActions = [
+  {
+    id: "isolate",
+    name: "ISOLATE",
+    shortText: "Contain spread damage.",
+    responseTags: ["isolate"],
+    empowerTags: ["isolate"],
+    intentTags: ["swarm", "spread", "multi", "flood", "overload"],
+    reductions: {
+      normal: 0.35,
+      recommended: 0.65,
+      empowered: 0.35,
+      resisted: 0.15,
+      immune: 0
+    },
+    gaugeGain: {
+      normal: 0,
+      recommended: 0,
+      empowered: 0,
+      resisted: 0,
+      immune: 0
+    }
+  },
+  {
+    id: "countertrace",
+    name: "COUNTERTRACE",
+    shortText: "Trace the attack route.",
+    responseTags: ["countertrace"],
+    empowerTags: ["countertrace"],
+    intentTags: ["deceive", "harvest", "stealth", "escalate", "breach", "persist"],
+    reductions: {
+      normal: 0.25,
+      recommended: 0.5,
+      empowered: 0.25,
+      resisted: 0.1,
+      immune: 0
+    },
+    gaugeGain: {
+      normal: 8,
+      recommended: 15,
+      empowered: 8,
+      resisted: 4,
+      immune: 0
+    }
+  },
+  {
+    id: "redirect",
+    name: "REDIRECT",
+    shortText: "Route payload into decoy.",
+    responseTags: ["redirect", "decoy", "bait"],
+    empowerTags: ["decoy", "redirect", "bait"],
+    intentTags: ["deceive", "redirect", "harvest", "beacon"],
+    reductions: {
+      normal: 0.3,
+      recommended: 0.55,
+      empowered: 0.55,
+      resisted: 0.1,
+      immune: 0
+    },
+    gaugeGain: {
+      normal: 0,
+      recommended: 0,
+      empowered: 0,
+      resisted: 0,
+      immune: 0
+    }
+  },
+  {
+    id: "purge",
+    name: "PURGE",
+    shortText: "Clean hostile residue.",
+    responseTags: ["purge", "cleanse", "recover"],
+    empowerTags: ["purge", "cleanse", "recover"],
+    intentTags: ["corrupt", "shield", "persist", "status"],
+    reductions: {
+      normal: 0.25,
+      recommended: 0.55,
+      empowered: 0.45,
+      resisted: 0.1,
+      immune: 0
+    },
+    gaugeGain: {
+      normal: 0,
+      recommended: 0,
+      empowered: 0,
+      resisted: 0,
+      immune: 0
+    }
+  }
+];
+
+function getEnemyResponseActions() {
+  return enemyResponseActions.map((action) => ({ ...action }));
+}
+
+function getEnemyResponseAction(responseId) {
+  const normalizedId = String(responseId || "").trim().toLowerCase();
+  return enemyResponseActions.find((action) => action.id === normalizedId) || null;
+}
+
+function hasAnyResponseTag(sourceTags, targetTags) {
+  const normalizedSourceTags = normalizeResponseTagList(sourceTags);
+  const normalizedTargetTags = normalizeResponseTagList(targetTags);
+  return normalizedTargetTags.some((tag) => normalizedSourceTags.includes(tag));
+}
+
+function getCurrentEnemyIntentResponseTags(battleState = null) {
+  const currentIntent = battleState?.pendingEnemyAction?.resolvedEnemyIntent?.intent
+    || battleState?.enemyIntent
+    || battleState?.resolvedEnemyIntent
+    || null;
+  const currentIntentTags = normalizeResponseTagList([
+    currentIntent?.id,
+    currentIntent?.type,
+    currentIntent?.severity,
+    currentIntent?.iconLabel,
+    ...(Array.isArray(currentIntent?.intentTags) ? currentIntent.intentTags : [])
+  ]);
+
+  return normalizeResponseTagList([
+    ...currentIntentTags,
+    ...getThreatIntentTags(battleState?.threat)
+  ]);
+}
+
+function doesThreatMatchResponse(threat, action, matcher) {
+  return normalizeResponseTagList(action?.responseTags).some((tag) => matcher(threat, tag));
+}
+
+function getEnemyResponseEvaluation(battleState = null, responseId = "") {
+  const action = getEnemyResponseAction(responseId);
+  const threat = battleState?.threat;
+  if (!action || !threat) {
+    return null;
+  }
+
+  const livingTags = getLivingPartyResponseTags(battleState);
+  const intentTags = getCurrentEnemyIntentResponseTags(battleState);
+  const isImmune = doesThreatMatchResponse(threat, action, isThreatImmuneToResponse);
+  const isWeak = doesThreatMatchResponse(threat, action, isThreatWeakToResponse);
+  const isIntentMatch = hasAnyResponseTag(intentTags, action.intentTags);
+  const isResisted = doesThreatMatchResponse(threat, action, isThreatResistantToResponse);
+  const isEmpowered = hasAnyResponseTag(livingTags, action.empowerTags);
+
+  let status = "NORMAL";
+  if (isImmune) {
+    status = "INEFFECTIVE";
+  } else if (isWeak || isIntentMatch) {
+    status = "RECOMMENDED";
+  } else if (isResisted) {
+    status = "RESISTED";
+  } else if (isEmpowered) {
+    status = "EMPOWERED";
+  }
+
+  const effectKey = status === "INEFFECTIVE"
+    ? "immune"
+    : status === "RECOMMENDED"
+      ? "recommended"
+      : status === "EMPOWERED"
+        ? "empowered"
+        : status === "RESISTED"
+          ? "resisted"
+          : "normal";
+
+  return {
+    id: action.id,
+    name: action.name,
+    shortText: action.shortText,
+    status,
+    effectKey,
+    damageReduction: action.reductions[effectKey],
+    gaugeGain: action.gaugeGain[effectKey],
+    isRecommended: status === "RECOMMENDED",
+    isEmpowered,
+    isResisted,
+    isImmune
+  };
+}
+
+function getEnemyResponseOptions(battleState = null) {
+  return enemyResponseActions
+    .map((action) => getEnemyResponseEvaluation(battleState, action.id))
+    .filter(Boolean);
+}
+
+function getRecommendedEnemyResponse(battleState = null) {
+  const options = getEnemyResponseOptions(battleState);
+  return options.find((option) => option.status === "RECOMMENDED") || null;
+}
+
 // getThreatResponseHint() surfaces the best current response match without changing combat outcomes.
 function getThreatResponseHint(battleState = null) {
   const threat = battleState?.threat;
@@ -640,7 +831,7 @@ function getThreatResponseHint(battleState = null) {
     };
   }
 
-  const intentTags = getThreatIntentTags(threat);
+  const intentTags = getCurrentEnemyIntentResponseTags(battleState);
   const intentMatch = livingTags.find((tag) => intentTags.includes(tag) && !isThreatResistantToResponse(threat, tag) && !isThreatImmuneToResponse(threat, tag));
   if (intentMatch) {
     return {
@@ -1281,6 +1472,10 @@ function buildCombatState(sourceThreat) {
     recentEnemyIntents: [],
     resolvedEnemyIntent: null,
     lastEnemyIntentId: enemyIntent?.id || null,
+    responsePhase: false,
+    pendingEnemyAction: null,
+    selectedResponse: null,
+    responseResult: null,
     expAwarded: false,
     pantheonBoonMessages: activeBoonMessages.concat(battleBoonMessages),
     activeBoons: activeBoons

@@ -1118,13 +1118,51 @@ function buildStageCommandPromptMarkup(state) {
   `;
 }
 
+function buildEnemyResponseMenuMarkup(state) {
+  if (!state || !state.responsePhase) {
+    return "";
+  }
+
+  const responseOptions = typeof getEnemyResponseOptions === "function" ? getEnemyResponseOptions(state) : [];
+  if (!responseOptions.length) {
+    return "";
+  }
+
+  const recommendedResponse = typeof getRecommendedEnemyResponse === "function" ? getRecommendedEnemyResponse(state) : null;
+  const intentLabel = state.enemyIntent ? String(state.enemyIntent.label || "UNKNOWN").toUpperCase() : "UNKNOWN";
+  const intentIcon = state.enemyIntent ? String(state.enemyIntent.iconLabel || state.enemyIntent.severity || "").toUpperCase() : "";
+  const recommendedLabel = recommendedResponse
+    ? recommendedResponse.name
+    : "NONE - CHOOSE MITIGATION";
+
+  return `
+    <section class="combat-response-panel" aria-label="Enemy response">
+      <div class="combat-response-header">
+        <span class="combat-response-eyebrow">ENEMY RESPONSE</span>
+        <span class="combat-response-intent">THREAT INTENT: ${intentLabel}${intentIcon ? ` / ${intentIcon}` : ""}</span>
+      </div>
+      <div class="combat-response-copy">Choose a counter before the payload lands.</div>
+      <div class="combat-response-recommendation">RECOMMENDED: ${recommendedLabel}</div>
+      <div class="combat-response-grid">
+        ${responseOptions.map((option) => `
+          <button class="combat-action-button combat-response-card is-${String(option.status || "normal").toLowerCase()}" type="button" data-combat-command="response:${option.id}">
+            <span class="combat-response-name">${option.name}</span>
+            <span class="combat-response-status">${option.status}</span>
+            <span class="combat-response-text">${option.shortText}</span>
+          </button>
+        `).join("")}
+      </div>
+    </section>
+  `;
+}
+
 function buildStageFeedbackToastMarkup(state) {
   if (!state || state.battleIntroPlaying) {
     return "";
   }
 
   const currentActor = state.turnOrder?.[state.currentTurnIndex];
-  const shouldShowFeedback = state.actionLocked || currentActor?.kind === "threat";
+  const shouldShowFeedback = !state.responsePhase && (state.actionLocked || currentActor?.kind === "threat");
   const primaryLine = String(state.battleMessage || "").trim();
   const secondaryLine = String(state.battleSubmessage || "").trim();
 
@@ -1332,6 +1370,7 @@ function buildCombatMarkup(state) {
   const stageCommandClusterActive = Boolean(stageCommandClusterMarkup);
   const stageCommandSubmenuMarkup = buildStageCommandSubmenuMarkup(state);
   const stageCommandSubmenuActive = Boolean(stageCommandSubmenuMarkup);
+  const enemyResponseMenuMarkup = buildEnemyResponseMenuMarkup(state);
   const stageFeedbackToastMarkup = buildStageFeedbackToastMarkup(state);
   const stageFeedbackActive = Boolean(stageFeedbackToastMarkup);
   const collapseActiveHud = shouldCollapseActiveHud(state);
@@ -1386,6 +1425,7 @@ function buildCombatMarkup(state) {
         ${attackStageOverlayMarkup}
         ${stageCommandClusterMarkup}
         ${stageCommandSubmenuMarkup}
+        ${enemyResponseMenuMarkup}
         ${stageFeedbackToastMarkup}
         <div class="combat-reserve-strip">
           <div class="combat-reserve-row">
@@ -1581,11 +1621,22 @@ function bindCombatButtons() {
 
   threatPanelContent.querySelectorAll("[data-combat-command]").forEach((button) => {
     button.addEventListener("click", () => {
-      if (!combatState || !actor || actor.kind !== "program" || combatState.actionLocked) {
+      if (!combatState || !actor) {
         return;
       }
 
       const command = button.getAttribute("data-combat-command");
+
+      if (command && command.startsWith("response:")) {
+        if (combatEngine && combatState.responsePhase && actor.kind === "threat") {
+          combatEngine.resolveEnemyResponse(command.replace("response:", ""));
+        }
+        return;
+      }
+
+      if (actor.kind !== "program" || combatState.actionLocked) {
+        return;
+      }
 
       if (command === "back") {
         combatState.forceFooterAttackList = false;

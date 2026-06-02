@@ -426,6 +426,167 @@ class ThreatCombat {
     return buildVisualEffect(this.state, actorEntry, targetEntry, ability, damageResult, phase);
   }
 
+  getFallbackThreatAbility(threat) {
+    const abilities = Array.isArray(threat?.abilities) ? threat.abilities : [];
+    return abilities.find((candidate) => candidate && Number.isFinite(candidate.baseDamage) && candidate.baseDamage > 0 && String(candidate.effect || "") !== "self_level_up")
+      || abilities[0]
+      || {
+        name: "System Strike",
+        cost: 0,
+        baseDamage: Number.isFinite(threat?.atk) ? threat.atk : 1,
+        effect: ""
+      };
+  }
+
+  buildEnemyResponseResult(evaluation) {
+    const safeEvaluation = evaluation && typeof evaluation === "object" ? evaluation : null;
+    if (!safeEvaluation) {
+      return {
+        id: "none",
+        name: "RESPONSE",
+        status: "NORMAL",
+        damageReduction: 0,
+        gaugeGain: 0,
+        message: "NO RESPONSE SELECTED.",
+        submessage: "PAYLOAD LANDS WITHOUT COUNTERPLAY.",
+        logMessage: "NO RESPONSE SELECTED. PAYLOAD LANDED WITHOUT COUNTERPLAY.",
+        variant: "damage"
+      };
+    }
+
+    const gaugeText = safeEvaluation.gaugeGain > 0 ? ` Tactical Gauge +${safeEvaluation.gaugeGain}.` : "";
+    const reducedText = safeEvaluation.damageReduction > 0 ? " Damage reduced." : "";
+    const responseCopy = {
+      isolate: {
+        normal: `ISOLATE contained part of the spread.${reducedText}`,
+        resisted: `ISOLATE met resistance.${reducedText}`,
+        ineffective: "ISOLATE failed. Target ignored containment.",
+        recommended: `ISOLATE contained the spread.${reducedText}`,
+        empowered: `ISOLATE contained the spread.${reducedText}`
+      },
+      countertrace: {
+        normal: `COUNTERTRACE traced part of the route.${reducedText}${gaugeText}`,
+        resisted: `COUNTERTRACE was partially blocked.${reducedText}${gaugeText}`,
+        ineffective: "COUNTERTRACE failed. Source route stayed hidden.",
+        recommended: `COUNTERTRACE found the attack route.${reducedText}${gaugeText}`,
+        empowered: `COUNTERTRACE found the attack route.${reducedText}${gaugeText}`
+      },
+      redirect: {
+        normal: `REDIRECT routed part of the payload into decoy space.${reducedText}`,
+        resisted: `REDIRECT was resisted.${reducedText}`,
+        ineffective: "REDIRECT failed. Target ignored decoy routing.",
+        recommended: `REDIRECT routed the payload into decoy space.${reducedText}`,
+        empowered: `REDIRECT routed the payload into decoy space.${reducedText}`
+      },
+      purge: {
+        normal: `PURGE cleaned hostile residue.${reducedText}`,
+        resisted: `PURGE was resisted.${reducedText}`,
+        ineffective: "PURGE failed. Hostile residue remained active.",
+        recommended: `PURGE cleaned hostile residue.${reducedText}`,
+        empowered: `PURGE cleaned hostile residue.${reducedText}`
+      }
+    };
+    const copyKey = safeEvaluation.status === "INEFFECTIVE"
+      ? "ineffective"
+      : safeEvaluation.status === "RESISTED"
+        ? "resisted"
+        : safeEvaluation.status === "RECOMMENDED"
+          ? "recommended"
+          : safeEvaluation.status === "EMPOWERED"
+            ? "empowered"
+            : "normal";
+    const message = responseCopy[safeEvaluation.id]?.[copyKey]
+      || (safeEvaluation.damageReduction > 0 ? "Payload partially mitigated." : "No strong counter. Payload continues.");
+
+    return {
+      ...safeEvaluation,
+      message,
+      submessage: safeEvaluation.status === "INEFFECTIVE"
+        ? "NO MITIGATION APPLIED."
+        : `${Math.round(safeEvaluation.damageReduction * 100)}% DAMAGE MITIGATION${safeEvaluation.gaugeGain > 0 ? ` / GAUGE +${safeEvaluation.gaugeGain}` : ""}.`,
+      logMessage: message.toUpperCase(),
+      variant: safeEvaluation.status === "INEFFECTIVE" ? "damage" : "buff"
+    };
+  }
+
+  clearEnemyResponseState() {
+    this.state.responsePhase = false;
+    this.state.pendingEnemyAction = null;
+    this.state.selectedResponse = null;
+    this.state.responseResult = null;
+    if (this.state.commandMode === "response") {
+      this.state.commandMode = "main";
+    }
+  }
+
+  enterEnemyResponsePhase(actorEntry) {
+    const actor = actorEntry?.ref;
+    if (!actor || actor.hp <= 0) {
+      return;
+    }
+
+    const resolvedEnemyIntent = typeof resolveEnemyIntent === "function"
+      ? resolveEnemyIntent(this.state)
+      : null;
+    const threatAbility = resolvedEnemyIntent?.ability || this.getFallbackThreatAbility(actor);
+    if (resolvedEnemyIntent?.intent) {
+      this.state.enemyIntent = resolvedEnemyIntent.intent;
+    }
+
+    this.state.responsePhase = true;
+    this.state.pendingEnemyAction = {
+      actorId: actor.id || actor.title || "threat",
+      ability: threatAbility,
+      resolvedEnemyIntent
+    };
+    this.state.selectedResponse = null;
+    this.state.responseResult = null;
+    this.state.actionLocked = false;
+    this.state.commandMode = "response";
+    this.state.battleMessage = "ENEMY RESPONSE.";
+    this.state.battleSubmessage = "CHOOSE A COUNTER BEFORE THE PAYLOAD LANDS.";
+    this.state.visualEffect = null;
+    renderCombatScreen();
+  }
+
+  resolveEnemyResponse(responseId) {
+    if (!this.state || this.state.phase !== "battle" || !this.state.responsePhase) {
+      return;
+    }
+
+    const currentActor = this.getCurrentActor();
+    if (!currentActor || currentActor.kind !== "threat" || currentActor.ref.hp <= 0) {
+      return;
+    }
+
+    const evaluation = typeof getEnemyResponseEvaluation === "function"
+      ? getEnemyResponseEvaluation(this.state, responseId)
+      : null;
+    const responseResult = this.buildEnemyResponseResult(evaluation);
+
+    this.state.responsePhase = false;
+    this.state.actionLocked = true;
+    this.state.commandMode = "main";
+    this.state.selectedResponse = responseResult.id;
+    this.state.responseResult = responseResult;
+
+    if (responseResult.gaugeGain > 0) {
+      this.state.responseGauge = Math.min(100, Math.max(0, this.state.responseGauge + responseResult.gaugeGain));
+    }
+
+    addBattleLog(responseResult.logMessage, responseResult.variant);
+    this.setBattleCue(responseResult.message, responseResult.submessage);
+    renderCombatScreen();
+
+    scheduleBattleStep(this, () => {
+      if (!this.state || this.state.phase !== "battle") {
+        return;
+      }
+
+      this.takeTurn(currentActor, this.state.pendingEnemyAction?.ability || null);
+    }, 360);
+  }
+
   resolveCurrentTurn() {
     if (this.state.phase !== "battle") {
       return;
@@ -438,14 +599,7 @@ class ThreatCombat {
     }
 
     if (currentActor.kind === "threat") {
-      this.state.battleMessage = `${currentActor.ref.title.toUpperCase()} IS PREPARING AN ATTACK.`;
-      this.state.battleSubmessage = "HOLD POSITION.";
-      this.state.visualEffect = null;
-      renderCombatScreen();
-      this.turnTimeoutId = window.setTimeout(() => {
-        this.turnTimeoutId = null;
-        this.takeTurn(currentActor, null);
-      }, 650);
+      this.enterEnemyResponsePhase(currentActor);
       return;
     }
 
@@ -843,10 +997,17 @@ class ThreatCombat {
     }
 
     if (actorEntry.kind === "threat") {
-      const resolvedEnemyIntent = typeof resolveEnemyIntent === "function"
-        ? resolveEnemyIntent(this.state)
+      const pendingEnemyAction = this.state.pendingEnemyAction && this.state.pendingEnemyAction.actorId === (actor.id || actor.title || "threat")
+        ? this.state.pendingEnemyAction
         : null;
-      const threatAbility = resolvedEnemyIntent?.ability || ability || actor.abilities[getRandomInt(0, actor.abilities.length - 1)];
+      const responseResult = this.state.responseResult && this.state.selectedResponse ? this.state.responseResult : null;
+      const responseMultiplier = responseResult && Number.isFinite(responseResult.damageReduction)
+        ? Math.max(0, 1 - Math.max(0, Math.min(0.95, responseResult.damageReduction)))
+        : 1;
+      const resolvedEnemyIntent = pendingEnemyAction?.resolvedEnemyIntent || (typeof resolveEnemyIntent === "function"
+        ? resolveEnemyIntent(this.state)
+        : null);
+      const threatAbility = pendingEnemyAction?.ability || resolvedEnemyIntent?.ability || ability || this.getFallbackThreatAbility(actor);
       if (resolvedEnemyIntent && resolvedEnemyIntent.intent) {
         this.state.enemyIntent = resolvedEnemyIntent.intent;
       }
@@ -872,6 +1033,7 @@ class ThreatCombat {
           if (typeof recordEnemyIntentHistory === "function" && resolvedEnemyIntent?.intent?.id) {
             recordEnemyIntentHistory(this.state, resolvedEnemyIntent.intent.id);
           }
+          this.clearEnemyResponseState();
           this.finishActedTurn(actorEntry);
         }, 360);
         return;
@@ -890,8 +1052,8 @@ class ThreatCombat {
 
       scheduleBattleStep(this, () => {
         const damageResult = threatAbility.effect === "damage_all"
-          ? this.resolveDamage(actor, chosenTarget, threatAbility, { multiplier: 0.75, isThreatAttack: true })
-          : this.resolveDamage(actor, chosenTarget, threatAbility, { isThreatAttack: true });
+          ? this.resolveDamage(actor, chosenTarget, threatAbility, { multiplier: 0.75 * responseMultiplier, isThreatAttack: true })
+          : this.resolveDamage(actor, chosenTarget, threatAbility, { multiplier: responseMultiplier, isThreatAttack: true });
 
         if (threatAbility.effect === "damage_all") {
           livingPrograms.forEach((program) => {
@@ -899,7 +1061,7 @@ class ThreatCombat {
               return;
             }
 
-            const splashResult = this.resolveDamage(actor, program, threatAbility, { multiplier: 0.75, isThreatAttack: true });
+            const splashResult = this.resolveDamage(actor, program, threatAbility, { multiplier: 0.75 * responseMultiplier, isThreatAttack: true });
             addBattleLog(`${actor.title.toUpperCase()} SPLASHED ${program.name.toUpperCase()} FOR ${splashResult.damage} DAMAGE.`, "damage");
           });
         }
@@ -910,7 +1072,9 @@ class ThreatCombat {
           ? "PRESSURE INCREASED."
           : damageResult.typeState === "weak"
             ? "THE STRIKE WAS SOFTENED."
-            : `${damageResult.levelMultiplier.toFixed(1)}X LEVEL BONUS.`;
+            : responseResult && responseResult.damageReduction > 0
+              ? `${responseResult.name} MITIGATED ${Math.round(responseResult.damageReduction * 100)}%.`
+              : `${damageResult.levelMultiplier.toFixed(1)}X LEVEL BONUS.`;
 
         this.setBattleCue(
           `${chosenTarget.name.toUpperCase()} TOOK ${damageResult.damage} DAMAGE!`,
@@ -923,6 +1087,8 @@ class ThreatCombat {
           addBattleLog(`COUNTER DAMAGE DEALT ${this.state.nextCounterDamage} TO ${this.state.threat.title.toUpperCase()}.`, "buff");
           this.state.nextCounterDamage = 0;
         }
+
+        this.clearEnemyResponseState();
 
         if (this.checkWinCondition()) {
           this.state.actionLocked = false;
