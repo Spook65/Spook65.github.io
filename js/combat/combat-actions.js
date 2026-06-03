@@ -509,6 +509,99 @@ class ThreatCombat {
     };
   }
 
+  getEnemyResponseEffectivenessLabel(responseResult) {
+    const status = String(responseResult?.status || "").toUpperCase();
+    if (status === "RECOMMENDED") {
+      return "STRONG COUNTER";
+    }
+    if (status === "EMPOWERED") {
+      return "EMPOWERED";
+    }
+    if (status === "RESISTED") {
+      return "RESISTED";
+    }
+    if (status === "INEFFECTIVE") {
+      return "INEFFECTIVE";
+    }
+    return "PARTIAL";
+  }
+
+  previewThreatDamage(attacker, defender, ability, options = {}) {
+    const damageResult = this.calculateDamage(attacker, defender, ability);
+    let damage = damageResult.damage;
+    const bonusDamage = Number.isFinite(options.bonusDamage) ? Math.max(0, options.bonusDamage) : 0;
+
+    if (bonusDamage > 0) {
+      damage += bonusDamage;
+    }
+
+    if (options.isThreatAttack && this.state.nextDamageReduction > 0) {
+      damage = Math.max(1, Math.round(damage * (1 - this.state.nextDamageReduction)));
+    }
+
+    if (options.isThreatAttack && Number.isFinite(this.state.runDamageReductionPercent) && this.state.runDamageReductionPercent > 0) {
+      const reduction = Math.min(0.5, Math.max(0, this.state.runDamageReductionPercent / 100));
+      damage = Math.max(1, Math.round(damage * (1 - reduction)));
+    }
+
+    if (defender === this.state.threat && hasCombatantStatus(defender, "isolated")) {
+      damage = Math.max(1, Math.round(damage * 1.1));
+    }
+
+    if (options.multiplier) {
+      damage = Math.max(1, Math.round(damage * options.multiplier));
+    }
+
+    return {
+      ...damageResult,
+      damage
+    };
+  }
+
+  buildEnemyResponseOutcome(responseResult, incomingDamage, finalDamage) {
+    const safeResult = responseResult && typeof responseResult === "object" ? responseResult : null;
+    const responseName = String(safeResult?.name || "RESPONSE").toUpperCase();
+    const effectiveness = this.getEnemyResponseEffectivenessLabel(safeResult);
+    const safeIncomingDamage = Number.isFinite(incomingDamage) ? Math.max(0, incomingDamage) : 0;
+    const safeFinalDamage = Number.isFinite(finalDamage) ? Math.max(0, finalDamage) : 0;
+    const reducedBy = Math.max(0, safeIncomingDamage - safeFinalDamage);
+    const gaugeGain = Number.isFinite(safeResult?.gaugeGain) ? Math.max(0, safeResult.gaugeGain) : 0;
+    const gaugeText = gaugeGain > 0 ? ` Tactical Gauge +${gaugeGain}.` : "";
+
+    let message = "";
+    if (!safeResult) {
+      message = `Mitigation applied. Damage reduced from ${safeIncomingDamage} to ${safeFinalDamage}.`;
+    } else if (safeResult.status === "INEFFECTIVE") {
+      message = `${responseName} failed. Threat ignored this countermeasure.`;
+    } else if (safeResult.status === "RESISTED") {
+      message = `${responseName} was resisted. Damage only reduced from ${safeIncomingDamage} to ${safeFinalDamage}.${gaugeText}`;
+    } else if (safeResult.id === "countertrace") {
+      message = `${responseName} mapped the route. Damage reduced from ${safeIncomingDamage} to ${safeFinalDamage}.${gaugeText}`;
+    } else if (safeResult.id === "isolate" && safeResult.status === "RECOMMENDED") {
+      message = `${responseName} contained the payload. Damage reduced from ${safeIncomingDamage} to ${safeFinalDamage}.`;
+    } else if (safeResult.id === "isolate") {
+      message = `${responseName} partially contained the payload. Damage reduced from ${safeIncomingDamage} to ${safeFinalDamage}.`;
+    } else if (safeResult.id === "redirect") {
+      message = `${responseName} diverted part of the payload. Damage reduced from ${safeIncomingDamage} to ${safeFinalDamage}.`;
+    } else if (safeResult.id === "purge") {
+      message = `${responseName} cleaned hostile residue. Damage reduced from ${safeIncomingDamage} to ${safeFinalDamage}.`;
+    } else {
+      message = `Mitigation applied. Damage reduced from ${safeIncomingDamage} to ${safeFinalDamage}.${gaugeText}`;
+    }
+
+    return {
+      responseId: safeResult?.id || "none",
+      label: responseName,
+      effectiveness,
+      incomingDamage: safeIncomingDamage,
+      finalDamage: safeFinalDamage,
+      reducedBy,
+      gaugeGain,
+      message,
+      submessage: `DEFEND RESULT / ${responseName} - ${effectiveness} / DAMAGE ${safeIncomingDamage} -> ${safeFinalDamage}${gaugeGain > 0 ? ` / GAUGE +${gaugeGain}` : ""}`
+    };
+  }
+
   clearEnemyResponseState() {
     this.state.responsePhase = false;
     this.state.pendingEnemyAction = null;
@@ -574,7 +667,6 @@ class ThreatCombat {
       this.state.responseGauge = Math.min(100, Math.max(0, this.state.responseGauge + responseResult.gaugeGain));
     }
 
-    addBattleLog(responseResult.logMessage, responseResult.variant);
     this.setBattleCue(responseResult.message, responseResult.submessage);
     renderCombatScreen();
 
@@ -1020,6 +1112,15 @@ class ThreatCombat {
 
       this.applyThreatEffect(actor, threatAbility);
       if (threatAbility.effect === "self_level_up") {
+        if (responseResult) {
+          const responseOutcome = this.buildEnemyResponseOutcome(responseResult, 0, 0);
+          this.state.responseResult = {
+            ...responseResult,
+            ...responseOutcome
+          };
+          addBattleLog(responseOutcome.message.toUpperCase(), responseResult.variant);
+        }
+
         this.state.actionLocked = true;
         this.setBattleCue(
           `${actor.title.toUpperCase()} UPGRADED ITS CORE!`,
@@ -1051,9 +1152,25 @@ class ThreatCombat {
       );
 
       scheduleBattleStep(this, () => {
+        const baseThreatMultiplier = threatAbility.effect === "damage_all" ? 0.75 : 1;
+        const incomingDamageResult = this.previewThreatDamage(actor, chosenTarget, threatAbility, {
+          multiplier: baseThreatMultiplier,
+          isThreatAttack: true
+        });
         const damageResult = threatAbility.effect === "damage_all"
           ? this.resolveDamage(actor, chosenTarget, threatAbility, { multiplier: 0.75 * responseMultiplier, isThreatAttack: true })
           : this.resolveDamage(actor, chosenTarget, threatAbility, { multiplier: responseMultiplier, isThreatAttack: true });
+        const responseOutcome = responseResult
+          ? this.buildEnemyResponseOutcome(responseResult, incomingDamageResult.damage, damageResult.damage)
+          : null;
+
+        if (responseOutcome) {
+          this.state.responseResult = {
+            ...responseResult,
+            ...responseOutcome
+          };
+          addBattleLog(responseOutcome.message.toUpperCase(), responseResult.variant);
+        }
 
         if (threatAbility.effect === "damage_all") {
           livingPrograms.forEach((program) => {
@@ -1068,7 +1185,9 @@ class ThreatCombat {
 
         addBattleLog(`${actor.title.toUpperCase()} USED ${threatAbility.name.toUpperCase()} - ${damageResult.damage} DAMAGE ON ${chosenTarget.name.toUpperCase()}.`, "damage");
 
-        const effectText = damageResult.typeState === "super-effective"
+        const effectText = responseOutcome
+          ? responseOutcome.submessage
+          : damageResult.typeState === "super-effective"
           ? "PRESSURE INCREASED."
           : damageResult.typeState === "weak"
             ? "THE STRIKE WAS SOFTENED."
@@ -1077,7 +1196,7 @@ class ThreatCombat {
               : `${damageResult.levelMultiplier.toFixed(1)}X LEVEL BONUS.`;
 
         this.setBattleCue(
-          `${chosenTarget.name.toUpperCase()} TOOK ${damageResult.damage} DAMAGE!`,
+          responseOutcome ? `DEFEND RESULT: ${responseOutcome.label} - ${responseOutcome.effectiveness}` : `${chosenTarget.name.toUpperCase()} TOOK ${damageResult.damage} DAMAGE!`,
           effectText,
           this.buildVisualEffect(actorEntry, { kind: "program", ref: chosenTarget }, threatAbility, damageResult, "impact")
         );
