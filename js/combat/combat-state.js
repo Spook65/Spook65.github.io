@@ -613,18 +613,12 @@ function formatResponseHintTag(tag) {
   return String(tag || "").trim().toUpperCase();
 }
 
-const enemyResponseActions = [
-  {
-    id: "isolate",
-    name: "ISOLATE",
-    shortText: "Reduce incoming spread damage.",
-    responseTags: ["isolate"],
-    empowerTags: ["isolate"],
-    intentTags: ["swarm", "spread", "multi", "flood", "overload"],
+const enemyResponseTuning = {
+  isolate: {
     reductions: {
       normal: 0.35,
-      recommended: 0.65,
-      empowered: 0.35,
+      recommended: 0.58,
+      empowered: 0.4,
       resisted: 0.15,
       immune: 0
     },
@@ -636,6 +630,67 @@ const enemyResponseActions = [
       immune: 0
     }
   },
+  countertrace: {
+    reductions: {
+      normal: 0.2,
+      recommended: 0.42,
+      empowered: 0.28,
+      resisted: 0.08,
+      immune: 0
+    },
+    gaugeGain: {
+      normal: 10,
+      recommended: 14,
+      empowered: 12,
+      resisted: 5,
+      immune: 0
+    }
+  },
+  redirect: {
+    reductions: {
+      normal: 0.24,
+      recommended: 0.46,
+      empowered: 0.52,
+      resisted: 0.08,
+      immune: 0
+    },
+    gaugeGain: {
+      normal: 0,
+      recommended: 0,
+      empowered: 0,
+      resisted: 0,
+      immune: 0
+    }
+  },
+  purge: {
+    reductions: {
+      normal: 0.28,
+      recommended: 0.5,
+      empowered: 0.38,
+      resisted: 0.1,
+      immune: 0
+    },
+    gaugeGain: {
+      normal: 0,
+      recommended: 0,
+      empowered: 0,
+      resisted: 0,
+      immune: 0
+    }
+  }
+};
+
+const enemyResponseActions = [
+  {
+    id: "isolate",
+    name: "ISOLATE",
+    shortText: "Reduce incoming spread damage.",
+    responseTags: ["isolate"],
+    empowerTags: ["isolate"],
+    intentTags: ["swarm", "spread", "multi", "flood", "overload"],
+    reductions: enemyResponseTuning.isolate.reductions,
+    gaugeGain: enemyResponseTuning.isolate.gaugeGain
+  },
   {
     id: "countertrace",
     name: "COUNTERTRACE",
@@ -643,20 +698,8 @@ const enemyResponseActions = [
     responseTags: ["countertrace"],
     empowerTags: ["countertrace"],
     intentTags: ["deceive", "harvest", "stealth", "escalate", "breach", "persist"],
-    reductions: {
-      normal: 0.25,
-      recommended: 0.5,
-      empowered: 0.25,
-      resisted: 0.1,
-      immune: 0
-    },
-    gaugeGain: {
-      normal: 8,
-      recommended: 15,
-      empowered: 8,
-      resisted: 4,
-      immune: 0
-    }
+    reductions: enemyResponseTuning.countertrace.reductions,
+    gaugeGain: enemyResponseTuning.countertrace.gaugeGain
   },
   {
     id: "redirect",
@@ -665,20 +708,8 @@ const enemyResponseActions = [
     responseTags: ["redirect", "decoy", "bait"],
     empowerTags: ["decoy", "redirect", "bait"],
     intentTags: ["deceive", "redirect", "harvest", "beacon"],
-    reductions: {
-      normal: 0.3,
-      recommended: 0.55,
-      empowered: 0.55,
-      resisted: 0.1,
-      immune: 0
-    },
-    gaugeGain: {
-      normal: 0,
-      recommended: 0,
-      empowered: 0,
-      resisted: 0,
-      immune: 0
-    }
+    reductions: enemyResponseTuning.redirect.reductions,
+    gaugeGain: enemyResponseTuning.redirect.gaugeGain
   },
   {
     id: "purge",
@@ -687,20 +718,8 @@ const enemyResponseActions = [
     responseTags: ["purge", "cleanse", "recover"],
     empowerTags: ["purge", "cleanse", "recover"],
     intentTags: ["corrupt", "shield", "persist", "status"],
-    reductions: {
-      normal: 0.25,
-      recommended: 0.55,
-      empowered: 0.45,
-      resisted: 0.1,
-      immune: 0
-    },
-    gaugeGain: {
-      normal: 0,
-      recommended: 0,
-      empowered: 0,
-      resisted: 0,
-      immune: 0
-    }
+    reductions: enemyResponseTuning.purge.reductions,
+    gaugeGain: enemyResponseTuning.purge.gaugeGain
   }
 ];
 
