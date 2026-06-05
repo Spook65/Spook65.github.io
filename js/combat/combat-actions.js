@@ -502,9 +502,7 @@ class ThreatCombat {
       return true;
     }
 
-    const majorIntentTags = ["swarm", "spread", "exploit", "corrupt", "overload", "shield", "charge", "flood"];
-    const intentTags = this.getThreatActionIntentTags(action);
-    return majorIntentTags.some((tag) => intentTags.includes(tag));
+    return action.telegraphed === true || action.ability?.telegraphed === true;
   }
 
   buildEnemyActionQueue(actorEntry) {
@@ -525,30 +523,55 @@ class ThreatCombat {
       kind: "major",
       ability: majorAbility,
       resolvedEnemyIntent,
-      damageMultiplier: actionCount > 1 && actionWeight === "light" ? 0.82 : 1,
+      damageMultiplier: actionCount > 1 ? 0.95 : 1,
       targetPattern: majorAbility?.targetPattern || baseTargetPattern,
       threatLevel: majorAbility?.threatLevel || resolvedEnemyIntent?.intent?.threatLevel || "",
-      payloadType: majorAbility?.payloadType || resolvedEnemyIntent?.intent?.type || ""
+      payloadType: majorAbility?.payloadType || resolvedEnemyIntent?.intent?.type || "",
+      telegraphed: majorAbility?.telegraphed === true || resolvedEnemyIntent?.intent?.telegraphed === true
     };
     majorAction.requiresResponse = this.shouldThreatActionTriggerResponse(majorAction);
-
-    if (actionCount <= 1) {
-      return [majorAction];
-    }
-
     const basicAbility = this.getBasicThreatAbility(actor, majorAbility);
-    const basicAction = {
-      id: "basic",
-      kind: "basic",
-      ability: basicAbility,
-      resolvedEnemyIntent: null,
-      damageMultiplier: actionWeight === "mixed" ? 0.72 : 0.76,
-      targetPattern: basicAbility?.targetPattern || baseTargetPattern,
-      threatLevel: basicAbility?.threatLevel || "minor",
-      requiresResponse: false
-    };
 
-    return [basicAction, majorAction];
+    const actionQueue = actionCount <= 1
+      ? [majorAction]
+      : [
+          {
+            id: "basic",
+            kind: "basic",
+            ability: basicAbility,
+            resolvedEnemyIntent: null,
+            damageMultiplier: 0.85,
+            targetPattern: basicAbility?.targetPattern || baseTargetPattern,
+            threatLevel: "minor",
+            requiresResponse: false,
+            telegraphed: false
+          },
+          majorAction
+        ];
+
+    const indexedQueue = actionQueue.map((queueAction, index) => ({
+      ...queueAction,
+      index: index + 1,
+      total: actionQueue.length
+    }));
+
+    console.log("[ENEMY TURN]", actor.title || actor.name || actor.id || "Threat", {
+      actionsPerTurn: indexedQueue.length,
+      configuredActions: actionCount,
+      targetPattern: baseTargetPattern,
+      actionWeight
+    });
+    console.log("[ENEMY ACTION QUEUE]", indexedQueue.map((queueAction) => ({
+      index: queueAction.index,
+      total: queueAction.total,
+      type: queueAction.kind,
+      ability: queueAction.ability?.name || "Unknown",
+      requiresResponse: Boolean(queueAction.requiresResponse),
+      damageMultiplier: queueAction.damageMultiplier,
+      threatLevel: queueAction.threatLevel || "none"
+    })));
+
+    return indexedQueue;
   }
 
   getLivingEnemyTargets() {
@@ -794,7 +817,16 @@ class ThreatCombat {
     this.state.battleMessage = "DEFEND PHASE.";
     this.state.battleSubmessage = "ENEMY PAYLOAD INCOMING. CHOOSE ONE RESPONSE BEFORE IMPACT.";
     this.state.visualEffect = null;
-    addBattleLog(`MAJOR PAYLOAD DETECTED. CHOOSE A DEFENSIVE RESPONSE.`, "buff");
+    const actionIndex = Number.isFinite(queuedAction?.index) ? queuedAction.index : 1;
+    const actionTotal = Number.isFinite(queuedAction?.total) ? queuedAction.total : 1;
+    console.log("[DEFEND PHASE]", actor.title || actor.name || actor.id || "Threat", {
+      action: `${actionIndex}/${actionTotal}`,
+      ability: threatAbility?.name || "Unknown",
+      requiresResponse: Boolean(queuedAction?.requiresResponse),
+      threatLevel: queuedAction?.threatLevel || threatAbility?.threatLevel || "none",
+      queueContinuesAfterResponse: Array.isArray(this.state.enemyActionQueue) && this.state.enemyActionQueue.length > 0
+    });
+    addBattleLog(`ENEMY ACTION ${actionIndex}/${actionTotal}: MAJOR PAYLOAD DETECTED. CHOOSE A DEFENSIVE RESPONSE.`, "buff");
     renderCombatScreen();
   }
 
@@ -1155,11 +1187,21 @@ class ThreatCombat {
       this.state.enemyIntent = null;
 
       if (Array.isArray(this.state.enemyActionQueue) && this.state.enemyActionQueue.length) {
+        console.log("[ENEMY TURN]", actorEntry?.ref?.title || actorEntry?.ref?.name || actorEntry?.ref?.id || "Threat", {
+          completedAction: action?.index && action?.total ? `${action.index}/${action.total}` : "unknown",
+          queueContinuesAfterAction: true,
+          remainingActions: this.state.enemyActionQueue.length
+        });
         this.clearEnemyResponseState();
         this.takeTurn(actorEntry, null);
         return;
       }
 
+      console.log("[ENEMY TURN]", actorEntry?.ref?.title || actorEntry?.ref?.name || actorEntry?.ref?.id || "Threat", {
+        completedAction: action?.index && action?.total ? `${action.index}/${action.total}` : "unknown",
+        queueContinuesAfterAction: false,
+        remainingActions: 0
+      });
       this.clearEnemyResponseState();
       this.state.enemyActionQueue = [];
       this.state.enemyActionTargets = [];
@@ -1177,6 +1219,8 @@ class ThreatCombat {
 
     const threatAbility = action?.ability || this.getFallbackThreatAbility(actor);
     const resolvedEnemyIntent = action?.resolvedEnemyIntent || null;
+    const actionIndex = Number.isFinite(action?.index) ? action.index : 1;
+    const actionTotal = Number.isFinite(action?.total) ? action.total : 1;
     const livingPrograms = this.getLivingEnemyTargets();
     if (!livingPrograms.length) {
       this.end("defeat");
@@ -1195,6 +1239,14 @@ class ThreatCombat {
     this.state.enemyActionTargets.push(chosenTarget);
     this.state.actionLocked = true;
     this.applyThreatEffect(actor, threatAbility, chosenTarget);
+    console.log(`[ENEMY ACTION ${actionIndex}/${actionTotal}]`, actor.title || actor.name || actor.id || "Threat", {
+      type: action?.kind || "major",
+      ability: threatAbility?.name || "Unknown",
+      requiresResponse: Boolean(action?.requiresResponse),
+      target: threatAbility.effect === "damage_all" ? "All Defenders" : chosenTarget.name,
+      targetPattern: action?.targetPattern || "randomLiving",
+      damageMultiplier: Number.isFinite(action?.damageMultiplier) ? action.damageMultiplier : 1
+    });
 
     if (threatAbility.effect === "self_level_up") {
       if (responseResult) {
@@ -1217,9 +1269,6 @@ class ThreatCombat {
 
     const actionLabel = action?.kind === "basic" ? "MINOR PROBE" : "MAJOR PAYLOAD";
     const targetLabel = threatAbility.effect === "damage_all" ? "ALL DEFENDERS" : chosenTarget.name.toUpperCase();
-    if (action?.kind === "basic") {
-      addBattleLog(`${actor.title.toUpperCase()} LAUNCHED A MINOR PROBE AT ${targetLabel}.`, "damage");
-    }
 
     this.setBattleCue(
       `${actor.title.toUpperCase()} USED ${threatAbility.name.toUpperCase()}!`,
@@ -1244,6 +1293,16 @@ class ThreatCombat {
       const responseOutcome = responseResult
         ? this.buildEnemyResponseOutcome(responseResult, incomingDamageResult.damage, damageResult.damage)
         : null;
+      console.log("[ENEMY DAMAGE]", actor.title || actor.name || actor.id || "Threat", {
+        action: `${actionIndex}/${actionTotal}`,
+        type: action?.kind || "major",
+        ability: threatAbility?.name || "Unknown",
+        target: threatAbility.effect === "damage_all" ? "All Defenders" : chosenTarget.name,
+        rawDamage: incomingDamageResult.damage,
+        finalDamage: damageResult.damage,
+        responseApplied: Boolean(responseResult),
+        queueContinuesAfterAction: Array.isArray(this.state.enemyActionQueue) && this.state.enemyActionQueue.length > 0
+      });
 
       if (responseOutcome) {
         this.state.responseResult = {
@@ -1267,7 +1326,9 @@ class ThreatCombat {
         });
       }
 
-      addBattleLog(`${actor.title.toUpperCase()} USED ${threatAbility.name.toUpperCase()} - ${damageResult.damage} DAMAGE ON ${chosenTarget.name.toUpperCase()}.`, "damage");
+      const playerActionLabel = action?.kind === "basic" ? "Minor probe" : "Major payload";
+      const damageTargetLabel = threatAbility.effect === "damage_all" ? "all Defenders" : chosenTarget.name.toUpperCase();
+      addBattleLog(`ENEMY ACTION ${actionIndex}/${actionTotal}: ${playerActionLabel} hit ${damageTargetLabel} for ${damageResult.damage}.`, "damage");
 
       const effectText = responseOutcome
         ? responseOutcome.submessage

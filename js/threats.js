@@ -118,7 +118,7 @@ const threats = [
       actionWeight: "light"
     },
     abilities: [
-      { name: "Amplify Flood", cost: 0, baseDamage: 18, effect: "damage_all" },
+      { name: "Amplify Flood", cost: 0, baseDamage: 18, effect: "damage_all", requiresResponse: true, threatLevel: "major", payloadType: "flood", telegraphed: true },
       { name: "Fragment Route", cost: 1, baseDamage: 14, effect: "status_isolated" },
       { name: "Escalate", cost: 2, baseDamage: 0, effect: "self_level_up" }
     ]
@@ -164,7 +164,7 @@ const threats = [
     },
     abilities: [
       { name: "Beacon C2", cost: 0, baseDamage: 12, effect: "status_detected" },
-      { name: "Multiply Nodes", cost: 1, baseDamage: 10, effect: "damage_all" },
+      { name: "Multiply Nodes", cost: 1, baseDamage: 10, effect: "damage_all", requiresResponse: true, threatLevel: "major", payloadType: "swarm", telegraphed: true },
       { name: "Reinfect", cost: 2, baseDamage: 0, effect: "self_level_up" }
     ]
   },
@@ -208,9 +208,9 @@ const threats = [
       actionWeight: "mixed"
     },
     abilities: [
-      { name: "Privilege Escalate", cost: 0, baseDamage: 22, effect: "status_encrypted" },
-      { name: "Disable EDR", cost: 1, baseDamage: 18, effect: "damage_all" },
-      { name: "Kernel Chain", cost: 2, baseDamage: 0, effect: "self_level_up" }
+      { name: "Privilege Escalate", cost: 0, baseDamage: 22, effect: "status_encrypted", requiresResponse: true, threatLevel: "major", payloadType: "exploit", telegraphed: true },
+      { name: "Disable EDR", cost: 1, baseDamage: 18, effect: "damage_all", requiresResponse: true, threatLevel: "major", payloadType: "corrupt", telegraphed: true },
+      { name: "Kernel Chain", cost: 2, baseDamage: 0, effect: "self_level_up", requiresResponse: true, threatLevel: "major", payloadType: "escalate", telegraphed: true }
     ]
   },
   {
@@ -292,7 +292,7 @@ const threats = [
       actionWeight: "light"
     },
     abilities: [
-      { name: "Saturate Peering", cost: 0, baseDamage: 19, effect: "damage_all" },
+      { name: "Saturate Peering", cost: 0, baseDamage: 19, effect: "damage_all", requiresResponse: true, threatLevel: "major", payloadType: "saturate", telegraphed: true },
       { name: "GRE Spray", cost: 1, baseDamage: 15, effect: "status_isolated" },
       { name: "Escalate", cost: 2, baseDamage: 0, effect: "self_level_up" }
     ]
