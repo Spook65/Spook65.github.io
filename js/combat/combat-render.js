@@ -205,6 +205,31 @@ function buildBattleLogMarkup(state) {
   }).join("");
 }
 
+function buildCombatFeedMarkup(state) {
+  const entries = Array.isArray(state?.combatFeed) ? state.combatFeed.slice(-5).reverse() : [];
+
+  if (!entries.length || state?.battleIntroPlaying) {
+    return "";
+  }
+
+  return `
+    <aside class="combat-feed" aria-label="Combat feed">
+      <div class="combat-feed-kicker">COMBAT FEED</div>
+      <div class="combat-feed-list">
+        ${entries.map((entry, index) => {
+          const variantClass = entry.variant ? `is-${entry.variant}` : "";
+          return `
+            <div class="combat-feed-entry ${variantClass} ${index === 0 ? "is-latest" : ""}">
+              <div class="combat-feed-title">${entry.title || "COMBAT EVENT"}</div>
+              <div class="combat-feed-body">${entry.body || ""}</div>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    </aside>
+  `;
+}
+
 // buildPantheonBoonBriefMarkup() shows the active and opening Protocol God boon effects without adding a new screen.
 function buildPantheonBoonBriefMarkup(state) {
   const boonLines = Array.isArray(state.pantheonBoonMessages) ? state.pantheonBoonMessages : [];
@@ -1162,7 +1187,7 @@ function buildStageFeedbackToastMarkup(state) {
   }
 
   const currentActor = state.turnOrder?.[state.currentTurnIndex];
-  const shouldShowFeedback = !state.responsePhase && (state.actionLocked || currentActor?.kind === "threat");
+  const shouldShowFeedback = state.responsePhase || state.actionLocked || currentActor?.kind === "threat";
   const primaryLine = String(state.battleMessage || "").trim();
   const secondaryLine = String(state.battleSubmessage || "").trim();
 
@@ -1372,6 +1397,7 @@ function buildCombatMarkup(state) {
   const stageCommandSubmenuActive = Boolean(stageCommandSubmenuMarkup);
   const enemyResponseMenuMarkup = buildEnemyResponseMenuMarkup(state);
   const stageFeedbackToastMarkup = buildStageFeedbackToastMarkup(state);
+  const combatFeedMarkup = buildCombatFeedMarkup(state);
   const stageFeedbackActive = Boolean(stageFeedbackToastMarkup);
   const collapseActiveHud = shouldCollapseActiveHud(state);
   if (state?.commandMode === "attack") {
@@ -1427,6 +1453,7 @@ function buildCombatMarkup(state) {
         ${stageCommandSubmenuMarkup}
         ${enemyResponseMenuMarkup}
         ${stageFeedbackToastMarkup}
+        ${combatFeedMarkup}
         <div class="combat-reserve-strip">
           <div class="combat-reserve-row">
             ${buildReserveStripMarkup(state, currentProgram.id)}

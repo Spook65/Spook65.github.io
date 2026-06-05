@@ -1471,6 +1471,7 @@ function buildCombatState(sourceThreat) {
     activeProgramId: firstProgram ? firstProgram.ref.id : playerParty[0].id,
     responseGauge: pendingQueue.length ? pendingBattleEffects.responseGauge : pendingGaugeBonus,
     battleLog: [],
+    combatFeed: [],
     battleMessage: "",
     battleSubmessage: "",
     visualEffect: null,

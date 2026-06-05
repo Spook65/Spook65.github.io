@@ -1,15 +1,59 @@
 /* Combat action helpers own the battle loop, turn resolution, and encounter flow. */
 
-// addBattleLog() records a short combat event so the battle history can stay readable.
-function addBattleLog(message, variant = "") {
+const COMBAT_FEED_MAX_EVENTS = 5;
+const ENEMY_ACTION_CONTINUE_DELAY_MS = 760;
+
+function buildCombatFeedEvent(event, variant = "") {
+  const safeEvent = event && typeof event === "object" ? event : { body: String(event || "") };
+  const rawBody = String(safeEvent.body || safeEvent.message || "").trim();
+  const enemyActionMatch = rawBody.match(/^ENEMY ACTION\s+(\d+\/\d+):\s*(.*)$/i);
+  const defendResultMatch = rawBody.match(/^([A-Z_ -]+?)\s+(reduced|contained|mapped|failed|was resisted|partially|ignored|redirected|mitigated)/i);
+
+  return {
+    type: safeEvent.type || (enemyActionMatch ? "enemy-action" : "combat"),
+    title: safeEvent.title || (enemyActionMatch ? `ENEMY ACTION ${enemyActionMatch[1]}` : defendResultMatch ? "DEFEND RESULT" : "COMBAT EVENT"),
+    body: safeEvent.body || (enemyActionMatch ? enemyActionMatch[2] : rawBody),
+    variant: safeEvent.variant || variant || "",
+    timestamp: Number.isFinite(safeEvent.timestamp) ? safeEvent.timestamp : Date.now()
+  };
+}
+
+function addCombatFeedEvent(event, variant = "") {
   if (!combatState) {
     return;
   }
 
+  const feedEvent = buildCombatFeedEvent(event, variant);
+  if (!feedEvent.body) {
+    return;
+  }
+
+  combatState.combatFeed = Array.isArray(combatState.combatFeed) ? combatState.combatFeed : [];
+  combatState.combatFeed.push(feedEvent);
+  if (combatState.combatFeed.length > COMBAT_FEED_MAX_EVENTS) {
+    combatState.combatFeed.splice(0, combatState.combatFeed.length - COMBAT_FEED_MAX_EVENTS);
+  }
+}
+
+// addBattleLog() records a short combat event so the battle history can stay readable.
+function addBattleLog(message, variant = "", options = {}) {
+  if (!combatState) {
+    return;
+  }
+
+  const safeMessage = String(message || "").trim();
+  if (!safeMessage) {
+    return;
+  }
+
   combatState.battleLog.push({
-    message,
+    message: safeMessage,
     variant
   });
+
+  if (options.feed !== false) {
+    addCombatFeedEvent({ body: safeMessage, variant }, variant);
+  }
 }
 
 // returnToGlobeFromCombat() closes the victory overlay and restores the globe for a manual next-click.
@@ -826,7 +870,7 @@ class ThreatCombat {
       threatLevel: queuedAction?.threatLevel || threatAbility?.threatLevel || "none",
       queueContinuesAfterResponse: Array.isArray(this.state.enemyActionQueue) && this.state.enemyActionQueue.length > 0
     });
-    addBattleLog(`ENEMY ACTION ${actionIndex}/${actionTotal}: MAJOR PAYLOAD DETECTED. CHOOSE A DEFENSIVE RESPONSE.`, "buff");
+    addBattleLog(`ENEMY ACTION ${actionIndex}/${actionTotal}: Major payload detected.`, "buff");
     renderCombatScreen();
   }
 
@@ -1175,6 +1219,9 @@ class ThreatCombat {
       return;
     }
 
+    const hasQueuedEnemyAction = Array.isArray(this.state.enemyActionQueue) && this.state.enemyActionQueue.length > 0;
+    const continuationDelay = hasQueuedEnemyAction ? Math.max(delay, ENEMY_ACTION_CONTINUE_DELAY_MS) : delay;
+
     scheduleBattleStep(this, () => {
       if (typeof recordEnemyIntentHistory === "function" && resolvedEnemyIntent?.intent?.id) {
         this.state.resolvedEnemyIntent = {
@@ -1207,7 +1254,7 @@ class ThreatCombat {
       this.state.enemyActionTargets = [];
       this.state.enemyResponseUsedThisTurn = false;
       this.finishActedTurn(actorEntry);
-    }, delay);
+    }, continuationDelay);
   }
 
   executeThreatAction(actorEntry, action = null, responseResult = null) {
@@ -1255,7 +1302,13 @@ class ThreatCombat {
           ...responseResult,
           ...responseOutcome
         };
-        addBattleLog(responseOutcome.message.toUpperCase(), responseResult.variant);
+        addBattleLog(responseOutcome.message.toUpperCase(), responseResult.variant, { feed: false });
+        addCombatFeedEvent({
+          type: "defend-result",
+          title: "DEFEND RESULT",
+          body: `${responseOutcome.label} resolved. Damage ${responseOutcome.incomingDamage} -> ${responseOutcome.finalDamage}${responseOutcome.gaugeGain > 0 ? ` / Gauge +${responseOutcome.gaugeGain}` : ""}.`,
+          variant: responseResult.variant
+        }, responseResult.variant);
       }
 
       this.setBattleCue(
@@ -1309,7 +1362,13 @@ class ThreatCombat {
           ...responseResult,
           ...responseOutcome
         };
-        addBattleLog(responseOutcome.message.toUpperCase(), responseResult.variant);
+        addBattleLog(responseOutcome.message.toUpperCase(), responseResult.variant, { feed: false });
+        addCombatFeedEvent({
+          type: "defend-result",
+          title: "DEFEND RESULT",
+          body: `${responseOutcome.label} reduced damage ${responseOutcome.incomingDamage} -> ${responseOutcome.finalDamage}${responseOutcome.gaugeGain > 0 ? ` / Gauge +${responseOutcome.gaugeGain}` : ""}.`,
+          variant: responseResult.variant
+        }, responseResult.variant);
       }
 
       if (threatAbility.effect === "damage_all") {
@@ -1433,6 +1492,7 @@ class ThreatCombat {
         const damageResult = this.resolveDamage(actor, this.state.threat, ability, {
           bonusDamage: openingDamageBonus
         });
+        addBattleLog(`${actor.name.toUpperCase()} USED ${ability.name.toUpperCase()} FOR ${damageResult.damage} DAMAGE.`, "damage");
         if (openingDamageBonus > 0) {
           this.state.openingDamageBonusConsumed = true;
         }
