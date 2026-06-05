@@ -8606,6 +8606,15 @@ body {
     0 10px 18px rgba(0, 0, 0, 0.24);
 }
 
+.combat-reserve-card.is-recently-hit {
+  border-color: rgba(255, 102, 121, 0.58);
+  animation: combat-party-hit-pulse 680ms ease both;
+  box-shadow:
+    0 0 0 1px rgba(255, 102, 121, 0.22),
+    0 0 18px rgba(255, 102, 121, 0.16),
+    0 10px 18px rgba(0, 0, 0, 0.24);
+}
+
 .combat-reserve-card.is-down {
   opacity: 0.45;
 }
@@ -9489,6 +9498,49 @@ body {
   color: rgba(188, 205, 204, 0.7);
   font-size: 0.39rem;
   letter-spacing: 0.08em;
+}
+
+@keyframes combat-party-hit-pulse {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  18% {
+    transform: translateX(-0.16rem);
+    background: linear-gradient(180deg, rgba(44, 15, 21, 0.92), rgba(13, 8, 12, 0.92));
+  }
+
+  36% {
+    transform: translateX(0.14rem);
+  }
+
+  54% {
+    transform: translateX(-0.08rem);
+  }
+
+  72% {
+    transform: translateX(0.04rem);
+  }
+}
+
+@keyframes combat-ally-hit-pulse {
+  0%,
+  100% {
+    transform: scaleX(-1) translateY(0);
+  }
+
+  22% {
+    transform: scaleX(-1) translateY(-0.18rem) translateX(-0.12rem);
+  }
+
+  48% {
+    transform: scaleX(-1) translateY(0.08rem) translateX(0.08rem);
+  }
+
+  72% {
+    transform: scaleX(-1) translateY(0) translateX(-0.04rem);
+  }
 }
 
 @media (max-width: 920px) {
@@ -10614,6 +10666,14 @@ body {
 
 .combat-ally-battler.is-support {
   z-index: 1;
+}
+
+.combat-ally-battler.is-recently-hit .battle-sprite {
+  animation: combat-ally-hit-pulse 560ms ease both;
+  filter:
+    brightness(1.18)
+    saturate(1.16)
+    drop-shadow(0 0 13px rgba(255, 102, 121, 0.18));
 }
 
 .combat-ally-battler .combat-battler-sprite-wrap {

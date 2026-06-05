@@ -1499,6 +1499,9 @@ function buildCombatState(sourceThreat) {
     enemyActionQueue: [],
     enemyActionTargets: [],
     enemyResponseUsedThisTurn: false,
+    recentlyHitProgramId: null,
+    recentlyHitProgramIds: [],
+    recentlyHitAt: 0,
     expAwarded: false,
     pantheonBoonMessages: activeBoonMessages.concat(battleBoonMessages),
     activeBoons: activeBoons

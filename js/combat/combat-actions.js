@@ -1,7 +1,10 @@
 /* Combat action helpers own the battle loop, turn resolution, and encounter flow. */
 
 const COMBAT_FEED_MAX_EVENTS = 5;
-const ENEMY_ACTION_CONTINUE_DELAY_MS = 760;
+const ENEMY_ACTION_STEP_DELAY_MS = 1180;
+const ENEMY_DEFEND_PHASE_DELAY_MS = 1080;
+const ENEMY_RESULT_HOLD_MS = 1040;
+const ENEMY_HIT_MARKER_DURATION_MS = 680;
 
 function buildCombatFeedEvent(event, variant = "") {
   const safeEvent = event && typeof event === "object" ? event : { body: String(event || "") };
@@ -466,6 +469,36 @@ class ThreatCombat {
     setBattleCue(this.state, message, submessage, visualEffect);
   }
 
+  setEnemyActionCue(title, body = "", visualEffect = null) {
+    this.setBattleCue(title, body, visualEffect);
+  }
+
+  markProgramRecentlyHit(program) {
+    this.markProgramsRecentlyHit(program ? [program] : []);
+  }
+
+  markProgramsRecentlyHit(programsToMark) {
+    const hitProgramIds = (Array.isArray(programsToMark) ? programsToMark : [])
+      .map((program) => program?.id)
+      .filter(Boolean);
+    if (!hitProgramIds.length) {
+      return;
+    }
+
+    const hitAt = Date.now();
+    this.state.recentlyHitProgramId = hitProgramIds[0];
+    this.state.recentlyHitProgramIds = hitProgramIds;
+    this.state.recentlyHitAt = hitAt;
+    scheduleBattleStep(this, () => {
+      if (this.state.recentlyHitAt === hitAt) {
+        this.state.recentlyHitProgramId = null;
+        this.state.recentlyHitProgramIds = [];
+        this.state.recentlyHitAt = 0;
+        renderCombatScreen();
+      }
+    }, ENEMY_HIT_MARKER_DURATION_MS);
+  }
+
   buildVisualEffect(actorEntry, targetEntry, ability, damageResult, phase) {
     return buildVisualEffect(this.state, actorEntry, targetEntry, ability, damageResult, phase);
   }
@@ -858,11 +891,11 @@ class ThreatCombat {
     this.state.responseResult = null;
     this.state.actionLocked = false;
     this.state.commandMode = "response";
-    this.state.battleMessage = "DEFEND PHASE.";
-    this.state.battleSubmessage = "ENEMY PAYLOAD INCOMING. CHOOSE ONE RESPONSE BEFORE IMPACT.";
     this.state.visualEffect = null;
     const actionIndex = Number.isFinite(queuedAction?.index) ? queuedAction.index : 1;
     const actionTotal = Number.isFinite(queuedAction?.total) ? queuedAction.total : 1;
+    this.state.battleMessage = `ENEMY ACTION ${actionIndex}/${actionTotal}`;
+    this.state.battleSubmessage = "MAJOR PAYLOAD INCOMING. CHOOSE RESPONSE.";
     console.log("[DEFEND PHASE]", actor.title || actor.name || actor.id || "Threat", {
       action: `${actionIndex}/${actionTotal}`,
       ability: threatAbility?.name || "Unknown",
@@ -1220,7 +1253,9 @@ class ThreatCombat {
     }
 
     const hasQueuedEnemyAction = Array.isArray(this.state.enemyActionQueue) && this.state.enemyActionQueue.length > 0;
-    const continuationDelay = hasQueuedEnemyAction ? Math.max(delay, ENEMY_ACTION_CONTINUE_DELAY_MS) : delay;
+    const nextQueuedAction = hasQueuedEnemyAction ? this.state.enemyActionQueue[0] : null;
+    const nextDelay = nextQueuedAction?.requiresResponse ? ENEMY_DEFEND_PHASE_DELAY_MS : ENEMY_ACTION_STEP_DELAY_MS;
+    const continuationDelay = hasQueuedEnemyAction ? Math.max(delay, nextDelay) : delay;
 
     scheduleBattleStep(this, () => {
       if (typeof recordEnemyIntentHistory === "function" && resolvedEnemyIntent?.intent?.id) {
@@ -1323,7 +1358,7 @@ class ThreatCombat {
     const actionLabel = action?.kind === "basic" ? "MINOR PROBE" : "MAJOR PAYLOAD";
     const targetLabel = threatAbility.effect === "damage_all" ? "ALL DEFENDERS" : chosenTarget.name.toUpperCase();
 
-    this.setBattleCue(
+    this.setEnemyActionCue(
       `${actor.title.toUpperCase()} USED ${threatAbility.name.toUpperCase()}!`,
       `${actionLabel} TARGETING ${targetLabel}.`,
       this.buildVisualEffect(actorEntry, { kind: "program", ref: chosenTarget }, threatAbility, null, "windup")
@@ -1371,6 +1406,7 @@ class ThreatCombat {
         }, responseResult.variant);
       }
 
+      const hitPrograms = [chosenTarget];
       if (threatAbility.effect === "damage_all") {
         this.getLivingEnemyTargets().forEach((program) => {
           if (program === chosenTarget) {
@@ -1381,6 +1417,7 @@ class ThreatCombat {
             multiplier: baseThreatMultiplier * responseMultiplier,
             isThreatAttack: true
           });
+          hitPrograms.push(program);
           addBattleLog(`${actor.title.toUpperCase()} SPLASHED ${program.name.toUpperCase()} FOR ${splashResult.damage} DAMAGE.`, "damage");
         });
       }
@@ -1388,18 +1425,11 @@ class ThreatCombat {
       const playerActionLabel = action?.kind === "basic" ? "Minor probe" : "Major payload";
       const damageTargetLabel = threatAbility.effect === "damage_all" ? "all Defenders" : chosenTarget.name.toUpperCase();
       addBattleLog(`ENEMY ACTION ${actionIndex}/${actionTotal}: ${playerActionLabel} hit ${damageTargetLabel} for ${damageResult.damage}.`, "damage");
+      this.markProgramsRecentlyHit(hitPrograms);
 
-      const effectText = responseOutcome
-        ? responseOutcome.submessage
-        : damageResult.typeState === "super-effective"
-          ? "PRESSURE INCREASED."
-          : damageResult.typeState === "weak"
-            ? "THE STRIKE WAS SOFTENED."
-            : `${damageResult.levelMultiplier.toFixed(1)}X LEVEL BONUS.`;
-
-      this.setBattleCue(
-        responseOutcome ? `DEFEND RESULT: ${responseOutcome.label} - ${responseOutcome.effectiveness}` : `${chosenTarget.name.toUpperCase()} TOOK ${damageResult.damage} DAMAGE!`,
-        effectText,
+      this.setEnemyActionCue(
+        responseOutcome ? "DEFEND RESULT" : `ENEMY ACTION ${actionIndex}/${actionTotal}`,
+        responseOutcome ? `${responseOutcome.label} REDUCED DAMAGE ${responseOutcome.incomingDamage} -> ${responseOutcome.finalDamage}.` : `${playerActionLabel} hit ${damageTargetLabel} for ${damageResult.damage}.`,
         this.buildVisualEffect(actorEntry, { kind: "program", ref: chosenTarget }, threatAbility, damageResult, "impact")
       );
 
@@ -1409,7 +1439,7 @@ class ThreatCombat {
         this.state.nextCounterDamage = 0;
       }
 
-      this.completeThreatAction(actorEntry, action, resolvedEnemyIntent, 420);
+      this.completeThreatAction(actorEntry, action, resolvedEnemyIntent, responseOutcome ? ENEMY_RESULT_HOLD_MS : ENEMY_ACTION_STEP_DELAY_MS);
     }, 260);
   }
 

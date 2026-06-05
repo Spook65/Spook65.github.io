@@ -460,11 +460,13 @@ function buildReserveStripMarkup(state, activeProgramId) {
   return state.playerParty.map((program) => {
     const isActive = program.id === activeProgramId;
     const isTargeted = state.visualEffect && state.visualEffect.targetId === program.id && state.visualEffect.phase !== "recover";
+    const recentlyHitIds = Array.isArray(state.recentlyHitProgramIds) ? state.recentlyHitProgramIds : [];
+    const isRecentlyHit = state.recentlyHitProgramId === program.id || recentlyHitIds.includes(program.id);
     const spriteKey = getProgramSpriteClass(program);
     const hpPct = Math.max(0, Math.min(100, Math.round((program.hp / Math.max(1, program.maxHp)) * 100)));
 
     return `
-      <article class="combat-reserve-card ${isActive ? "is-active" : ""} ${program.hp <= 0 ? "is-down" : ""} ${isTargeted ? "is-targeted" : ""}" style="--reserve-accent: ${program.color}; color: ${program.color};">
+      <article class="combat-reserve-card ${isActive ? "is-active" : ""} ${program.hp <= 0 ? "is-down" : ""} ${isTargeted ? "is-targeted" : ""} ${isRecentlyHit ? "is-recently-hit" : ""}" style="--reserve-accent: ${program.color}; color: ${program.color};">
         <span class="combat-reserve-emblem is-${spriteKey}" aria-hidden="true">
           <span class="combat-reserve-mark">${getProgramMonogram(program)}</span>
         </span>
@@ -672,7 +674,7 @@ function buildAllyFormationMarkup(state, activeProgramId) {
         state,
         activeProgramId === program.id,
         {
-          extraClasses: `combat-ally-battler is-slot-${slot} ${activeProgramId === program.id ? "is-active" : "is-support"}`,
+          extraClasses: `combat-ally-battler is-slot-${slot} ${activeProgramId === program.id ? "is-active" : "is-support"} ${state.recentlyHitProgramId === program.id || (Array.isArray(state.recentlyHitProgramIds) && state.recentlyHitProgramIds.includes(program.id)) ? "is-recently-hit" : ""}`,
           showStatusBox: false
         }
       )).join("")}
