@@ -111,6 +111,12 @@ const threats = [
     weakTo: ["mitigate", "redirect", "isolate"],
     resists: ["purge"],
     immuneTo: ["decoy"],
+    behaviorProfile: {
+      archetype: "flood",
+      actionsPerTurn: 2,
+      targetPattern: "differentIfPossible",
+      actionWeight: "light"
+    },
     abilities: [
       { name: "Amplify Flood", cost: 0, baseDamage: 18, effect: "damage_all" },
       { name: "Fragment Route", cost: 1, baseDamage: 14, effect: "status_isolated" },
@@ -150,6 +156,12 @@ const threats = [
     weakTo: ["scan", "isolate", "purge"],
     resists: ["redirect"],
     immuneTo: [],
+    behaviorProfile: {
+      archetype: "swarm",
+      actionsPerTurn: 2,
+      targetPattern: "randomLiving",
+      actionWeight: "light"
+    },
     abilities: [
       { name: "Beacon C2", cost: 0, baseDamage: 12, effect: "status_detected" },
       { name: "Multiply Nodes", cost: 1, baseDamage: 10, effect: "damage_all" },
@@ -189,6 +201,12 @@ const threats = [
     weakTo: ["countertrace", "cleanse", "mitigate"],
     resists: ["decoy"],
     immuneTo: ["bait"],
+    behaviorProfile: {
+      archetype: "elite",
+      actionsPerTurn: 2,
+      targetPattern: "lowestHp",
+      actionWeight: "mixed"
+    },
     abilities: [
       { name: "Privilege Escalate", cost: 0, baseDamage: 22, effect: "status_encrypted" },
       { name: "Disable EDR", cost: 1, baseDamage: 18, effect: "damage_all" },
@@ -267,6 +285,12 @@ const threats = [
     weakTo: ["mitigate", "redirect", "isolate"],
     resists: ["purge"],
     immuneTo: ["decoy"],
+    behaviorProfile: {
+      archetype: "flood",
+      actionsPerTurn: 2,
+      targetPattern: "differentIfPossible",
+      actionWeight: "light"
+    },
     abilities: [
       { name: "Saturate Peering", cost: 0, baseDamage: 19, effect: "damage_all" },
       { name: "GRE Spray", cost: 1, baseDamage: 15, effect: "status_isolated" },

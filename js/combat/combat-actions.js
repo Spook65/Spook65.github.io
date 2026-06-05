@@ -438,6 +438,155 @@ class ThreatCombat {
       };
   }
 
+  getThreatBehaviorProfile(threat) {
+    return threat && typeof threat.behaviorProfile === "object" ? threat.behaviorProfile : {};
+  }
+
+  getEnemyActionCount(threat) {
+    const profile = this.getThreatBehaviorProfile(threat);
+    const rawCount = Number.isFinite(profile.actionsPerTurn)
+      ? profile.actionsPerTurn
+      : Number.isFinite(threat?.actionsPerTurn)
+        ? threat.actionsPerTurn
+        : Number.isFinite(threat?.maxActions)
+          ? threat.maxActions
+          : 1;
+
+    return Math.max(1, Math.min(2, Math.round(rawCount)));
+  }
+
+  getThreatTargetPattern(threat, action = null) {
+    const profile = this.getThreatBehaviorProfile(threat);
+    return String(action?.targetPattern || profile.targetPattern || threat?.targetPattern || "randomLiving");
+  }
+
+  getThreatActionWeight(threat) {
+    const profile = this.getThreatBehaviorProfile(threat);
+    return String(profile.actionWeight || threat?.actionWeight || "normal").toLowerCase();
+  }
+
+  getBasicThreatAbility(threat, majorAbility = null) {
+    const abilities = Array.isArray(threat?.abilities) ? threat.abilities : [];
+    return abilities.find((candidate) => candidate && candidate !== majorAbility && Number.isFinite(candidate.baseDamage) && candidate.baseDamage > 0 && String(candidate.effect || "") !== "damage_all")
+      || abilities.find((candidate) => candidate && candidate !== majorAbility && Number.isFinite(candidate.baseDamage) && candidate.baseDamage > 0)
+      || this.getFallbackThreatAbility(threat);
+  }
+
+  getThreatActionIntentTags(action = null) {
+    const intent = action?.resolvedEnemyIntent?.intent || null;
+    return normalizeResponseTagList([
+      action?.threatLevel,
+      action?.payloadType,
+      action?.ability?.threatLevel,
+      action?.ability?.payloadType,
+      ...(Array.isArray(action?.ability?.intentTags) ? action.ability.intentTags : []),
+      intent?.id,
+      intent?.type,
+      intent?.severity,
+      intent?.iconLabel,
+      ...(Array.isArray(intent?.intentTags) ? intent.intentTags : [])
+    ]);
+  }
+
+  shouldThreatActionTriggerResponse(action = null) {
+    if (!action) {
+      return false;
+    }
+
+    if (action.requiresResponse === true || action.ability?.requiresResponse === true) {
+      return true;
+    }
+
+    const threatLevel = String(action.threatLevel || action.ability?.threatLevel || "").toLowerCase();
+    if (threatLevel === "major") {
+      return true;
+    }
+
+    const majorIntentTags = ["swarm", "spread", "exploit", "corrupt", "overload", "shield", "charge", "flood"];
+    const intentTags = this.getThreatActionIntentTags(action);
+    return majorIntentTags.some((tag) => intentTags.includes(tag));
+  }
+
+  buildEnemyActionQueue(actorEntry) {
+    const actor = actorEntry?.ref;
+    if (!actor || actor.hp <= 0) {
+      return [];
+    }
+
+    const resolvedEnemyIntent = typeof resolveEnemyIntent === "function"
+      ? resolveEnemyIntent(this.state)
+      : null;
+    const majorAbility = resolvedEnemyIntent?.ability || this.getFallbackThreatAbility(actor);
+    const actionCount = this.getEnemyActionCount(actor);
+    const actionWeight = this.getThreatActionWeight(actor);
+    const baseTargetPattern = this.getThreatTargetPattern(actor);
+    const majorAction = {
+      id: "major",
+      kind: "major",
+      ability: majorAbility,
+      resolvedEnemyIntent,
+      damageMultiplier: actionCount > 1 && actionWeight === "light" ? 0.82 : 1,
+      targetPattern: majorAbility?.targetPattern || baseTargetPattern,
+      threatLevel: majorAbility?.threatLevel || resolvedEnemyIntent?.intent?.threatLevel || "",
+      payloadType: majorAbility?.payloadType || resolvedEnemyIntent?.intent?.type || ""
+    };
+    majorAction.requiresResponse = this.shouldThreatActionTriggerResponse(majorAction);
+
+    if (actionCount <= 1) {
+      return [majorAction];
+    }
+
+    const basicAbility = this.getBasicThreatAbility(actor, majorAbility);
+    const basicAction = {
+      id: "basic",
+      kind: "basic",
+      ability: basicAbility,
+      resolvedEnemyIntent: null,
+      damageMultiplier: actionWeight === "mixed" ? 0.72 : 0.76,
+      targetPattern: basicAbility?.targetPattern || baseTargetPattern,
+      threatLevel: basicAbility?.threatLevel || "minor",
+      requiresResponse: false
+    };
+
+    return [basicAction, majorAction];
+  }
+
+  getLivingEnemyTargets() {
+    return programs.filter((program) => program && program.hp > 0);
+  }
+
+  selectEnemyActionTarget(action = null, previousTargets = []) {
+    const livingPrograms = this.getLivingEnemyTargets();
+    if (!livingPrograms.length) {
+      return null;
+    }
+
+    const pattern = String(action?.targetPattern || "randomLiving").toLowerCase();
+    const activeTarget = livingPrograms.find((program) => program.id === this.state.activeProgramId) || livingPrograms[0];
+
+    if (pattern === "active") {
+      return activeTarget;
+    }
+
+    if (pattern === "lowesthp") {
+      return livingPrograms.slice().sort((left, right) => {
+        const leftPercent = (left.hp || 0) / Math.max(1, left.maxHp || left.hp || 1);
+        const rightPercent = (right.hp || 0) / Math.max(1, right.maxHp || right.hp || 1);
+        return leftPercent - rightPercent;
+      })[0];
+    }
+
+    if (pattern === "differentifpossible") {
+      const previousTargetIds = previousTargets.map((target) => target?.id).filter(Boolean);
+      const availableTargets = livingPrograms.filter((program) => !previousTargetIds.includes(program.id));
+      if (availableTargets.length) {
+        return availableTargets[getRandomInt(0, availableTargets.length - 1)];
+      }
+    }
+
+    return livingPrograms[getRandomInt(0, livingPrograms.length - 1)];
+  }
+
   buildEnemyResponseResult(evaluation) {
     const safeEvaluation = evaluation && typeof evaluation === "object" ? evaluation : null;
     if (!safeEvaluation) {
@@ -612,25 +761,31 @@ class ThreatCombat {
     }
   }
 
-  enterEnemyResponsePhase(actorEntry) {
+  enterEnemyResponsePhase(actorEntry, queuedAction = null) {
     const actor = actorEntry?.ref;
     if (!actor || actor.hp <= 0) {
       return;
     }
 
-    const resolvedEnemyIntent = typeof resolveEnemyIntent === "function"
+    const resolvedEnemyIntent = queuedAction?.resolvedEnemyIntent || (typeof resolveEnemyIntent === "function"
       ? resolveEnemyIntent(this.state)
-      : null;
-    const threatAbility = resolvedEnemyIntent?.ability || this.getFallbackThreatAbility(actor);
+      : null);
+    const threatAbility = queuedAction?.ability || resolvedEnemyIntent?.ability || this.getFallbackThreatAbility(actor);
     if (resolvedEnemyIntent?.intent) {
       this.state.enemyIntent = resolvedEnemyIntent.intent;
     }
 
     this.state.responsePhase = true;
+    this.state.enemyResponseUsedThisTurn = true;
     this.state.pendingEnemyAction = {
       actorId: actor.id || actor.title || "threat",
       ability: threatAbility,
-      resolvedEnemyIntent
+      resolvedEnemyIntent,
+      queuedAction: {
+        ...(queuedAction || {}),
+        ability: threatAbility,
+        resolvedEnemyIntent
+      }
     };
     this.state.selectedResponse = null;
     this.state.responseResult = null;
@@ -639,6 +794,7 @@ class ThreatCombat {
     this.state.battleMessage = "DEFEND PHASE.";
     this.state.battleSubmessage = "ENEMY PAYLOAD INCOMING. CHOOSE ONE RESPONSE BEFORE IMPACT.";
     this.state.visualEffect = null;
+    addBattleLog(`MAJOR PAYLOAD DETECTED. CHOOSE A DEFENSIVE RESPONSE.`, "buff");
     renderCombatScreen();
   }
 
@@ -691,7 +847,13 @@ class ThreatCombat {
     }
 
     if (currentActor.kind === "threat") {
-      this.enterEnemyResponsePhase(currentActor);
+      this.state.enemyActionQueue = this.buildEnemyActionQueue(currentActor);
+      this.state.enemyActionTargets = [];
+      this.state.enemyResponseUsedThisTurn = false;
+      this.state.pendingEnemyAction = null;
+      this.state.selectedResponse = null;
+      this.state.responseResult = null;
+      this.takeTurn(currentActor, null);
       return;
     }
 
@@ -834,7 +996,7 @@ class ThreatCombat {
     }
   }
 
-  applyThreatEffect(threat, ability) {
+  applyThreatEffect(threat, ability, targetOverride = null) {
     if (ability.effect === "self_level_up") {
       addBattleLog(`${threat.title.toUpperCase()} TRIED TO ESCALATE, BUT THE BATTLE LEVEL IS LOCKED.`, "buff");
       return;
@@ -843,7 +1005,7 @@ class ThreatCombat {
     if (ability.effect === "damage_all" && String(this.state?.resolvedEnemyIntent?.intent?.id || this.state?.enemyIntent?.id || "").toLowerCase() === "overload") {
       const livingPrograms = programs.filter((program) => program.hp > 0);
       if (livingPrograms.length) {
-        const target = livingPrograms[getRandomInt(0, livingPrograms.length - 1)];
+        const target = targetOverride && targetOverride.hp > 0 ? targetOverride : livingPrograms[getRandomInt(0, livingPrograms.length - 1)];
         this.applyStatusEffect(target, {
           id: "flood",
           label: "FLOOD",
@@ -861,7 +1023,7 @@ class ThreatCombat {
 
     if (ability.effect === "status_encrypted") {
       const livingPrograms = programs.filter((program) => program.hp > 0);
-      const target = livingPrograms[getRandomInt(0, livingPrograms.length - 1)];
+      const target = targetOverride && targetOverride.hp > 0 ? targetOverride : livingPrograms[getRandomInt(0, livingPrograms.length - 1)];
       this.applyStatusEffect(target, {
         id: "rot",
         label: "ROT",
@@ -878,7 +1040,7 @@ class ThreatCombat {
 
     if (ability.effect === "status_detected") {
       const livingPrograms = programs.filter((program) => program.hp > 0);
-      const target = livingPrograms[getRandomInt(0, livingPrograms.length - 1)];
+      const target = targetOverride && targetOverride.hp > 0 ? targetOverride : livingPrograms[getRandomInt(0, livingPrograms.length - 1)];
       this.applyStatusEffect(target, "status_detected");
       addBattleLog(`${target.name.toUpperCase()} WAS TAGGED [DETECTED].`, "damage");
       return;
@@ -886,7 +1048,7 @@ class ThreatCombat {
 
     if (ability.effect === "status_isolated") {
       const livingPrograms = programs.filter((program) => program.hp > 0);
-      const target = livingPrograms[getRandomInt(0, livingPrograms.length - 1)];
+      const target = targetOverride && targetOverride.hp > 0 ? targetOverride : livingPrograms[getRandomInt(0, livingPrograms.length - 1)];
       this.applyStatusEffect(target, "status_isolated");
       addBattleLog(`${target.name.toUpperCase()} WAS PULLED INTO AN [ISOLATED] SEGMENT.`, "damage");
     }
@@ -973,6 +1135,162 @@ class ThreatCombat {
       ...damageResult,
       damage
     };
+  }
+
+  completeThreatAction(actorEntry, action = null, resolvedEnemyIntent = null, delay = 420) {
+    if (this.checkWinCondition()) {
+      this.state.actionLocked = false;
+      return;
+    }
+
+    scheduleBattleStep(this, () => {
+      if (typeof recordEnemyIntentHistory === "function" && resolvedEnemyIntent?.intent?.id) {
+        this.state.resolvedEnemyIntent = {
+          ...resolvedEnemyIntent.intent,
+          consumedAt: Date.now()
+        };
+        recordEnemyIntentHistory(this.state, resolvedEnemyIntent.intent.id);
+      }
+
+      this.state.enemyIntent = null;
+
+      if (Array.isArray(this.state.enemyActionQueue) && this.state.enemyActionQueue.length) {
+        this.clearEnemyResponseState();
+        this.takeTurn(actorEntry, null);
+        return;
+      }
+
+      this.clearEnemyResponseState();
+      this.state.enemyActionQueue = [];
+      this.state.enemyActionTargets = [];
+      this.state.enemyResponseUsedThisTurn = false;
+      this.finishActedTurn(actorEntry);
+    }, delay);
+  }
+
+  executeThreatAction(actorEntry, action = null, responseResult = null) {
+    const actor = actorEntry?.ref;
+    if (!actor || actor.hp <= 0) {
+      this.finishActedTurn(actorEntry);
+      return;
+    }
+
+    const threatAbility = action?.ability || this.getFallbackThreatAbility(actor);
+    const resolvedEnemyIntent = action?.resolvedEnemyIntent || null;
+    const livingPrograms = this.getLivingEnemyTargets();
+    if (!livingPrograms.length) {
+      this.end("defeat");
+      return;
+    }
+
+    const chosenTarget = threatAbility.effect === "damage_all"
+      ? livingPrograms[0]
+      : this.selectEnemyActionTarget(action, this.state.enemyActionTargets || []);
+    if (!chosenTarget) {
+      this.end("defeat");
+      return;
+    }
+
+    this.state.enemyActionTargets = Array.isArray(this.state.enemyActionTargets) ? this.state.enemyActionTargets : [];
+    this.state.enemyActionTargets.push(chosenTarget);
+    this.state.actionLocked = true;
+    this.applyThreatEffect(actor, threatAbility, chosenTarget);
+
+    if (threatAbility.effect === "self_level_up") {
+      if (responseResult) {
+        const responseOutcome = this.buildEnemyResponseOutcome(responseResult, 0, 0);
+        this.state.responseResult = {
+          ...responseResult,
+          ...responseOutcome
+        };
+        addBattleLog(responseOutcome.message.toUpperCase(), responseResult.variant);
+      }
+
+      this.setBattleCue(
+        `${actor.title.toUpperCase()} UPGRADED ITS CORE!`,
+        "THREAT POWER INCREASED.",
+        this.buildVisualEffect(actorEntry, { kind: "threat", ref: this.state.threat }, threatAbility, null, "buff")
+      );
+      this.completeThreatAction(actorEntry, action, resolvedEnemyIntent, 360);
+      return;
+    }
+
+    const actionLabel = action?.kind === "basic" ? "MINOR PROBE" : "MAJOR PAYLOAD";
+    const targetLabel = threatAbility.effect === "damage_all" ? "ALL DEFENDERS" : chosenTarget.name.toUpperCase();
+    if (action?.kind === "basic") {
+      addBattleLog(`${actor.title.toUpperCase()} LAUNCHED A MINOR PROBE AT ${targetLabel}.`, "damage");
+    }
+
+    this.setBattleCue(
+      `${actor.title.toUpperCase()} USED ${threatAbility.name.toUpperCase()}!`,
+      `${actionLabel} TARGETING ${targetLabel}.`,
+      this.buildVisualEffect(actorEntry, { kind: "program", ref: chosenTarget }, threatAbility, null, "windup")
+    );
+
+    scheduleBattleStep(this, () => {
+      const actionDamageMultiplier = Number.isFinite(action?.damageMultiplier) ? action.damageMultiplier : 1;
+      const baseThreatMultiplier = (threatAbility.effect === "damage_all" ? 0.75 : 1) * actionDamageMultiplier;
+      const responseMultiplier = responseResult && Number.isFinite(responseResult.damageReduction)
+        ? Math.max(0, 1 - Math.max(0, Math.min(0.95, responseResult.damageReduction)))
+        : 1;
+      const incomingDamageResult = this.previewThreatDamage(actor, chosenTarget, threatAbility, {
+        multiplier: baseThreatMultiplier,
+        isThreatAttack: true
+      });
+      const damageResult = this.resolveDamage(actor, chosenTarget, threatAbility, {
+        multiplier: baseThreatMultiplier * responseMultiplier,
+        isThreatAttack: true
+      });
+      const responseOutcome = responseResult
+        ? this.buildEnemyResponseOutcome(responseResult, incomingDamageResult.damage, damageResult.damage)
+        : null;
+
+      if (responseOutcome) {
+        this.state.responseResult = {
+          ...responseResult,
+          ...responseOutcome
+        };
+        addBattleLog(responseOutcome.message.toUpperCase(), responseResult.variant);
+      }
+
+      if (threatAbility.effect === "damage_all") {
+        this.getLivingEnemyTargets().forEach((program) => {
+          if (program === chosenTarget) {
+            return;
+          }
+
+          const splashResult = this.resolveDamage(actor, program, threatAbility, {
+            multiplier: baseThreatMultiplier * responseMultiplier,
+            isThreatAttack: true
+          });
+          addBattleLog(`${actor.title.toUpperCase()} SPLASHED ${program.name.toUpperCase()} FOR ${splashResult.damage} DAMAGE.`, "damage");
+        });
+      }
+
+      addBattleLog(`${actor.title.toUpperCase()} USED ${threatAbility.name.toUpperCase()} - ${damageResult.damage} DAMAGE ON ${chosenTarget.name.toUpperCase()}.`, "damage");
+
+      const effectText = responseOutcome
+        ? responseOutcome.submessage
+        : damageResult.typeState === "super-effective"
+          ? "PRESSURE INCREASED."
+          : damageResult.typeState === "weak"
+            ? "THE STRIKE WAS SOFTENED."
+            : `${damageResult.levelMultiplier.toFixed(1)}X LEVEL BONUS.`;
+
+      this.setBattleCue(
+        responseOutcome ? `DEFEND RESULT: ${responseOutcome.label} - ${responseOutcome.effectiveness}` : `${chosenTarget.name.toUpperCase()} TOOK ${damageResult.damage} DAMAGE!`,
+        effectText,
+        this.buildVisualEffect(actorEntry, { kind: "program", ref: chosenTarget }, threatAbility, damageResult, "impact")
+      );
+
+      if (this.state.nextCounterDamage > 0) {
+        this.state.threat.hp = Math.max(0, this.state.threat.hp - this.state.nextCounterDamage);
+        addBattleLog(`COUNTER DAMAGE DEALT ${this.state.nextCounterDamage} TO ${this.state.threat.title.toUpperCase()}.`, "buff");
+        this.state.nextCounterDamage = 0;
+      }
+
+      this.completeThreatAction(actorEntry, action, resolvedEnemyIntent, 420);
+    }, 260);
   }
 
   takeTurn(actorEntry, ability) {
@@ -1093,136 +1411,35 @@ class ThreatCombat {
         ? this.state.pendingEnemyAction
         : null;
       const responseResult = this.state.responseResult && this.state.selectedResponse ? this.state.responseResult : null;
-      const responseMultiplier = responseResult && Number.isFinite(responseResult.damageReduction)
-        ? Math.max(0, 1 - Math.max(0, Math.min(0.95, responseResult.damageReduction)))
-        : 1;
-      const resolvedEnemyIntent = pendingEnemyAction?.resolvedEnemyIntent || (typeof resolveEnemyIntent === "function"
-        ? resolveEnemyIntent(this.state)
-        : null);
-      const threatAbility = pendingEnemyAction?.ability || resolvedEnemyIntent?.ability || ability || this.getFallbackThreatAbility(actor);
-      if (resolvedEnemyIntent && resolvedEnemyIntent.intent) {
-        this.state.enemyIntent = resolvedEnemyIntent.intent;
-      }
-      const livingPrograms = programs.filter((program) => program.hp > 0);
 
-      if (!livingPrograms.length) {
+      if (!this.getLivingEnemyTargets().length) {
         this.end("defeat");
         return;
       }
 
-      this.applyThreatEffect(actor, threatAbility);
-      if (threatAbility.effect === "self_level_up") {
-        if (responseResult) {
-          const responseOutcome = this.buildEnemyResponseOutcome(responseResult, 0, 0);
-          this.state.responseResult = {
-            ...responseResult,
-            ...responseOutcome
-          };
-          addBattleLog(responseOutcome.message.toUpperCase(), responseResult.variant);
-        }
-
-        this.state.actionLocked = true;
-        this.setBattleCue(
-          `${actor.title.toUpperCase()} UPGRADED ITS CORE!`,
-          "THREAT POWER INCREASED.",
-          this.buildVisualEffect(actorEntry, { kind: "threat", ref: this.state.threat }, threatAbility, null, "buff")
-        );
-
-        scheduleBattleStep(this, () => {
-          this.state.actionLocked = false;
-          renderCombatScreen();
-          if (typeof recordEnemyIntentHistory === "function" && resolvedEnemyIntent?.intent?.id) {
-            recordEnemyIntentHistory(this.state, resolvedEnemyIntent.intent.id);
-          }
-          this.clearEnemyResponseState();
-          this.finishActedTurn(actorEntry);
-        }, 360);
+      if (pendingEnemyAction) {
+        this.executeThreatAction(actorEntry, pendingEnemyAction.queuedAction, responseResult);
         return;
       }
 
-      this.state.actionLocked = true;
-      const chosenTarget = threatAbility.effect === "damage_all"
-        ? livingPrograms[0]
-        : livingPrograms[getRandomInt(0, livingPrograms.length - 1)];
+      if (!Array.isArray(this.state.enemyActionQueue) || !this.state.enemyActionQueue.length) {
+        this.state.enemyActionQueue = this.buildEnemyActionQueue(actorEntry);
+        this.state.enemyActionTargets = [];
+        this.state.enemyResponseUsedThisTurn = false;
+      }
 
-      this.setBattleCue(
-        `${actor.title.toUpperCase()} USED ${threatAbility.name.toUpperCase()}!`,
-        resolvedEnemyIntent?.intent?.description ? resolvedEnemyIntent.intent.description.toUpperCase() : "COUNTERMEASURE DEPLOYED.",
-        this.buildVisualEffect(actorEntry, { kind: "program", ref: chosenTarget }, threatAbility, null, "windup")
-      );
+      const nextAction = this.state.enemyActionQueue.shift();
+      if (!nextAction) {
+        this.finishActedTurn(actorEntry);
+        return;
+      }
 
-      scheduleBattleStep(this, () => {
-        const baseThreatMultiplier = threatAbility.effect === "damage_all" ? 0.75 : 1;
-        const incomingDamageResult = this.previewThreatDamage(actor, chosenTarget, threatAbility, {
-          multiplier: baseThreatMultiplier,
-          isThreatAttack: true
-        });
-        const damageResult = threatAbility.effect === "damage_all"
-          ? this.resolveDamage(actor, chosenTarget, threatAbility, { multiplier: 0.75 * responseMultiplier, isThreatAttack: true })
-          : this.resolveDamage(actor, chosenTarget, threatAbility, { multiplier: responseMultiplier, isThreatAttack: true });
-        const responseOutcome = responseResult
-          ? this.buildEnemyResponseOutcome(responseResult, incomingDamageResult.damage, damageResult.damage)
-          : null;
+      if (nextAction.requiresResponse && !this.state.enemyResponseUsedThisTurn) {
+        this.enterEnemyResponsePhase(actorEntry, nextAction);
+        return;
+      }
 
-        if (responseOutcome) {
-          this.state.responseResult = {
-            ...responseResult,
-            ...responseOutcome
-          };
-          addBattleLog(responseOutcome.message.toUpperCase(), responseResult.variant);
-        }
-
-        if (threatAbility.effect === "damage_all") {
-          livingPrograms.forEach((program) => {
-            if (program === chosenTarget) {
-              return;
-            }
-
-            const splashResult = this.resolveDamage(actor, program, threatAbility, { multiplier: 0.75 * responseMultiplier, isThreatAttack: true });
-            addBattleLog(`${actor.title.toUpperCase()} SPLASHED ${program.name.toUpperCase()} FOR ${splashResult.damage} DAMAGE.`, "damage");
-          });
-        }
-
-        addBattleLog(`${actor.title.toUpperCase()} USED ${threatAbility.name.toUpperCase()} - ${damageResult.damage} DAMAGE ON ${chosenTarget.name.toUpperCase()}.`, "damage");
-
-        const effectText = responseOutcome
-          ? responseOutcome.submessage
-          : damageResult.typeState === "super-effective"
-          ? "PRESSURE INCREASED."
-          : damageResult.typeState === "weak"
-            ? "THE STRIKE WAS SOFTENED."
-            : responseResult && responseResult.damageReduction > 0
-              ? `${responseResult.name} MITIGATED ${Math.round(responseResult.damageReduction * 100)}%.`
-              : `${damageResult.levelMultiplier.toFixed(1)}X LEVEL BONUS.`;
-
-        this.setBattleCue(
-          responseOutcome ? `DEFEND RESULT: ${responseOutcome.label} - ${responseOutcome.effectiveness}` : `${chosenTarget.name.toUpperCase()} TOOK ${damageResult.damage} DAMAGE!`,
-          effectText,
-          this.buildVisualEffect(actorEntry, { kind: "program", ref: chosenTarget }, threatAbility, damageResult, "impact")
-        );
-
-        if (this.state.nextCounterDamage > 0) {
-          this.state.threat.hp = Math.max(0, this.state.threat.hp - this.state.nextCounterDamage);
-          addBattleLog(`COUNTER DAMAGE DEALT ${this.state.nextCounterDamage} TO ${this.state.threat.title.toUpperCase()}.`, "buff");
-          this.state.nextCounterDamage = 0;
-        }
-
-        this.clearEnemyResponseState();
-
-        if (this.checkWinCondition()) {
-          this.state.actionLocked = false;
-          return;
-        }
-
-        scheduleBattleStep(this, () => {
-          this.state.resolvedEnemyIntent = resolvedEnemyIntent?.intent ? { ...resolvedEnemyIntent.intent, consumedAt: Date.now() } : this.state.resolvedEnemyIntent;
-          if (typeof recordEnemyIntentHistory === "function" && resolvedEnemyIntent?.intent?.id) {
-            recordEnemyIntentHistory(this.state, resolvedEnemyIntent.intent.id);
-          }
-          this.state.enemyIntent = null;
-          this.finishActedTurn(actorEntry);
-        }, 420);
-      }, 260);
+      this.executeThreatAction(actorEntry, nextAction, null);
     }
   }
 
