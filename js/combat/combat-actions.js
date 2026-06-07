@@ -5,6 +5,9 @@ const ENEMY_ACTION_STEP_DELAY_MS = 1180;
 const ENEMY_DEFEND_PHASE_DELAY_MS = 1080;
 const ENEMY_RESULT_HOLD_MS = 1040;
 const ENEMY_HIT_MARKER_DURATION_MS = 680;
+const PLAYER_ACTION_WINDUP_MS = 280;
+const PLAYER_ACTION_RESULT_HOLD_MS = 920;
+const PLAYER_HIT_MARKER_DURATION_MS = 620;
 
 function buildCombatFeedEvent(event, variant = "") {
   const safeEvent = event && typeof event === "object" ? event : { body: String(event || "") };
@@ -14,8 +17,14 @@ function buildCombatFeedEvent(event, variant = "") {
 
   return {
     type: safeEvent.type || (enemyActionMatch ? "enemy-action" : "combat"),
+    side: safeEvent.side || "",
     title: safeEvent.title || (enemyActionMatch ? `ENEMY ACTION ${enemyActionMatch[1]}` : defendResultMatch ? "DEFEND RESULT" : "COMBAT EVENT"),
     body: safeEvent.body || (enemyActionMatch ? enemyActionMatch[2] : rawBody),
+    actorName: safeEvent.actorName || "",
+    targetName: safeEvent.targetName || "",
+    damage: Number.isFinite(safeEvent.damage) ? safeEvent.damage : null,
+    gaugeDelta: Number.isFinite(safeEvent.gaugeDelta) ? safeEvent.gaugeDelta : null,
+    effect: safeEvent.effect || "",
     variant: safeEvent.variant || variant || "",
     timestamp: Number.isFinite(safeEvent.timestamp) ? safeEvent.timestamp : Date.now()
   };
@@ -497,6 +506,53 @@ class ThreatCombat {
         renderCombatScreen();
       }
     }, ENEMY_HIT_MARKER_DURATION_MS);
+  }
+
+  markThreatRecentlyHit() {
+    const threatId = this.state.threat?.id || this.state.threat?.title || "threat";
+    const hitAt = Date.now();
+    this.state.recentlyHitThreatId = threatId;
+    this.state.recentlyHitThreatAt = hitAt;
+    scheduleBattleStep(this, () => {
+      if (this.state.recentlyHitThreatId === threatId && this.state.recentlyHitThreatAt === hitAt) {
+        this.state.recentlyHitThreatId = null;
+        this.state.recentlyHitThreatAt = 0;
+        renderCombatScreen();
+      }
+    }, PLAYER_HIT_MARKER_DURATION_MS);
+  }
+
+  getPlayerEffectFeedback(ability) {
+    const effect = String(ability?.effect || "");
+    if (effect === "status_detected") {
+      return { label: "DETECTED", body: `${ability.name} applied DETECTED.`, variant: "buff" };
+    }
+
+    if (effect === "status_isolated") {
+      return { label: "ISOLATED", body: `${ability.name} applied ISOLATED.`, variant: "buff" };
+    }
+
+    if (effect === "reduce_next_damage") {
+      return { label: "MITIGATION", body: `${ability.name} armed incoming damage reduction.`, variant: "buff" };
+    }
+
+    if (effect === "boost_def") {
+      return { label: "HARDEN", body: `${ability.name} raised defense.`, variant: "buff" };
+    }
+
+    if (effect === "shared_ability") {
+      return { label: "GAUGE", body: `${ability.name} restored Tactical Gauge.`, variant: "buff" };
+    }
+
+    if (effect === "cleanse" || effect === "combo_containment") {
+      return { label: "CLEANSE", body: `${ability.name} cleared status effects.`, variant: "buff" };
+    }
+
+    if (effect === "combo_sync_defense") {
+      return { label: "COUNTER", body: `${ability.name} armed synchronized defense.`, variant: "buff" };
+    }
+
+    return null;
   }
 
   buildVisualEffect(actorEntry, targetEntry, ability, damageResult, phase) {
@@ -1054,31 +1110,31 @@ class ThreatCombat {
   applyPlayerEffect(actor, ability, damageResult) {
     if (ability.effect === "reduce_next_damage") {
       this.state.nextDamageReduction = 0.5;
-      addBattleLog(`${actor.name.toUpperCase()} BRACED THE NETWORK. NEXT INCOMING DAMAGE HALVED.`, "buff");
+      addBattleLog(`${actor.name.toUpperCase()} BRACED THE NETWORK. NEXT INCOMING DAMAGE HALVED.`, "buff", { feed: false });
       return;
     }
 
     if (ability.effect === "boost_def") {
       actor.def += 2;
-      addBattleLog(`${actor.name.toUpperCase()} HARDENED PORTS. DEFENSE +2.`, "buff");
+      addBattleLog(`${actor.name.toUpperCase()} HARDENED PORTS. DEFENSE +2.`, "buff", { feed: false });
       return;
     }
 
     if (ability.effect === "shared_ability") {
       this.state.responseGauge = Math.min(100, this.state.responseGauge + 5);
-      addBattleLog(`${actor.name.toUpperCase()} SHARED BANDWIDTH ACROSS THE PARTY. GAUGE +5.`, "buff");
+      addBattleLog(`${actor.name.toUpperCase()} SHARED BANDWIDTH ACROSS THE PARTY. GAUGE +5.`, "buff", { feed: false });
       return;
     }
 
     if (ability.effect === "status_detected") {
       this.applyStatusEffect(this.state.threat, "status_detected");
-      addBattleLog(`${this.state.threat.title.toUpperCase()} WAS TAGGED [DETECTED].`, "buff");
+      addBattleLog(`${this.state.threat.title.toUpperCase()} WAS TAGGED [DETECTED].`, "buff", { feed: false });
       return;
     }
 
     if (ability.effect === "status_isolated") {
       this.applyStatusEffect(this.state.threat, "status_isolated");
-      addBattleLog(`${this.state.threat.title.toUpperCase()} WAS TAGGED [ISOLATED].`, "buff");
+      addBattleLog(`${this.state.threat.title.toUpperCase()} WAS TAGGED [ISOLATED].`, "buff", { feed: false });
       return;
     }
 
@@ -1087,21 +1143,21 @@ class ThreatCombat {
         this.clearStatusEffects(program);
       });
       this.clearStatusEffects(this.state.threat);
-      addBattleLog(`${actor.name.toUpperCase()} CLEARED PARTY AND THREAT STATUS EFFECTS.`, "buff");
+      addBattleLog(`${actor.name.toUpperCase()} CLEARED PARTY AND THREAT STATUS EFFECTS.`, "buff", { feed: false });
       return;
     }
 
     if (ability.effect === "combo_sync_defense") {
       this.state.nextDamageReduction = 0.5;
       this.state.nextCounterDamage = 15;
-      addBattleLog(`SYNCHRONIZED DEFENSE ONLINE. NEXT HIT REDUCED BY 50% AND COUNTER DAMAGE ARMED.`, "buff");
+      addBattleLog(`SYNCHRONIZED DEFENSE ONLINE. NEXT HIT REDUCED BY 50% AND COUNTER DAMAGE ARMED.`, "buff", { feed: false });
       return;
     }
 
     if (ability.effect === "combo_containment") {
       this.clearStatusEffects(this.state.threat);
       programs.forEach((program) => this.clearStatusEffects(program));
-      addBattleLog(`CONTAINMENT PROTOCOL ENGAGED. STATUS EFFECTS CLEARED.`, "buff");
+      addBattleLog(`CONTAINMENT PROTOCOL ENGAGED. STATUS EFFECTS CLEARED.`, "buff", { feed: false });
     }
   }
 
@@ -1480,12 +1536,23 @@ class ThreatCombat {
 
       if (!availability.canUse) {
         if (availability.reason === "charges") {
-          addBattleLog(`${actor.name.toUpperCase()} TRIED ${ability.name.toUpperCase()} BUT HAD NO CHARGES LEFT.`, "buff");
+          addBattleLog(`${actor.name.toUpperCase()} TRIED ${ability.name.toUpperCase()} BUT HAD NO CHARGES LEFT.`, "buff", { feed: false });
         } else if (availability.reason === "gauge") {
-          addBattleLog(`${actor.name.toUpperCase()} NEEDS MORE TACTICAL GAUGE FOR ${ability.name.toUpperCase()}.`, "buff");
+          addBattleLog(`${actor.name.toUpperCase()} NEEDS MORE TACTICAL GAUGE FOR ${ability.name.toUpperCase()}.`, "buff", { feed: false });
         } else {
-          addBattleLog(`${actor.name.toUpperCase()} COULD NOT USE ${ability.name.toUpperCase()}.`, "buff");
+          addBattleLog(`${actor.name.toUpperCase()} COULD NOT USE ${ability.name.toUpperCase()}.`, "buff", { feed: false });
         }
+        addCombatFeedEvent({
+          type: "player-blocked",
+          side: "player",
+          title: "PLAYER ACTION",
+          body: `${actor.name} could not use ${ability.name}. ${availability.detail || availability.message || "Action blocked."}`,
+          actorName: actor.name,
+          targetName: this.state.threat.title,
+          damage: 0,
+          effect: availability.reason || "blocked",
+          variant: "buff"
+        }, "buff");
         this.setBattleCue(
           availability.message || "MOVE UNAVAILABLE.",
           availability.detail || "SELECT A DIFFERENT MOVE."
@@ -1498,23 +1565,45 @@ class ThreatCombat {
       const attackHits = rollMoveAccuracy(ability, this.state.battleAccuracyBonus || 0);
       this.state.actionLocked = true;
       this.setBattleCue(
-        `${actor.name.toUpperCase()} USED ${ability.name.toUpperCase()}!`,
-        "ATTACK WINDING UP...",
+        "PLAYER ACTION",
+        `${actor.name.toUpperCase()} used ${ability.name.toUpperCase()}.`,
         this.buildVisualEffect(actorEntry, { kind: "threat", ref: this.state.threat }, ability, null, "windup")
       );
+      addCombatFeedEvent({
+        type: "player-action",
+        side: "player",
+        title: "PLAYER ACTION",
+        body: `${actor.name} used ${ability.name}.`,
+        actorName: actor.name,
+        targetName: this.state.threat.title,
+        effect: ability.effect || "",
+        variant: "buff"
+      }, "buff");
 
       scheduleBattleStep(this, () => {
+        const gaugeBeforeMove = this.state.responseGauge;
         this.state.responseGauge = Math.max(0, this.state.responseGauge - ability.cost);
         if (!attackHits) {
-          addBattleLog(`${actor.name.toUpperCase()} USED ${ability.name.toUpperCase()}, BUT IT MISSED.`, "damage");
+          addBattleLog(`${actor.name.toUpperCase()} USED ${ability.name.toUpperCase()}, BUT IT MISSED.`, "damage", { feed: false });
+          addCombatFeedEvent({
+            type: "player-miss",
+            side: "player",
+            title: "PLAYER ACTION",
+            body: `${actor.name} used ${ability.name}, but it missed.`,
+            actorName: actor.name,
+            targetName: this.state.threat.title,
+            damage: 0,
+            effect: "miss",
+            variant: "damage"
+          }, "damage");
           this.setBattleCue(
-            `${actor.name.toUpperCase()} USED ${ability.name.toUpperCase()}, BUT IT MISSED.`,
-            "NO DAMAGE DEALT."
+            "PLAYER ACTION",
+            `${actor.name.toUpperCase()} used ${ability.name.toUpperCase()}, but it missed. NO DAMAGE DEALT.`
           );
 
           scheduleBattleStep(this, () => {
             this.finishActedTurn(actorEntry);
-          }, 420);
+          }, PLAYER_ACTION_RESULT_HOLD_MS);
           return;
         }
 
@@ -1522,12 +1611,51 @@ class ThreatCombat {
         const damageResult = this.resolveDamage(actor, this.state.threat, ability, {
           bonusDamage: openingDamageBonus
         });
-        addBattleLog(`${actor.name.toUpperCase()} USED ${ability.name.toUpperCase()} FOR ${damageResult.damage} DAMAGE.`, "damage");
+        addBattleLog(`${actor.name.toUpperCase()} USED ${ability.name.toUpperCase()} FOR ${damageResult.damage} DAMAGE.`, "damage", { feed: false });
+        addCombatFeedEvent({
+          type: "player-damage",
+          side: "player",
+          title: "DAMAGE",
+          body: `${this.state.threat.title} took ${damageResult.damage} damage.`,
+          actorName: actor.name,
+          targetName: this.state.threat.title,
+          damage: damageResult.damage,
+          effect: ability.effect || "",
+          variant: "damage"
+        }, "damage");
         if (openingDamageBonus > 0) {
           this.state.openingDamageBonusConsumed = true;
         }
-        this.state.responseGauge = Math.min(100, this.state.responseGauge + getRandomInt(10, 15));
+        const gaugeGain = getRandomInt(10, 15);
+        this.state.responseGauge = Math.min(100, this.state.responseGauge + gaugeGain);
         this.applyPlayerEffect(actor, ability, damageResult);
+        const gaugeDelta = this.state.responseGauge - gaugeBeforeMove;
+        if (gaugeDelta !== 0) {
+          addCombatFeedEvent({
+            type: "gauge",
+            side: "player",
+            title: "GAUGE",
+            body: `Tactical Gauge ${gaugeDelta > 0 ? "+" : ""}${gaugeDelta}.`,
+            actorName: actor.name,
+            targetName: actor.name,
+            gaugeDelta,
+            variant: "buff"
+          }, "buff");
+        }
+        const effectFeedback = this.getPlayerEffectFeedback(ability);
+        if (effectFeedback) {
+          addCombatFeedEvent({
+            type: "player-effect",
+            side: "player",
+            title: "EFFECT",
+            body: effectFeedback.body,
+            actorName: actor.name,
+            targetName: this.state.threat.title,
+            effect: effectFeedback.label,
+            variant: effectFeedback.variant
+          }, effectFeedback.variant);
+        }
+        this.markThreatRecentlyHit();
 
         const effectivenessText = damageResult.typeState === "super-effective"
           ? "IT WAS SUPER-EFFECTIVE!"
@@ -1536,8 +1664,8 @@ class ThreatCombat {
             : `${damageResult.levelMultiplier.toFixed(1)}X LEVEL BONUS.`;
 
         this.setBattleCue(
-          `${this.state.threat.title.toUpperCase()} TOOK ${damageResult.damage} DAMAGE!`,
-          effectivenessText,
+          "DAMAGE",
+          `${this.state.threat.title.toUpperCase()} took ${damageResult.damage} damage. ${effectivenessText}`,
           this.buildVisualEffect(actorEntry, { kind: "threat", ref: this.state.threat }, ability, damageResult, "impact")
         );
 
@@ -1546,14 +1674,14 @@ class ThreatCombat {
             this.state.actionLocked = false;
             this.clearBattleVisual();
             this.end("victory");
-          }, 420);
+          }, PLAYER_ACTION_RESULT_HOLD_MS);
           return;
         }
 
         scheduleBattleStep(this, () => {
           this.finishActedTurn(actorEntry);
-        }, 420);
-      }, 220);
+        }, PLAYER_ACTION_RESULT_HOLD_MS);
+      }, PLAYER_ACTION_WINDUP_MS);
       return;
     }
 

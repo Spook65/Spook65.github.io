@@ -1502,6 +1502,8 @@ function buildCombatState(sourceThreat) {
     recentlyHitProgramId: null,
     recentlyHitProgramIds: [],
     recentlyHitAt: 0,
+    recentlyHitThreatId: null,
+    recentlyHitThreatAt: 0,
     expAwarded: false,
     pantheonBoonMessages: activeBoonMessages.concat(battleBoonMessages),
     activeBoons: activeBoons

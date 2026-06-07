@@ -8793,6 +8793,10 @@ body {
   pointer-events: none;
 }
 
+.combat-enemy-target-readout.is-recently-hit {
+  animation: combat-enemy-readout-hit-pulse 620ms ease both;
+}
+
 .combat-enemy-lockline {
   position: relative;
   display: grid;
@@ -9540,6 +9544,45 @@ body {
 
   72% {
     transform: scaleX(-1) translateY(0) translateX(-0.04rem);
+  }
+}
+
+@keyframes combat-threat-hit-pulse {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+
+  24% {
+    transform: translateY(-0.16rem) scale(1.025);
+  }
+
+  52% {
+    transform: translateY(0.08rem) scale(0.992);
+  }
+
+  76% {
+    transform: translateY(0) scale(1.008);
+  }
+}
+
+@keyframes combat-enemy-readout-hit-pulse {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  22% {
+    transform: translateX(0.14rem);
+    filter: brightness(1.18) saturate(1.12);
+  }
+
+  48% {
+    transform: translateX(-0.08rem);
+  }
+
+  72% {
+    transform: translateX(0.04rem);
   }
 }
 
@@ -10734,6 +10777,14 @@ body {
 .combat-battler-enemy .battle-sprite {
   width: clamp(170px, 14.2vw, 238px);
   height: clamp(170px, 14.2vw, 238px);
+}
+
+.combat-battler-enemy.is-recently-hit .battle-sprite {
+  animation: combat-threat-hit-pulse 620ms ease both;
+  filter:
+    brightness(1.2)
+    saturate(1.16)
+    drop-shadow(0 0 16px rgba(255, 102, 121, 0.22));
 }
 
 .combat-stage-command-cluster,

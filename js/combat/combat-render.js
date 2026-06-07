@@ -148,8 +148,10 @@ function buildEnemyTargetReadoutMarkup(state, options = {}) {
   const intentIcon = state.enemyIntent ? String(state.enemyIntent.iconLabel || state.enemyIntent.severity || "").toUpperCase() : "";
   const responseHint = typeof getThreatResponseHint === "function" ? getThreatResponseHint(state) : null;
   const statusMarkup = renderStatusPills(threat.statusEffects);
+  const isRecentlyHit = state.recentlyHitThreatId === (threat.id || threat.title || "threat");
   const readoutClasses = [
     "combat-enemy-target-readout",
+    isRecentlyHit ? "is-recently-hit" : "",
     options.attackMode ? "combat-attack-enemy-readout combat-attack-hitbox is-attack-mode" : ""
   ].filter(Boolean).join(" ");
 
@@ -700,10 +702,12 @@ function buildThreatVisualMarkup(state) {
   const threat = state.threat;
   const effect = state.visualEffect || {};
   const threatClass = `threat-${getThreatSpriteClass(threat)}`;
+  const isRecentlyHit = state.recentlyHitThreatId === (threat.id || threat.title || "threat");
   const figureClass = [
     "combat-battler",
     "combat-battler-enemy",
     threatClass,
+    isRecentlyHit ? "is-recently-hit" : "",
     effect.attackerKind === "threat" && effect.attackerId === threat.id ? `is-${effect.phase || "windup"}` : "",
     effect.targetKind === "threat" && effect.targetId === threat.id ? "is-hit" : "",
     threat.hp <= 0 ? "is-fainted" : ""
@@ -1768,12 +1772,23 @@ function bindCombatButtons() {
         combatState.battleMessage = availability.message || "MOVE UNAVAILABLE.";
         combatState.battleSubmessage = availability.detail || "SELECT ANOTHER MOVE.";
         if (availability.reason === "charges") {
-          addBattleLog(`${actor.ref.name.toUpperCase()} TRIED ${ability.name.toUpperCase()} BUT HAD NO CHARGES LEFT.`, "buff");
+          addBattleLog(`${actor.ref.name.toUpperCase()} TRIED ${ability.name.toUpperCase()} BUT HAD NO CHARGES LEFT.`, "buff", { feed: false });
         } else if (availability.reason === "gauge") {
-          addBattleLog(`${actor.ref.name.toUpperCase()} NEEDS MORE TACTICAL GAUGE FOR ${ability.name.toUpperCase()}.`, "buff");
+          addBattleLog(`${actor.ref.name.toUpperCase()} NEEDS MORE TACTICAL GAUGE FOR ${ability.name.toUpperCase()}.`, "buff", { feed: false });
         } else {
-          addBattleLog(`${actor.ref.name.toUpperCase()} COULD NOT USE ${ability.name.toUpperCase()}.`, "buff");
+          addBattleLog(`${actor.ref.name.toUpperCase()} COULD NOT USE ${ability.name.toUpperCase()}.`, "buff", { feed: false });
         }
+        addCombatFeedEvent({
+          type: "player-blocked",
+          side: "player",
+          title: "PLAYER ACTION",
+          body: `${actor.ref.name} could not use ${ability.name}. ${availability.detail || availability.message || "Action blocked."}`,
+          actorName: actor.ref.name,
+          targetName: combatState.threat.title,
+          damage: 0,
+          effect: availability.reason || "blocked",
+          variant: "buff"
+        }, "buff");
         renderCombatScreen();
         return;
       }
