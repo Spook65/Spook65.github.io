@@ -1,6 +1,7 @@
 /* Combat action helpers own the battle loop, turn resolution, and encounter flow. */
 
 const COMBAT_FEED_MAX_EVENTS = 5;
+const BATTLE_HISTORY_MAX_EVENTS = 120;
 const ENEMY_ACTION_STEP_DELAY_MS = 1180;
 const ENEMY_DEFEND_PHASE_DELAY_MS = 1080;
 const ENEMY_RESULT_HOLD_MS = 1040;
@@ -20,6 +21,11 @@ function buildCombatFeedEvent(event, variant = "") {
     side: safeEvent.side || "",
     title: safeEvent.title || (enemyActionMatch ? `ENEMY ACTION ${enemyActionMatch[1]}` : defendResultMatch ? "DEFEND RESULT" : "COMBAT EVENT"),
     body: safeEvent.body || (enemyActionMatch ? enemyActionMatch[2] : rawBody),
+    turnIndex: Number.isInteger(safeEvent.turnIndex)
+      ? safeEvent.turnIndex
+      : Number.isInteger(combatState?.currentTurnIndex)
+        ? combatState.currentTurnIndex
+        : null,
     actorName: safeEvent.actorName || "",
     targetName: safeEvent.targetName || "",
     damage: Number.isFinite(safeEvent.damage) ? safeEvent.damage : null,
@@ -44,6 +50,12 @@ function addCombatFeedEvent(event, variant = "") {
   combatState.combatFeed.push(feedEvent);
   if (combatState.combatFeed.length > COMBAT_FEED_MAX_EVENTS) {
     combatState.combatFeed.splice(0, combatState.combatFeed.length - COMBAT_FEED_MAX_EVENTS);
+  }
+
+  combatState.battleHistory = Array.isArray(combatState.battleHistory) ? combatState.battleHistory : [];
+  combatState.battleHistory.push(feedEvent);
+  if (combatState.battleHistory.length > BATTLE_HISTORY_MAX_EVENTS) {
+    combatState.battleHistory.splice(0, combatState.battleHistory.length - BATTLE_HISTORY_MAX_EVENTS);
   }
 }
 
@@ -306,6 +318,7 @@ function showCombatReward(rewardLines) {
     return;
   }
 
+  combatState.historyDrawerOpen = false;
   combatState.phase = "reward";
   renderCombatReward(rewardLines);
 }
@@ -317,6 +330,7 @@ function showCombatDefeatScreen(outcome) {
   }
 
   if (combatState) {
+    combatState.historyDrawerOpen = false;
     combatState.phase = "defeat";
   }
 
@@ -447,6 +461,7 @@ class ThreatCombat {
     this.state.battleMessage = "";
     this.state.battleSubmessage = "";
     this.state.visualEffect = null;
+    this.state.historyDrawerOpen = false;
     this.state.actionLocked = true;
     screenState = "combat";
     addBattleLog(`ENGAGING ${this.state.threat.title.toUpperCase()} AT LEVEL ${this.state.threat.level}.`);

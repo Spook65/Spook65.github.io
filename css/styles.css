@@ -9459,11 +9459,35 @@ body {
 }
 
 .combat-feed-kicker {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0;
   color: rgba(127, 183, 176, 0.74);
   font-size: 0.42rem;
   letter-spacing: 0.22em;
   line-height: 1;
   text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  text-align: left;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.combat-feed-kicker:hover,
+.combat-feed-kicker:focus-visible {
+  color: rgba(215, 184, 106, 0.9);
+  outline: none;
+}
+
+.combat-feed-action {
+  color: rgba(215, 184, 106, 0.62);
+  font-size: 0.34rem;
+  letter-spacing: 0.16em;
+  white-space: nowrap;
 }
 
 .combat-feed-list {
@@ -9502,6 +9526,115 @@ body {
   color: rgba(188, 205, 204, 0.7);
   font-size: 0.39rem;
   letter-spacing: 0.08em;
+}
+
+.combat-history-drawer {
+  position: absolute;
+  left: clamp(2rem, 6vw, 5.4rem);
+  top: clamp(7.5rem, 18vh, 10rem);
+  z-index: 7;
+  width: min(27rem, 42vw);
+  max-height: min(32rem, 62vh);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 0.7rem;
+  padding: 0.78rem 0.82rem 0.86rem;
+  border-left: 2px solid rgba(215, 184, 106, 0.54);
+  background:
+    linear-gradient(135deg, rgba(9, 12, 17, 0.94), rgba(5, 7, 10, 0.86)),
+    linear-gradient(90deg, rgba(127, 183, 176, 0.08), transparent 42%);
+  box-shadow:
+    0 22px 44px rgba(0, 0, 0, 0.34),
+    inset 0 0 0 1px rgba(231, 220, 198, 0.04);
+}
+
+.combat-history-drawer-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.combat-history-drawer-kicker {
+  color: rgba(236, 220, 186, 0.9);
+  font-size: 0.62rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.combat-history-drawer-copy {
+  margin-top: 0.14rem;
+  color: rgba(127, 183, 176, 0.68);
+  font-size: 0.4rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.combat-history-close {
+  border: 1px solid rgba(215, 184, 106, 0.28);
+  background: rgba(5, 7, 10, 0.7);
+  color: rgba(215, 184, 106, 0.82);
+  cursor: pointer;
+  font-size: 0.4rem;
+  letter-spacing: 0.18em;
+  padding: 0.34rem 0.46rem;
+  text-transform: uppercase;
+}
+
+.combat-history-close:hover,
+.combat-history-close:focus-visible {
+  border-color: rgba(215, 184, 106, 0.6);
+  color: rgba(236, 220, 186, 0.96);
+  outline: none;
+}
+
+.combat-history-drawer-list {
+  display: grid;
+  gap: 0.46rem;
+  overflow-y: auto;
+  padding-right: 0.32rem;
+}
+
+.combat-history-drawer-entry {
+  display: grid;
+  gap: 0.14rem;
+  padding: 0.34rem 0.42rem;
+  border-left: 1px solid rgba(127, 183, 176, 0.26);
+  background: rgba(255, 255, 255, 0.018);
+}
+
+.combat-history-drawer-entry.is-damage {
+  border-left-color: rgba(255, 102, 121, 0.38);
+}
+
+.combat-history-drawer-entry.is-buff {
+  border-left-color: rgba(215, 184, 106, 0.38);
+}
+
+.combat-history-drawer-title,
+.combat-history-drawer-body,
+.combat-history-drawer-meta,
+.combat-history-drawer-empty {
+  color: rgba(231, 220, 198, 0.82);
+  font-size: 0.43rem;
+  letter-spacing: 0.12em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.combat-history-drawer-title {
+  color: rgba(236, 220, 186, 0.9);
+}
+
+.combat-history-drawer-body {
+  color: rgba(188, 205, 204, 0.76);
+}
+
+.combat-history-drawer-meta,
+.combat-history-drawer-empty {
+  color: rgba(127, 183, 176, 0.56);
+  font-size: 0.34rem;
+  letter-spacing: 0.14em;
 }
 
 @keyframes combat-party-hit-pulse {
@@ -9596,11 +9729,26 @@ body {
   .combat-feed-entry:nth-child(n+4) {
     display: none;
   }
+
+  .combat-history-drawer {
+    left: clamp(1rem, 3vw, 2rem);
+    top: clamp(6.8rem, 16vh, 8.8rem);
+    width: min(24rem, 58vw);
+    max-height: min(28rem, 58vh);
+  }
 }
 
 @media (max-width: 700px) {
   .combat-feed {
     display: none;
+  }
+
+  .combat-history-drawer {
+    left: 0.8rem;
+    right: 0.8rem;
+    top: 6.2rem;
+    width: auto;
+    max-height: 56vh;
   }
 }
 

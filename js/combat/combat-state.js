@@ -1472,6 +1472,8 @@ function buildCombatState(sourceThreat) {
     responseGauge: pendingQueue.length ? pendingBattleEffects.responseGauge : pendingGaugeBonus,
     battleLog: [],
     combatFeed: [],
+    battleHistory: [],
+    historyDrawerOpen: false,
     battleMessage: "",
     battleSubmessage: "",
     visualEffect: null,

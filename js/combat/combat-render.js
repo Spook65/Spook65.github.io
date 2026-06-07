@@ -208,7 +208,7 @@ function buildBattleLogMarkup(state) {
 }
 
 function buildCombatFeedMarkup(state) {
-  const entries = Array.isArray(state?.combatFeed) ? state.combatFeed.slice(-5).reverse() : [];
+  const entries = Array.isArray(state?.combatFeed) ? state.combatFeed.slice(-3).reverse() : [];
 
   if (!entries.length || state?.battleIntroPlaying) {
     return "";
@@ -216,7 +216,10 @@ function buildCombatFeedMarkup(state) {
 
   return `
     <aside class="combat-feed" aria-label="Combat feed">
-      <div class="combat-feed-kicker">COMBAT FEED</div>
+      <button class="combat-feed-kicker" type="button" data-combat-command="toggle-history" aria-expanded="${state.historyDrawerOpen ? "true" : "false"}">
+        <span>COMBAT FEED</span>
+        <span class="combat-feed-action">VIEW HISTORY</span>
+      </button>
       <div class="combat-feed-list">
         ${entries.map((entry, index) => {
           const variantClass = entry.variant ? `is-${entry.variant}` : "";
@@ -229,6 +232,43 @@ function buildCombatFeedMarkup(state) {
         }).join("")}
       </div>
     </aside>
+  `;
+}
+
+function buildBattleHistoryDrawerMarkup(state) {
+  if (!state?.historyDrawerOpen || state?.battleIntroPlaying) {
+    return "";
+  }
+
+  const entries = Array.isArray(state.battleHistory) ? state.battleHistory : [];
+
+  return `
+    <section class="combat-history-drawer" aria-label="Battle history">
+      <div class="combat-history-drawer-head">
+        <div>
+          <div class="combat-history-drawer-kicker">BATTLE HISTORY</div>
+          <div class="combat-history-drawer-copy">Current encounter transcript</div>
+        </div>
+        <button class="combat-history-close" type="button" data-combat-command="close-history">CLOSE</button>
+      </div>
+      <div class="combat-history-drawer-list">
+        ${entries.length ? entries.map((entry) => {
+          const variantClass = entry.variant ? `is-${entry.variant}` : "";
+          const metaParts = [
+            entry.side ? String(entry.side).toUpperCase() : "",
+            entry.actorName || "",
+            entry.targetName ? `-> ${entry.targetName}` : ""
+          ].filter(Boolean);
+          return `
+            <article class="combat-history-drawer-entry ${variantClass}">
+              <div class="combat-history-drawer-title">${entry.title || "COMBAT EVENT"}</div>
+              <div class="combat-history-drawer-body">${entry.body || ""}</div>
+              ${metaParts.length ? `<div class="combat-history-drawer-meta">${metaParts.join(" / ")}</div>` : ""}
+            </article>
+          `;
+        }).join("") : '<div class="combat-history-drawer-empty">NO COMBAT EVENTS RECORDED YET.</div>'}
+      </div>
+    </section>
   `;
 }
 
@@ -1404,6 +1444,7 @@ function buildCombatMarkup(state) {
   const enemyResponseMenuMarkup = buildEnemyResponseMenuMarkup(state);
   const stageFeedbackToastMarkup = buildStageFeedbackToastMarkup(state);
   const combatFeedMarkup = buildCombatFeedMarkup(state);
+  const battleHistoryDrawerMarkup = buildBattleHistoryDrawerMarkup(state);
   const stageFeedbackActive = Boolean(stageFeedbackToastMarkup);
   const collapseActiveHud = shouldCollapseActiveHud(state);
   if (state?.commandMode === "attack") {
@@ -1460,6 +1501,7 @@ function buildCombatMarkup(state) {
         ${enemyResponseMenuMarkup}
         ${stageFeedbackToastMarkup}
         ${combatFeedMarkup}
+        ${battleHistoryDrawerMarkup}
         <div class="combat-reserve-strip">
           <div class="combat-reserve-row">
             ${buildReserveStripMarkup(state, currentProgram.id)}
@@ -1659,6 +1701,18 @@ function bindCombatButtons() {
       }
 
       const command = button.getAttribute("data-combat-command");
+
+      if (command === "toggle-history") {
+        combatState.historyDrawerOpen = !combatState.historyDrawerOpen;
+        renderCombatScreen();
+        return;
+      }
+
+      if (command === "close-history") {
+        combatState.historyDrawerOpen = false;
+        renderCombatScreen();
+        return;
+      }
 
       if (command && command.startsWith("response:")) {
         if (combatEngine && combatState.responsePhase && actor.kind === "threat") {
