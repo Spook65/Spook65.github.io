@@ -9528,24 +9528,45 @@ body {
   letter-spacing: 0.08em;
 }
 
-.combat-history-drawer {
+.combat-history-overlay {
   position: absolute;
-  left: clamp(2rem, 6vw, 5.4rem);
-  top: clamp(7.5rem, 18vh, 10rem);
+  inset: 0;
   z-index: 7;
-  width: min(27rem, 42vw);
-  max-height: min(32rem, 62vh);
+  display: grid;
+  place-items: center;
+  padding: clamp(1rem, 3vw, 2.4rem);
+  pointer-events: auto;
+}
+
+.combat-history-backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(127, 183, 176, 0.08), transparent 34%),
+    linear-gradient(180deg, rgba(2, 4, 8, 0.62), rgba(2, 4, 8, 0.78));
+  cursor: pointer;
+}
+
+.combat-history-modal {
+  position: relative;
+  z-index: 1;
+  width: min(43rem, 74vw);
+  max-height: min(36rem, 76vh);
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   gap: 0.7rem;
-  padding: 0.78rem 0.82rem 0.86rem;
+  padding: clamp(0.86rem, 1.7vw, 1.2rem);
   border-left: 2px solid rgba(215, 184, 106, 0.54);
+  border-top: 1px solid rgba(231, 220, 198, 0.08);
+  border-bottom: 1px solid rgba(127, 183, 176, 0.08);
   background:
-    linear-gradient(135deg, rgba(9, 12, 17, 0.94), rgba(5, 7, 10, 0.86)),
+    linear-gradient(135deg, rgba(9, 12, 17, 0.96), rgba(5, 7, 10, 0.9)),
     linear-gradient(90deg, rgba(127, 183, 176, 0.08), transparent 42%);
   box-shadow:
     0 22px 44px rgba(0, 0, 0, 0.34),
     inset 0 0 0 1px rgba(231, 220, 198, 0.04);
+  pointer-events: auto;
 }
 
 .combat-history-drawer-head {
@@ -9730,11 +9751,13 @@ body {
     display: none;
   }
 
-  .combat-history-drawer {
-    left: clamp(1rem, 3vw, 2rem);
-    top: clamp(6.8rem, 16vh, 8.8rem);
-    width: min(24rem, 58vw);
-    max-height: min(28rem, 58vh);
+  .combat-history-overlay {
+    padding: 1rem;
+  }
+
+  .combat-history-modal {
+    width: min(34rem, 82vw);
+    max-height: min(30rem, 72vh);
   }
 }
 
@@ -9743,12 +9766,13 @@ body {
     display: none;
   }
 
-  .combat-history-drawer {
-    left: 0.8rem;
-    right: 0.8rem;
-    top: 6.2rem;
-    width: auto;
-    max-height: 56vh;
+  .combat-history-overlay {
+    padding: 0.8rem;
+  }
+
+  .combat-history-modal {
+    width: 100%;
+    max-height: 68vh;
   }
 }
 

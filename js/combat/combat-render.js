@@ -243,30 +243,33 @@ function buildBattleHistoryDrawerMarkup(state) {
   const entries = Array.isArray(state.battleHistory) ? state.battleHistory : [];
 
   return `
-    <section class="combat-history-drawer" aria-label="Battle history">
-      <div class="combat-history-drawer-head">
-        <div>
-          <div class="combat-history-drawer-kicker">BATTLE HISTORY</div>
-          <div class="combat-history-drawer-copy">Current encounter transcript</div>
+    <section class="combat-history-overlay" aria-label="Battle history overlay">
+      <button class="combat-history-backdrop" type="button" data-combat-command="close-history" aria-label="Close battle history"></button>
+      <div class="combat-history-modal" role="dialog" aria-modal="true" aria-label="Battle history">
+        <div class="combat-history-drawer-head">
+          <div>
+            <div class="combat-history-drawer-kicker">BATTLE HISTORY</div>
+            <div class="combat-history-drawer-copy">ENCOUNTER TRANSCRIPT</div>
+          </div>
+          <button class="combat-history-close" type="button" data-combat-command="close-history">CLOSE</button>
         </div>
-        <button class="combat-history-close" type="button" data-combat-command="close-history">CLOSE</button>
-      </div>
-      <div class="combat-history-drawer-list">
-        ${entries.length ? entries.map((entry) => {
-          const variantClass = entry.variant ? `is-${entry.variant}` : "";
-          const metaParts = [
-            entry.side ? String(entry.side).toUpperCase() : "",
-            entry.actorName || "",
-            entry.targetName ? `-> ${entry.targetName}` : ""
-          ].filter(Boolean);
-          return `
-            <article class="combat-history-drawer-entry ${variantClass}">
-              <div class="combat-history-drawer-title">${entry.title || "COMBAT EVENT"}</div>
-              <div class="combat-history-drawer-body">${entry.body || ""}</div>
-              ${metaParts.length ? `<div class="combat-history-drawer-meta">${metaParts.join(" / ")}</div>` : ""}
-            </article>
-          `;
-        }).join("") : '<div class="combat-history-drawer-empty">NO COMBAT EVENTS RECORDED YET.</div>'}
+        <div class="combat-history-drawer-list">
+          ${entries.length ? entries.map((entry) => {
+            const variantClass = entry.variant ? `is-${entry.variant}` : "";
+            const metaParts = [
+              entry.side ? String(entry.side).toUpperCase() : "",
+              entry.actorName || "",
+              entry.targetName ? `-> ${entry.targetName}` : ""
+            ].filter(Boolean);
+            return `
+              <article class="combat-history-drawer-entry ${variantClass}">
+                <div class="combat-history-drawer-title">${entry.title || "COMBAT EVENT"}</div>
+                <div class="combat-history-drawer-body">${entry.body || ""}</div>
+                ${metaParts.length ? `<div class="combat-history-drawer-meta">${metaParts.join(" / ")}</div>` : ""}
+              </article>
+            `;
+          }).join("") : '<div class="combat-history-drawer-empty">NO COMBAT EVENTS RECORDED YET.</div>'}
+        </div>
       </div>
     </section>
   `;
@@ -1709,6 +1712,7 @@ function bindCombatButtons() {
       }
 
       if (command === "close-history") {
+        console.log("[HISTORY DRAWER] close");
         combatState.historyDrawerOpen = false;
         renderCombatScreen();
         return;
