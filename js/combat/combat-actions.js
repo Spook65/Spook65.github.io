@@ -570,6 +570,83 @@ class ThreatCombat {
     return null;
   }
 
+  collectConceptIds(...sources) {
+    const conceptIds = [];
+
+    sources.forEach((source) => {
+      if (!source || typeof source !== "object") {
+        return;
+      }
+
+      conceptIds.push(
+        ...(Array.isArray(source.teachesConcepts) ? source.teachesConcepts : []),
+        ...(Array.isArray(source.relatedConcepts) ? source.relatedConcepts : [])
+      );
+    });
+
+    return typeof normalizeCyberConceptIds === "function" ? normalizeCyberConceptIds(conceptIds) : conceptIds;
+  }
+
+  getResponseConceptIds(responseResult) {
+    const responseId = String(responseResult?.id || "").toLowerCase();
+    const responseConcepts = {
+      isolate: ["containment"],
+      countertrace: ["detection", "incident_response"],
+      redirect: ["containment", "lateral_movement"],
+      purge: ["malware_cleanup", "recovery"],
+      cleanse: ["malware_cleanup", "recovery"],
+      mitigate: ["hardening", "containment"]
+    };
+
+    return responseConcepts[responseId] || [];
+  }
+
+  recordConceptHint(conceptIds, context = {}) {
+    const normalizedConceptIds = typeof normalizeCyberConceptIds === "function"
+      ? normalizeCyberConceptIds(conceptIds)
+      : (Array.isArray(conceptIds) ? conceptIds : [conceptIds]).filter(Boolean);
+    if (!normalizedConceptIds.length) {
+      return;
+    }
+
+    this.state.shownConceptHintsThisBattle = Array.isArray(this.state.shownConceptHintsThisBattle)
+      ? this.state.shownConceptHintsThisBattle
+      : [];
+    const conceptId = typeof getFirstUnshownCyberConceptId === "function"
+      ? getFirstUnshownCyberConceptId(normalizedConceptIds, this.state.shownConceptHintsThisBattle)
+      : normalizedConceptIds.find((id) => !this.state.shownConceptHintsThisBattle.includes(id));
+
+    if (!conceptId) {
+      return;
+    }
+
+    const hintText = typeof buildCyberConceptHintText === "function" ? buildCyberConceptHintText(conceptId) : conceptId;
+    if (!hintText) {
+      return;
+    }
+
+    this.state.shownConceptHintsThisBattle.push(conceptId);
+    this.state.unlockedConcepts = Array.isArray(this.state.unlockedConcepts) ? this.state.unlockedConcepts : [];
+    if (!this.state.unlockedConcepts.includes(conceptId)) {
+      this.state.unlockedConcepts.push(conceptId);
+    }
+
+    if (typeof unlockCyberConcept === "function") {
+      unlockCyberConcept(conceptId);
+    }
+
+    addCombatFeedEvent({
+      type: "concept",
+      side: context.side || "system",
+      title: "CONCEPT",
+      body: hintText,
+      actorName: context.actorName || "",
+      targetName: context.targetName || "",
+      effect: conceptId,
+      variant: "concept"
+    }, "concept");
+  }
+
   buildVisualEffect(actorEntry, targetEntry, ability, damageResult, phase) {
     return buildVisualEffect(this.state, actorEntry, targetEntry, ability, damageResult, phase);
   }
@@ -975,6 +1052,11 @@ class ThreatCombat {
       queueContinuesAfterResponse: Array.isArray(this.state.enemyActionQueue) && this.state.enemyActionQueue.length > 0
     });
     addBattleLog(`ENEMY ACTION ${actionIndex}/${actionTotal}: Major payload detected.`, "buff");
+    this.recordConceptHint(this.collectConceptIds(threatAbility, actor, resolvedEnemyIntent?.intent), {
+      side: "enemy",
+      actorName: actor.title || actor.name || "Threat",
+      targetName: "Defenders"
+    });
     renderCombatScreen();
   }
 
@@ -1415,6 +1497,17 @@ class ThreatCombat {
           body: `${responseOutcome.label} resolved. Damage ${responseOutcome.incomingDamage} -> ${responseOutcome.finalDamage}${responseOutcome.gaugeGain > 0 ? ` / Gauge +${responseOutcome.gaugeGain}` : ""}.`,
           variant: responseResult.variant
         }, responseResult.variant);
+        this.recordConceptHint(this.getResponseConceptIds(responseResult), {
+          side: "defend",
+          actorName: responseOutcome.label,
+          targetName: actor.title || actor.name || "Threat"
+        });
+      } else {
+        this.recordConceptHint(this.collectConceptIds(threatAbility, actor, resolvedEnemyIntent?.intent), {
+          side: "enemy",
+          actorName: actor.title || actor.name || "Threat",
+          targetName: "Threat Core"
+        });
       }
 
       this.setBattleCue(
@@ -1475,6 +1568,17 @@ class ThreatCombat {
           body: `${responseOutcome.label} reduced damage ${responseOutcome.incomingDamage} -> ${responseOutcome.finalDamage}${responseOutcome.gaugeGain > 0 ? ` / Gauge +${responseOutcome.gaugeGain}` : ""}.`,
           variant: responseResult.variant
         }, responseResult.variant);
+        this.recordConceptHint(this.getResponseConceptIds(responseResult), {
+          side: "defend",
+          actorName: responseOutcome.label,
+          targetName: actor.title || actor.name || "Threat"
+        });
+      } else {
+        this.recordConceptHint(this.collectConceptIds(threatAbility, actor, resolvedEnemyIntent?.intent), {
+          side: "enemy",
+          actorName: actor.title || actor.name || "Threat",
+          targetName: threatAbility.effect === "damage_all" ? "All Defenders" : chosenTarget.name
+        });
       }
 
       const hitPrograms = [chosenTarget];
@@ -1670,6 +1774,11 @@ class ThreatCombat {
             variant: effectFeedback.variant
           }, effectFeedback.variant);
         }
+        this.recordConceptHint(this.collectConceptIds(ability), {
+          side: "player",
+          actorName: actor.name,
+          targetName: this.state.threat.title
+        });
         this.markThreatRecentlyHit();
 
         const effectivenessText = damageResult.typeState === "super-effective"

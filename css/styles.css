@@ -9513,6 +9513,14 @@ body {
   color: rgba(215, 184, 106, 0.86);
 }
 
+.combat-feed-entry.is-concept .combat-feed-title {
+  color: rgba(127, 183, 176, 0.9);
+}
+
+.combat-feed-entry.is-concept .combat-feed-body {
+  color: rgba(236, 220, 186, 0.72);
+}
+
 .combat-feed-title,
 .combat-feed-body {
   color: rgba(231, 220, 198, 0.82);
@@ -9630,6 +9638,14 @@ body {
 
 .combat-history-drawer-entry.is-buff {
   border-left-color: rgba(215, 184, 106, 0.38);
+}
+
+.combat-history-drawer-entry.is-concept {
+  border-left-color: rgba(127, 183, 176, 0.48);
+}
+
+.combat-history-drawer-entry.is-concept .combat-history-drawer-title {
+  color: rgba(127, 183, 176, 0.9);
 }
 
 .combat-history-drawer-title,

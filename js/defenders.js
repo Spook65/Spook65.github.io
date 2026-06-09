@@ -48,6 +48,7 @@ const defenderCatalog = [
         accuracy: 100,
         cost: 0,
         effect: "reduce_next_damage",
+        teachesConcepts: ["containment", "hardening"],
         description: "Raises defensive posture and steadies the front line."
       },
       {
@@ -61,6 +62,7 @@ const defenderCatalog = [
         accuracy: 85,
         cost: 1,
         effect: "boost_def",
+        teachesConcepts: ["hardening"],
         description: "Fortifies the chassis and counter-pressures the next exchange."
       },
       {
@@ -74,6 +76,7 @@ const defenderCatalog = [
         accuracy: 20,
         cost: 2,
         effect: "mirror_shell_burst",
+        teachesConcepts: ["hardening", "incident_response"],
         description: "A desperate reflective burst that can shatter pressure or fizzle out."
       }
     ],
@@ -142,6 +145,7 @@ const defenderCatalog = [
         accuracy: 100,
         cost: 0,
         effect: "status_detected",
+        teachesConcepts: ["detection", "incident_response"],
         description: "Scans the target for weak signals and exposes hidden errors."
       },
       {
@@ -155,6 +159,7 @@ const defenderCatalog = [
         accuracy: 85,
         cost: 1,
         effect: "status_detected",
+        teachesConcepts: ["detection"],
         description: "Launches a focused signature strike at the target's core."
       },
       {
@@ -168,6 +173,7 @@ const defenderCatalog = [
         accuracy: 20,
         cost: 2,
         effect: "trace_route_burst",
+        teachesConcepts: ["detection", "incident_response"],
         description: "A reckless exploit strike that either lands hard or evaporates."
       }
     ],
@@ -236,6 +242,7 @@ const defenderCatalog = [
         accuracy: 100,
         cost: 0,
         effect: "status_isolated",
+        teachesConcepts: ["containment", "lateral_movement"],
         description: "Baits threats into a false route and isolates their focus."
       },
       {
@@ -249,6 +256,7 @@ const defenderCatalog = [
         accuracy: 85,
         cost: 1,
         effect: "boost_def",
+        teachesConcepts: ["containment"],
         description: "Projects layered decoys that make targeting uncertain."
       },
       {
@@ -262,6 +270,7 @@ const defenderCatalog = [
         accuracy: 20,
         cost: 2,
         effect: "status_isolated",
+        teachesConcepts: ["containment", "incident_response"],
         description: "A risky trap detonation that can punish a target in one sharp snap."
       }
     ],
@@ -330,6 +339,7 @@ const defenderCatalog = [
         accuracy: 100,
         cost: 0,
         effect: "cleanse",
+        teachesConcepts: ["malware_cleanup", "recovery"],
         description: "Sweeps the target for hostile traces and clears minor corruption."
       },
       {
@@ -343,6 +353,7 @@ const defenderCatalog = [
         accuracy: 85,
         cost: 1,
         effect: "status_detected",
+        teachesConcepts: ["detection", "malware_cleanup"],
         description: "Rapidly identifies anomalies and forces them into the light."
       },
       {
@@ -356,6 +367,7 @@ const defenderCatalog = [
         accuracy: 20,
         cost: 2,
         effect: "cleanse",
+        teachesConcepts: ["malware_cleanup"],
         description: "Delivers a desperate purge blast that strips corruption from the core."
       }
     ],
@@ -521,6 +533,7 @@ function buildCombatAbilities(moves = [], defenderId = "move") {
     const safeMove = move && typeof move === "object" ? move : {};
     const chargeCount = getMoveChargeCount(safeMove);
     const maxCharges = Number.isFinite(safeMove.maxCharges) ? safeMove.maxCharges : chargeCount;
+    const teachesConcepts = normalizeDefenderConceptTags(safeMove.teachesConcepts || safeMove.relatedConcepts || []);
     const moveId = typeof safeMove.id === "string" && safeMove.id.trim()
       ? safeMove.id.trim()
       : `${String(defenderId || "move").toLowerCase()}-${String(safeMove.name || "ability").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")}-${index}`;
@@ -539,6 +552,8 @@ function buildCombatAbilities(moves = [], defenderId = "move") {
       cost: Number.isFinite(safeMove.cost) ? safeMove.cost : 0,
       effect: safeMove.effect,
       description: safeMove.description,
+      teachesConcepts,
+      relatedConcepts: teachesConcepts.slice(),
       baseDamage: Number.isFinite(safeMove.power) ? safeMove.power : 0
     };
   });
@@ -647,6 +662,32 @@ function normalizeDefenderResponseTags(defender) {
   });
 
   return normalizedTags;
+}
+
+function normalizeDefenderConceptTags(conceptIds = []) {
+  if (typeof normalizeCyberConceptIds === "function") {
+    return normalizeCyberConceptIds(conceptIds);
+  }
+
+  const sourceIds = Array.isArray(conceptIds) ? conceptIds : [conceptIds];
+  const seen = new Set();
+  const normalizedIds = [];
+
+  sourceIds.flat().forEach((conceptId) => {
+    if (typeof conceptId !== "string") {
+      return;
+    }
+
+    const normalizedId = conceptId.trim().toLowerCase();
+    if (!normalizedId || seen.has(normalizedId)) {
+      return;
+    }
+
+    seen.add(normalizedId);
+    normalizedIds.push(normalizedId);
+  });
+
+  return normalizedIds;
 }
 
 // buildCombatProgramFromDefender() maps the new defender save model into the legacy combat roster format.
@@ -815,7 +856,8 @@ function createDefaultSave() {
     },
     collection: {
       recruitedThreats: [],
-      discoveredVariants: []
+      discoveredVariants: [],
+      unlockedConcepts: []
     },
     story: createDefaultStoryState(),
     settings: {}
@@ -911,7 +953,8 @@ function normalizeDefenderSave(saveData) {
     },
     collection: {
       recruitedThreats: Array.isArray(collectionSource.recruitedThreats) ? collectionSource.recruitedThreats.slice() : fallback.collection.recruitedThreats.slice(),
-      discoveredVariants: Array.isArray(collectionSource.discoveredVariants) ? collectionSource.discoveredVariants.slice() : fallback.collection.discoveredVariants.slice()
+      discoveredVariants: Array.isArray(collectionSource.discoveredVariants) ? collectionSource.discoveredVariants.slice() : fallback.collection.discoveredVariants.slice(),
+      unlockedConcepts: normalizeDefenderConceptTags(Array.isArray(collectionSource.unlockedConcepts) ? collectionSource.unlockedConcepts : fallback.collection.unlockedConcepts)
     },
     story: normalizeStoryState(source.story),
     settings: source.settings && typeof source.settings === "object" ? { ...source.settings } : {}
@@ -949,6 +992,39 @@ function saveGame() {
   } catch (error) {
     // Saving is best-effort only, so the game keeps working even when storage is unavailable.
   }
+}
+
+function getUnlockedCyberConceptIds() {
+  if (!defenderSaveState) {
+    loadSave();
+  }
+
+  return normalizeDefenderConceptTags(defenderSaveState?.collection?.unlockedConcepts || []);
+}
+
+function unlockCyberConcept(conceptId) {
+  const normalizedIds = normalizeDefenderConceptTags([conceptId]);
+  const normalizedId = normalizedIds[0];
+  if (!normalizedId) {
+    return false;
+  }
+
+  if (!defenderSaveState) {
+    loadSave();
+  }
+
+  defenderSaveState.collection = defenderSaveState.collection && typeof defenderSaveState.collection === "object"
+    ? defenderSaveState.collection
+    : createDefaultSave().collection;
+  defenderSaveState.collection.unlockedConcepts = normalizeDefenderConceptTags(defenderSaveState.collection.unlockedConcepts || []);
+
+  if (defenderSaveState.collection.unlockedConcepts.includes(normalizedId)) {
+    return false;
+  }
+
+  defenderSaveState.collection.unlockedConcepts.push(normalizedId);
+  saveGame();
+  return true;
 }
 
 // persistDefenderSave() keeps the older helper name available for the existing combat wiring.

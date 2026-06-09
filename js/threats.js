@@ -30,13 +30,14 @@ const threats = [
     weakType: "defense",
     weakPoint: "isolate",
     intentTags: ["swarm", "spread", "lockout"],
+    relatedConcepts: ["encryption", "lateral_movement", "phishing", "incident_response"],
     weakTo: ["isolate", "countertrace"],
     resists: ["purge"],
     immuneTo: ["bait"],
     abilities: [
-      { name: "Encrypt Files", cost: 0, baseDamage: 20, effect: "status_encrypted" },
-      { name: "Spread Network", cost: 1, baseDamage: 12, effect: "damage_all" },
-      { name: "Escalate", cost: 2, baseDamage: 0, effect: "self_level_up" }
+      { name: "Encrypt Files", cost: 0, baseDamage: 20, effect: "status_encrypted", teachesConcepts: ["encryption", "malware_cleanup"] },
+      { name: "Spread Network", cost: 1, baseDamage: 12, effect: "damage_all", teachesConcepts: ["lateral_movement", "containment"] },
+      { name: "Escalate", cost: 2, baseDamage: 0, effect: "self_level_up", teachesConcepts: ["privilege_escalation"] }
     ]
   },
   {
@@ -69,13 +70,14 @@ const threats = [
     weakType: "offense",
     weakPoint: "revoke",
     intentTags: ["deceive", "harvest", "redirect"],
+    relatedConcepts: ["phishing", "detection", "incident_response"],
     weakTo: ["scan", "reveal", "countertrace"],
     resists: ["redirect"],
     immuneTo: [],
     abilities: [
-      { name: "Harvest Credentials", cost: 0, baseDamage: 14, effect: "status_detected" },
-      { name: "Spoof Tenant", cost: 1, baseDamage: 10, effect: "damage_all" },
-      { name: "Escalate", cost: 2, baseDamage: 0, effect: "self_level_up" }
+      { name: "Harvest Credentials", cost: 0, baseDamage: 14, effect: "status_detected", teachesConcepts: ["phishing", "detection"] },
+      { name: "Spoof Tenant", cost: 1, baseDamage: 10, effect: "damage_all", teachesConcepts: ["phishing", "lateral_movement"] },
+      { name: "Escalate", cost: 2, baseDamage: 0, effect: "self_level_up", teachesConcepts: ["privilege_escalation"] }
     ]
   },
   {
@@ -108,6 +110,7 @@ const threats = [
     weakType: "purge",
     weakPoint: "reroute",
     intentTags: ["swarm", "flood", "saturate"],
+    relatedConcepts: ["containment", "incident_response"],
     weakTo: ["mitigate", "redirect", "isolate"],
     resists: ["purge"],
     immuneTo: ["decoy"],
@@ -118,9 +121,9 @@ const threats = [
       actionWeight: "light"
     },
     abilities: [
-      { name: "Amplify Flood", cost: 0, baseDamage: 18, effect: "damage_all", requiresResponse: true, threatLevel: "major", payloadType: "flood", telegraphed: true },
-      { name: "Fragment Route", cost: 1, baseDamage: 14, effect: "status_isolated" },
-      { name: "Escalate", cost: 2, baseDamage: 0, effect: "self_level_up" }
+      { name: "Amplify Flood", cost: 0, baseDamage: 18, effect: "damage_all", requiresResponse: true, threatLevel: "major", payloadType: "flood", telegraphed: true, teachesConcepts: ["containment", "incident_response"] },
+      { name: "Fragment Route", cost: 1, baseDamage: 14, effect: "status_isolated", teachesConcepts: ["containment"] },
+      { name: "Escalate", cost: 2, baseDamage: 0, effect: "self_level_up", teachesConcepts: ["privilege_escalation"] }
     ]
   },
   {
@@ -153,6 +156,7 @@ const threats = [
     weakType: "purge",
     weakPoint: "sinkhole",
     intentTags: ["swarm", "beacon", "spread"],
+    relatedConcepts: ["lateral_movement", "malware_cleanup", "incident_response"],
     weakTo: ["scan", "isolate", "purge"],
     resists: ["redirect"],
     immuneTo: [],
@@ -163,9 +167,9 @@ const threats = [
       actionWeight: "light"
     },
     abilities: [
-      { name: "Beacon C2", cost: 0, baseDamage: 12, effect: "status_detected" },
-      { name: "Multiply Nodes", cost: 1, baseDamage: 10, effect: "damage_all", requiresResponse: true, threatLevel: "major", payloadType: "swarm", telegraphed: true },
-      { name: "Reinfect", cost: 2, baseDamage: 0, effect: "self_level_up" }
+      { name: "Beacon C2", cost: 0, baseDamage: 12, effect: "status_detected", teachesConcepts: ["detection", "malware_cleanup"] },
+      { name: "Multiply Nodes", cost: 1, baseDamage: 10, effect: "damage_all", requiresResponse: true, threatLevel: "major", payloadType: "swarm", telegraphed: true, teachesConcepts: ["lateral_movement", "containment"] },
+      { name: "Reinfect", cost: 2, baseDamage: 0, effect: "self_level_up", teachesConcepts: ["malware_cleanup"] }
     ]
   },
   {
@@ -198,6 +202,7 @@ const threats = [
     weakType: "offense",
     weakPoint: "patch",
     intentTags: ["escalate", "corrupt", "breach"],
+    relatedConcepts: ["vulnerability", "privilege_escalation", "patching", "incident_response"],
     weakTo: ["countertrace", "cleanse", "mitigate"],
     resists: ["decoy"],
     immuneTo: ["bait"],
@@ -208,9 +213,9 @@ const threats = [
       actionWeight: "mixed"
     },
     abilities: [
-      { name: "Privilege Escalate", cost: 0, baseDamage: 22, effect: "status_encrypted", requiresResponse: true, threatLevel: "major", payloadType: "exploit", telegraphed: true },
-      { name: "Disable EDR", cost: 1, baseDamage: 18, effect: "damage_all", requiresResponse: true, threatLevel: "major", payloadType: "corrupt", telegraphed: true },
-      { name: "Kernel Chain", cost: 2, baseDamage: 0, effect: "self_level_up", requiresResponse: true, threatLevel: "major", payloadType: "escalate", telegraphed: true }
+      { name: "Privilege Escalate", cost: 0, baseDamage: 22, effect: "status_encrypted", requiresResponse: true, threatLevel: "major", payloadType: "exploit", telegraphed: true, teachesConcepts: ["privilege_escalation", "vulnerability"] },
+      { name: "Disable EDR", cost: 1, baseDamage: 18, effect: "damage_all", requiresResponse: true, threatLevel: "major", payloadType: "corrupt", telegraphed: true, teachesConcepts: ["hardening", "incident_response"] },
+      { name: "Kernel Chain", cost: 2, baseDamage: 0, effect: "self_level_up", requiresResponse: true, threatLevel: "major", payloadType: "escalate", telegraphed: true, teachesConcepts: ["privilege_escalation", "patching"] }
     ]
   },
   {
@@ -243,13 +248,14 @@ const threats = [
     weakType: "purge",
     weakPoint: "isolate",
     intentTags: ["stealth", "harvest", "persist"],
+    relatedConcepts: ["malware_cleanup", "detection", "phishing"],
     weakTo: ["scan", "cleanse", "isolate"],
     resists: ["redirect"],
     immuneTo: [],
     abilities: [
-      { name: "Inject Form", cost: 0, baseDamage: 15, effect: "status_detected" },
-      { name: "Steal Sessions", cost: 1, baseDamage: 13, effect: "damage_all" },
-      { name: "Reconnect", cost: 2, baseDamage: 0, effect: "self_level_up" }
+      { name: "Inject Form", cost: 0, baseDamage: 15, effect: "status_detected", teachesConcepts: ["malware_cleanup", "detection"] },
+      { name: "Steal Sessions", cost: 1, baseDamage: 13, effect: "damage_all", teachesConcepts: ["phishing", "lateral_movement"] },
+      { name: "Reconnect", cost: 2, baseDamage: 0, effect: "self_level_up", teachesConcepts: ["malware_cleanup"] }
     ]
   },
   {
@@ -282,6 +288,7 @@ const threats = [
     weakType: "defense",
     weakPoint: "divert",
     intentTags: ["swarm", "saturate", "disrupt"],
+    relatedConcepts: ["containment", "incident_response"],
     weakTo: ["mitigate", "redirect", "isolate"],
     resists: ["purge"],
     immuneTo: ["decoy"],
@@ -292,9 +299,9 @@ const threats = [
       actionWeight: "light"
     },
     abilities: [
-      { name: "Saturate Peering", cost: 0, baseDamage: 19, effect: "damage_all", requiresResponse: true, threatLevel: "major", payloadType: "saturate", telegraphed: true },
-      { name: "GRE Spray", cost: 1, baseDamage: 15, effect: "status_isolated" },
-      { name: "Escalate", cost: 2, baseDamage: 0, effect: "self_level_up" }
+      { name: "Saturate Peering", cost: 0, baseDamage: 19, effect: "damage_all", requiresResponse: true, threatLevel: "major", payloadType: "saturate", telegraphed: true, teachesConcepts: ["containment", "incident_response"] },
+      { name: "GRE Spray", cost: 1, baseDamage: 15, effect: "status_isolated", teachesConcepts: ["containment"] },
+      { name: "Escalate", cost: 2, baseDamage: 0, effect: "self_level_up", teachesConcepts: ["privilege_escalation"] }
     ]
   },
   {
@@ -327,13 +334,14 @@ const threats = [
     weakType: "offense",
     weakPoint: "inspect",
     intentTags: ["deceive", "redirect", "harvest"],
+    relatedConcepts: ["phishing", "detection"],
     weakTo: ["scan", "reveal", "countertrace"],
     resists: ["redirect"],
     immuneTo: [],
     abilities: [
-      { name: "Reset Request", cost: 0, baseDamage: 11, effect: "status_detected" },
-      { name: "Redirect Chain", cost: 1, baseDamage: 9, effect: "damage_all" },
-      { name: "Escalate", cost: 2, baseDamage: 0, effect: "self_level_up" }
+      { name: "Reset Request", cost: 0, baseDamage: 11, effect: "status_detected", teachesConcepts: ["phishing", "detection"] },
+      { name: "Redirect Chain", cost: 1, baseDamage: 9, effect: "damage_all", teachesConcepts: ["phishing", "lateral_movement"] },
+      { name: "Escalate", cost: 2, baseDamage: 0, effect: "self_level_up", teachesConcepts: ["privilege_escalation"] }
     ]
   }
 ];
