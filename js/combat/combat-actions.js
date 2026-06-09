@@ -319,6 +319,7 @@ function showCombatReward(rewardLines) {
   }
 
   combatState.historyDrawerOpen = false;
+  combatState.cyberCodexOpen = false;
   combatState.phase = "reward";
   renderCombatReward(rewardLines);
 }
@@ -331,6 +332,7 @@ function showCombatDefeatScreen(outcome) {
 
   if (combatState) {
     combatState.historyDrawerOpen = false;
+    combatState.cyberCodexOpen = false;
     combatState.phase = "defeat";
   }
 
@@ -462,6 +464,7 @@ class ThreatCombat {
     this.state.battleSubmessage = "";
     this.state.visualEffect = null;
     this.state.historyDrawerOpen = false;
+    this.state.cyberCodexOpen = false;
     this.state.actionLocked = true;
     screenState = "combat";
     addBattleLog(`ENGAGING ${this.state.threat.title.toUpperCase()} AT LEVEL ${this.state.threat.level}.`);

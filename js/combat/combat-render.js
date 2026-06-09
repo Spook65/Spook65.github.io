@@ -216,10 +216,13 @@ function buildCombatFeedMarkup(state) {
 
   return `
     <aside class="combat-feed" aria-label="Combat feed">
-      <button class="combat-feed-kicker" type="button" data-combat-command="toggle-history" aria-expanded="${state.historyDrawerOpen ? "true" : "false"}">
+      <div class="combat-feed-kicker">
         <span>COMBAT FEED</span>
-        <span class="combat-feed-action">VIEW HISTORY</span>
-      </button>
+        <span class="combat-feed-actions">
+          <button class="combat-feed-action" type="button" data-combat-command="toggle-history" aria-expanded="${state.historyDrawerOpen ? "true" : "false"}">VIEW HISTORY</button>
+          <button class="combat-feed-action" type="button" data-combat-command="toggle-codex" aria-expanded="${state.cyberCodexOpen ? "true" : "false"}">CYBER CODEX</button>
+        </span>
+      </div>
       <div class="combat-feed-list">
         ${entries.map((entry, index) => {
           const variantClass = entry.variant ? `is-${entry.variant}` : "";
@@ -232,6 +235,63 @@ function buildCombatFeedMarkup(state) {
         }).join("")}
       </div>
     </aside>
+  `;
+}
+
+function buildCyberCodexOverlayMarkup(state) {
+  if (!state?.cyberCodexOpen || state?.battleIntroPlaying) {
+    return "";
+  }
+
+  const concepts = typeof getCyberConcepts === "function" ? getCyberConcepts() : [];
+  const unlockedIds = new Set(typeof normalizeCyberConceptIds === "function"
+    ? normalizeCyberConceptIds(state.unlockedConcepts || [])
+    : (Array.isArray(state.unlockedConcepts) ? state.unlockedConcepts : []));
+  const unlockedConcepts = concepts.filter((concept) => unlockedIds.has(concept.id));
+  const lockedConcepts = concepts.filter((concept) => !unlockedIds.has(concept.id));
+  const unlockedCount = unlockedConcepts.length;
+  const totalCount = concepts.length;
+
+  return `
+    <section class="combat-history-overlay combat-codex-overlay" aria-label="Cyber Codex overlay">
+      <button class="combat-history-backdrop" type="button" data-combat-command="close-codex" aria-label="Close Cyber Codex"></button>
+      <div class="combat-history-modal combat-codex-modal" role="dialog" aria-modal="true" aria-label="Cyber Codex">
+        <div class="combat-history-drawer-head">
+          <div>
+            <div class="combat-history-drawer-kicker">CYBER CODEX</div>
+            <div class="combat-history-drawer-copy">UNLOCKED CONCEPTS / ${unlockedCount} OF ${totalCount}</div>
+          </div>
+          <button class="combat-history-close" type="button" data-combat-command="close-codex">CLOSE</button>
+        </div>
+        <div class="combat-codex-list">
+          ${unlockedConcepts.length ? unlockedConcepts.map((concept) => `
+            <article class="combat-codex-card">
+              <div class="combat-codex-card-title">${concept.title}</div>
+              <div class="combat-codex-card-line">${concept.beginnerDefinition}</div>
+              <div class="combat-codex-card-kicker">IN COMBAT</div>
+              <div class="combat-codex-card-line">${concept.gameplayMeaning}</div>
+              <div class="combat-codex-card-kicker">EXAMPLE</div>
+              <div class="combat-codex-card-line">${concept.example}</div>
+              ${Array.isArray(concept.relatedCounters) && concept.relatedCounters.length ? `
+                <div class="combat-codex-counter-row">
+                  ${concept.relatedCounters.map((counter) => `<span class="combat-codex-counter">${String(counter).toUpperCase()}</span>`).join("")}
+                </div>
+              ` : ""}
+            </article>
+          `).join("") : `
+            <div class="combat-codex-empty">
+              <div class="combat-codex-card-title">NO CONCEPTS UNLOCKED</div>
+              <div class="combat-codex-card-line">Combat hints will unlock Codex entries as Defenders scan, contain, redirect, and cleanse threats.</div>
+            </div>
+          `}
+          ${lockedConcepts.length ? `
+            <div class="combat-codex-locked-list" aria-label="Locked concepts">
+              ${lockedConcepts.map(() => '<div class="combat-codex-locked-row">LOCKED CONCEPT</div>').join("")}
+            </div>
+          ` : ""}
+        </div>
+      </div>
+    </section>
   `;
 }
 
@@ -1448,6 +1508,7 @@ function buildCombatMarkup(state) {
   const stageFeedbackToastMarkup = buildStageFeedbackToastMarkup(state);
   const combatFeedMarkup = buildCombatFeedMarkup(state);
   const battleHistoryDrawerMarkup = buildBattleHistoryDrawerMarkup(state);
+  const cyberCodexOverlayMarkup = buildCyberCodexOverlayMarkup(state);
   const stageFeedbackActive = Boolean(stageFeedbackToastMarkup);
   const collapseActiveHud = shouldCollapseActiveHud(state);
   if (state?.commandMode === "attack") {
@@ -1505,6 +1566,7 @@ function buildCombatMarkup(state) {
         ${stageFeedbackToastMarkup}
         ${combatFeedMarkup}
         ${battleHistoryDrawerMarkup}
+        ${cyberCodexOverlayMarkup}
         <div class="combat-reserve-strip">
           <div class="combat-reserve-row">
             ${buildReserveStripMarkup(state, currentProgram.id)}
@@ -1707,6 +1769,9 @@ function bindCombatButtons() {
 
       if (command === "toggle-history") {
         combatState.historyDrawerOpen = !combatState.historyDrawerOpen;
+        if (combatState.historyDrawerOpen) {
+          combatState.cyberCodexOpen = false;
+        }
         renderCombatScreen();
         return;
       }
@@ -1714,6 +1779,21 @@ function bindCombatButtons() {
       if (command === "close-history") {
         console.log("[HISTORY DRAWER] close");
         combatState.historyDrawerOpen = false;
+        renderCombatScreen();
+        return;
+      }
+
+      if (command === "toggle-codex") {
+        combatState.cyberCodexOpen = !combatState.cyberCodexOpen;
+        if (combatState.cyberCodexOpen) {
+          combatState.historyDrawerOpen = false;
+        }
+        renderCombatScreen();
+        return;
+      }
+
+      if (command === "close-codex") {
+        combatState.cyberCodexOpen = false;
         renderCombatScreen();
         return;
       }

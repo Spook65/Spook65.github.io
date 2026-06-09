@@ -131,6 +131,10 @@ function getCyberConcept(conceptId) {
   return normalizedId ? cyberConceptRegistry[normalizedId] || null : null;
 }
 
+function getCyberConcepts() {
+  return cyberConcepts.slice();
+}
+
 function buildCyberConceptHintText(conceptId) {
   const concept = getCyberConcept(conceptId);
   if (!concept) {
@@ -150,6 +154,7 @@ if (typeof window !== "undefined") {
   window.cyberConceptRegistry = cyberConceptRegistry;
   window.normalizeCyberConceptIds = normalizeCyberConceptIds;
   window.getCyberConcept = getCyberConcept;
+  window.getCyberConcepts = getCyberConcepts;
   window.buildCyberConceptHintText = buildCyberConceptHintText;
   window.getFirstUnshownCyberConceptId = getFirstUnshownCyberConceptId;
 }

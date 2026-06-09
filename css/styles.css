@@ -9459,9 +9459,6 @@ body {
 }
 
 .combat-feed-kicker {
-  appearance: none;
-  border: 0;
-  background: transparent;
   padding: 0;
   color: rgba(127, 183, 176, 0.74);
   font-size: 0.42rem;
@@ -9473,21 +9470,33 @@ body {
   justify-content: space-between;
   gap: 0.5rem;
   text-align: left;
-  cursor: pointer;
-  pointer-events: auto;
 }
 
-.combat-feed-kicker:hover,
-.combat-feed-kicker:focus-visible {
-  color: rgba(215, 184, 106, 0.9);
-  outline: none;
+.combat-feed-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.46rem;
 }
 
 .combat-feed-action {
+  appearance: none;
+  border: 0;
+  background: transparent;
   color: rgba(215, 184, 106, 0.62);
+  cursor: pointer;
   font-size: 0.34rem;
   letter-spacing: 0.16em;
+  line-height: 1;
+  padding: 0;
+  text-transform: uppercase;
   white-space: nowrap;
+  pointer-events: auto;
+}
+
+.combat-feed-action:hover,
+.combat-feed-action:focus-visible {
+  color: rgba(215, 184, 106, 0.9);
+  outline: none;
 }
 
 .combat-feed-list {
@@ -9672,6 +9681,84 @@ body {
   color: rgba(127, 183, 176, 0.56);
   font-size: 0.34rem;
   letter-spacing: 0.14em;
+}
+
+.combat-codex-modal {
+  width: min(45rem, 76vw);
+}
+
+.combat-codex-list {
+  display: grid;
+  gap: 0.52rem;
+  overflow-y: auto;
+  padding-right: 0.34rem;
+}
+
+.combat-codex-card,
+.combat-codex-empty {
+  display: grid;
+  gap: 0.22rem;
+  padding: 0.54rem 0.64rem;
+  border-left: 1px solid rgba(127, 183, 176, 0.48);
+  background:
+    linear-gradient(90deg, rgba(127, 183, 176, 0.05), rgba(255, 255, 255, 0.018));
+}
+
+.combat-codex-card-title {
+  color: rgba(236, 220, 186, 0.92);
+  font-size: 0.56rem;
+  letter-spacing: 0.18em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.combat-codex-card-kicker {
+  margin-top: 0.18rem;
+  color: rgba(127, 183, 176, 0.64);
+  font-size: 0.34rem;
+  letter-spacing: 0.18em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.combat-codex-card-line {
+  color: rgba(188, 205, 204, 0.78);
+  font-size: 0.44rem;
+  letter-spacing: 0.08em;
+  line-height: 1.45;
+  text-transform: uppercase;
+}
+
+.combat-codex-counter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.32rem;
+  margin-top: 0.16rem;
+}
+
+.combat-codex-counter {
+  border: 1px solid rgba(215, 184, 106, 0.24);
+  color: rgba(215, 184, 106, 0.78);
+  font-size: 0.32rem;
+  letter-spacing: 0.14em;
+  padding: 0.16rem 0.24rem;
+}
+
+.combat-codex-locked-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+  gap: 0.34rem;
+  margin-top: 0.14rem;
+}
+
+.combat-codex-locked-row {
+  border-left: 1px solid rgba(127, 183, 176, 0.18);
+  color: rgba(127, 183, 176, 0.38);
+  font-size: 0.34rem;
+  letter-spacing: 0.16em;
+  padding: 0.28rem 0.36rem;
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.012);
 }
 
 @keyframes combat-party-hit-pulse {
