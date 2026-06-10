@@ -220,7 +220,7 @@ function buildCombatFeedMarkup(state) {
         <span>COMBAT FEED</span>
         <span class="combat-feed-actions">
           <button class="combat-feed-action" type="button" data-combat-command="toggle-history" aria-expanded="${state.historyDrawerOpen ? "true" : "false"}">VIEW HISTORY</button>
-          <button class="combat-feed-action" type="button" data-combat-command="toggle-codex" aria-expanded="${state.cyberCodexOpen ? "true" : "false"}">CYBER CODEX</button>
+          <button class="combat-feed-action" type="button" data-combat-command="toggle-codex" aria-expanded="${state.cyberCodexOpen ? "true" : "false"}">THREAT INTEL</button>
         </span>
       </div>
       <div class="combat-feed-list">
@@ -253,13 +253,13 @@ function buildCyberCodexOverlayMarkup(state) {
   const totalCount = concepts.length;
 
   return `
-    <section class="combat-history-overlay combat-codex-overlay" aria-label="Cyber Codex overlay">
-      <button class="combat-history-backdrop" type="button" data-combat-command="close-codex" aria-label="Close Cyber Codex"></button>
-      <div class="combat-history-modal combat-codex-modal" role="dialog" aria-modal="true" aria-label="Cyber Codex">
+    <section class="combat-history-overlay combat-codex-overlay" aria-label="Threat Intel overlay">
+      <button class="combat-history-backdrop" type="button" data-combat-command="close-codex" aria-label="Close Threat Intel"></button>
+      <div class="combat-history-modal combat-codex-modal" role="dialog" aria-modal="true" aria-label="Threat Intel">
         <div class="combat-history-drawer-head">
           <div>
-            <div class="combat-history-drawer-kicker">CYBER CODEX</div>
-            <div class="combat-history-drawer-copy">UNLOCKED CONCEPTS / ${unlockedCount} OF ${totalCount}</div>
+            <div class="combat-history-drawer-kicker">THREAT INTEL</div>
+            <div class="combat-history-drawer-copy">UNLOCKED CYBER CONCEPTS / ${unlockedCount} OF ${totalCount}</div>
           </div>
           <button class="combat-history-close" type="button" data-combat-command="close-codex">CLOSE</button>
         </div>
@@ -280,8 +280,8 @@ function buildCyberCodexOverlayMarkup(state) {
             </article>
           `).join("") : `
             <div class="combat-codex-empty">
-              <div class="combat-codex-card-title">NO CONCEPTS UNLOCKED</div>
-              <div class="combat-codex-card-line">Combat hints will unlock Codex entries as Defenders scan, contain, redirect, and cleanse threats.</div>
+              <div class="combat-codex-card-title">NO THREAT INTEL UNLOCKED YET</div>
+              <div class="combat-codex-card-line">Use cyber actions in combat to reveal concepts as Defenders scan, contain, redirect, and cleanse threats.</div>
             </div>
           `}
           ${lockedConcepts.length ? `
@@ -1788,11 +1788,13 @@ function bindCombatButtons() {
         if (combatState.cyberCodexOpen) {
           combatState.historyDrawerOpen = false;
         }
+        console.log("[THREAT INTEL] toggle open:", combatState.cyberCodexOpen);
         renderCombatScreen();
         return;
       }
 
       if (command === "close-codex") {
+        console.log("[THREAT INTEL] close");
         combatState.cyberCodexOpen = false;
         renderCombatScreen();
         return;

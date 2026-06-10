@@ -9465,17 +9465,16 @@ body {
   letter-spacing: 0.22em;
   line-height: 1;
   text-transform: uppercase;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
+  display: grid;
+  gap: 0.24rem;
   text-align: left;
 }
 
 .combat-feed-actions {
   display: inline-flex;
   align-items: center;
-  gap: 0.46rem;
+  flex-wrap: wrap;
+  gap: 0.32rem 0.48rem;
 }
 
 .combat-feed-action {
@@ -9484,7 +9483,7 @@ body {
   background: transparent;
   color: rgba(215, 184, 106, 0.62);
   cursor: pointer;
-  font-size: 0.34rem;
+  font-size: 0.36rem;
   letter-spacing: 0.16em;
   line-height: 1;
   padding: 0;
