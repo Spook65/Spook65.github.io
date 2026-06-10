@@ -8879,6 +8879,11 @@ body {
   font-size: 0.42rem;
 }
 
+.combat-enemy-detail-line.is-hidden-intel strong,
+.combat-enemy-response-hint.is-hidden-intel strong {
+  color: rgba(127, 183, 176, 0.62);
+}
+
 .combat-enemy-response-hint {
   display: flex;
   align-items: baseline;

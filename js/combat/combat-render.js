@@ -143,10 +143,13 @@ function buildEnemyTargetReadoutMarkup(state, options = {}) {
   }
 
   const displayLevel = Number.isFinite(threat?.battleLevel) ? threat.battleLevel : threat.level;
-  const weaknessLabel = String(getActorCombatType(threat, true) || "UNKNOWN").toUpperCase();
-  const intentLabel = state.enemyIntent ? String(state.enemyIntent.label || "STRIKE").toUpperCase() : "";
-  const intentIcon = state.enemyIntent ? String(state.enemyIntent.iconLabel || state.enemyIntent.severity || "").toUpperCase() : "";
-  const responseHint = typeof getThreatResponseHint === "function" ? getThreatResponseHint(state) : null;
+  const hasDetectedStatus = typeof hasCombatantStatus === "function" && hasCombatantStatus(threat, "detected");
+  const isAnalyzed = Boolean(state.threatAnalyzed || hasDetectedStatus);
+  const weaknessLabel = isAnalyzed ? String(getActorCombatType(threat, true) || "UNKNOWN").toUpperCase() : "UNKNOWN";
+  const intentLabel = isAnalyzed && state.enemyIntent ? String(state.enemyIntent.label || "STRIKE").toUpperCase() : "UNKNOWN";
+  const intentIcon = isAnalyzed && state.enemyIntent ? String(state.enemyIntent.iconLabel || state.enemyIntent.severity || "").toUpperCase() : "";
+  const responseHint = isAnalyzed && typeof getThreatResponseHint === "function" ? getThreatResponseHint(state) : null;
+  const counterplayLabel = responseHint ? responseHint.text : "SCAN TO REVEAL";
   const statusMarkup = renderStatusPills(threat.statusEffects);
   const isRecentlyHit = state.recentlyHitThreatId === (threat.id || threat.title || "threat");
   const readoutClasses = [
@@ -167,8 +170,8 @@ function buildEnemyTargetReadoutMarkup(state, options = {}) {
       <div class="combat-enemy-detail-box">
         <div class="combat-enemy-detail-line"><span>LVL</span><strong>${displayLevel}</strong></div>
         <div class="combat-enemy-detail-line"><span>WEAK</span><strong>${weaknessLabel}</strong></div>
-        ${state.enemyIntent ? `<div class="combat-enemy-detail-line"><span>INTENT</span><strong>${intentLabel}${intentIcon ? ` / ${intentIcon}` : ""}</strong></div>` : ""}
-        ${responseHint ? `<div class="combat-enemy-response-hint is-${responseHint.tone || "neutral"}"><span>${responseHint.label}</span><strong>${responseHint.text}</strong></div>` : ""}
+        <div class="combat-enemy-detail-line ${isAnalyzed ? "" : "is-hidden-intel"}"><span>INTENT</span><strong>${intentLabel}${intentIcon ? ` / ${intentIcon}` : ""}</strong></div>
+        <div class="combat-enemy-response-hint is-${isAnalyzed ? (responseHint?.tone || "neutral") : "neutral"} ${isAnalyzed ? "" : "is-hidden-intel"}"><span>COUNTERPLAY</span><strong>${counterplayLabel}</strong></div>
         ${statusMarkup ? `<div class="combat-enemy-detail-status">${statusMarkup}</div>` : ""}
       </div>
     </div>

@@ -1476,6 +1476,8 @@ function buildCombatState(sourceThreat) {
     battleHistory: [],
     historyDrawerOpen: false,
     cyberCodexOpen: false,
+    threatAnalyzed: false,
+    revealedThreatInfo: {},
     shownConceptHintsThisBattle: [],
     unlockedConcepts,
     battleMessage: "",

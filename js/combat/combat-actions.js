@@ -650,6 +650,53 @@ class ThreatCombat {
     }, "concept");
   }
 
+  isThreatAnalysisMove(ability) {
+    const conceptIds = this.collectConceptIds(ability);
+    const responseTags = typeof normalizeResponseTagList === "function"
+      ? normalizeResponseTagList([
+          ...(Array.isArray(ability?.responseTags) ? ability.responseTags : []),
+          ...(Array.isArray(ability?.tags) ? ability.tags : [])
+        ])
+      : [];
+    const effect = String(ability?.effect || "").toLowerCase();
+
+    return conceptIds.includes("detection")
+      || responseTags.includes("scan")
+      || responseTags.includes("detect")
+      || effect === "status_detected";
+  }
+
+  revealThreatAnalysis(actor, ability) {
+    if (!this.state?.threat || this.state.threatAnalyzed || !this.isThreatAnalysisMove(ability)) {
+      return false;
+    }
+
+    const threat = this.state.threat;
+    const responseHint = typeof getThreatResponseHint === "function" ? getThreatResponseHint(this.state) : null;
+    this.state.threatAnalyzed = true;
+    this.state.revealedThreatInfo = {
+      threatId: threat.id || threat.title || "",
+      weakness: String(getActorCombatType(threat, true) || "unknown").toLowerCase(),
+      intent: String(this.state.enemyIntent?.label || "unknown").toLowerCase(),
+      counterplay: String(responseHint?.text || threat.weakPoint || "unknown").toLowerCase(),
+      revealedAt: Date.now()
+    };
+
+    addBattleLog(`${threat.title.toUpperCase()} ANALYSIS COMPLETE. WEAKNESS, INTENT, AND COUNTERPLAY REVEALED.`, "buff", { feed: false });
+    addCombatFeedEvent({
+      type: "threat-analysis",
+      side: "player",
+      title: "THREAT ANALYZED",
+      body: `${threat.title} behavior revealed. Weakness, intent, and counterplay exposed.`,
+      actorName: actor?.name || "",
+      targetName: threat.title,
+      effect: "analysis",
+      variant: "concept"
+    }, "concept");
+
+    return true;
+  }
+
   buildVisualEffect(actorEntry, targetEntry, ability, damageResult, phase) {
     return buildVisualEffect(this.state, actorEntry, targetEntry, ability, damageResult, phase);
   }
@@ -1751,6 +1798,7 @@ class ThreatCombat {
         const gaugeGain = getRandomInt(10, 15);
         this.state.responseGauge = Math.min(100, this.state.responseGauge + gaugeGain);
         this.applyPlayerEffect(actor, ability, damageResult);
+        this.revealThreatAnalysis(actor, ability);
         const gaugeDelta = this.state.responseGauge - gaugeBeforeMove;
         if (gaugeDelta !== 0) {
           addCombatFeedEvent({
