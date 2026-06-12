@@ -1379,6 +1379,7 @@ function buildCombatState(sourceThreat) {
   const queueHasThreatHint = pendingQueue.some((boon) => String(boon?.effectType || "") === "reveal_next_weakness");
   const enemyForecastActive = queueHasThreatHint || Boolean(legacyThreatHint);
   const unlockedConcepts = typeof getUnlockedCyberConceptIds === "function" ? getUnlockedCyberConceptIds() : [];
+  const learningObjective = typeof getThreatLearningObjective === "function" ? getThreatLearningObjective(threat) : "";
   const pendingGaugeBonus = (queueHasGaugeBonus ? 0 : legacyGaugeBonus) + legacyChargeRestoreGaugeBonus;
   const pendingAccuracyBonus = queueHasAccuracyBonus ? 0 : legacyAccuracyBonus;
   const pendingOpeningDamageBonus = queueHasOpeningDamageBonus ? 0 : legacyOpeningDamageBonus;
@@ -1478,6 +1479,7 @@ function buildCombatState(sourceThreat) {
     cyberCodexOpen: false,
     threatAnalyzed: false,
     revealedThreatInfo: {},
+    learningObjective,
     shownConceptHintsThisBattle: [],
     unlockedConcepts,
     battleMessage: "",

@@ -29,6 +29,12 @@ const threats = [
     spd: 5,
     weakType: "defense",
     weakPoint: "isolate",
+    difficultyTier: 6,
+    learningStage: "response_ransomware_recovery",
+    teachesConcepts: ["encryption", "recovery", "incident_response"],
+    recommendedConcepts: ["containment", "recovery", "malware_cleanup"],
+    beginnerSummary: "A ransomware lockout. Contain spread, clean hostile code, and recover service.",
+    learningObjective: "Recover from ransomware pressure by containing spread and using cleanup responses.",
     intentTags: ["swarm", "spread", "lockout"],
     relatedConcepts: ["encryption", "lateral_movement", "phishing", "incident_response"],
     weakTo: ["isolate", "countertrace"],
@@ -69,6 +75,12 @@ const threats = [
     spd: 8,
     weakType: "offense",
     weakPoint: "revoke",
+    difficultyTier: 5,
+    learningStage: "social_engineering_phishing",
+    teachesConcepts: ["phishing", "detection", "incident_response"],
+    recommendedConcepts: ["detection", "countertrace", "incident_response"],
+    beginnerSummary: "A credential theft campaign. Detection and countertrace expose deceptive access paths.",
+    learningObjective: "Identify phishing behavior and use detection to choose safer counterplay.",
     intentTags: ["deceive", "harvest", "redirect"],
     relatedConcepts: ["phishing", "detection", "incident_response"],
     weakTo: ["scan", "reveal", "countertrace"],
@@ -109,6 +121,12 @@ const threats = [
     spd: 6,
     weakType: "purge",
     weakPoint: "reroute",
+    difficultyTier: 7,
+    learningStage: "network_flood_containment",
+    teachesConcepts: ["containment", "incident_response"],
+    recommendedConcepts: ["containment", "hardening", "incident_response"],
+    beginnerSummary: "A network flood. Mitigation and routing controls limit service disruption.",
+    learningObjective: "Contain flood pressure before it disrupts multiple Defenders.",
     intentTags: ["swarm", "flood", "saturate"],
     relatedConcepts: ["containment", "incident_response"],
     weakTo: ["mitigate", "redirect", "isolate"],
@@ -155,6 +173,12 @@ const threats = [
     spd: 9,
     weakType: "purge",
     weakPoint: "sinkhole",
+    difficultyTier: 3,
+    learningStage: "worm_lateral_movement",
+    teachesConcepts: ["lateral_movement", "containment", "malware_cleanup"],
+    recommendedConcepts: ["containment", "detection", "malware_cleanup"],
+    beginnerSummary: "A spreading device swarm. Scan, isolate, and purge before it multiplies.",
+    learningObjective: "Watch for lateral movement and contain the swarm before it spreads.",
     intentTags: ["swarm", "beacon", "spread"],
     relatedConcepts: ["lateral_movement", "malware_cleanup", "incident_response"],
     weakTo: ["scan", "isolate", "purge"],
@@ -201,6 +225,12 @@ const threats = [
     spd: 7,
     weakType: "offense",
     weakPoint: "patch",
+    difficultyTier: 4,
+    learningStage: "vulnerability_patching",
+    teachesConcepts: ["vulnerability", "patching", "hardening", "privilege_escalation"],
+    recommendedConcepts: ["detection", "hardening", "malware_cleanup"],
+    beginnerSummary: "An exploit chain abusing an unpatched service. Harden and patch weaknesses.",
+    learningObjective: "Recognize the vulnerability path and harden systems against escalation.",
     intentTags: ["escalate", "corrupt", "breach"],
     relatedConcepts: ["vulnerability", "privilege_escalation", "patching", "incident_response"],
     weakTo: ["countertrace", "cleanse", "mitigate"],
@@ -247,6 +277,12 @@ const threats = [
     spd: 6,
     weakType: "purge",
     weakPoint: "isolate",
+    difficultyTier: 2,
+    learningStage: "malware_cleanup_basics",
+    teachesConcepts: ["malware_cleanup", "containment", "detection"],
+    recommendedConcepts: ["detection", "containment", "malware_cleanup"],
+    beginnerSummary: "A malware dropper. Detect the payload, isolate it, then clean hostile code.",
+    learningObjective: "Use detection and cleanup to remove malware without letting it persist.",
     intentTags: ["stealth", "harvest", "persist"],
     relatedConcepts: ["malware_cleanup", "detection", "phishing"],
     weakTo: ["scan", "cleanse", "isolate"],
@@ -287,6 +323,12 @@ const threats = [
     spd: 6,
     weakType: "defense",
     weakPoint: "divert",
+    difficultyTier: 8,
+    learningStage: "advanced_infrastructure_containment",
+    teachesConcepts: ["containment", "hardening", "incident_response"],
+    recommendedConcepts: ["containment", "hardening", "incident_response"],
+    beginnerSummary: "A larger infrastructure flood. Strong response planning keeps services online.",
+    learningObjective: "Coordinate containment and hardening against a larger disruption.",
     intentTags: ["swarm", "saturate", "disrupt"],
     relatedConcepts: ["containment", "incident_response"],
     weakTo: ["mitigate", "redirect", "isolate"],
@@ -333,6 +375,12 @@ const threats = [
     spd: 7,
     weakType: "offense",
     weakPoint: "inspect",
+    difficultyTier: 1,
+    learningStage: "basics_detection",
+    teachesConcepts: ["detection", "phishing", "incident_response"],
+    recommendedConcepts: ["detection", "countertrace"],
+    beginnerSummary: "A suspicious login pattern. Scan to reveal behavior before responding.",
+    learningObjective: "Use Detection to reveal threat behavior before choosing a response.",
     intentTags: ["deceive", "redirect", "harvest"],
     relatedConcepts: ["phishing", "detection"],
     weakTo: ["scan", "reveal", "countertrace"],
@@ -345,3 +393,114 @@ const threats = [
     ]
   }
 ];
+
+const beginnerThreatProgression = [
+  {
+    threatId: "tg-008",
+    learningStage: "basics_detection",
+    concepts: ["detection", "phishing"],
+    objective: "Use Detection to reveal threat behavior before choosing a response."
+  },
+  {
+    threatId: "tg-006",
+    learningStage: "malware_cleanup_basics",
+    concepts: ["malware_cleanup", "containment"],
+    objective: "Detect the payload, isolate it, and clean hostile code."
+  },
+  {
+    threatId: "tg-004",
+    learningStage: "worm_lateral_movement",
+    concepts: ["lateral_movement", "containment"],
+    objective: "Watch for lateral movement and contain the swarm before it spreads."
+  },
+  {
+    threatId: "tg-005",
+    learningStage: "vulnerability_patching",
+    concepts: ["vulnerability", "patching", "hardening"],
+    objective: "Recognize the vulnerability path and harden systems against escalation."
+  },
+  {
+    threatId: "tg-002",
+    learningStage: "social_engineering_phishing",
+    concepts: ["phishing", "detection", "incident_response"],
+    objective: "Identify phishing behavior and use detection to choose safer counterplay."
+  },
+  {
+    threatId: "tg-001",
+    learningStage: "response_ransomware_recovery",
+    concepts: ["recovery", "encryption", "incident_response"],
+    objective: "Recover from ransomware pressure by containing spread and using cleanup responses."
+  }
+];
+
+function normalizeThreatConceptIds(conceptIds = []) {
+  if (typeof normalizeCyberConceptIds === "function") {
+    return normalizeCyberConceptIds(conceptIds);
+  }
+
+  const sourceIds = Array.isArray(conceptIds) ? conceptIds : [conceptIds];
+  const seen = new Set();
+  const normalizedIds = [];
+
+  sourceIds.flat().forEach((conceptId) => {
+    if (typeof conceptId !== "string") {
+      return;
+    }
+
+    const normalizedId = conceptId.trim().toLowerCase();
+    if (!normalizedId || seen.has(normalizedId)) {
+      return;
+    }
+
+    seen.add(normalizedId);
+    normalizedIds.push(normalizedId);
+  });
+
+  return normalizedIds;
+}
+
+function getThreatLearningConcepts(threat) {
+  return normalizeThreatConceptIds([
+    ...(Array.isArray(threat?.teachesConcepts) ? threat.teachesConcepts : []),
+    ...(Array.isArray(threat?.relatedConcepts) ? threat.relatedConcepts : []),
+    ...(Array.isArray(threat?.recommendedConcepts) ? threat.recommendedConcepts : [])
+  ]);
+}
+
+function getBeginnerThreatProgressionStep(progressIndex = 0) {
+  const safeIndex = Math.max(0, Math.floor(Number.isFinite(progressIndex) ? progressIndex : 0));
+  return beginnerThreatProgression[safeIndex] || null;
+}
+
+function getThreatLearningObjective(threat) {
+  if (typeof threat?.learningObjective === "string" && threat.learningObjective.trim()) {
+    return threat.learningObjective.trim();
+  }
+
+  if (typeof threat?.beginnerSummary === "string" && threat.beginnerSummary.trim()) {
+    return threat.beginnerSummary.trim();
+  }
+
+  return "";
+}
+
+function selectBeginnerThreatForProgression(clickedThreat, progressIndex = 0) {
+  const step = getBeginnerThreatProgressionStep(progressIndex);
+  if (!step) {
+    return clickedThreat || null;
+  }
+
+  const activeThreats = threats.filter((threat) => threat.status === "active");
+  const exactThreat = activeThreats.find((threat) => threat.id === step.threatId);
+  if (exactThreat) {
+    return exactThreat;
+  }
+
+  const stepConcepts = normalizeThreatConceptIds(step.concepts || []);
+  const conceptMatch = activeThreats.find((threat) => {
+    const threatConcepts = getThreatLearningConcepts(threat);
+    return stepConcepts.some((conceptId) => threatConcepts.includes(conceptId));
+  });
+
+  return conceptMatch || clickedThreat || activeThreats[0] || null;
+}

@@ -171,6 +171,47 @@ function getRandomActiveThreat() {
   return activeThreats[getRandomInt(0, activeThreats.length - 1)];
 }
 
+function getBeginnerEncounterProgressIndex() {
+  const runState = typeof defenderSaveState !== "undefined" && defenderSaveState?.currentRun ? defenderSaveState.currentRun : null;
+  if (!runState || typeof runState !== "object") {
+    return 0;
+  }
+
+  if (Array.isArray(runState.clearedThreatIds)) {
+    return runState.clearedThreatIds.length;
+  }
+
+  if (Array.isArray(runState.defeatedThreats)) {
+    return runState.defeatedThreats.length;
+  }
+
+  return Number.isFinite(runState.battlesWon) ? Math.max(0, runState.battlesWon) : 0;
+}
+
+function resolveThreatForBeginnerProgression(clickedThreat) {
+  if (typeof selectBeginnerThreatForProgression !== "function") {
+    return clickedThreat;
+  }
+
+  return selectBeginnerThreatForProgression(clickedThreat, getBeginnerEncounterProgressIndex()) || clickedThreat;
+}
+
+function recordBeginnerThreatProgress(threat) {
+  const runState = typeof defenderSaveState !== "undefined" && defenderSaveState?.currentRun ? defenderSaveState.currentRun : null;
+  if (!runState || !threat?.id) {
+    return;
+  }
+
+  runState.clearedThreatIds = Array.isArray(runState.clearedThreatIds) ? runState.clearedThreatIds : [];
+  if (!runState.clearedThreatIds.includes(threat.id)) {
+    runState.clearedThreatIds.push(threat.id);
+  }
+
+  if (typeof saveGame === "function") {
+    saveGame();
+  }
+}
+
 // showCombatScreen() opens the battle overlay and advances immediately into the first turn.
 function showCombatScreen(state) {
   hideEncounterTransition();
@@ -468,6 +509,17 @@ class ThreatCombat {
     this.state.actionLocked = true;
     screenState = "combat";
     addBattleLog(`ENGAGING ${this.state.threat.title.toUpperCase()} AT LEVEL ${this.state.threat.level}.`);
+    if (this.state.learningObjective) {
+      addCombatFeedEvent({
+        type: "learning-objective",
+        side: "system",
+        title: "LEARNING OBJECTIVE",
+        body: this.state.learningObjective,
+        targetName: this.state.threat.title,
+        effect: "learning",
+        variant: "concept"
+      }, "concept");
+    }
     renderCombatScreen();
     playBattleSummonIntro(this);
   }
@@ -1933,6 +1985,7 @@ class ThreatCombat {
       this.state.phase = "narrative";
       this.state.sourceThreat.status = "neutralized";
       this.state.sourceThreat.hp = this.state.sourceThreat.maxHp;
+      recordBeginnerThreatProgress(this.state.sourceThreat);
       threatsNeutralized += 1;
       addScore(100);
       globe.removeThreatNode(this.state.sourceThreat.id);
@@ -1973,7 +2026,7 @@ function startCombatEncounter(threat) {
     return;
   }
 
-  showEncounterTransition(threat);
+  showEncounterTransition(resolveThreatForBeginnerProgression(threat));
 }
 
 // wireThreatResponses() connects globe clicks to battle encounters and keeps the earlier respawn layer alive.
