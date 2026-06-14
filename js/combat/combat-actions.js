@@ -365,6 +365,22 @@ function showCombatReward(rewardLines) {
   renderCombatReward(rewardLines);
 }
 
+function continueVictorySummary() {
+  if (!combatState || !combatState.victorySummary) {
+    returnToGlobeFromCombat();
+    return;
+  }
+
+  const defeatedThreat = combatState.sourceThreat;
+  const rewardLines = Array.isArray(combatState.pendingVictoryRewardLines) ? combatState.pendingVictoryRewardLines : [];
+  try {
+    showPostBattleNarrativeEncounter(defeatedThreat, rewardLines);
+  } catch (error) {
+    console.error("[Narrative] Unexpected victory handoff failure, returning to globe.", error);
+    returnToGlobeFromCombat();
+  }
+}
+
 // showCombatDefeatScreen() handles the defeat branch without colliding with the boot screen game-over UI.
 function showCombatDefeatScreen(outcome) {
   if (outcome !== "lose") {
@@ -455,9 +471,130 @@ function closeCombatOverlay(forceClose = false) {
   }, 180);
 }
 
+function getVictoryRewardTier(defeatedThreat) {
+  if (Number.isFinite(defeatedThreat?.difficultyTier)) {
+    return Math.max(1, Math.floor(defeatedThreat.difficultyTier));
+  }
+
+  if (Number.isFinite(defeatedThreat?.level)) {
+    return Math.max(1, Math.floor(defeatedThreat.level));
+  }
+
+  return 1;
+}
+
+function getVictoryRewardAmounts(defeatedThreat) {
+  const tier = getVictoryRewardTier(defeatedThreat);
+  const rewardTable = {
+    1: { xp: 25, dataCache: 10 },
+    2: { xp: 40, dataCache: 16 },
+    3: { xp: 60, dataCache: 24 }
+  };
+
+  if (rewardTable[tier]) {
+    return { tier, ...rewardTable[tier] };
+  }
+
+  return {
+    tier,
+    xp: 60 + ((tier - 3) * 20),
+    dataCache: 24 + ((tier - 3) * 8)
+  };
+}
+
+function getConceptDisplayName(conceptId) {
+  const concept = typeof getCyberConcept === "function" ? getCyberConcept(conceptId) : null;
+  if (concept?.title) {
+    return concept.title;
+  }
+
+  return String(conceptId || "")
+    .split("_")
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function normalizeVictoryConceptIds(conceptIds = []) {
+  if (typeof normalizeCyberConceptIds === "function") {
+    return normalizeCyberConceptIds(conceptIds);
+  }
+
+  const sourceIds = Array.isArray(conceptIds) ? conceptIds : [conceptIds];
+  const seen = new Set();
+  const normalizedIds = [];
+
+  sourceIds.flat().forEach((conceptId) => {
+    if (typeof conceptId !== "string") {
+      return;
+    }
+
+    const normalizedId = conceptId.trim().toLowerCase();
+    if (!normalizedId || seen.has(normalizedId)) {
+      return;
+    }
+
+    seen.add(normalizedId);
+    normalizedIds.push(normalizedId);
+  });
+
+  return normalizedIds;
+}
+
+function getVictoryConceptIds(state) {
+  const threatConcepts = typeof getThreatLearningConcepts === "function"
+    ? getThreatLearningConcepts(state?.sourceThreat || state?.threat)
+    : normalizeVictoryConceptIds([
+        ...(Array.isArray(state?.sourceThreat?.teachesConcepts) ? state.sourceThreat.teachesConcepts : []),
+        ...(Array.isArray(state?.sourceThreat?.recommendedConcepts) ? state.sourceThreat.recommendedConcepts : []),
+        ...(Array.isArray(state?.sourceThreat?.relatedConcepts) ? state.sourceThreat.relatedConcepts : [])
+      ]);
+
+  return normalizeVictoryConceptIds([
+    ...threatConcepts,
+    ...(Array.isArray(state?.shownConceptHintsThisBattle) ? state.shownConceptHintsThisBattle : [])
+  ]);
+}
+
+function unlockVictoryConcepts(state, conceptIds) {
+  const unlockedThisBattle = Array.isArray(state.conceptsUnlockedThisBattle) ? state.conceptsUnlockedThisBattle : [];
+
+  conceptIds.forEach((conceptId) => {
+    if (!conceptId || typeof unlockCyberConcept !== "function") {
+      return;
+    }
+
+    const wasUnlocked = unlockCyberConcept(conceptId);
+    if (wasUnlocked && !unlockedThisBattle.includes(conceptId)) {
+      unlockedThisBattle.push(conceptId);
+    }
+  });
+
+  state.conceptsUnlockedThisBattle = normalizeVictoryConceptIds(unlockedThisBattle);
+  state.unlockedConcepts = normalizeVictoryConceptIds([
+    ...(Array.isArray(state.unlockedConcepts) ? state.unlockedConcepts : []),
+    ...conceptIds
+  ]);
+}
+
+function applyDataCacheReward(dataCacheAwarded) {
+  const runState = typeof defenderSaveState !== "undefined" && defenderSaveState?.currentRun ? defenderSaveState.currentRun : null;
+  if (!runState || !Number.isFinite(dataCacheAwarded) || dataCacheAwarded <= 0) {
+    return;
+  }
+
+  runState.dataCache = Math.max(0, Number.isFinite(runState.dataCache) ? runState.dataCache : 0) + dataCacheAwarded;
+  runState.totalDataCacheEarned = Math.max(0, Number.isFinite(runState.totalDataCacheEarned) ? runState.totalDataCacheEarned : 0) + dataCacheAwarded;
+
+  if (typeof saveGame === "function") {
+    saveGame();
+  }
+}
+
 // awardBattleRewards() applies the roguelike XP loop and returns the summary text for the victory screen.
 function awardBattleRewards(defeatedThreat) {
-  const baseXP = 50 * defeatedThreat.level;
+  const rewardAmounts = getVictoryRewardAmounts(defeatedThreat);
+  const baseXP = rewardAmounts.xp;
   const rewardLines = [];
 
   programs.forEach((program) => {
@@ -484,8 +621,33 @@ function awardBattleRewards(defeatedThreat) {
     });
   });
 
+  applyDataCacheReward(rewardAmounts.dataCache);
   updateScoreDisplay();
-  return rewardLines;
+  return {
+    rewardLines,
+    xpAwarded: baseXP,
+    dataCacheAwarded: rewardAmounts.dataCache,
+    rewardTier: rewardAmounts.tier
+  };
+}
+
+function buildVictorySummary(state, rewardResult) {
+  const conceptIds = getVictoryConceptIds(state);
+  unlockVictoryConcepts(state, conceptIds);
+  const unlockedConceptIds = normalizeVictoryConceptIds(state.conceptsUnlockedThisBattle || []);
+
+  return {
+    threatName: state?.sourceThreat?.title || state?.threat?.title || "Unknown Threat",
+    threatLevel: Number.isFinite(state?.threat?.level) ? state.threat.level : (Number.isFinite(state?.sourceThreat?.level) ? state.sourceThreat.level : 1),
+    learningStage: state?.sourceThreat?.learningStage || state?.threat?.learningStage || "",
+    learningObjective: state?.learningObjective || (typeof getThreatLearningObjective === "function" ? getThreatLearningObjective(state?.sourceThreat || state?.threat) : ""),
+    conceptsPracticed: conceptIds.map((conceptId) => ({ id: conceptId, title: getConceptDisplayName(conceptId) })),
+    conceptsUnlocked: unlockedConceptIds.map((conceptId) => ({ id: conceptId, title: getConceptDisplayName(conceptId) })),
+    xpAwarded: rewardResult?.xpAwarded || 0,
+    dataCacheAwarded: rewardResult?.dataCacheAwarded || 0,
+    rewardTier: rewardResult?.rewardTier || getVictoryRewardTier(state?.sourceThreat || state?.threat),
+    rewardBasis: "difficultyTier"
+  };
 }
 
 // ThreatCombat owns the battle loop, auto-turns, and battle resolution for the current encounter.
@@ -687,7 +849,15 @@ class ThreatCombat {
     }
 
     if (typeof unlockCyberConcept === "function") {
-      unlockCyberConcept(conceptId);
+      const wasUnlocked = unlockCyberConcept(conceptId);
+      if (wasUnlocked) {
+        this.state.conceptsUnlockedThisBattle = Array.isArray(this.state.conceptsUnlockedThisBattle)
+          ? this.state.conceptsUnlockedThisBattle
+          : [];
+        if (!this.state.conceptsUnlockedThisBattle.includes(conceptId)) {
+          this.state.conceptsUnlockedThisBattle.push(conceptId);
+        }
+      }
     }
 
     addCombatFeedEvent({
@@ -1971,6 +2141,7 @@ class ThreatCombat {
 
     this.destroy();
     this.state.outcome = outcome;
+    this.state.battleOutcome = outcome;
     this.state.actionLocked = false;
     this.state.battleMessage = "";
     this.state.battleSubmessage = "";
@@ -1982,7 +2153,8 @@ class ThreatCombat {
       }
 
       this.state.expAwarded = true;
-      this.state.phase = "narrative";
+      this.state.victoryProcessed = true;
+      this.state.phase = "reward";
       this.state.sourceThreat.status = "neutralized";
       this.state.sourceThreat.hp = this.state.sourceThreat.maxHp;
       recordBeginnerThreatProgress(this.state.sourceThreat);
@@ -1993,15 +2165,19 @@ class ThreatCombat {
       addBattleLog(`${this.state.sourceThreat.title.toUpperCase()} NEUTRALIZED. RECOVERING NARRATIVE FRAGMENT.`, "buff");
 
       try {
-        const rewardLines = awardBattleRewards(this.state.sourceThreat);
+        const rewardResult = awardBattleRewards(this.state.sourceThreat);
+        const rewardLines = Array.isArray(rewardResult?.rewardLines) ? rewardResult.rewardLines : [];
+        this.state.rewardsApplied = true;
+        this.state.pendingVictoryRewardLines = rewardLines;
+        this.state.victorySummary = buildVictorySummary(this.state, rewardResult);
         if (Array.isArray(rewardLines) && rewardLines.length) {
           rewardLines.forEach((line) => {
             addBattleLog(line.text.toUpperCase(), line.levelUp ? "buff" : "");
           });
         }
-        showPostBattleNarrativeEncounter(this.state.sourceThreat, rewardLines);
+        showCombatReward(rewardLines);
       } catch (error) {
-        console.error("[Narrative] Unexpected victory overlay failure, returning to globe.", error);
+        console.error("[Victory] Unexpected victory summary failure, returning to globe.", error);
         returnToGlobeFromCombat();
       }
       return;

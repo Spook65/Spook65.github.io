@@ -1613,16 +1613,69 @@ function buildCombatMarkup(state) {
 
 // buildRewardMarkup() keeps the player on the victory screen until they decide whether to continue or quit.
 function buildRewardMarkup(state, rewardLines) {
+  const summary = state?.victorySummary || {};
+  const conceptsPracticed = Array.isArray(summary.conceptsPracticed) ? summary.conceptsPracticed : [];
+  const conceptsUnlocked = Array.isArray(summary.conceptsUnlocked) ? summary.conceptsUnlocked : [];
+  const reinforcedConcepts = conceptsPracticed.filter((concept) => !conceptsUnlocked.some((unlocked) => unlocked.id === concept.id));
+  const learningObjective = summary.learningObjective || "Threat behavior contained. Review the battle history for tactical details.";
+  const threatName = summary.threatName || state?.sourceThreat?.title || state?.threat?.title || "Unknown Threat";
+  const threatLevel = Number.isFinite(summary.threatLevel) ? summary.threatLevel : (Number.isFinite(state?.threat?.level) ? state.threat.level : 1);
+  const xpAwarded = Number.isFinite(summary.xpAwarded) ? summary.xpAwarded : 0;
+  const dataCacheAwarded = Number.isFinite(summary.dataCacheAwarded) ? summary.dataCacheAwarded : 0;
+  const rewardLineMarkup = Array.isArray(rewardLines) && rewardLines.length
+    ? `
+      <details class="battle-victory-details">
+        <summary>PARTY XP DETAIL</summary>
+        <div class="battle-reward-lines">
+          ${rewardLines.map((line) => `<div class="battle-reward-line ${line.levelUp ? "is-levelup" : ""}">${line.text}</div>`).join("")}
+        </div>
+      </details>
+    `
+    : "";
+
   return `
     <div class="battle-reward-screen">
-      <div class="battle-end-headline">VICTORY</div>
+      <div class="battle-end-headline">INCIDENT CONTAINED</div>
       <div class="terminal-rule" aria-hidden="true"></div>
-      <div class="battle-reward-copy">THREAT NEUTRALIZED. XP GAINED. PARTY STATUS PRESERVED.</div>
-      <div class="battle-reward-lines">
-        ${rewardLines.map((line) => `<div class="battle-reward-line ${line.levelUp ? "is-levelup" : ""}">${line.text}</div>`).join("")}
+      <div class="battle-victory-grid">
+        <section class="battle-victory-panel is-primary">
+          <div class="battle-victory-kicker">THREAT NEUTRALIZED</div>
+          <div class="battle-victory-threat">${threatName}</div>
+          <div class="battle-victory-meta">LVL ${threatLevel}${summary.learningStage ? ` / ${String(summary.learningStage).replace(/_/g, " ")}` : ""}</div>
+        </section>
+        <section class="battle-victory-panel">
+          <div class="battle-victory-kicker">LEARNING OBJECTIVE</div>
+          <div class="battle-victory-copy">${learningObjective}</div>
+        </section>
+        <section class="battle-victory-panel">
+          <div class="battle-victory-kicker">CONCEPTS PRACTICED</div>
+          <div class="battle-victory-chip-list">
+            ${conceptsPracticed.length
+              ? conceptsPracticed.map((concept) => `<span class="battle-victory-chip">${concept.title}</span>`).join("")
+              : `<span class="battle-victory-muted">NO CONCEPT TAGS RECORDED</span>`}
+          </div>
+        </section>
+        <section class="battle-victory-panel">
+          <div class="battle-victory-kicker">THREAT INTEL UPDATED</div>
+          <div class="battle-victory-chip-list">
+            ${conceptsUnlocked.length
+              ? conceptsUnlocked.map((concept) => `<span class="battle-victory-chip is-unlocked">${concept.title} UNLOCKED</span>`).join("")
+              : reinforcedConcepts.length
+                ? reinforcedConcepts.slice(0, 4).map((concept) => `<span class="battle-victory-chip is-reinforced">${concept.title} REINFORCED</span>`).join("")
+                : `<span class="battle-victory-muted">NO NEW INTEL UNLOCKED</span>`}
+          </div>
+        </section>
+        <section class="battle-victory-panel is-reward">
+          <div class="battle-victory-kicker">REWARDS</div>
+          <div class="battle-victory-rewards">
+            <span>+${xpAwarded} XP</span>
+            <span>+${dataCacheAwarded} DATA CACHE</span>
+          </div>
+        </section>
       </div>
+      ${rewardLineMarkup}
       <div class="battle-reward-actions">
-        <button class="battle-reward-button" type="button" data-combat-next>CONTINUE EXPEDITION</button>
+        <button class="battle-reward-button" type="button" data-combat-next>CONTINUE</button>
         <button class="battle-reward-button" type="button" data-combat-menu>BACK TO MENU</button>
       </div>
     </div>
@@ -1961,6 +2014,11 @@ function bindCombatButtons() {
   const nextButton = threatPanelContent.querySelector("[data-combat-next]");
   if (nextButton) {
     nextButton.addEventListener("click", () => {
+      if (combatState?.phase === "reward" && typeof continueVictorySummary === "function") {
+        continueVictorySummary();
+        return;
+      }
+
       returnToGlobeFromCombat();
     });
   }
