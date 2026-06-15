@@ -572,6 +572,8 @@ function buildReserveStripMarkup(state, activeProgramId) {
     const isRecentlyHit = state.recentlyHitProgramId === program.id || recentlyHitIds.includes(program.id);
     const spriteKey = getProgramSpriteClass(program);
     const hpPct = Math.max(0, Math.min(100, Math.round((program.hp / Math.max(1, program.maxHp)) * 100)));
+    const module = program.equippedModule || null;
+    const moduleLabel = module && typeof getRecoveredModuleShortLabel === "function" ? getRecoveredModuleShortLabel(module) : "";
 
     return `
       <article class="combat-reserve-card ${isActive ? "is-active" : ""} ${program.hp <= 0 ? "is-down" : ""} ${isTargeted ? "is-targeted" : ""} ${isRecentlyHit ? "is-recently-hit" : ""}" style="--reserve-accent: ${program.color}; color: ${program.color};">
@@ -584,6 +586,7 @@ function buildReserveStripMarkup(state, activeProgramId) {
             ${isActive ? '<div class="combat-reserve-active-dot" aria-label="Active defender"></div>' : ""}
           </div>
           <div class="combat-reserve-meta">HP ${program.hp}/${program.maxHp}</div>
+          ${module ? `<div class="combat-reserve-module" title="${module.name || "Recovered Module"}">MOD ${moduleLabel}</div>` : ""}
           <div class="combat-reserve-bar" aria-hidden="true">
             <span class="combat-reserve-bar-fill ${isActive ? "is-active" : ""}" style="width:${hpPct}%"></span>
           </div>
@@ -1205,6 +1208,7 @@ function buildStageCommandSubmenuMarkup(state) {
                 <div class="combat-party-name">${program.name}</div>
                 <div class="combat-party-meta">HP ${program.hp}/${program.maxHp}</div>
                 <div class="combat-party-meta">LVL ${program.level}</div>
+                ${program.equippedModule ? `<div class="combat-party-tag">MOD ${program.equippedModule.name || "Recovered Module"}</div>` : ""}
                 ${program.id === currentActor.ref.id ? '<div class="combat-party-tag">ACTIVE</div>' : ""}
               </div>
             `).join("")}
@@ -1402,6 +1406,7 @@ function buildActionButtonMarkup(state) {
             <div class="combat-party-name">${program.name}</div>
             <div class="combat-party-meta">HP ${program.hp}/${program.maxHp}</div>
             <div class="combat-party-meta">LVL ${program.level}</div>
+            ${program.equippedModule ? `<div class="combat-party-tag">MOD ${program.equippedModule.name || "Recovered Module"}</div>` : ""}
             ${program.id === actor.id ? '<div class="combat-party-tag">ACTIVE</div>' : ""}
           </div>
         `).join("")}
@@ -1682,6 +1687,119 @@ function buildRewardMarkup(state, rewardLines) {
   `;
 }
 
+function getSafeModuleText(value, fallback = "") {
+  const text = String(value || "").trim();
+  return text && text !== "undefined" && text !== "null" && text !== "NaN" ? text : fallback;
+}
+
+function buildRecoveredModuleCardMarkup(module, index) {
+  const name = getSafeModuleText(module?.name, "Recovered Module");
+  const rarity = getSafeModuleText(module?.rarity, "common").toUpperCase();
+  const effectText = getSafeModuleText(module?.effectText, "Module effect stabilized.");
+  const flavorText = getSafeModuleText(module?.flavorText, "Recovered from the contained incident.");
+  const conceptTags = Array.isArray(module?.conceptTags) ? module.conceptTags : [];
+  const conceptLabel = conceptTags.length && typeof getRecoveredModuleConceptLabel === "function"
+    ? getRecoveredModuleConceptLabel(conceptTags[0])
+    : getSafeModuleText(conceptTags[0], "General");
+
+  return `
+    <button class="battle-module-card" type="button" data-module-choice="${module?.instanceId || ""}">
+      <span class="battle-module-card-index">0${index + 1}</span>
+      <span class="battle-module-card-head">
+        <span class="battle-module-name">${name}</span>
+        <span class="battle-module-rarity">${rarity} MODULE</span>
+      </span>
+      <span class="battle-module-effect">${effectText}</span>
+      <span class="battle-module-concept">CONCEPT: ${conceptLabel}</span>
+      <span class="battle-module-flavor">"${flavorText}"</span>
+    </button>
+  `;
+}
+
+function buildRecoveredModuleInstallTargetMarkup(state, program) {
+  const module = state.pendingModuleReward;
+  const existingModule = program.equippedModule || null;
+  const existingText = existingModule?.name ? `WILL REPLACE: ${existingModule.name}` : "EMPTY MODULE SLOT";
+
+  return `
+    <button class="battle-module-target ${program.hp <= 0 ? "is-down" : ""}" type="button" data-module-target="${program.id}">
+      <span class="battle-module-target-name">${program.name || "Defender"}</span>
+      <span class="battle-module-target-meta">LVL ${program.level || 1} / HP ${program.hp || 0}/${program.maxHp || 0}</span>
+      <span class="battle-module-target-replace">${existingText}</span>
+      <span class="battle-module-target-action">INSTALL ${getSafeModuleText(module?.name, "MODULE")}</span>
+    </button>
+  `;
+}
+
+function buildRecoveredModuleRewardMarkup(state) {
+  const step = state?.moduleRewardStep || "choice";
+  const choices = Array.isArray(state?.moduleRewardChoices) ? state.moduleRewardChoices : [];
+  const pendingModule = state?.pendingModuleReward || null;
+  const installed = state?.moduleRewardInstalled || null;
+
+  if (step === "installed" && installed) {
+    return `
+      <div class="battle-narrative-screen is-pantheon battle-module-screen">
+        <div class="battle-narrative-shell">
+          <div class="battle-narrative-sector">RECOVERED MODULE / INSTALL COMPLETE</div>
+          <div class="battle-narrative-response-panel">
+            <div class="battle-narrative-response-title">MODULE INSTALLED</div>
+            <div class="battle-narrative-response-quote">"${getSafeModuleText(installed.module?.flavorText, "The recovered module locks into place.")}"</div>
+            <div class="battle-narrative-response">${getSafeModuleText(installed.module?.name, "Recovered Module")} assigned to ${getSafeModuleText(installed.defenderName, "Defender")}.</div>
+            <div class="battle-narrative-response-effect">
+              <div class="battle-narrative-result-label">ACTIVE EFFECT</div>
+              <div class="battle-narrative-result-value">${getSafeModuleText(installed.module?.effectText, "Module effect online.")}</div>
+              <div class="battle-narrative-result-meta">${installed.replacedModule?.name ? `REPLACED ${installed.replacedModule.name}` : "UNIVERSAL MODULE SLOT"}</div>
+            </div>
+          </div>
+          <button class="battle-narrative-button" type="button" data-module-continue>CONTINUE EXPEDITION</button>
+        </div>
+      </div>
+    `;
+  }
+
+  if (step === "install" && pendingModule) {
+    const targets = Array.isArray(state?.playerParty) ? state.playerParty : [];
+    return `
+      <div class="battle-narrative-screen is-pantheon battle-module-screen">
+        <div class="battle-narrative-shell">
+          <div class="battle-narrative-sector">RECOVERED MODULE / INSTALL MODULE</div>
+          <div class="battle-narrative-header-grid">
+            <div class="battle-narrative-identity">
+              <div class="battle-narrative-title">${getSafeModuleText(pendingModule.name, "Recovered Module")}</div>
+              <div class="battle-narrative-fragment">${getSafeModuleText(pendingModule.rarity, "common").toUpperCase()} MODULE</div>
+              <div class="battle-narrative-sector-copy">${getSafeModuleText(pendingModule.effectText, "Module effect online.")}</div>
+            </div>
+            <div class="battle-narrative-motif" aria-hidden="true">
+              <div class="battle-narrative-motif-glyph"></div>
+              <div class="battle-narrative-motif-copy">CHOOSE DEFENDER</div>
+              <div class="battle-narrative-motif-subcopy">ONE UNIVERSAL MODULE SLOT</div>
+            </div>
+          </div>
+          <div class="battle-module-target-grid">
+            ${targets.length ? targets.map((program) => buildRecoveredModuleInstallTargetMarkup(state, program)).join("") : '<div class="battle-module-empty">NO ACTIVE DEFENDERS AVAILABLE.</div>'}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="battle-narrative-screen is-pantheon battle-module-screen">
+      <div class="battle-narrative-shell">
+        <div class="battle-narrative-sector">HERMES RELAY / RECOVERED MODULES</div>
+        <div class="battle-narrative-dialogue-panel">
+          <div class="battle-narrative-dialogue">Choose one recovered module from the contained incident.</div>
+          <div class="battle-narrative-viewpoint">The selected module can be installed into one active Defender for the rest of this run.</div>
+        </div>
+        <div class="battle-module-choice-grid">
+          ${choices.length ? choices.map((module, index) => buildRecoveredModuleCardMarkup(module, index)).join("") : '<div class="battle-module-empty">NO MODULES RECOVERED.</div>'}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 // buildBattleLostMarkup() keeps the defeat flow stark and brief so the player can restart quickly.
 function buildBattleLostMarkup() {
   const defeatLine = typeof getPantheonDefeatLine === "function" ? getPantheonDefeatLine() : "";
@@ -1796,6 +1914,14 @@ function renderCombatScreen() {
 // renderCombatReward() replaces the battle grid with a victory summary and the next-step buttons.
 function renderCombatReward(rewardLines) {
   threatPanelContent.innerHTML = buildRewardMarkup(combatState, rewardLines);
+  threatPanelContent.scrollTop = 0;
+  threatPanel.classList.add("is-open", "is-combat");
+  threatPanel.setAttribute("aria-hidden", "false");
+  bindCombatButtons();
+}
+
+function renderRecoveredModuleReward() {
+  threatPanelContent.innerHTML = buildRecoveredModuleRewardMarkup(combatState);
   threatPanelContent.scrollTop = 0;
   threatPanel.classList.add("is-open", "is-combat");
   threatPanel.setAttribute("aria-hidden", "false");
@@ -2019,6 +2145,29 @@ function bindCombatButtons() {
         return;
       }
 
+      returnToGlobeFromCombat();
+    });
+  }
+
+  threatPanelContent.querySelectorAll("[data-module-choice]").forEach((button) => {
+    button.addEventListener("click", () => {
+      if (typeof selectRecoveredModuleReward === "function") {
+        selectRecoveredModuleReward(button.getAttribute("data-module-choice"));
+      }
+    });
+  });
+
+  threatPanelContent.querySelectorAll("[data-module-target]").forEach((button) => {
+    button.addEventListener("click", () => {
+      if (typeof installRecoveredModuleReward === "function") {
+        installRecoveredModuleReward(button.getAttribute("data-module-target"));
+      }
+    });
+  });
+
+  const moduleContinueButton = threatPanelContent.querySelector("[data-module-continue]");
+  if (moduleContinueButton) {
+    moduleContinueButton.addEventListener("click", () => {
       returnToGlobeFromCombat();
     });
   }

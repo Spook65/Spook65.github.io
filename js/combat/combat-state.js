@@ -1358,6 +1358,49 @@ function calculateDamage(attacker, defender, ability) {
   };
 }
 
+function attachEquippedModulesToParty(playerParty, runState) {
+  if (!Array.isArray(playerParty)) {
+    return;
+  }
+
+  playerParty.forEach((program) => {
+    const equippedModule = typeof getEquippedModuleForDefenderId === "function"
+      ? getEquippedModuleForDefenderId(runState, program?.id)
+      : null;
+    program.equippedModule = equippedModule ? JSON.parse(JSON.stringify(equippedModule)) : null;
+  });
+}
+
+function getPartyModuleStartGauge(playerParty) {
+  if (!Array.isArray(playerParty)) {
+    return 0;
+  }
+
+  return playerParty.reduce((total, program) => {
+    const value = typeof getDefenderModuleStat === "function"
+      ? getDefenderModuleStat(program, "startGauge")
+      : 0;
+    return total + (Number.isFinite(value) ? value : 0);
+  }, 0);
+}
+
+function buildModuleBattleMessages(playerParty) {
+  if (!Array.isArray(playerParty)) {
+    return [];
+  }
+
+  return playerParty
+    .filter((program) => program?.equippedModule)
+    .map((program) => {
+      const module = program.equippedModule;
+      return {
+        status: "opening",
+        label: `${program.name || "DEFENDER"} / ${module.name || "RECOVERED MODULE"}`,
+        text: module.effectText || "Recovered module online."
+      };
+    });
+}
+
 // buildCombatState() seeds the live battle state using the clicked threat and the current party.
 function buildCombatState(sourceThreat) {
   const encounterLevel = getThreatLevel();
@@ -1367,9 +1410,11 @@ function buildCombatState(sourceThreat) {
   const firstProgram = turnOrder.find((entry) => entry.kind === "program" && entry.ref.hp > 0);
   const runState = typeof defenderSaveState !== "undefined" && defenderSaveState && defenderSaveState.currentRun ? defenderSaveState.currentRun : null;
   const storyState = typeof defenderSaveState !== "undefined" && defenderSaveState && defenderSaveState.story ? defenderSaveState.story : null;
+  attachEquippedModulesToParty(playerParty, runState);
   const pendingQueue = Array.isArray(runState?.pendingNextBattleBoons) ? runState.pendingNextBattleBoons.slice() : [];
   const legacyGaugeBonus = Number.isFinite(runState?.nextBattleGaugeBonus) ? runState.nextBattleGaugeBonus : 0;
   const legacyChargeRestoreGaugeBonus = Number.isFinite(runState?.chargeRestoreBattleGaugeBonus) ? runState.chargeRestoreBattleGaugeBonus : 0;
+  const moduleStartGaugeBonus = getPartyModuleStartGauge(playerParty);
   const legacyAccuracyBonus = Number.isFinite(runState?.nextBattleAccuracyBonus) ? runState.nextBattleAccuracyBonus : 0;
   const legacyOpeningDamageBonus = Number.isFinite(runState?.nextBattleOpeningDamageBonus) ? runState.nextBattleOpeningDamageBonus : 0;
   const legacyThreatHint = typeof runState?.nextThreatHint === "string" && runState.nextThreatHint.trim() ? runState.nextThreatHint.trim() : "";
@@ -1380,7 +1425,8 @@ function buildCombatState(sourceThreat) {
   const enemyForecastActive = queueHasThreatHint || Boolean(legacyThreatHint);
   const unlockedConcepts = typeof getUnlockedCyberConceptIds === "function" ? getUnlockedCyberConceptIds() : [];
   const learningObjective = typeof getThreatLearningObjective === "function" ? getThreatLearningObjective(threat) : "";
-  const pendingGaugeBonus = (queueHasGaugeBonus ? 0 : legacyGaugeBonus) + legacyChargeRestoreGaugeBonus;
+  const protocolGaugeBonus = (queueHasGaugeBonus ? 0 : legacyGaugeBonus) + legacyChargeRestoreGaugeBonus;
+  const pendingGaugeBonus = protocolGaugeBonus + moduleStartGaugeBonus;
   const pendingAccuracyBonus = queueHasAccuracyBonus ? 0 : legacyAccuracyBonus;
   const pendingOpeningDamageBonus = queueHasOpeningDamageBonus ? 0 : legacyOpeningDamageBonus;
   const pendingThreatHint = queueHasThreatHint ? "" : legacyThreatHint;
@@ -1432,13 +1478,23 @@ function buildCombatState(sourceThreat) {
     battleBoonMessages.push(...applyPendingNextBattleBoons(runState, pendingBattleEffects));
   }
 
-  if (pendingGaugeBonus > 0) {
+  if (protocolGaugeBonus > 0) {
     battleBoonMessages.push({
       status: "opening",
       label: "PROTOCOL GOD / STARTUP ROUTE",
-      text: `Tactical Gauge +${pendingGaugeBonus}.`
+      text: `Tactical Gauge +${protocolGaugeBonus}.`
     });
   }
+
+  if (moduleStartGaugeBonus > 0) {
+    battleBoonMessages.push({
+      status: "opening",
+      label: "RECOVERED MODULE / STARTUP CACHE",
+      text: `Tactical Gauge +${moduleStartGaugeBonus}.`
+    });
+  }
+
+  battleBoonMessages.push(...buildModuleBattleMessages(playerParty));
 
   if (pendingAccuracyBonus > 0) {
     battleBoonMessages.push({
@@ -1488,6 +1544,10 @@ function buildCombatState(sourceThreat) {
     victoryProcessed: false,
     rewardsApplied: false,
     pendingVictoryRewardLines: [],
+    moduleRewardChoices: [],
+    pendingModuleReward: null,
+    moduleRewardStep: "",
+    moduleRewardInstalled: null,
     battleMessage: "",
     battleSubmessage: "",
     visualEffect: null,

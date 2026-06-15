@@ -118,6 +118,10 @@ function rollMoveAccuracy(move, accuracyBonus = 0) {
   return (Math.floor(Math.random() * 100) + 1) <= Math.min(100, accuracy + bonus);
 }
 
+function getCombatantModuleStat(combatant, statKey) {
+  return typeof getDefenderModuleStat === "function" ? getDefenderModuleStat(combatant, statKey) : 0;
+}
+
 // resolveEnemyIntent() turns the forecast into the exact threat ability that will be used this turn.
 function resolveEnemyIntent(intentOrBattleState, battleStateMaybe) {
   const hasExplicitBattleState = Boolean(battleStateMaybe);
@@ -371,14 +375,86 @@ function continueVictorySummary() {
     return;
   }
 
-  const defeatedThreat = combatState.sourceThreat;
-  const rewardLines = Array.isArray(combatState.pendingVictoryRewardLines) ? combatState.pendingVictoryRewardLines : [];
-  try {
-    showPostBattleNarrativeEncounter(defeatedThreat, rewardLines);
-  } catch (error) {
-    console.error("[Narrative] Unexpected victory handoff failure, returning to globe.", error);
+  showRecoveredModuleReward();
+}
+
+function getVictoryModuleConceptIds(state) {
+  const summaryConcepts = Array.isArray(state?.victorySummary?.conceptsPracticed)
+    ? state.victorySummary.conceptsPracticed.map((concept) => concept?.id).filter(Boolean)
+    : [];
+  return normalizeVictoryConceptIds(summaryConcepts.length ? summaryConcepts : getVictoryConceptIds(state));
+}
+
+function showRecoveredModuleReward() {
+  if (!combatState) {
     returnToGlobeFromCombat();
+    return;
   }
+
+  if (!Array.isArray(combatState.moduleRewardChoices) || !combatState.moduleRewardChoices.length) {
+    combatState.moduleRewardChoices = typeof generateRecoveredModuleChoices === "function"
+      ? generateRecoveredModuleChoices({
+          conceptIds: getVictoryModuleConceptIds(combatState),
+          count: 3,
+          threatId: combatState.sourceThreat?.id || combatState.threat?.id || null,
+          threatName: combatState.sourceThreat?.title || combatState.threat?.title || ""
+        })
+      : [];
+  }
+
+  combatState.moduleRewardStep = "choice";
+  combatState.pendingModuleReward = null;
+  combatState.moduleRewardInstalled = null;
+  renderRecoveredModuleReward();
+}
+
+function selectRecoveredModuleReward(moduleInstanceId) {
+  if (!combatState || combatState.moduleRewardStep !== "choice") {
+    return;
+  }
+
+  const choices = Array.isArray(combatState.moduleRewardChoices) ? combatState.moduleRewardChoices : [];
+  const selectedModule = choices.find((module) => module.instanceId === moduleInstanceId);
+  if (!selectedModule) {
+    return;
+  }
+
+  combatState.pendingModuleReward = selectedModule;
+  combatState.moduleRewardStep = "install";
+  renderRecoveredModuleReward();
+}
+
+function installRecoveredModuleReward(defenderId) {
+  if (!combatState || combatState.moduleRewardStep !== "install" || !combatState.pendingModuleReward || !defenderId) {
+    return;
+  }
+
+  const runState = typeof defenderSaveState !== "undefined" && defenderSaveState?.currentRun ? defenderSaveState.currentRun : null;
+  const defender = Array.isArray(combatState.playerParty)
+    ? combatState.playerParty.find((program) => program.id === defenderId)
+    : null;
+  if (!runState || !defender || typeof equipRecoveredModule !== "function") {
+    return;
+  }
+
+  const moduleToEquip = JSON.parse(JSON.stringify(combatState.pendingModuleReward));
+  const replacedModule = equipRecoveredModule(runState, defenderId, moduleToEquip);
+  defender.equippedModule = typeof getEquippedModuleForDefenderId === "function"
+    ? getEquippedModuleForDefenderId(runState, defenderId)
+    : moduleToEquip;
+  combatState.moduleRewardInstalled = {
+    module: defender.equippedModule || moduleToEquip,
+    defenderId,
+    defenderName: defender.name || "Defender",
+    replacedModule
+  };
+  combatState.moduleRewardStep = "installed";
+
+  if (typeof saveGame === "function") {
+    saveGame();
+  }
+
+  renderRecoveredModuleReward();
 }
 
 // showCombatDefeatScreen() handles the defeat branch without colliding with the boot screen game-over UI.
@@ -1213,6 +1289,14 @@ class ThreatCombat {
       damage = Math.max(1, Math.round(damage * (1 - reduction)));
     }
 
+    if (options.isThreatAttack) {
+      const moduleDefense = getCombatantModuleStat(defender, "defensePct");
+      if (moduleDefense > 0) {
+        const reduction = Math.min(0.35, moduleDefense / 100);
+        damage = Math.max(1, Math.round(damage * (1 - reduction)));
+      }
+    }
+
     if (defender === this.state.threat && hasCombatantStatus(defender, "isolated")) {
       damage = Math.max(1, Math.round(damage * 1.1));
     }
@@ -1656,6 +1740,14 @@ class ThreatCombat {
       damage = Math.max(1, Math.round(damage * (1 - reduction)));
     }
 
+    if (options.isThreatAttack) {
+      const moduleDefense = getCombatantModuleStat(defender, "defensePct");
+      if (moduleDefense > 0) {
+        const reduction = Math.min(0.35, moduleDefense / 100);
+        damage = Math.max(1, Math.round(damage * (1 - reduction)));
+      }
+    }
+
     if (defender === this.state.threat && hasCombatantStatus(defender, "isolated")) {
       damage = Math.max(1, Math.round(damage * 1.1));
     }
@@ -1953,7 +2045,8 @@ class ThreatCombat {
       }
 
       consumeMoveCharge(ability);
-      const attackHits = rollMoveAccuracy(ability, this.state.battleAccuracyBonus || 0);
+      const moduleAccuracyBonus = getCombatantModuleStat(actor, "accuracyPct");
+      const attackHits = rollMoveAccuracy(ability, (this.state.battleAccuracyBonus || 0) + moduleAccuracyBonus);
       this.state.actionLocked = true;
       this.setBattleCue(
         "PLAYER ACTION",
