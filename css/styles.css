@@ -7483,58 +7483,145 @@ body {
   text-transform: none;
 }
 
-.battle-module-choice-grid,
-.battle-module-target-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 11px;
+.battle-module-screen {
+  --module-accent: rgba(127, 183, 176, 0.86);
+  --module-accent-soft: rgba(127, 183, 176, 0.12);
 }
 
-.battle-module-target-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.battle-module-card,
-.battle-module-target {
+.battle-module-shell {
   position: relative;
-  display: grid;
-  gap: 8px;
-  padding: 13px 14px 12px;
-  border: 1px solid rgba(127, 183, 176, 0.18);
-  background:
-    linear-gradient(180deg, rgba(10, 12, 18, 0.96), rgba(7, 9, 14, 0.98));
-  color: #f4efe3;
-  cursor: pointer;
-  overflow: hidden;
-  text-align: left;
-  transition:
-    transform 140ms ease,
-    border-color 140ms ease,
-    box-shadow 140ms ease;
+  min-height: min(42rem, 78vh);
+  align-content: center;
+  gap: 16px;
 }
 
-.battle-module-card::before,
-.battle-module-target::before {
+.battle-module-shell::before {
   content: "";
   position: absolute;
-  inset: 0 auto 0 0;
-  width: 3px;
-  background: linear-gradient(180deg, rgba(127, 183, 176, 0.92), transparent);
+  inset: -18px -20px;
+  pointer-events: none;
+  background:
+    linear-gradient(115deg, transparent 0 18%, rgba(127, 183, 176, 0.08) 18.3% 18.8%, transparent 19.1% 100%),
+    radial-gradient(circle at 18% 42%, rgba(215, 184, 106, 0.1), transparent 23%),
+    radial-gradient(circle at 74% 26%, rgba(0, 204, 255, 0.1), transparent 28%);
+  opacity: 0.9;
+  z-index: -1;
 }
 
-.battle-module-card:hover,
-.battle-module-card:focus-visible,
-.battle-module-target:hover,
-.battle-module-target:focus-visible {
-  transform: translateY(-1px);
-  border-color: rgba(215, 184, 106, 0.56);
-  box-shadow: 0 0 18px rgba(127, 183, 176, 0.1);
-  outline: none;
+.battle-module-scene-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
 }
 
-.battle-module-card-index,
+.battle-module-scene-title {
+  max-width: 18ch;
+  color: #f4efe3;
+  font-size: clamp(1.85rem, 4vw, 3.45rem);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  line-height: 0.9;
+  text-transform: uppercase;
+}
+
+.battle-module-scene-note,
+.battle-module-scene-stat {
+  align-self: flex-start;
+  border: 1px solid rgba(215, 184, 106, 0.28);
+  background: rgba(215, 184, 106, 0.055);
+  color: rgba(255, 206, 87, 0.9);
+  font-size: 0.58rem;
+  letter-spacing: 0.2em;
+  line-height: 1.25;
+  padding: 8px 10px;
+  text-align: right;
+  text-transform: uppercase;
+}
+
+.battle-module-ceremony-copy,
+.battle-module-install-copy,
+.battle-module-action-hint {
+  max-width: 64ch;
+  color: rgba(244, 239, 227, 0.76);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+.battle-module-action-hint {
+  color: rgba(127, 183, 176, 0.78);
+}
+
+.battle-module-focus {
+  --module-accent: rgba(127, 183, 176, 0.88);
+  --module-accent-soft: rgba(127, 183, 176, 0.13);
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(86px, 0.34fr) minmax(0, 1fr);
+  gap: 16px;
+  min-height: 150px;
+  padding: 18px;
+  border: 1px solid color-mix(in srgb, var(--module-accent) 42%, transparent);
+  background:
+    linear-gradient(90deg, var(--module-accent-soft), transparent 42%),
+    linear-gradient(180deg, rgba(10, 12, 18, 0.9), rgba(3, 5, 9, 0.88));
+  box-shadow:
+    0 0 0 1px rgba(244, 239, 227, 0.035) inset,
+    0 24px 38px rgba(0, 0, 0, 0.28);
+  overflow: hidden;
+}
+
+.battle-module-focus::after {
+  content: "";
+  position: absolute;
+  inset: auto 16px 14px 34%;
+  height: 1px;
+  background: linear-gradient(90deg, var(--module-accent), transparent);
+  opacity: 0.5;
+}
+
+.battle-module-focus-ring {
+  position: relative;
+  align-self: center;
+  aspect-ratio: 1;
+  border: 1px solid color-mix(in srgb, var(--module-accent) 70%, transparent);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, rgba(244, 239, 227, 0.18) 0 10%, transparent 11% 100%),
+    conic-gradient(from 18deg, transparent 0 13%, var(--module-accent) 14% 17%, transparent 18% 43%, rgba(215, 184, 106, 0.65) 44% 47%, transparent 48% 100%);
+  box-shadow: 0 0 28px var(--module-accent-soft);
+}
+
+.battle-module-focus-ring::before,
+.battle-module-focus-ring::after {
+  content: "";
+  position: absolute;
+  inset: 18%;
+  border: 1px solid rgba(244, 239, 227, 0.12);
+  transform: rotate(45deg);
+}
+
+.battle-module-focus-ring::after {
+  inset: 37%;
+  border-color: color-mix(in srgb, var(--module-accent) 48%, transparent);
+}
+
+.battle-module-focus-copy {
+  display: grid;
+  align-content: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.battle-module-focus-kicker,
+.battle-module-focus-meta,
+.battle-module-focus-sync,
+.battle-module-sync,
 .battle-module-rarity,
 .battle-module-concept,
+.battle-module-card-index,
 .battle-module-target-meta,
 .battle-module-target-replace,
 .battle-module-target-action,
@@ -7546,40 +7633,160 @@ body {
   text-transform: uppercase;
 }
 
+.battle-module-focus-name {
+  color: #f4efe3;
+  font-size: clamp(1.3rem, 2.4vw, 2.1rem);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.battle-module-focus-stat {
+  color: rgba(255, 206, 87, 0.94);
+  font-size: clamp(0.95rem, 1.8vw, 1.32rem);
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.battle-module-focus-effect {
+  color: rgba(244, 239, 227, 0.84);
+  font-size: 0.66rem;
+  letter-spacing: 0.09em;
+  line-height: 1.45;
+  text-transform: uppercase;
+}
+
+.battle-module-focus-flavor {
+  color: rgba(215, 184, 106, 0.78);
+  font-size: 0.62rem;
+  font-style: italic;
+  letter-spacing: 0.05em;
+  line-height: 1.45;
+}
+
+.battle-module-focus-sync {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  color: rgba(255, 206, 87, 0.86);
+}
+
+.battle-module-choice-grid,
+.battle-module-choice-strip,
+.battle-module-target-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 11px;
+}
+
+.battle-module-choice-strip {
+  grid-template-columns: minmax(14rem, 1.16fr) repeat(2, minmax(10rem, 0.92fr));
+  align-items: stretch;
+}
+
+.battle-module-target-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.battle-module-card,
+.battle-module-target {
+  --module-accent: rgba(127, 183, 176, 0.86);
+  --module-accent-soft: rgba(127, 183, 176, 0.12);
+  position: relative;
+  display: grid;
+  gap: 8px;
+  padding: 13px 14px 12px;
+  border: 1px solid color-mix(in srgb, var(--module-accent) 30%, transparent);
+  background:
+    linear-gradient(135deg, var(--module-accent-soft), transparent 38%),
+    linear-gradient(180deg, rgba(10, 12, 18, 0.94), rgba(7, 9, 14, 0.98));
+  color: #f4efe3;
+  cursor: pointer;
+  overflow: hidden;
+  text-align: left;
+  transition:
+    transform 140ms ease,
+    border-color 140ms ease,
+    opacity 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.battle-module-card {
+  min-height: 136px;
+  align-content: space-between;
+}
+
+.battle-module-card.is-featured {
+  min-height: 156px;
+  box-shadow: 0 0 22px var(--module-accent-soft);
+}
+
+.battle-module-card:not(.is-featured) {
+  opacity: 0.86;
+}
+
+.battle-module-card::before,
+.battle-module-target::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: linear-gradient(180deg, var(--module-accent), transparent);
+}
+
+.battle-module-card:hover,
+.battle-module-card:focus-visible,
+.battle-module-target:hover,
+.battle-module-target:focus-visible {
+  transform: translateY(-2px);
+  border-color: rgba(215, 184, 106, 0.62);
+  box-shadow: 0 0 20px var(--module-accent-soft);
+  opacity: 1;
+  outline: none;
+}
+
 .battle-module-card-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 10px;
+  display: grid;
+  gap: 5px;
 }
 
 .battle-module-name,
 .battle-module-target-name {
-  color: rgba(244, 239, 227, 0.94);
+  color: rgba(244, 239, 227, 0.96);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  line-height: 1.25;
+  text-transform: uppercase;
+}
+
+.battle-module-stat {
+  color: rgba(255, 206, 87, 0.9);
   font-size: 0.74rem;
-  letter-spacing: 0.14em;
+  font-weight: 800;
+  letter-spacing: 0.1em;
   line-height: 1.3;
   text-transform: uppercase;
 }
 
-.battle-module-effect {
-  color: rgba(244, 239, 227, 0.84);
-  font-size: 0.62rem;
-  letter-spacing: 0.08em;
-  line-height: 1.45;
-  text-transform: uppercase;
+.battle-module-sync {
+  justify-self: start;
+  color: rgba(255, 206, 87, 0.88);
 }
 
-.battle-module-flavor {
-  color: rgba(215, 184, 106, 0.72);
-  font-size: 0.56rem;
-  font-style: italic;
-  letter-spacing: 0.06em;
-  line-height: 1.45;
+.battle-module-target {
+  min-height: 112px;
 }
 
 .battle-module-target-action {
-  color: rgba(215, 184, 106, 0.84);
+  color: rgba(215, 184, 106, 0.86);
+}
+
+.battle-module-target.is-down {
+  opacity: 0.5;
 }
 
 .battle-module-empty {
@@ -7587,6 +7794,61 @@ body {
   border-left: 2px solid rgba(127, 183, 176, 0.32);
   background: rgba(127, 183, 176, 0.04);
   padding: 12px;
+}
+
+.battle-module-card.is-rarity-common,
+.battle-module-focus.is-rarity-common {
+  --module-accent: rgba(127, 183, 176, 0.86);
+  --module-accent-soft: rgba(127, 183, 176, 0.12);
+}
+
+.battle-module-card.is-rarity-uncommon,
+.battle-module-focus.is-rarity-uncommon {
+  --module-accent: rgba(61, 220, 177, 0.9);
+  --module-accent-soft: rgba(61, 220, 177, 0.14);
+}
+
+.battle-module-card.is-rarity-rare,
+.battle-module-focus.is-rarity-rare {
+  --module-accent: rgba(175, 148, 255, 0.9);
+  --module-accent-soft: rgba(175, 148, 255, 0.14);
+}
+
+.battle-module-card.is-recommended,
+.battle-module-focus.is-recommended {
+  border-color: rgba(255, 206, 87, 0.38);
+}
+
+@media (max-width: 900px) {
+  .battle-module-shell {
+    min-height: auto;
+    align-content: start;
+  }
+
+  .battle-module-scene-head,
+  .battle-module-focus,
+  .battle-module-choice-strip,
+  .battle-module-target-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .battle-module-scene-head {
+    display: grid;
+  }
+
+  .battle-module-scene-note,
+  .battle-module-scene-stat {
+    justify-self: start;
+    text-align: left;
+  }
+
+  .battle-module-focus-ring {
+    width: 92px;
+  }
+
+  .battle-module-focus-sync {
+    position: static;
+  }
 }
 
 .battle-narrative-response-panel {

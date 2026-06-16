@@ -392,14 +392,19 @@ function showRecoveredModuleReward() {
   }
 
   if (!Array.isArray(combatState.moduleRewardChoices) || !combatState.moduleRewardChoices.length) {
-    combatState.moduleRewardChoices = typeof generateRecoveredModuleChoices === "function"
+    const conceptIds = getVictoryModuleConceptIds(combatState);
+    const moduleChoices = typeof generateRecoveredModuleChoices === "function"
       ? generateRecoveredModuleChoices({
-          conceptIds: getVictoryModuleConceptIds(combatState),
+          conceptIds,
           count: 3,
           threatId: combatState.sourceThreat?.id || combatState.threat?.id || null,
           threatName: combatState.sourceThreat?.title || combatState.threat?.title || ""
         })
       : [];
+    combatState.moduleRewardChoices = (Array.isArray(moduleChoices) ? moduleChoices : []).map((module) => ({
+      ...module,
+      recommended: Array.isArray(module?.conceptTags) && module.conceptTags.some((conceptId) => conceptIds.includes(conceptId))
+    }));
   }
 
   combatState.moduleRewardStep = "choice";
