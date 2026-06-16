@@ -1696,6 +1696,11 @@ function getModuleRarityClass(module) {
   return `is-rarity-${getSafeModuleText(module?.rarity, "common").toLowerCase()}`;
 }
 
+function getModuleSourceClass(module) {
+  const sourceId = getSafeModuleText(module?.sourceId, "hermes-relay").toLowerCase().replace(/[^a-z0-9-]+/g, "-");
+  return `is-source-${sourceId}`;
+}
+
 function getRecoveredModulePrimaryStat(module) {
   const stats = module?.statBonuses && typeof module.statBonuses === "object" ? module.statBonuses : {};
   const statLabels = {
@@ -1719,7 +1724,30 @@ function getRecoveredModulePrimaryStat(module) {
   };
 }
 
-function buildRecoveredModuleCardMarkup(module, index) {
+function getFocusedModuleChoiceIndex(state, choices) {
+  const modules = Array.isArray(choices) ? choices : [];
+  const index = Number(state?.focusedModuleChoiceIndex);
+  return Number.isInteger(index) && index >= 0 && index < modules.length ? index : 0;
+}
+
+function getRecoveredModuleBestFit(state, module) {
+  const conceptTags = Array.isArray(module?.conceptTags) ? module.conceptTags : [];
+  const fitRules = [
+    { defenderHint: "ids", tags: ["detection", "incident_response"] },
+    { defenderHint: "firewall", tags: ["containment", "hardening", "patching", "vulnerability"] },
+    { defenderHint: "honeypot", tags: ["deception", "evasion", "decoy", "bait"] },
+    { defenderHint: "antivirus", tags: ["malware_cleanup", "recovery", "cleanup"] }
+  ];
+  const match = fitRules.find((rule) => conceptTags.some((tag) => rule.tags.includes(tag)));
+  const party = Array.isArray(state?.playerParty) ? state.playerParty : [];
+  const defender = match
+    ? party.find((program) => String(program?.id || "").toLowerCase().includes(match.defenderHint) || String(program?.name || "").toLowerCase().includes(match.defenderHint))
+    : null;
+
+  return defender?.name || "";
+}
+
+function buildRecoveredModuleCardMarkup(module, index, focusedIndex = 0) {
   const name = getSafeModuleText(module?.name, "Recovered Module");
   const rarity = getSafeModuleText(module?.rarity, "common").toUpperCase();
   const conceptTags = Array.isArray(module?.conceptTags) ? module.conceptTags : [];
@@ -1727,9 +1755,10 @@ function buildRecoveredModuleCardMarkup(module, index) {
     ? getRecoveredModuleConceptLabel(conceptTags[0])
     : getSafeModuleText(conceptTags[0], "General");
   const primaryStat = getRecoveredModulePrimaryStat(module);
+  const isFocused = index === focusedIndex;
 
   return `
-    <button class="battle-module-card ${index === 0 ? "is-featured" : ""} ${module?.recommended ? "is-recommended" : ""} ${getModuleRarityClass(module)}" type="button" data-module-choice="${module?.instanceId || ""}">
+    <button class="battle-module-card ${index === 0 ? "is-featured" : ""} ${isFocused ? "is-focused-choice" : ""} ${module?.recommended ? "is-recommended" : ""} ${getModuleRarityClass(module)} ${getModuleSourceClass(module)}" type="button" data-module-choice="${module?.instanceId || ""}" data-module-choice-index="${index}">
       <span class="battle-module-card-index">0${index + 1}</span>
       ${module?.recommended ? '<span class="battle-module-sync">SYNCED WITH LESSON</span>' : ""}
       <span class="battle-module-card-head">
@@ -1737,12 +1766,13 @@ function buildRecoveredModuleCardMarkup(module, index) {
         <span class="battle-module-rarity">${rarity} MODULE</span>
       </span>
       <span class="battle-module-stat">${primaryStat.text}</span>
+      <span class="battle-module-source">${getSafeModuleText(module?.sourceName, "Hermes Relay")}</span>
       <span class="battle-module-concept">CONCEPT: ${conceptLabel}</span>
     </button>
   `;
 }
 
-function buildRecoveredModuleFocusMarkup(module) {
+function buildRecoveredModuleFocusMarkup(module, state) {
   if (!module) {
     return '<div class="battle-module-focus is-empty">NO MODULE SIGNAL LOCKED.</div>';
   }
@@ -1756,19 +1786,25 @@ function buildRecoveredModuleFocusMarkup(module) {
     ? getRecoveredModuleConceptLabel(conceptTags[0])
     : getSafeModuleText(conceptTags[0], "General");
   const primaryStat = getRecoveredModulePrimaryStat(module);
+  const sourceName = getSafeModuleText(module.sourceName, "Hermes Relay");
+  const sourceTheme = getSafeModuleText(module.sourceTheme, "Recovered Protocol");
+  const sourceLine = getSafeModuleText(module.sourceLine, flavorText);
+  const bestFit = getRecoveredModuleBestFit(state, module);
 
   return `
-    <section class="battle-module-focus ${getModuleRarityClass(module)} ${module.recommended ? "is-recommended" : ""}">
+    <section class="battle-module-focus ${getModuleRarityClass(module)} ${getModuleSourceClass(module)} ${module.recommended ? "is-recommended" : ""}">
       <div class="battle-module-focus-ring" aria-hidden="true"></div>
       <div class="battle-module-focus-copy">
-        <div class="battle-module-focus-kicker">FOCUSED FRAGMENT</div>
+        <div class="battle-module-focus-source">${sourceName}</div>
+        <div class="battle-module-focus-theme">${sourceTheme}</div>
         <div class="battle-module-focus-name">${name}</div>
         <div class="battle-module-focus-meta">${rarity} MODULE / CONCEPT: ${conceptLabel}</div>
         <div class="battle-module-focus-stat">${primaryStat.text}</div>
         <div class="battle-module-focus-effect">${effectText}</div>
-        <div class="battle-module-focus-flavor">"${flavorText}"</div>
+        <div class="battle-module-focus-flavor">"${sourceLine}"</div>
       </div>
       ${module.recommended ? '<div class="battle-module-focus-sync">SYNCED WITH LESSON</div>' : ""}
+      ${bestFit ? `<div class="battle-module-focus-fit">BEST FIT: ${bestFit}</div>` : ""}
     </section>
   `;
 }
@@ -1796,19 +1832,29 @@ function buildRecoveredModuleRewardMarkup(state) {
   const installed = state?.moduleRewardInstalled || null;
 
   if (step === "installed" && installed) {
+    const installedModule = installed.module || null;
+    const primaryStat = getRecoveredModulePrimaryStat(installedModule);
     return `
       <div class="battle-narrative-screen is-pantheon battle-module-screen">
-        <div class="battle-narrative-shell">
-          <div class="battle-narrative-sector">RECOVERED MODULE / INSTALL COMPLETE</div>
+        <div class="battle-narrative-shell battle-module-shell is-installed">
+          <div class="battle-module-scene-head">
+            <div>
+              <div class="battle-narrative-sector">RECOVERED MODULE / INSTALL COMPLETE</div>
+              <div class="battle-module-scene-title">MODULE INSTALLED</div>
+            </div>
+            <div class="battle-module-scene-stat">${primaryStat.text}</div>
+          </div>
+          ${buildRecoveredModuleFocusMarkup(installedModule, state)}
           <div class="battle-narrative-response-panel">
             <div class="battle-narrative-response-title">MODULE INSTALLED</div>
-            <div class="battle-narrative-response-quote">"${getSafeModuleText(installed.module?.flavorText, "The recovered module locks into place.")}"</div>
-            <div class="battle-narrative-response">${getSafeModuleText(installed.module?.name, "Recovered Module")} assigned to ${getSafeModuleText(installed.defenderName, "Defender")}.</div>
+            <div class="battle-narrative-response-quote">"${getSafeModuleText(installedModule?.sourceLine, installedModule?.flavorText || "The recovered module locks into place.")}"</div>
+            <div class="battle-narrative-response">${getSafeModuleText(installedModule?.name, "Recovered Module")} assigned to ${getSafeModuleText(installed.defenderName, "Defender")}.</div>
             <div class="battle-narrative-response-effect">
               <div class="battle-narrative-result-label">ACTIVE EFFECT</div>
-              <div class="battle-narrative-result-value">${getSafeModuleText(installed.module?.effectText, "Module effect online.")}</div>
+              <div class="battle-narrative-result-value">${getSafeModuleText(installedModule?.effectText, "Module effect online.")}</div>
               <div class="battle-narrative-result-meta">${installed.replacedModule?.name ? `REPLACED ${installed.replacedModule.name}` : "UNIVERSAL MODULE SLOT"}</div>
             </div>
+            <div class="battle-module-ready-line">READY FOR NEXT INCIDENT.</div>
           </div>
           <button class="battle-narrative-button" type="button" data-module-continue>CONTINUE EXPEDITION</button>
         </div>
@@ -1829,7 +1875,9 @@ function buildRecoveredModuleRewardMarkup(state) {
             </div>
             <div class="battle-module-scene-stat">${primaryStat.text}</div>
           </div>
-          ${buildRecoveredModuleFocusMarkup(pendingModule)}
+          <div class="battle-module-focus-slot" data-module-focus-preview>
+            ${buildRecoveredModuleFocusMarkup(pendingModule, state)}
+          </div>
           <div class="battle-module-install-copy">Choose an active Defender. One universal module slot is available this run.</div>
           <div class="battle-module-target-grid">
             ${targets.length ? targets.map((program) => buildRecoveredModuleInstallTargetMarkup(state, program)).join("") : '<div class="battle-module-empty">NO ACTIVE DEFENDERS AVAILABLE.</div>'}
@@ -1839,6 +1887,8 @@ function buildRecoveredModuleRewardMarkup(state) {
     `;
   }
 
+  const focusedIndex = getFocusedModuleChoiceIndex(state, choices);
+  const focusedModule = choices[focusedIndex] || choices[0] || null;
   return `
     <div class="battle-narrative-screen is-pantheon battle-module-screen">
       <div class="battle-narrative-shell battle-module-shell">
@@ -1850,9 +1900,11 @@ function buildRecoveredModuleRewardMarkup(state) {
           <div class="battle-module-scene-note">CHOOSE ONE FRAGMENT</div>
         </div>
         <div class="battle-module-ceremony-copy">Hermes Relay recovered three usable fragments from the contained incident.</div>
-        ${buildRecoveredModuleFocusMarkup(choices[0])}
+        <div class="battle-module-focus-slot" data-module-focus-preview>
+          ${buildRecoveredModuleFocusMarkup(focusedModule, state)}
+        </div>
         <div class="battle-module-choice-strip" aria-label="Recovered module choices">
-          ${choices.length ? choices.map((module, index) => buildRecoveredModuleCardMarkup(module, index)).join("") : '<div class="battle-module-empty">NO MODULES RECOVERED.</div>'}
+          ${choices.length ? choices.map((module, index) => buildRecoveredModuleCardMarkup(module, index, focusedIndex)).join("") : '<div class="battle-module-empty">NO MODULES RECOVERED.</div>'}
         </div>
         <div class="battle-module-action-hint">Select a module to install it into an active Defender for this run.</div>
       </div>
@@ -1986,6 +2038,28 @@ function renderRecoveredModuleReward() {
   threatPanel.classList.add("is-open", "is-combat");
   threatPanel.setAttribute("aria-hidden", "false");
   bindCombatButtons();
+}
+
+function updateRecoveredModuleFocusPreview(choiceIndex) {
+  if (!threatPanelContent || !combatState || combatState.moduleRewardStep !== "choice") {
+    return;
+  }
+
+  const choices = Array.isArray(combatState.moduleRewardChoices) ? combatState.moduleRewardChoices : [];
+  const focusedModule = typeof focusRecoveredModuleRewardChoice === "function"
+    ? focusRecoveredModuleRewardChoice(choiceIndex)
+    : null;
+  const focusedIndex = getFocusedModuleChoiceIndex(combatState, choices);
+  const module = focusedModule || choices[focusedIndex] || null;
+  const focusSlot = threatPanelContent.querySelector("[data-module-focus-preview]");
+  if (focusSlot) {
+    focusSlot.innerHTML = buildRecoveredModuleFocusMarkup(module, combatState);
+  }
+
+  threatPanelContent.querySelectorAll("[data-module-choice-index]").forEach((button) => {
+    const index = Number(button.getAttribute("data-module-choice-index"));
+    button.classList.toggle("is-focused-choice", index === focusedIndex);
+  });
 }
 
 // renderBattleLostScreen() shows the failure branch without tearing down the overlay instantly.
@@ -2210,6 +2284,13 @@ function bindCombatButtons() {
   }
 
   threatPanelContent.querySelectorAll("[data-module-choice]").forEach((button) => {
+    const focusChoice = () => {
+      if (typeof updateRecoveredModuleFocusPreview === "function") {
+        updateRecoveredModuleFocusPreview(button.getAttribute("data-module-choice-index"));
+      }
+    };
+    button.addEventListener("mouseenter", focusChoice);
+    button.addEventListener("focus", focusChoice);
     button.addEventListener("click", () => {
       if (typeof selectRecoveredModuleReward === "function") {
         selectRecoveredModuleReward(button.getAttribute("data-module-choice"));

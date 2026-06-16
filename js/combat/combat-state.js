@@ -1546,6 +1546,7 @@ function buildCombatState(sourceThreat) {
     pendingVictoryRewardLines: [],
     moduleRewardChoices: [],
     pendingModuleReward: null,
+    focusedModuleChoiceIndex: 0,
     moduleRewardStep: "",
     moduleRewardInstalled: null,
     battleMessage: "",

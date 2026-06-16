@@ -409,8 +409,24 @@ function showRecoveredModuleReward() {
 
   combatState.moduleRewardStep = "choice";
   combatState.pendingModuleReward = null;
+  combatState.focusedModuleChoiceIndex = 0;
   combatState.moduleRewardInstalled = null;
   renderRecoveredModuleReward();
+}
+
+function focusRecoveredModuleRewardChoice(choiceIndex) {
+  if (!combatState || combatState.moduleRewardStep !== "choice") {
+    return null;
+  }
+
+  const choices = Array.isArray(combatState.moduleRewardChoices) ? combatState.moduleRewardChoices : [];
+  const index = Number(choiceIndex);
+  if (!Number.isInteger(index) || index < 0 || index >= choices.length) {
+    return null;
+  }
+
+  combatState.focusedModuleChoiceIndex = index;
+  return choices[index] || null;
 }
 
 function selectRecoveredModuleReward(moduleInstanceId) {
@@ -425,6 +441,7 @@ function selectRecoveredModuleReward(moduleInstanceId) {
   }
 
   combatState.pendingModuleReward = selectedModule;
+  combatState.focusedModuleChoiceIndex = choices.findIndex((module) => module.instanceId === moduleInstanceId);
   combatState.moduleRewardStep = "install";
   renderRecoveredModuleReward();
 }
