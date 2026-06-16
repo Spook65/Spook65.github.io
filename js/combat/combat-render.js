@@ -1803,7 +1803,9 @@ function buildRecoveredModuleFocusMarkup(module, state) {
 
   return `
     <section class="battle-module-focus ${getModuleRarityClass(module)} ${getModuleSourceClass(module)} ${module.recommended ? "is-recommended" : ""}">
-      <div class="battle-module-focus-ring" aria-hidden="true"></div>
+      <div class="module-relic-stage ${getModuleSourceClass(module)}" data-reward-relic-stage data-source-id="${getSafeModuleText(module.sourceId, "hermes_relay")}" aria-hidden="true">
+        <div class="battle-module-focus-ring"></div>
+      </div>
       <div class="battle-module-focus-copy">
         <div class="battle-module-source-block">
           <div class="battle-module-focus-label">SOURCE</div>
@@ -2051,11 +2053,30 @@ function renderCombatReward(rewardLines) {
 }
 
 function renderRecoveredModuleReward() {
+  if (typeof destroyRewardRelicScene === "function") {
+    destroyRewardRelicScene();
+  }
   threatPanelContent.innerHTML = buildRecoveredModuleRewardMarkup(combatState);
   threatPanelContent.scrollTop = 0;
   threatPanel.classList.add("is-open", "is-combat");
   threatPanel.setAttribute("aria-hidden", "false");
   bindCombatButtons();
+  mountRecoveredModuleRelic();
+}
+
+function mountRecoveredModuleRelic() {
+  if (!threatPanelContent || typeof mountRewardRelicScene !== "function") {
+    return;
+  }
+
+  const relicStage = threatPanelContent.querySelector("[data-reward-relic-stage]");
+  if (!relicStage) {
+    return;
+  }
+
+  mountRewardRelicScene(relicStage, {
+    sourceId: relicStage.getAttribute("data-source-id") || "default"
+  });
 }
 
 function updateRecoveredModuleFocusPreview(choiceIndex) {
@@ -2071,7 +2092,11 @@ function updateRecoveredModuleFocusPreview(choiceIndex) {
   const module = focusedModule || choices[focusedIndex] || null;
   const focusSlot = threatPanelContent.querySelector("[data-module-focus-preview]");
   if (focusSlot) {
+    if (typeof destroyRewardRelicScene === "function") {
+      destroyRewardRelicScene();
+    }
     focusSlot.innerHTML = buildRecoveredModuleFocusMarkup(module, combatState);
+    mountRecoveredModuleRelic();
   }
 
   threatPanelContent.querySelectorAll("[data-module-choice-index]").forEach((button) => {
@@ -2292,6 +2317,9 @@ function bindCombatButtons() {
   const nextButton = threatPanelContent.querySelector("[data-combat-next]");
   if (nextButton) {
     nextButton.addEventListener("click", () => {
+      if (typeof destroyRewardRelicScene === "function") {
+        destroyRewardRelicScene();
+      }
       if (combatState?.phase === "reward" && typeof continueVictorySummary === "function") {
         continueVictorySummary();
         return;
@@ -2327,6 +2355,9 @@ function bindCombatButtons() {
   const moduleContinueButton = threatPanelContent.querySelector("[data-module-continue]");
   if (moduleContinueButton) {
     moduleContinueButton.addEventListener("click", () => {
+      if (typeof destroyRewardRelicScene === "function") {
+        destroyRewardRelicScene();
+      }
       returnToGlobeFromCombat();
     });
   }
@@ -2334,6 +2365,9 @@ function bindCombatButtons() {
   const menuButton = threatPanelContent.querySelector("[data-combat-menu]");
   if (menuButton) {
     menuButton.addEventListener("click", () => {
+      if (typeof destroyRewardRelicScene === "function") {
+        destroyRewardRelicScene();
+      }
       closeCombatOverlay(true);
       showMenu();
     });
