@@ -1,4 +1,49 @@
 /* Recovered Modules are run-local Defender upgrades awarded after contained incidents. */
+const recoveredModuleSourceProfiles = {
+  oracle_ids: {
+    sourceId: "oracle_ids",
+    sourceName: "Oracle IDS",
+    sourceTheme: "Detection / Scan / Reveal / Countertrace",
+    sourceDescription: "Reveals hidden behavior and improves threat analysis.",
+    sourceLine: "Nothing hides forever once the signal is clean."
+  },
+  hermes_relay: {
+    sourceId: "hermes_relay",
+    sourceName: "Hermes Relay",
+    sourceTheme: "Routing / Speed / Tactical Gauge / Initiative",
+    sourceDescription: "Improves tempo, routing, and early battle momentum.",
+    sourceLine: "A cleaner route is a faster command."
+  },
+  athena_firewall: {
+    sourceId: "athena_firewall",
+    sourceName: "Athena Firewall",
+    sourceTheme: "Defense / Containment / Mitigation",
+    sourceDescription: "Strengthens defensive responses and limits spread.",
+    sourceLine: "A clean boundary is a sacred law."
+  },
+  hephaestus_forge: {
+    sourceId: "hephaestus_forge",
+    sourceName: "Hephaestus Forge",
+    sourceTheme: "Patching / Hardware / Durability",
+    sourceDescription: "Reinforces systems and turns lessons into hardened code.",
+    sourceLine: "Every scar becomes a stronger plate."
+  },
+  asclepius_recovery: {
+    sourceId: "asclepius_recovery",
+    sourceName: "Asclepius Recovery",
+    sourceTheme: "Healing / Backup / Recovery / Continuity",
+    sourceDescription: "Restores stability after damage or corruption.",
+    sourceLine: "What was corrupted can still be made whole."
+  },
+  arachne_web: {
+    sourceId: "arachne_web",
+    sourceName: "Arachne Web",
+    sourceTheme: "Honeypot / Deception / Traps / Evasion",
+    sourceDescription: "Misdirects threats and turns enemy behavior against them.",
+    sourceLine: "The trap is strongest when it looks like a path."
+  }
+};
+
 const recoveredModuleRegistry = [
   {
     id: "packet_sieve",
@@ -200,6 +245,10 @@ function getRecoveredModuleBlueprint(moduleId) {
   return recoveredModuleRegistry.find((module) => module.id === moduleId) || null;
 }
 
+function getRecoveredModuleSourceProfile(sourceId) {
+  return recoveredModuleSourceProfiles[sourceId] || recoveredModuleSourceProfiles.hermes_relay;
+}
+
 function getRecoveredModuleConceptLabel(conceptId) {
   const concept = typeof getCyberConcept === "function" ? getCyberConcept(conceptId) : null;
   if (concept?.title) {
@@ -245,6 +294,7 @@ function createRecoveredModuleInstance(module, context = {}) {
   } else {
     effect.value = rolledValue;
   }
+  const sourceProfile = getRecoveredModuleSourceProfile(module.sourceId);
 
   return {
     instanceId: `${module.id}-${Date.now()}-${Math.floor(Math.random() * 100000)}`,
@@ -253,10 +303,11 @@ function createRecoveredModuleInstance(module, context = {}) {
     rarity: module.rarity || "common",
     slot: module.slot || "module",
     conceptTags: normalizeModuleConceptTags(module.conceptTags || []),
-    sourceId: module.sourceId || "hermes_relay",
-    sourceName: module.sourceName || "Hermes Relay",
-    sourceTheme: module.sourceTheme || "Recovered Protocol",
-    sourceLine: module.sourceLine || "A recovered fragment answers the next incident.",
+    sourceId: sourceProfile.sourceId,
+    sourceName: sourceProfile.sourceName || module.sourceName || "Hermes Relay",
+    sourceTheme: sourceProfile.sourceTheme || module.sourceTheme || "Recovered Protocol",
+    sourceDescription: sourceProfile.sourceDescription || module.sourceDescription || "Recovered modules specialize in a response strategy.",
+    sourceLine: module.sourceLine || sourceProfile.sourceLine,
     shortDescription: module.shortDescription || "Recovered combat module.",
     effectText: formatRecoveredModuleEffectText(module, rolledValue),
     statBonuses,
@@ -339,8 +390,10 @@ function getDefenderModuleStat(defender, statKey) {
 }
 
 if (typeof window !== "undefined") {
+  window.recoveredModuleSourceProfiles = recoveredModuleSourceProfiles;
   window.recoveredModuleRegistry = recoveredModuleRegistry;
   window.getRecoveredModuleBlueprint = getRecoveredModuleBlueprint;
+  window.getRecoveredModuleSourceProfile = getRecoveredModuleSourceProfile;
   window.getRecoveredModuleConceptLabel = getRecoveredModuleConceptLabel;
   window.generateRecoveredModuleChoices = generateRecoveredModuleChoices;
   window.getRecoveredModuleShortLabel = getRecoveredModuleShortLabel;

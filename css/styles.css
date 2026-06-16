@@ -7541,7 +7541,8 @@ body {
 
 .battle-module-ceremony-copy,
 .battle-module-install-copy,
-.battle-module-action-hint {
+.battle-module-action-hint,
+.battle-module-source-legend {
   max-width: 64ch;
   color: rgba(244, 239, 227, 0.76);
   font-size: 0.68rem;
@@ -7552,6 +7553,10 @@ body {
 
 .battle-module-action-hint {
   color: rgba(127, 183, 176, 0.78);
+}
+
+.battle-module-source-legend {
+  color: rgba(215, 184, 106, 0.76);
 }
 
 .battle-module-focus {
@@ -7615,6 +7620,12 @@ body {
   min-width: 0;
 }
 
+.battle-module-source-block {
+  display: grid;
+  gap: 2px;
+}
+
+.battle-module-focus-label,
 .battle-module-focus-source,
 .battle-module-focus-theme,
 .battle-module-focus-meta,
@@ -7634,6 +7645,12 @@ body {
   letter-spacing: 0.15em;
   line-height: 1.35;
   text-transform: uppercase;
+}
+
+.battle-module-focus-label {
+  color: rgba(244, 239, 227, 0.5);
+  font-size: 0.42rem;
+  letter-spacing: 0.22em;
 }
 
 .battle-module-focus-source {
@@ -7669,6 +7686,14 @@ body {
   color: rgba(244, 239, 227, 0.84);
   font-size: 0.66rem;
   letter-spacing: 0.09em;
+  line-height: 1.45;
+  text-transform: uppercase;
+}
+
+.battle-module-focus-description {
+  color: rgba(244, 239, 227, 0.72);
+  font-size: 0.62rem;
+  letter-spacing: 0.07em;
   line-height: 1.45;
   text-transform: uppercase;
 }
@@ -7849,14 +7874,14 @@ body {
 
 .battle-module-card.is-source-hermes-relay,
 .battle-module-focus.is-source-hermes-relay {
-  --module-accent: rgba(97, 220, 255, 0.9);
-  --module-accent-soft: rgba(97, 220, 255, 0.13);
+  --module-accent: rgba(61, 220, 177, 0.9);
+  --module-accent-soft: rgba(61, 220, 177, 0.13);
 }
 
 .battle-module-card.is-source-oracle-ids,
 .battle-module-focus.is-source-oracle-ids {
-  --module-accent: rgba(128, 226, 191, 0.9);
-  --module-accent-soft: rgba(128, 226, 191, 0.13);
+  --module-accent: rgba(97, 220, 255, 0.92);
+  --module-accent-soft: rgba(97, 220, 255, 0.14);
 }
 
 .battle-module-card.is-source-athena-firewall,
@@ -7875,6 +7900,12 @@ body {
 .battle-module-focus.is-source-hephaestus-forge {
   --module-accent: rgba(255, 128, 86, 0.86);
   --module-accent-soft: rgba(255, 128, 86, 0.12);
+}
+
+.battle-module-card.is-source-arachne-web,
+.battle-module-focus.is-source-arachne-web {
+  --module-accent: rgba(199, 126, 255, 0.86);
+  --module-accent-soft: rgba(199, 126, 255, 0.12);
 }
 
 .battle-module-card.is-recommended,

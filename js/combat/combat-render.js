@@ -1701,6 +1701,18 @@ function getModuleSourceClass(module) {
   return `is-source-${sourceId}`;
 }
 
+function getRecoveredModuleSourceDisplay(module) {
+  const profile = typeof getRecoveredModuleSourceProfile === "function"
+    ? getRecoveredModuleSourceProfile(module?.sourceId)
+    : null;
+  return {
+    sourceName: getSafeModuleText(module?.sourceName || profile?.sourceName, "Hermes Relay"),
+    sourceTheme: getSafeModuleText(module?.sourceTheme || profile?.sourceTheme, "Recovered Protocol"),
+    sourceDescription: getSafeModuleText(module?.sourceDescription || profile?.sourceDescription, "Recovered modules specialize in a response strategy."),
+    sourceLine: getSafeModuleText(module?.sourceLine || profile?.sourceLine || module?.flavorText, "A recovered fragment answers the next incident.")
+  };
+}
+
 function getRecoveredModulePrimaryStat(module) {
   const stats = module?.statBonuses && typeof module.statBonuses === "object" ? module.statBonuses : {};
   const statLabels = {
@@ -1756,6 +1768,7 @@ function buildRecoveredModuleCardMarkup(module, index, focusedIndex = 0) {
     : getSafeModuleText(conceptTags[0], "General");
   const primaryStat = getRecoveredModulePrimaryStat(module);
   const isFocused = index === focusedIndex;
+  const source = getRecoveredModuleSourceDisplay(module);
 
   return `
     <button class="battle-module-card ${index === 0 ? "is-featured" : ""} ${isFocused ? "is-focused-choice" : ""} ${module?.recommended ? "is-recommended" : ""} ${getModuleRarityClass(module)} ${getModuleSourceClass(module)}" type="button" data-module-choice="${module?.instanceId || ""}" data-module-choice-index="${index}">
@@ -1766,7 +1779,7 @@ function buildRecoveredModuleCardMarkup(module, index, focusedIndex = 0) {
         <span class="battle-module-rarity">${rarity} MODULE</span>
       </span>
       <span class="battle-module-stat">${primaryStat.text}</span>
-      <span class="battle-module-source">${getSafeModuleText(module?.sourceName, "Hermes Relay")}</span>
+      <span class="battle-module-source">SOURCE: ${source.sourceName}</span>
       <span class="battle-module-concept">CONCEPT: ${conceptLabel}</span>
     </button>
   `;
@@ -1780,28 +1793,32 @@ function buildRecoveredModuleFocusMarkup(module, state) {
   const name = getSafeModuleText(module.name, "Recovered Module");
   const rarity = getSafeModuleText(module.rarity, "common").toUpperCase();
   const effectText = getSafeModuleText(module.effectText, "Module effect stabilized.");
-  const flavorText = getSafeModuleText(module.flavorText, "Recovered from the contained incident.");
   const conceptTags = Array.isArray(module.conceptTags) ? module.conceptTags : [];
   const conceptLabel = conceptTags.length && typeof getRecoveredModuleConceptLabel === "function"
     ? getRecoveredModuleConceptLabel(conceptTags[0])
     : getSafeModuleText(conceptTags[0], "General");
   const primaryStat = getRecoveredModulePrimaryStat(module);
-  const sourceName = getSafeModuleText(module.sourceName, "Hermes Relay");
-  const sourceTheme = getSafeModuleText(module.sourceTheme, "Recovered Protocol");
-  const sourceLine = getSafeModuleText(module.sourceLine, flavorText);
+  const source = getRecoveredModuleSourceDisplay(module);
   const bestFit = getRecoveredModuleBestFit(state, module);
 
   return `
     <section class="battle-module-focus ${getModuleRarityClass(module)} ${getModuleSourceClass(module)} ${module.recommended ? "is-recommended" : ""}">
       <div class="battle-module-focus-ring" aria-hidden="true"></div>
       <div class="battle-module-focus-copy">
-        <div class="battle-module-focus-source">${sourceName}</div>
-        <div class="battle-module-focus-theme">${sourceTheme}</div>
+        <div class="battle-module-source-block">
+          <div class="battle-module-focus-label">SOURCE</div>
+          <div class="battle-module-focus-source">${source.sourceName}</div>
+        </div>
+        <div class="battle-module-source-block">
+          <div class="battle-module-focus-label">DOMAIN</div>
+          <div class="battle-module-focus-theme">${source.sourceTheme}</div>
+        </div>
         <div class="battle-module-focus-name">${name}</div>
         <div class="battle-module-focus-meta">${rarity} MODULE / CONCEPT: ${conceptLabel}</div>
         <div class="battle-module-focus-stat">${primaryStat.text}</div>
         <div class="battle-module-focus-effect">${effectText}</div>
-        <div class="battle-module-focus-flavor">"${sourceLine}"</div>
+        <div class="battle-module-focus-description">${source.sourceDescription}</div>
+        <div class="battle-module-focus-flavor">"${source.sourceLine}"</div>
       </div>
       ${module.recommended ? '<div class="battle-module-focus-sync">SYNCED WITH LESSON</div>' : ""}
       ${bestFit ? `<div class="battle-module-focus-fit">BEST FIT: ${bestFit}</div>` : ""}
@@ -1900,6 +1917,7 @@ function buildRecoveredModuleRewardMarkup(state) {
           <div class="battle-module-scene-note">CHOOSE ONE FRAGMENT</div>
         </div>
         <div class="battle-module-ceremony-copy">Hermes Relay recovered three usable fragments from the contained incident.</div>
+        <div class="battle-module-source-legend">Source colors mark the response strategy behind each recovered module.</div>
         <div class="battle-module-focus-slot" data-module-focus-preview>
           ${buildRecoveredModuleFocusMarkup(focusedModule, state)}
         </div>
