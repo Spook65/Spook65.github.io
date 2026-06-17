@@ -7542,7 +7542,8 @@ body {
 .battle-module-ceremony-copy,
 .battle-module-install-copy,
 .battle-module-action-hint,
-.battle-module-source-legend {
+.battle-module-source-legend,
+.battle-module-install-preview {
   max-width: 64ch;
   color: rgba(244, 239, 227, 0.76);
   font-size: 0.68rem;
@@ -7557,6 +7558,17 @@ body {
 
 .battle-module-source-legend {
   color: rgba(215, 184, 106, 0.76);
+}
+
+.battle-module-install-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  max-width: none;
+  border-left: 2px solid color-mix(in srgb, var(--module-accent, rgba(127, 183, 176, 0.86)) 55%, transparent);
+  background: rgba(127, 183, 176, 0.045);
+  padding: 9px 11px;
+  color: rgba(244, 239, 227, 0.78);
 }
 
 .battle-module-focus {
@@ -7591,8 +7603,8 @@ body {
   position: relative;
   align-self: center;
   aspect-ratio: 1;
-  min-width: 96px;
-  min-height: 128px;
+  min-width: 126px;
+  min-height: 162px;
   pointer-events: none;
   overflow: hidden;
 }
@@ -7778,12 +7790,12 @@ body {
 }
 
 .battle-module-card {
-  min-height: 136px;
-  align-content: space-between;
+  min-height: 154px;
+  grid-template-rows: auto minmax(3.2rem, auto) auto auto auto;
+  align-content: stretch;
 }
 
 .battle-module-card.is-featured {
-  min-height: 156px;
   box-shadow: 0 0 22px var(--module-accent-soft);
 }
 
@@ -7834,12 +7846,17 @@ body {
   text-transform: uppercase;
 }
 
+.battle-module-name {
+  min-height: 1.9em;
+}
+
 .battle-module-stat {
   color: rgba(255, 206, 87, 0.9);
   font-size: 0.74rem;
   font-weight: 800;
   letter-spacing: 0.1em;
   line-height: 1.3;
+  align-self: end;
   text-transform: uppercase;
 }
 
@@ -7854,6 +7871,7 @@ body {
 
 .battle-module-target {
   min-height: 112px;
+  align-content: space-between;
 }
 
 .battle-module-target-action {

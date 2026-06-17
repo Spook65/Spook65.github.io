@@ -1713,6 +1713,10 @@ function getRecoveredModuleSourceDisplay(module) {
   };
 }
 
+function getRecoveredModuleItemClass(module) {
+  return getSafeModuleText(module?.itemClass, "Recovered Relic").toUpperCase();
+}
+
 function getRecoveredModulePrimaryStat(module) {
   const stats = module?.statBonuses && typeof module.statBonuses === "object" ? module.statBonuses : {};
   const statLabels = {
@@ -1762,6 +1766,7 @@ function getRecoveredModuleBestFit(state, module) {
 function buildRecoveredModuleCardMarkup(module, index, focusedIndex = 0) {
   const name = getSafeModuleText(module?.name, "Recovered Module");
   const rarity = getSafeModuleText(module?.rarity, "common").toUpperCase();
+  const itemClass = getRecoveredModuleItemClass(module);
   const conceptTags = Array.isArray(module?.conceptTags) ? module.conceptTags : [];
   const conceptLabel = conceptTags.length && typeof getRecoveredModuleConceptLabel === "function"
     ? getRecoveredModuleConceptLabel(conceptTags[0])
@@ -1776,7 +1781,7 @@ function buildRecoveredModuleCardMarkup(module, index, focusedIndex = 0) {
       ${module?.recommended ? '<span class="battle-module-sync">SYNCED WITH LESSON</span>' : ""}
       <span class="battle-module-card-head">
         <span class="battle-module-name">${name}</span>
-        <span class="battle-module-rarity">${rarity} MODULE</span>
+        <span class="battle-module-rarity">${itemClass} / ${rarity} MODULE</span>
       </span>
       <span class="battle-module-stat">${primaryStat.text}</span>
       <span class="battle-module-source">SOURCE: ${source.sourceName}</span>
@@ -1792,6 +1797,7 @@ function buildRecoveredModuleFocusMarkup(module, state) {
 
   const name = getSafeModuleText(module.name, "Recovered Module");
   const rarity = getSafeModuleText(module.rarity, "common").toUpperCase();
+  const itemClass = getRecoveredModuleItemClass(module);
   const effectText = getSafeModuleText(module.effectText, "Module effect stabilized.");
   const conceptTags = Array.isArray(module.conceptTags) ? module.conceptTags : [];
   const conceptLabel = conceptTags.length && typeof getRecoveredModuleConceptLabel === "function"
@@ -1803,7 +1809,7 @@ function buildRecoveredModuleFocusMarkup(module, state) {
 
   return `
     <section class="battle-module-focus ${getModuleRarityClass(module)} ${getModuleSourceClass(module)} ${module.recommended ? "is-recommended" : ""}">
-      <div class="module-relic-stage ${getModuleSourceClass(module)}" data-reward-relic-stage data-source-id="${getSafeModuleText(module.sourceId, "hermes_relay")}" aria-hidden="true">
+      <div class="module-relic-stage ${getModuleSourceClass(module)}" data-reward-relic-stage data-source-id="${getSafeModuleText(module.sourceId, "hermes_relay")}" data-relic-type="${getSafeModuleText(module.relicType, "lens")}" aria-hidden="true">
         <div class="battle-module-focus-ring"></div>
       </div>
       <div class="battle-module-focus-copy">
@@ -1816,7 +1822,7 @@ function buildRecoveredModuleFocusMarkup(module, state) {
           <div class="battle-module-focus-theme">${source.sourceTheme}</div>
         </div>
         <div class="battle-module-focus-name">${name}</div>
-        <div class="battle-module-focus-meta">${rarity} MODULE / CONCEPT: ${conceptLabel}</div>
+        <div class="battle-module-focus-meta">${itemClass} / ${rarity} MODULE / CONCEPT: ${conceptLabel}</div>
         <div class="battle-module-focus-stat">${primaryStat.text}</div>
         <div class="battle-module-focus-effect">${effectText}</div>
         <div class="battle-module-focus-description">${source.sourceDescription}</div>
@@ -1825,6 +1831,22 @@ function buildRecoveredModuleFocusMarkup(module, state) {
       ${module.recommended ? '<div class="battle-module-focus-sync">SYNCED WITH LESSON</div>' : ""}
       ${bestFit ? `<div class="battle-module-focus-fit">BEST FIT: ${bestFit}</div>` : ""}
     </section>
+  `;
+}
+
+function buildRecoveredModuleInstallPreviewMarkup(state, module) {
+  if (!module) {
+    return "";
+  }
+
+  const primaryStat = getRecoveredModulePrimaryStat(module);
+  const bestFit = getRecoveredModuleBestFit(state, module);
+  const fitLabel = bestFit || "ANY ACTIVE DEFENDER";
+  return `
+    <div class="battle-module-install-preview">
+      <span>BEST FIT: ${fitLabel}</span>
+      <span>INSTALL PREVIEW: ${fitLabel} gains ${primaryStat.text}</span>
+    </div>
   `;
 }
 
@@ -1923,6 +1945,7 @@ function buildRecoveredModuleRewardMarkup(state) {
         <div class="battle-module-focus-slot" data-module-focus-preview>
           ${buildRecoveredModuleFocusMarkup(focusedModule, state)}
         </div>
+        ${buildRecoveredModuleInstallPreviewMarkup(state, focusedModule)}
         <div class="battle-module-choice-strip" aria-label="Recovered module choices">
           ${choices.length ? choices.map((module, index) => buildRecoveredModuleCardMarkup(module, index, focusedIndex)).join("") : '<div class="battle-module-empty">NO MODULES RECOVERED.</div>'}
         </div>
@@ -2075,7 +2098,8 @@ function mountRecoveredModuleRelic() {
   }
 
   mountRewardRelicScene(relicStage, {
-    sourceId: relicStage.getAttribute("data-source-id") || "default"
+    sourceId: relicStage.getAttribute("data-source-id") || "default",
+    relicType: relicStage.getAttribute("data-relic-type") || "lens"
   });
 }
 
@@ -2097,6 +2121,12 @@ function updateRecoveredModuleFocusPreview(choiceIndex) {
     }
     focusSlot.innerHTML = buildRecoveredModuleFocusMarkup(module, combatState);
     mountRecoveredModuleRelic();
+  }
+
+  const installPreview = threatPanelContent.querySelector(".battle-module-install-preview");
+  if (installPreview) {
+    const previewMarkup = buildRecoveredModuleInstallPreviewMarkup(combatState, module);
+    installPreview.outerHTML = previewMarkup || "";
   }
 
   threatPanelContent.querySelectorAll("[data-module-choice-index]").forEach((button) => {

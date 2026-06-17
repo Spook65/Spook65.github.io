@@ -1,4 +1,4 @@
-/* Lightweight Three.js relic visual for the Recovered Modules reward preview. */
+/* Lightweight Three.js gear relic visual for the Recovered Modules reward preview. */
 const rewardRelicSourceColors = {
   oracle_ids: "#61dcff",
   hermes_relay: "#3ddcb1",
@@ -15,20 +15,50 @@ function getRewardRelicColor(sourceId) {
   return rewardRelicSourceColors[sourceId] || rewardRelicSourceColors.default;
 }
 
+function getRewardRelicType(options = {}) {
+  const relicType = String(options.relicType || "").trim().toLowerCase();
+  if (["lens", "relay", "shield", "plate", "disk", "web"].includes(relicType)) {
+    return relicType;
+  }
+
+  const sourceId = String(options.sourceId || "").trim().toLowerCase();
+  if (sourceId === "oracle_ids") {
+    return "lens";
+  }
+  if (sourceId === "hermes_relay") {
+    return "relay";
+  }
+  if (sourceId === "athena_firewall") {
+    return "shield";
+  }
+  if (sourceId === "hephaestus_forge") {
+    return "plate";
+  }
+  if (sourceId === "asclepius_recovery") {
+    return "disk";
+  }
+  if (sourceId === "arachne_web") {
+    return "web";
+  }
+
+  return "lens";
+}
+
 class RewardRelicScene {
   constructor(container, options = {}) {
     this.container = container;
     this.sourceId = options.sourceId || "default";
+    this.relicType = getRewardRelicType(options);
     this.animationFrame = null;
     this.resizeObserver = null;
     this.scene = null;
     this.camera = null;
     this.renderer = null;
-    this.core = null;
-    this.ring = null;
-    this.orbit = null;
+    this.relicGroup = null;
+    this.pulseGroup = null;
     this.scanBeam = null;
     this.light = null;
+    this.materials = [];
     this.clock = new THREE.Clock();
 
     this.init();
@@ -42,7 +72,7 @@ class RewardRelicScene {
     this.container.innerHTML = "";
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(38, 1, 0.1, 20);
-    this.camera.position.set(0, 0.15, 5.2);
+    this.camera.position.set(0, 0.14, 5.4);
 
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
@@ -50,62 +80,154 @@ class RewardRelicScene {
     this.container.appendChild(this.renderer.domElement);
     this.renderer.domElement.setAttribute("aria-hidden", "true");
 
-    const ambient = new THREE.AmbientLight(0xffffff, 0.35);
-    this.scene.add(ambient);
-
-    this.light = new THREE.PointLight(getRewardRelicColor(this.sourceId), 1.35, 9);
-    this.light.position.set(1.8, 1.5, 2.6);
+    this.scene.add(new THREE.AmbientLight(0xffffff, 0.38));
+    this.light = new THREE.PointLight(getRewardRelicColor(this.sourceId), 1.4, 9);
+    this.light.position.set(1.8, 1.5, 2.7);
     this.scene.add(this.light);
 
-    const coreMaterial = new THREE.MeshStandardMaterial({
-      color: getRewardRelicColor(this.sourceId),
-      emissive: getRewardRelicColor(this.sourceId),
-      emissiveIntensity: 0.45,
-      metalness: 0.35,
-      roughness: 0.28,
-      transparent: true,
-      opacity: 0.9
-    });
-    this.core = new THREE.Mesh(new THREE.OctahedronGeometry(0.82, 1), coreMaterial);
-    this.scene.add(this.core);
+    this.relicGroup = new THREE.Group();
+    this.pulseGroup = new THREE.Group();
+    this.scene.add(this.pulseGroup);
+    this.scene.add(this.relicGroup);
 
-    const ringMaterial = new THREE.MeshBasicMaterial({
-      color: getRewardRelicColor(this.sourceId),
-      transparent: true,
-      opacity: 0.42,
-      side: THREE.DoubleSide
-    });
-    this.ring = new THREE.Mesh(new THREE.TorusGeometry(1.35, 0.018, 12, 96), ringMaterial);
-    this.ring.rotation.x = Math.PI / 2.35;
-    this.scene.add(this.ring);
-
-    const orbitMaterial = new THREE.MeshBasicMaterial({
-      color: getRewardRelicColor(this.sourceId),
-      transparent: true,
-      opacity: 0.24,
-      side: THREE.DoubleSide
-    });
-    this.orbit = new THREE.Mesh(new THREE.TorusGeometry(1.05, 0.01, 8, 84), orbitMaterial);
-    this.orbit.rotation.y = Math.PI / 2.9;
-    this.scene.add(this.orbit);
-
-    const beamMaterial = new THREE.MeshBasicMaterial({
-      color: getRewardRelicColor(this.sourceId),
-      transparent: true,
-      opacity: 0.18,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-      side: THREE.DoubleSide
-    });
-    this.scanBeam = new THREE.Mesh(new THREE.PlaneGeometry(0.36, 2.7), beamMaterial);
-    this.scanBeam.position.set(-0.95, 0, -0.08);
-    this.scanBeam.rotation.z = -0.32;
-    this.scene.add(this.scanBeam);
-
+    this.buildRelic();
+    this.addScanBeam();
     this.resize();
     this.resizeObserver = new ResizeObserver(() => this.resize());
     this.resizeObserver.observe(this.container);
     this.animate();
+  }
+
+  createMaterial(kind = "standard", opacity = 1) {
+    const color = getRewardRelicColor(this.sourceId);
+    const material = kind === "basic"
+      ? new THREE.MeshBasicMaterial({
+          color,
+          transparent: opacity < 1,
+          opacity,
+          side: THREE.DoubleSide,
+          depthWrite: opacity >= 0.85
+        })
+      : new THREE.MeshStandardMaterial({
+          color,
+          emissive: color,
+          emissiveIntensity: 0.38,
+          metalness: 0.42,
+          roughness: 0.3,
+          transparent: opacity < 1,
+          opacity
+        });
+    this.materials.push(material);
+    return material;
+  }
+
+  addMesh(group, geometry, material, position = [0, 0, 0], rotation = [0, 0, 0], scale = [1, 1, 1]) {
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(...position);
+    mesh.rotation.set(...rotation);
+    mesh.scale.set(...scale);
+    group.add(mesh);
+    return mesh;
+  }
+
+  buildRelic() {
+    if (this.relicType === "relay") {
+      this.buildRelayRelic();
+      return;
+    }
+    if (this.relicType === "shield") {
+      this.buildShieldRelic();
+      return;
+    }
+    if (this.relicType === "plate") {
+      this.buildPlateRelic();
+      return;
+    }
+    if (this.relicType === "disk") {
+      this.buildDiskRelic();
+      return;
+    }
+    if (this.relicType === "web") {
+      this.buildWebRelic();
+      return;
+    }
+    this.buildLensRelic();
+  }
+
+  buildLensRelic() {
+    const glass = this.createMaterial("basic", 0.34);
+    const metal = this.createMaterial("standard", 0.94);
+    this.addMesh(this.relicGroup, new THREE.CylinderGeometry(0.82, 0.82, 0.08, 72), glass, [0, 0, 0], [Math.PI / 2, 0, 0]);
+    this.addMesh(this.relicGroup, new THREE.TorusGeometry(0.86, 0.035, 12, 96), metal, [0, 0, 0], [Math.PI / 2, 0, 0]);
+    this.addMesh(this.relicGroup, new THREE.BoxGeometry(1.18, 0.52, 0.08), metal, [0, -0.12, -0.2], [0, 0, 0], [1, 1, 1]);
+    this.addMesh(this.pulseGroup, new THREE.TorusGeometry(1.18, 0.012, 8, 96), this.createMaterial("basic", 0.28), [0, 0, -0.04], [Math.PI / 2.7, 0, 0]);
+  }
+
+  buildRelayRelic() {
+    const metal = this.createMaterial("standard", 0.92);
+    const glow = this.createMaterial("basic", 0.35);
+    this.addMesh(this.relicGroup, new THREE.TorusGeometry(0.78, 0.065, 16, 96), metal, [0, 0, 0], [Math.PI / 2.4, 0, 0]);
+    this.addMesh(this.relicGroup, new THREE.TorusGeometry(1.08, 0.018, 10, 96), glow, [0, 0, 0], [Math.PI / 2.9, 0.45, 0]);
+    [[0.92, 0.26, 0], [-0.86, -0.18, 0], [0.04, 0.72, 0]].forEach((position) => {
+      this.addMesh(this.relicGroup, new THREE.SphereGeometry(0.09, 18, 18), metal, position);
+    });
+    this.addMesh(this.pulseGroup, new THREE.TorusGeometry(1.34, 0.012, 8, 96), glow, [0, 0, -0.05], [Math.PI / 2.2, 0, 0.3]);
+  }
+
+  buildShieldRelic() {
+    const metal = this.createMaterial("standard", 0.94);
+    const glow = this.createMaterial("basic", 0.3);
+    this.addMesh(this.relicGroup, new THREE.BoxGeometry(0.88, 1.22, 0.08), metal, [0, 0, 0], [0, 0, 0], [0.86, 1, 1]);
+    this.addMesh(this.relicGroup, new THREE.BoxGeometry(0.18, 1.48, 0.1), metal, [0, 0, 0.05], [0, 0, -0.68]);
+    this.addMesh(this.relicGroup, new THREE.BoxGeometry(0.18, 1.48, 0.1), metal, [0, 0, 0.05], [0, 0, 0.68]);
+    this.addMesh(this.relicGroup, new THREE.TorusGeometry(0.58, 0.02, 8, 64), glow, [0, 0.03, 0.12], [Math.PI / 2, 0, 0]);
+    this.addMesh(this.pulseGroup, new THREE.TorusGeometry(1.18, 0.012, 8, 96), glow, [0, 0, -0.06], [Math.PI / 2.35, 0, 0]);
+  }
+
+  buildPlateRelic() {
+    const metal = this.createMaterial("standard", 0.94);
+    const glow = this.createMaterial("basic", 0.32);
+    this.addMesh(this.relicGroup, new THREE.BoxGeometry(1.34, 0.86, 0.12), metal, [0, 0, 0]);
+    this.addMesh(this.relicGroup, new THREE.BoxGeometry(0.08, 1.08, 0.08), glow, [-0.42, 0, 0.09]);
+    this.addMesh(this.relicGroup, new THREE.BoxGeometry(0.08, 1.08, 0.08), glow, [0.42, 0, 0.09]);
+    this.addMesh(this.relicGroup, new THREE.BoxGeometry(1.58, 0.05, 0.08), glow, [0, 0.28, 0.1]);
+    this.addMesh(this.relicGroup, new THREE.BoxGeometry(1.58, 0.05, 0.08), glow, [0, -0.28, 0.1]);
+    this.addMesh(this.pulseGroup, new THREE.TorusGeometry(1.18, 0.012, 8, 96), glow, [0, 0, -0.05], [Math.PI / 2.5, 0, 0.45]);
+  }
+
+  buildDiskRelic() {
+    const metal = this.createMaterial("standard", 0.94);
+    const glow = this.createMaterial("basic", 0.34);
+    this.addMesh(this.relicGroup, new THREE.CylinderGeometry(0.72, 0.72, 0.14, 72), metal, [0, 0, 0], [Math.PI / 2, 0, 0]);
+    this.addMesh(this.relicGroup, new THREE.TorusGeometry(0.46, 0.02, 8, 72), glow, [0, 0, 0.09], [Math.PI / 2, 0, 0]);
+    this.addMesh(this.relicGroup, new THREE.TorusGeometry(0.86, 0.014, 8, 96), glow, [0, 0, -0.02], [Math.PI / 2.25, 0, 0]);
+    this.addMesh(this.pulseGroup, new THREE.TorusGeometry(1.18, 0.012, 8, 96), glow, [0, 0, -0.06], [Math.PI / 2.35, 0, 0]);
+  }
+
+  buildWebRelic() {
+    const metal = this.createMaterial("standard", 0.9);
+    const glow = this.createMaterial("basic", 0.32);
+    this.addMesh(this.relicGroup, new THREE.OctahedronGeometry(0.34, 0), metal, [0, 0, 0]);
+    for (let index = 0; index < 6; index += 1) {
+      const angle = (Math.PI * 2 * index) / 6;
+      const x = Math.cos(angle) * 0.72;
+      const y = Math.sin(angle) * 0.72;
+      this.addMesh(this.relicGroup, new THREE.SphereGeometry(0.07, 14, 14), metal, [x, y, 0]);
+      this.addMesh(this.relicGroup, new THREE.BoxGeometry(0.72, 0.018, 0.018), glow, [x / 2, y / 2, 0], [0, 0, angle]);
+    }
+    this.addMesh(this.pulseGroup, new THREE.TorusGeometry(1.1, 0.012, 8, 96), glow, [0, 0, -0.05], [Math.PI / 2.5, 0, 0]);
+  }
+
+  addScanBeam() {
+    this.scanBeam = this.addMesh(
+      this.scene,
+      new THREE.PlaneGeometry(0.34, 2.8),
+      this.createMaterial("basic", 0.16),
+      [-0.88, 0, -0.14],
+      [0, 0, -0.32]
+    );
+    this.scanBeam.material.blending = THREE.AdditiveBlending;
+    this.scanBeam.material.depthWrite = false;
   }
 
   resize() {
@@ -121,50 +243,25 @@ class RewardRelicScene {
     this.renderer.setSize(width, height, false);
   }
 
-  setSource(sourceId) {
-    this.sourceId = sourceId || "default";
-    const color = new THREE.Color(getRewardRelicColor(this.sourceId));
-    [this.core?.material, this.ring?.material, this.orbit?.material, this.scanBeam?.material].forEach((material) => {
-      if (!material) {
-        return;
-      }
-
-      material.color = color.clone();
-      if (material.emissive) {
-        material.emissive = color.clone();
-      }
-      material.needsUpdate = true;
-    });
-
-    if (this.light) {
-      this.light.color = color;
-    }
-  }
-
   animate() {
     this.animationFrame = window.requestAnimationFrame(() => this.animate());
     const elapsed = this.clock.getElapsedTime();
-    const pulse = 1 + (Math.sin(elapsed * 2.4) * 0.045);
+    const pulse = 1 + (Math.sin(elapsed * 2.4) * 0.035);
 
-    if (this.core) {
-      this.core.rotation.x += 0.008;
-      this.core.rotation.y += 0.012;
-      this.core.scale.setScalar(pulse);
+    if (this.relicGroup) {
+      this.relicGroup.rotation.y += 0.009;
+      this.relicGroup.rotation.x = Math.sin(elapsed * 0.55) * 0.12;
+      this.relicGroup.scale.setScalar(pulse);
     }
 
-    if (this.ring) {
-      this.ring.rotation.z += 0.006;
-      this.ring.material.opacity = 0.34 + (Math.sin(elapsed * 2.1) * 0.08);
-    }
-
-    if (this.orbit) {
-      this.orbit.rotation.x += 0.004;
-      this.orbit.rotation.z -= 0.005;
+    if (this.pulseGroup) {
+      this.pulseGroup.rotation.z += 0.007;
+      this.pulseGroup.scale.setScalar(1 + (Math.sin(elapsed * 1.8) * 0.055));
     }
 
     if (this.scanBeam) {
-      this.scanBeam.position.x = Math.sin(elapsed * 0.9) * 0.62;
-      this.scanBeam.material.opacity = 0.12 + (Math.sin(elapsed * 1.7) * 0.05);
+      this.scanBeam.position.x = Math.sin(elapsed * 0.9) * 0.58;
+      this.scanBeam.material.opacity = 0.1 + (Math.sin(elapsed * 1.7) * 0.045);
     }
 
     this.renderer?.render(this.scene, this.camera);
@@ -172,11 +269,6 @@ class RewardRelicScene {
 
   disposeObject(object) {
     object.geometry?.dispose?.();
-    if (Array.isArray(object.material)) {
-      object.material.forEach((material) => material.dispose?.());
-    } else {
-      object.material?.dispose?.();
-    }
   }
 
   dispose() {
@@ -188,6 +280,7 @@ class RewardRelicScene {
     this.resizeObserver?.disconnect();
     this.resizeObserver = null;
     this.scene?.traverse((object) => this.disposeObject(object));
+    this.materials.forEach((material) => material.dispose?.());
     this.renderer?.dispose?.();
 
     if (this.renderer?.domElement?.parentNode) {
@@ -198,6 +291,7 @@ class RewardRelicScene {
     this.scene = null;
     this.camera = null;
     this.renderer = null;
+    this.materials = [];
   }
 }
 
@@ -212,7 +306,6 @@ function mountRewardRelicScene(container, options = {}) {
   }
 
   if (activeRewardRelicScene?.container === container) {
-    activeRewardRelicScene.setSource(options.sourceId);
     return activeRewardRelicScene;
   }
 
