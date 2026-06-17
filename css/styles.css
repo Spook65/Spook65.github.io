@@ -9969,6 +9969,45 @@ body {
   letter-spacing: 0.16em;
 }
 
+.combat-party-module,
+.combat-status-module {
+  display: grid;
+  gap: 0.16rem;
+  margin-top: 0.46rem;
+  padding-top: 0.38rem;
+  border-top: 1px solid rgba(127, 183, 176, 0.18);
+  text-transform: uppercase;
+}
+
+.combat-party-module-label,
+.combat-status-module-label {
+  color: rgba(127, 183, 176, 0.72);
+  font-size: 0.34rem;
+  letter-spacing: 0.18em;
+}
+
+.combat-party-module-name,
+.combat-status-module-name {
+  color: rgba(236, 220, 186, 0.9);
+  font-size: 0.47rem;
+  letter-spacing: 0.11em;
+  line-height: 1.25;
+}
+
+.combat-party-module-effect,
+.combat-status-module-effect {
+  color: rgba(209, 179, 116, 0.84);
+  font-size: 0.38rem;
+  letter-spacing: 0.13em;
+  line-height: 1.25;
+}
+
+.combat-party-module.is-empty {
+  color: rgba(236, 220, 186, 0.42);
+  font-size: 0.38rem;
+  letter-spacing: 0.14em;
+}
+
 .combat-stage-command-submenu-empty {
   min-height: 3.5rem;
   padding: 0.66rem 0.78rem;

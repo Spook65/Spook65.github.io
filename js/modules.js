@@ -372,6 +372,10 @@ function getRecoveredModuleStat(module, statKey) {
   return Number.isFinite(value) ? value : 0;
 }
 
+function getModuleStatBonus(module, statKey) {
+  return getRecoveredModuleStat(module, statKey);
+}
+
 function getRecoveredModuleShortLabel(module) {
   const name = String(module?.name || "MOD").trim();
   if (!name) {
@@ -408,7 +412,7 @@ function equipRecoveredModule(runState, defenderId, moduleInstance) {
 }
 
 function getDefenderModuleStat(defender, statKey) {
-  return getRecoveredModuleStat(defender?.equippedModule, statKey);
+  return getModuleStatBonus(defender?.equippedModule, statKey);
 }
 
 if (typeof window !== "undefined") {
@@ -418,6 +422,7 @@ if (typeof window !== "undefined") {
   window.getRecoveredModuleSourceProfile = getRecoveredModuleSourceProfile;
   window.getRecoveredModuleConceptLabel = getRecoveredModuleConceptLabel;
   window.generateRecoveredModuleChoices = generateRecoveredModuleChoices;
+  window.getModuleStatBonus = getModuleStatBonus;
   window.getRecoveredModuleShortLabel = getRecoveredModuleShortLabel;
   window.getEquippedModuleForDefenderId = getEquippedModuleForDefenderId;
   window.equipRecoveredModule = equipRecoveredModule;

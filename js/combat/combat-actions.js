@@ -122,6 +122,67 @@ function getCombatantModuleStat(combatant, statKey) {
   return typeof getDefenderModuleStat === "function" ? getDefenderModuleStat(combatant, statKey) : 0;
 }
 
+function getCombatantModuleName(combatant) {
+  return String(combatant?.equippedModule?.name || "Recovered Module").trim() || "Recovered Module";
+}
+
+function getModuleFeedbackKey(combatant, statKey) {
+  const module = combatant?.equippedModule || null;
+  const ownerId = combatant?.id || combatant?.name || "defender";
+  const moduleId = module?.instanceId || module?.id || module?.name || "module";
+  return `${ownerId}:${moduleId}:${statKey}`;
+}
+
+function announceModuleEffectOnce(combatant, statKey, event) {
+  if (!combatState || !combatant?.equippedModule) {
+    return false;
+  }
+
+  return announceModuleFeedbackKeyOnce(getModuleFeedbackKey(combatant, statKey), event);
+}
+
+function announceModuleFeedbackKeyOnce(key, event) {
+  if (!combatState || !key) {
+    return false;
+  }
+
+  combatState.moduleEffectsAnnouncedThisBattle = Array.isArray(combatState.moduleEffectsAnnouncedThisBattle)
+    ? combatState.moduleEffectsAnnouncedThisBattle
+    : [];
+
+  if (combatState.moduleEffectsAnnouncedThisBattle.includes(key)) {
+    return false;
+  }
+
+  combatState.moduleEffectsAnnouncedThisBattle.push(key);
+  addCombatFeedEvent(event, event?.variant || "buff");
+  return true;
+}
+
+function announceBattleModulesOnline(state) {
+  if (!state || state.moduleOnlineAnnounced) {
+    return;
+  }
+
+  state.moduleOnlineAnnounced = true;
+  const equippedPrograms = Array.isArray(state.playerParty)
+    ? state.playerParty.filter((program) => program?.equippedModule)
+    : [];
+
+  equippedPrograms.forEach((program) => {
+    const module = program.equippedModule;
+    addCombatFeedEvent({
+      type: "module-online",
+      side: "player",
+      title: "MODULE ONLINE",
+      body: `${program.name} linked ${module.name || "Recovered Module"}.`,
+      actorName: program.name,
+      effect: "module",
+      variant: "buff"
+    }, "buff");
+  });
+}
+
 // resolveEnemyIntent() turns the forecast into the exact threat ability that will be used this turn.
 function resolveEnemyIntent(intentOrBattleState, battleStateMaybe) {
   const hasExplicitBattleState = Boolean(battleStateMaybe);
@@ -780,6 +841,7 @@ class ThreatCombat {
         variant: "concept"
       }, "concept");
     }
+    announceBattleModulesOnline(this.state);
     renderCombatScreen();
     playBattleSummonIntro(this);
   }
@@ -1603,6 +1665,19 @@ class ThreatCombat {
 
     if (ability.effect === "status_detected") {
       this.applyStatusEffect(this.state.threat, "status_detected");
+      const detectionPower = getCombatantModuleStat(actor, "detectionPowerPct");
+      if (detectionPower > 0) {
+        announceModuleEffectOnce(actor, "detectionPowerPct", {
+          type: "module-scan",
+          side: "player",
+          title: "MODULE SCAN",
+          body: `${getCombatantModuleName(actor)} amplified ${actor.name}'s analysis. Detection +${detectionPower}%.`,
+          actorName: actor.name,
+          targetName: this.state.threat.title,
+          effect: "detectionPowerPct",
+          variant: "buff"
+        });
+      }
       addBattleLog(`${this.state.threat.title.toUpperCase()} WAS TAGGED [DETECTED].`, "buff", { feed: false });
       return;
     }
@@ -1746,6 +1821,7 @@ class ThreatCombat {
   resolveDamage(attacker, defender, ability, options = {}) {
     const damageResult = this.calculateDamage(attacker, defender, ability);
     let damage = damageResult.damage;
+    let moduleMitigation = null;
     const bonusDamage = Number.isFinite(options.bonusDamage) ? Math.max(0, options.bonusDamage) : 0;
 
     if (bonusDamage > 0) {
@@ -1765,8 +1841,21 @@ class ThreatCombat {
     if (options.isThreatAttack) {
       const moduleDefense = getCombatantModuleStat(defender, "defensePct");
       if (moduleDefense > 0) {
+        const beforeModuleDamage = damage;
         const reduction = Math.min(0.35, moduleDefense / 100);
         damage = Math.max(1, Math.round(damage * (1 - reduction)));
+        const reducedBy = Math.max(0, beforeModuleDamage - damage);
+        if (reducedBy > 0) {
+          moduleMitigation = {
+            statKey: "defensePct",
+            statValue: moduleDefense,
+            moduleName: getCombatantModuleName(defender),
+            defenderName: defender?.name || "Defender",
+            incomingDamage: beforeModuleDamage,
+            finalDamage: damage,
+            reducedBy
+          };
+        }
       }
     }
 
@@ -1781,7 +1870,8 @@ class ThreatCombat {
     defender.hp = Math.max(0, defender.hp - damage);
     return {
       ...damageResult,
-      damage
+      damage,
+      moduleMitigation
     };
   }
 
@@ -1954,6 +2044,19 @@ class ThreatCombat {
           body: `${responseOutcome.label} reduced damage ${responseOutcome.incomingDamage} -> ${responseOutcome.finalDamage}${responseOutcome.gaugeGain > 0 ? ` / Gauge +${responseOutcome.gaugeGain}` : ""}.`,
           variant: responseResult.variant
         }, responseResult.variant);
+        if (responseResult.moduleReductionBonus > 0 && responseResult.moduleSupport) {
+          const support = responseResult.moduleSupport;
+          announceModuleFeedbackKeyOnce(`${support.holderName}:${support.moduleName}:${support.statKey}:response`, {
+            type: "module-response",
+            side: "player",
+            title: "MODULE RESPONSE",
+            body: `${support.moduleName} strengthened ${responseOutcome.label}. Mitigation +${Math.round(responseResult.moduleReductionBonus * 100)}%.`,
+            actorName: support.holderName,
+            targetName: actor.title || actor.name || "Threat",
+            effect: support.statKey,
+            variant: "buff"
+          });
+        }
         this.recordConceptHint(this.getResponseConceptIds(responseResult), {
           side: "defend",
           actorName: responseOutcome.label,
@@ -1964,6 +2067,20 @@ class ThreatCombat {
           side: "enemy",
           actorName: actor.title || actor.name || "Threat",
           targetName: threatAbility.effect === "damage_all" ? "All Defenders" : chosenTarget.name
+        });
+      }
+
+      if (damageResult.moduleMitigation) {
+        announceModuleEffectOnce(chosenTarget, "defensePct", {
+          type: "module-defense",
+          side: "player",
+          title: "MODULE GUARD",
+          body: `${damageResult.moduleMitigation.moduleName} shielded ${chosenTarget.name}. Damage ${damageResult.moduleMitigation.incomingDamage} -> ${damageResult.moduleMitigation.finalDamage}.`,
+          actorName: chosenTarget.name,
+          targetName: actor.title || actor.name || "Threat",
+          damage: damageResult.moduleMitigation.reducedBy,
+          effect: "defensePct",
+          variant: "buff"
         });
       }
 
@@ -1979,6 +2096,19 @@ class ThreatCombat {
             isThreatAttack: true
           });
           hitPrograms.push(program);
+          if (splashResult.moduleMitigation) {
+            announceModuleEffectOnce(program, "defensePct", {
+              type: "module-defense",
+              side: "player",
+              title: "MODULE GUARD",
+              body: `${splashResult.moduleMitigation.moduleName} shielded ${program.name}. Damage ${splashResult.moduleMitigation.incomingDamage} -> ${splashResult.moduleMitigation.finalDamage}.`,
+              actorName: program.name,
+              targetName: actor.title || actor.name || "Threat",
+              damage: splashResult.moduleMitigation.reducedBy,
+              effect: "defensePct",
+              variant: "buff"
+            });
+          }
           addBattleLog(`${actor.title.toUpperCase()} SPLASHED ${program.name.toUpperCase()} FOR ${splashResult.damage} DAMAGE.`, "damage");
         });
       }
@@ -2068,6 +2198,18 @@ class ThreatCombat {
 
       consumeMoveCharge(ability);
       const moduleAccuracyBonus = getCombatantModuleStat(actor, "accuracyPct");
+      if (moduleAccuracyBonus > 0) {
+        announceModuleEffectOnce(actor, "accuracyPct", {
+          type: "module-accuracy",
+          side: "player",
+          title: "MODULE AIM",
+          body: `${getCombatantModuleName(actor)} refined ${actor.name}'s hit protocol. Accuracy +${moduleAccuracyBonus}%.`,
+          actorName: actor.name,
+          targetName: this.state.threat.title,
+          effect: "accuracyPct",
+          variant: "buff"
+        });
+      }
       const attackHits = rollMoveAccuracy(ability, (this.state.battleAccuracyBonus || 0) + moduleAccuracyBonus);
       this.state.actionLocked = true;
       this.setBattleCue(

@@ -796,6 +796,10 @@ function getEnemyResponseEvaluation(battleState = null, responseId = "") {
         : status === "RESISTED"
           ? "resisted"
           : "normal";
+  const moduleSupport = getResponseModuleSupport(action, battleState);
+  const baseReduction = Number.isFinite(action.reductions[effectKey]) ? action.reductions[effectKey] : 0;
+  const moduleReductionBonus = status === "INEFFECTIVE" ? 0 : (moduleSupport?.mitigationBonus || 0);
+  const damageReduction = Math.min(0.85, baseReduction + moduleReductionBonus);
 
   return {
     id: action.id,
@@ -803,7 +807,10 @@ function getEnemyResponseEvaluation(battleState = null, responseId = "") {
     shortText: action.shortText,
     status,
     effectKey,
-    damageReduction: action.reductions[effectKey],
+    damageReduction,
+    baseDamageReduction: baseReduction,
+    moduleReductionBonus,
+    moduleSupport,
     gaugeGain: action.gaugeGain[effectKey],
     isRecommended: status === "RECOMMENDED",
     isEmpowered,
@@ -1384,6 +1391,55 @@ function getPartyModuleStartGauge(playerParty) {
   }, 0);
 }
 
+function getPartyModuleStatTotal(playerParty, statKey) {
+  if (!Array.isArray(playerParty)) {
+    return 0;
+  }
+
+  return playerParty.reduce((total, program) => {
+    if (!program || program.hp <= 0) {
+      return total;
+    }
+
+    const value = typeof getDefenderModuleStat === "function"
+      ? getDefenderModuleStat(program, statKey)
+      : 0;
+    return total + (Number.isFinite(value) ? value : 0);
+  }, 0);
+}
+
+function getResponseModuleSupport(action, battleState) {
+  const actionId = String(action?.id || "").toLowerCase();
+  const party = Array.isArray(battleState?.playerParty) ? battleState.playerParty : [];
+  let statKey = "";
+
+  if (actionId === "isolate" || actionId === "redirect") {
+    statKey = "containmentPowerPct";
+  } else if (actionId === "purge") {
+    statKey = getPartyModuleStatTotal(party, "recoveryPowerPct") > 0 ? "recoveryPowerPct" : "cleanupPowerPct";
+  }
+
+  if (!statKey) {
+    return null;
+  }
+
+  const statTotal = getPartyModuleStatTotal(party, statKey);
+  if (statTotal <= 0) {
+    return null;
+  }
+
+  const holder = party.find((program) => program?.hp > 0 && typeof getDefenderModuleStat === "function" && getDefenderModuleStat(program, statKey) > 0) || null;
+  const mitigationBonus = Math.min(0.12, statTotal / 400);
+
+  return {
+    statKey,
+    statTotal,
+    mitigationBonus,
+    moduleName: holder?.equippedModule?.name || "Recovered Module",
+    holderName: holder?.name || "Defender"
+  };
+}
+
 function buildModuleBattleMessages(playerParty) {
   if (!Array.isArray(playerParty)) {
     return [];
@@ -1573,6 +1629,8 @@ function buildCombatState(sourceThreat) {
     pendingEnemyAction: null,
     selectedResponse: null,
     responseResult: null,
+    moduleOnlineAnnounced: false,
+    moduleEffectsAnnouncedThisBattle: [],
     enemyActionQueue: [],
     enemyActionTargets: [],
     enemyResponseUsedThisTurn: false,

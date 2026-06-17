@@ -713,6 +713,8 @@ function renderThreatCombatantDetails(spriteKey) {
 
 function buildProgramStatusPanelMarkup(program) {
   const statusMarkup = renderStatusPills(program.statusEffects);
+  const module = program?.equippedModule || null;
+  const moduleStat = module ? getRecoveredModulePrimaryStat(module) : null;
 
   return `
     <div class="combat-status-box combat-status-box-player">
@@ -724,6 +726,13 @@ function buildProgramStatusPanelMarkup(program) {
       ${renderBar(program.hp, program.maxHp, "is-hp")}
       <div class="combat-subline">XP ${program.xp}/${program.level * 100}</div>
       ${renderBar(program.xp, program.level * 100, "is-xp")}
+      ${module ? `
+        <div class="combat-status-module">
+          <span class="combat-status-module-label">MODULE ONLINE</span>
+          <span class="combat-status-module-name">${module.name || "Recovered Module"}</span>
+          ${moduleStat ? `<span class="combat-status-module-effect">${moduleStat.text}</span>` : ""}
+        </div>
+      ` : ""}
       ${statusMarkup}
     </div>
   `;
@@ -1203,15 +1212,25 @@ function buildStageCommandSubmenuMarkup(state) {
         </div>
         <div class="combat-stage-command-submenu-body">
           <div class="combat-stage-program-grid combat-party-grid">
-            ${state.playerParty.map((program) => `
-              <div class="combat-stage-program-card combat-party-card ${program.id === currentActor.ref.id ? "is-active" : ""} ${program.hp <= 0 ? "is-down" : ""}">
-                <div class="combat-party-name">${program.name}</div>
-                <div class="combat-party-meta">HP ${program.hp}/${program.maxHp}</div>
-                <div class="combat-party-meta">LVL ${program.level}</div>
-                ${program.equippedModule ? `<div class="combat-party-tag">MOD ${program.equippedModule.name || "Recovered Module"}</div>` : ""}
-                ${program.id === currentActor.ref.id ? '<div class="combat-party-tag">ACTIVE</div>' : ""}
-              </div>
-            `).join("")}
+            ${state.playerParty.map((program) => {
+              const module = program.equippedModule || null;
+              const moduleStat = module ? getRecoveredModulePrimaryStat(module) : null;
+              return `
+                <div class="combat-stage-program-card combat-party-card ${program.id === currentActor.ref.id ? "is-active" : ""} ${program.hp <= 0 ? "is-down" : ""}">
+                  <div class="combat-party-name">${program.name}</div>
+                  <div class="combat-party-meta">HP ${program.hp}/${program.maxHp}</div>
+                  <div class="combat-party-meta">LVL ${program.level}</div>
+                  ${module ? `
+                    <div class="combat-party-module">
+                      <span class="combat-party-module-label">MODULE</span>
+                      <span class="combat-party-module-name">${module.name || "Recovered Module"}</span>
+                      ${moduleStat ? `<span class="combat-party-module-effect">${moduleStat.text}</span>` : ""}
+                    </div>
+                  ` : '<div class="combat-party-module is-empty">NO MODULE EQUIPPED</div>'}
+                  ${program.id === currentActor.ref.id ? '<div class="combat-party-tag">ACTIVE</div>' : ""}
+                </div>
+              `;
+            }).join("")}
           </div>
           <div class="combat-stage-command-submenu-note">SWITCHING COMING SOON.</div>
         </div>
@@ -1401,15 +1420,25 @@ function buildActionButtonMarkup(state) {
     return `
       <div class="combat-command-subtitle">ACTIVE PARTY</div>
       <div class="combat-party-grid">
-        ${state.playerParty.map((program) => `
-          <div class="combat-party-card ${program.id === actor.id ? "is-active" : ""} ${program.hp <= 0 ? "is-down" : ""}">
-            <div class="combat-party-name">${program.name}</div>
-            <div class="combat-party-meta">HP ${program.hp}/${program.maxHp}</div>
-            <div class="combat-party-meta">LVL ${program.level}</div>
-            ${program.equippedModule ? `<div class="combat-party-tag">MOD ${program.equippedModule.name || "Recovered Module"}</div>` : ""}
-            ${program.id === actor.id ? '<div class="combat-party-tag">ACTIVE</div>' : ""}
-          </div>
-        `).join("")}
+        ${state.playerParty.map((program) => {
+          const module = program.equippedModule || null;
+          const moduleStat = module ? getRecoveredModulePrimaryStat(module) : null;
+          return `
+            <div class="combat-party-card ${program.id === actor.id ? "is-active" : ""} ${program.hp <= 0 ? "is-down" : ""}">
+              <div class="combat-party-name">${program.name}</div>
+              <div class="combat-party-meta">HP ${program.hp}/${program.maxHp}</div>
+              <div class="combat-party-meta">LVL ${program.level}</div>
+              ${module ? `
+                <div class="combat-party-module">
+                  <span class="combat-party-module-label">MODULE</span>
+                  <span class="combat-party-module-name">${module.name || "Recovered Module"}</span>
+                  ${moduleStat ? `<span class="combat-party-module-effect">${moduleStat.text}</span>` : ""}
+                </div>
+              ` : '<div class="combat-party-module is-empty">NO MODULE EQUIPPED</div>'}
+              ${program.id === actor.id ? '<div class="combat-party-tag">ACTIVE</div>' : ""}
+            </div>
+          `;
+        }).join("")}
       </div>
       <div class="combat-action-note">SWITCHING COMING SOON.</div>
       <div class="combat-command-back-row">
