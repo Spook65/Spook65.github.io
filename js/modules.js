@@ -44,6 +44,60 @@ const recoveredModuleSourceProfiles = {
   }
 };
 
+const recoveredModuleStatLabels = {
+  detectionPowerPct: "Detection Power",
+  accuracyPct: "Accuracy",
+  attackPct: "Move Power",
+  speedPct: "Speed",
+  defensePct: "Defense",
+  containmentPowerPct: "Containment Power",
+  cleanupPowerPct: "Cleanup Power",
+  recoveryPowerPct: "Recovery Power",
+  statusResistancePct: "Status Resistance",
+  corruptionResistancePct: "Corruption Resistance",
+  responseStrengthPct: "Response Strength",
+  gaugeGainPct: "Tactical Gauge Gain",
+  startGauge: "Starting Tactical Gauge"
+};
+
+// Affix definitions stay immutable; crafting can later mutate the rolled arrays stored on each module instance.
+const recoveredModuleAffixRegistry = {
+  prefixes: [
+    { id: "calibrated", type: "prefix", label: "Calibrated", statBonuses: { accuracyPct: { min: 3, max: 7 } }, displayTemplate: "+{value}% Accuracy", conceptTags: ["detection", "incident_response"] },
+    { id: "forensic", type: "prefix", label: "Forensic", statBonuses: { detectionPowerPct: { min: 3, max: 7 } }, displayTemplate: "+{value}% Detection Power", conceptTags: ["detection", "incident_response"] },
+    { id: "overclocked", type: "prefix", label: "Overclocked", statBonuses: { attackPct: { min: 3, max: 6 } }, displayTemplate: "+{value}% Move Power", conceptTags: ["speed", "routing"] },
+    { id: "rapid", type: "prefix", label: "Rapid", statBonuses: { speedPct: { min: 3, max: 6 } }, displayTemplate: "+{value}% Speed", conceptTags: ["speed", "routing"] },
+    { id: "reinforced", type: "prefix", label: "Reinforced", statBonuses: { defensePct: { min: 3, max: 7 } }, displayTemplate: "+{value}% Defense", conceptTags: ["hardening", "containment", "patching"] },
+    { id: "compiled", type: "prefix", label: "Compiled", statBonuses: { cleanupPowerPct: { min: 3, max: 7 } }, displayTemplate: "+{value}% Cleanup Power", conceptTags: ["malware_cleanup", "patching"] }
+  ],
+  suffixes: [
+    { id: "of_quarantine", type: "suffix", label: "of Quarantine", statBonuses: { containmentPowerPct: { min: 4, max: 8 } }, displayTemplate: "+{value}% Containment Power", conceptTags: ["containment", "hardening"] },
+    { id: "of_continuity", type: "suffix", label: "of Continuity", statBonuses: { recoveryPowerPct: { min: 4, max: 8 } }, displayTemplate: "+{value}% Recovery Power", conceptTags: ["recovery", "malware_cleanup"] },
+    { id: "of_integrity", type: "suffix", label: "of Integrity", statBonuses: { statusResistancePct: { min: 3, max: 7 } }, displayTemplate: "+{value}% Status Resistance", conceptTags: ["hardening", "patching"] },
+    { id: "of_countertrace", type: "suffix", label: "of Countertrace", statBonuses: { gaugeGainPct: { min: 3, max: 7 } }, displayTemplate: "+{value}% Tactical Gauge Gain", conceptTags: ["detection", "incident_response"] },
+    { id: "of_sandboxing", type: "suffix", label: "of Sandboxing", statBonuses: { corruptionResistancePct: { min: 3, max: 7 } }, displayTemplate: "+{value}% Corruption Resistance", conceptTags: ["malware_cleanup", "containment"] },
+    { id: "of_routing", type: "suffix", label: "of Routing", statBonuses: { responseStrengthPct: { min: 3, max: 7 } }, displayTemplate: "+{value}% Response Strength", conceptTags: ["routing", "incident_response"] }
+  ],
+  substats: [
+    { id: "speed_substat", type: "substat", label: "Speed", statBonuses: { speedPct: { min: 2, max: 5 } }, displayTemplate: "+{value}% Speed", conceptTags: ["speed", "routing"] },
+    { id: "defense_substat", type: "substat", label: "Defense", statBonuses: { defensePct: { min: 2, max: 5 } }, displayTemplate: "+{value}% Defense", conceptTags: ["hardening", "containment"] },
+    { id: "accuracy_substat", type: "substat", label: "Accuracy", statBonuses: { accuracyPct: { min: 2, max: 5 } }, displayTemplate: "+{value}% Accuracy", conceptTags: ["detection", "routing"] },
+    { id: "detection_substat", type: "substat", label: "Detection Power", statBonuses: { detectionPowerPct: { min: 2, max: 5 } }, displayTemplate: "+{value}% Detection Power", conceptTags: ["detection"] },
+    { id: "cleanup_substat", type: "substat", label: "Cleanup Power", statBonuses: { cleanupPowerPct: { min: 2, max: 5 } }, displayTemplate: "+{value}% Cleanup Power", conceptTags: ["malware_cleanup"] },
+    { id: "containment_substat", type: "substat", label: "Containment Power", statBonuses: { containmentPowerPct: { min: 2, max: 5 } }, displayTemplate: "+{value}% Containment Power", conceptTags: ["containment"] },
+    { id: "recovery_substat", type: "substat", label: "Recovery Power", statBonuses: { recoveryPowerPct: { min: 2, max: 5 } }, displayTemplate: "+{value}% Recovery Power", conceptTags: ["recovery"] },
+    { id: "gauge_gain_substat", type: "substat", label: "Tactical Gauge Gain", statBonuses: { gaugeGainPct: { min: 2, max: 5 } }, displayTemplate: "+{value}% Tactical Gauge Gain", conceptTags: ["incident_response", "routing"] }
+  ]
+};
+
+const recoveredModuleRarityRules = {
+  common: { prefixes: [0, 0], suffixes: [0, 0], substats: [0, 0], uniqueEffect: false },
+  uncommon: { prefixes: [0, 1], suffixes: [0, 1], substats: [0, 1], uniqueEffect: false, singlePrimaryAffix: true },
+  rare: { prefixes: [1, 1], suffixes: [1, 1], substats: [1, 1], uniqueEffect: false },
+  epic: { prefixes: [1, 2], suffixes: [1, 2], substats: [1, 2], uniqueEffect: false },
+  legendary: { prefixes: [2, 2], suffixes: [2, 2], substats: [2, 3], uniqueEffect: true }
+};
+
 const recoveredModuleRegistry = [
   {
     id: "packet_sieve",
@@ -290,6 +344,147 @@ function rollRecoveredModuleValue(module) {
   return Math.floor(Math.random() * ((high - low) + 1)) + low;
 }
 
+function rollModuleRange(range, fallbackMin = 0, fallbackMax = fallbackMin) {
+  const min = Number.isFinite(range?.min) ? range.min : fallbackMin;
+  const max = Number.isFinite(range?.max) ? range.max : fallbackMax;
+  const low = Math.min(min, max);
+  const high = Math.max(min, max);
+  return Math.floor(Math.random() * ((high - low) + 1)) + low;
+}
+
+function getModuleStatLabel(statKey) {
+  return recoveredModuleStatLabels[statKey] || String(statKey || "Module Power")
+    .replace(/Pct$/, "")
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/^./, (character) => character.toUpperCase());
+}
+
+function formatModuleStatText(statKey, value) {
+  const safeValue = Number.isFinite(value) ? value : 0;
+  const suffix = statKey === "startGauge" ? "" : "%";
+  return `+${safeValue}${suffix} ${getModuleStatLabel(statKey)}`;
+}
+
+function getModuleBaseStat(module) {
+  if (module?.baseStat && typeof module.baseStat === "object" && module.baseStat.statKey && Number.isFinite(module.baseStat.value)) {
+    return {
+      statKey: module.baseStat.statKey,
+      value: module.baseStat.value,
+      label: module.baseStat.label || formatModuleStatText(module.baseStat.statKey, module.baseStat.value)
+    };
+  }
+
+  const legacyStats = module?.statBonuses && typeof module.statBonuses === "object" ? module.statBonuses : {};
+  const statKey = Object.keys(legacyStats).find((key) => Number.isFinite(legacyStats[key]));
+  const value = statKey ? legacyStats[statKey] : (Number.isFinite(module?.rolledValue) ? module.rolledValue : 0);
+  return {
+    statKey: statKey || "modulePower",
+    value,
+    label: formatModuleStatText(statKey || "modulePower", value)
+  };
+}
+
+function getModuleAffixList(module, type) {
+  const key = type === "prefix" ? "prefixes" : type === "suffix" ? "suffixes" : "substats";
+  return Array.isArray(module?.[key]) ? module[key].filter((affix) => affix && typeof affix === "object") : [];
+}
+
+function getModuleAffixDisplayText(affix) {
+  if (typeof affix?.displayText === "string" && affix.displayText.trim()) {
+    return affix.displayText.trim();
+  }
+  return affix?.statKey && Number.isFinite(affix?.value) ? formatModuleStatText(affix.statKey, affix.value) : "";
+}
+
+function getModuleRarityRule(rarity) {
+  return recoveredModuleRarityRules[String(rarity || "common").toLowerCase()] || recoveredModuleRarityRules.common;
+}
+
+function rollRecoveredModuleRarity(module, context = {}) {
+  const requested = String(context.rarity || "").toLowerCase();
+  if (["common", "uncommon", "rare"].includes(requested)) {
+    return requested;
+  }
+
+  const baseRarity = String(module?.rarity || "common").toLowerCase();
+  const roll = Math.random();
+  if (baseRarity === "rare") {
+    return "rare";
+  }
+  if (baseRarity === "uncommon") {
+    return roll < 0.2 ? "rare" : "uncommon";
+  }
+  if (roll < 0.1) {
+    return "rare";
+  }
+  return roll < 0.42 ? "uncommon" : "common";
+}
+
+function getModuleAffixCounts(rarity) {
+  const rule = getModuleRarityRule(rarity);
+  if (rule.singlePrimaryAffix) {
+    const usePrefix = Math.random() < 0.5;
+    return {
+      prefixes: usePrefix ? 1 : 0,
+      suffixes: usePrefix ? 0 : 1,
+      substats: Math.random() < 0.5 ? 1 : 0
+    };
+  }
+
+  return {
+    prefixes: rollModuleRange({ min: rule.prefixes[0], max: rule.prefixes[1] }),
+    suffixes: rollModuleRange({ min: rule.suffixes[0], max: rule.suffixes[1] }),
+    substats: rollModuleRange({ min: rule.substats[0], max: rule.substats[1] })
+  };
+}
+
+function getAffixPrimaryStatDefinition(affix) {
+  const stats = affix?.statBonuses && typeof affix.statBonuses === "object" ? affix.statBonuses : {};
+  const statKey = Object.keys(stats).find((key) => stats[key] && typeof stats[key] === "object");
+  return statKey ? { statKey, range: stats[statKey] } : null;
+}
+
+function rollRecoveredModuleAffix(affix) {
+  const statDefinition = getAffixPrimaryStatDefinition(affix);
+  if (!affix?.id || !statDefinition) {
+    return null;
+  }
+
+  const value = rollModuleRange(statDefinition.range);
+  const displayText = typeof affix.displayTemplate === "string"
+    ? affix.displayTemplate.replace(/\{value\}/g, String(value))
+    : formatModuleStatText(statDefinition.statKey, value);
+  return {
+    id: affix.id,
+    type: affix.type || "substat",
+    label: affix.label || getModuleStatLabel(statDefinition.statKey),
+    statKey: statDefinition.statKey,
+    value,
+    displayText,
+    conceptTags: normalizeModuleConceptTags(affix.conceptTags || [])
+  };
+}
+
+function selectRecoveredModuleAffixes(pool, count, conceptTags, usedAffixIds) {
+  const safePool = Array.isArray(pool) ? pool.filter((affix) => affix?.id && !usedAffixIds.has(affix.id)) : [];
+  const matching = safePool.filter((affix) => normalizeModuleConceptTags(affix.conceptTags || []).some((tag) => conceptTags.includes(tag)));
+  const fallback = safePool.filter((affix) => !matching.some((match) => match.id === affix.id));
+  const ordered = matching.sort(() => Math.random() - 0.5).concat(fallback.sort(() => Math.random() - 0.5));
+  const selected = [];
+
+  ordered.forEach((definition) => {
+    if (selected.length >= count || usedAffixIds.has(definition.id)) {
+      return;
+    }
+    const rolled = rollRecoveredModuleAffix(definition);
+    if (rolled) {
+      usedAffixIds.add(definition.id);
+      selected.push(rolled);
+    }
+  });
+  return selected;
+}
+
 function formatRecoveredModuleEffectText(module, rolledValue) {
   const template = typeof module?.effectText === "string" && module.effectText.trim()
     ? module.effectText
@@ -303,10 +498,19 @@ function createRecoveredModuleInstance(module, context = {}) {
   }
 
   const rolledValue = rollRecoveredModuleValue(module);
-  const statBonuses = {};
-  Object.keys(module.statBonuses || {}).forEach((statKey) => {
-    statBonuses[statKey] = rolledValue;
-  });
+  const baseStatKey = Object.keys(module.statBonuses || {}).find((statKey) => Number.isFinite(module.statBonuses[statKey])) || "modulePower";
+  const baseStat = {
+    statKey: baseStatKey,
+    value: rolledValue,
+    label: formatModuleStatText(baseStatKey, rolledValue)
+  };
+  const rarity = rollRecoveredModuleRarity(module, context);
+  const affixCounts = getModuleAffixCounts(rarity);
+  const conceptTags = normalizeModuleConceptTags(module.conceptTags || []);
+  const usedAffixIds = new Set();
+  const prefixes = selectRecoveredModuleAffixes(recoveredModuleAffixRegistry.prefixes, affixCounts.prefixes, conceptTags, usedAffixIds);
+  const suffixes = selectRecoveredModuleAffixes(recoveredModuleAffixRegistry.suffixes, affixCounts.suffixes, conceptTags, usedAffixIds);
+  const substats = selectRecoveredModuleAffixes(recoveredModuleAffixRegistry.substats, affixCounts.substats, conceptTags, usedAffixIds);
 
   const effect = module.effect && typeof module.effect === "object" ? { ...module.effect } : {};
   if ("valuePct" in effect) {
@@ -320,9 +524,9 @@ function createRecoveredModuleInstance(module, context = {}) {
     instanceId: `${module.id}-${Date.now()}-${Math.floor(Math.random() * 100000)}`,
     id: module.id,
     name: module.name || "Recovered Module",
-    rarity: module.rarity || "common",
+    rarity,
     slot: module.slot || "module",
-    conceptTags: normalizeModuleConceptTags(module.conceptTags || []),
+    conceptTags,
     sourceId: sourceProfile.sourceId,
     sourceName: sourceProfile.sourceName || module.sourceName || "Hermes Relay",
     sourceTheme: sourceProfile.sourceTheme || module.sourceTheme || "Recovered Protocol",
@@ -332,7 +536,12 @@ function createRecoveredModuleInstance(module, context = {}) {
     relicType: module.relicType || "lens",
     shortDescription: module.shortDescription || "Recovered combat module.",
     effectText: formatRecoveredModuleEffectText(module, rolledValue),
-    statBonuses,
+    statBonuses: {},
+    baseStat,
+    prefixes,
+    suffixes,
+    substats,
+    uniqueEffect: getModuleRarityRule(rarity).uniqueEffect ? { id: "future_unique_effect", label: "Unique protocol dormant.", statBonuses: {} } : null,
     effect,
     rolledValue,
     flavorText: module.flavorText || "Recovered from a contained incident.",
@@ -373,7 +582,32 @@ function getRecoveredModuleStat(module, statKey) {
 }
 
 function getModuleStatBonus(module, statKey) {
-  return getRecoveredModuleStat(module, statKey);
+  if (!module || !statKey) {
+    return 0;
+  }
+
+  let total = getRecoveredModuleStat(module, statKey);
+  if (module.baseStat?.statKey === statKey && Number.isFinite(module.baseStat.value)) {
+    total += module.baseStat.value;
+  }
+
+  // All combat consumers read this aggregate, so future forge rerolls only need to update instance layers.
+  ["prefixes", "suffixes", "substats"].forEach((key) => {
+    const affixes = Array.isArray(module[key]) ? module[key] : [];
+    affixes.forEach((affix) => {
+      if (affix?.statKey === statKey && Number.isFinite(affix.value)) {
+        total += affix.value;
+      }
+    });
+  });
+
+  const uniqueStats = module.uniqueEffect?.statBonuses && typeof module.uniqueEffect.statBonuses === "object"
+    ? module.uniqueEffect.statBonuses
+    : {};
+  if (Number.isFinite(uniqueStats[statKey])) {
+    total += uniqueStats[statKey];
+  }
+  return total;
 }
 
 function getRecoveredModuleShortLabel(module) {
@@ -418,10 +652,16 @@ function getDefenderModuleStat(defender, statKey) {
 if (typeof window !== "undefined") {
   window.recoveredModuleSourceProfiles = recoveredModuleSourceProfiles;
   window.recoveredModuleRegistry = recoveredModuleRegistry;
+  window.recoveredModuleAffixRegistry = recoveredModuleAffixRegistry;
+  window.recoveredModuleRarityRules = recoveredModuleRarityRules;
   window.getRecoveredModuleBlueprint = getRecoveredModuleBlueprint;
   window.getRecoveredModuleSourceProfile = getRecoveredModuleSourceProfile;
   window.getRecoveredModuleConceptLabel = getRecoveredModuleConceptLabel;
   window.generateRecoveredModuleChoices = generateRecoveredModuleChoices;
+  window.getModuleBaseStat = getModuleBaseStat;
+  window.getModuleAffixList = getModuleAffixList;
+  window.getModuleAffixDisplayText = getModuleAffixDisplayText;
+  window.getModuleStatLabel = getModuleStatLabel;
   window.getModuleStatBonus = getModuleStatBonus;
   window.getRecoveredModuleShortLabel = getRecoveredModuleShortLabel;
   window.getEquippedModuleForDefenderId = getEquippedModuleForDefenderId;

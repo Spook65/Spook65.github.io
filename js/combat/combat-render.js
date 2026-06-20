@@ -731,6 +731,7 @@ function buildProgramStatusPanelMarkup(program) {
           <span class="combat-status-module-label">MODULE ONLINE</span>
           <span class="combat-status-module-name">${module.name || "Recovered Module"}</span>
           ${moduleStat ? `<span class="combat-status-module-effect">${moduleStat.text}</span>` : ""}
+          <span class="combat-status-module-affixes">${getRecoveredModuleShortAffixSummary(module)}</span>
         </div>
       ` : ""}
       ${statusMarkup}
@@ -1225,6 +1226,7 @@ function buildStageCommandSubmenuMarkup(state) {
                       <span class="combat-party-module-label">MODULE</span>
                       <span class="combat-party-module-name">${module.name || "Recovered Module"}</span>
                       ${moduleStat ? `<span class="combat-party-module-effect">${moduleStat.text}</span>` : ""}
+                      <span class="combat-party-module-affixes">${getRecoveredModuleShortAffixSummary(module)}</span>
                     </div>
                   ` : '<div class="combat-party-module is-empty">NO MODULE EQUIPPED</div>'}
                   ${program.id === currentActor.ref.id ? '<div class="combat-party-tag">ACTIVE</div>' : ""}
@@ -1433,6 +1435,7 @@ function buildActionButtonMarkup(state) {
                   <span class="combat-party-module-label">MODULE</span>
                   <span class="combat-party-module-name">${module.name || "Recovered Module"}</span>
                   ${moduleStat ? `<span class="combat-party-module-effect">${moduleStat.text}</span>` : ""}
+                  <span class="combat-party-module-affixes">${getRecoveredModuleShortAffixSummary(module)}</span>
                 </div>
               ` : '<div class="combat-party-module is-empty">NO MODULE EQUIPPED</div>'}
               ${program.id === actor.id ? '<div class="combat-party-tag">ACTIVE</div>' : ""}
@@ -1747,26 +1750,77 @@ function getRecoveredModuleItemClass(module) {
 }
 
 function getRecoveredModulePrimaryStat(module) {
+  const baseStat = typeof getModuleBaseStat === "function" ? getModuleBaseStat(module) : null;
   const stats = module?.statBonuses && typeof module.statBonuses === "object" ? module.statBonuses : {};
-  const statLabels = {
-    detectionPowerPct: "Detection Power",
-    accuracyPct: "Accuracy",
-    startGauge: "Starting Tactical Gauge",
-    containmentPowerPct: "Containment Power",
-    defensePct: "Defense",
-    cleanupPowerPct: "Cleanup Power",
-    recoveryPowerPct: "Recovery Power"
-  };
-  const statKey = Object.keys(stats).find((key) => Number.isFinite(stats[key]));
-  const value = Number.isFinite(stats[statKey]) ? stats[statKey] : (Number.isFinite(module?.rolledValue) ? module.rolledValue : 0);
-  const label = statLabels[statKey] || "Module Power";
+  const legacyStatKey = Object.keys(stats).find((key) => Number.isFinite(stats[key]));
+  const statKey = baseStat?.statKey || legacyStatKey || "modulePower";
+  const value = Number.isFinite(baseStat?.value)
+    ? baseStat.value
+    : Number.isFinite(stats[statKey])
+      ? stats[statKey]
+      : (Number.isFinite(module?.rolledValue) ? module.rolledValue : 0);
+  const label = typeof getModuleStatLabel === "function" ? getModuleStatLabel(statKey) : "Module Power";
   const suffix = statKey === "startGauge" ? "" : "%";
 
   return {
     value,
     label,
-    text: `+${value}${suffix} ${label}`
+    statKey,
+    text: baseStat?.label || `+${value}${suffix} ${label}`
   };
+}
+
+function getRecoveredModuleAffixGroups(module) {
+  const getList = (type) => typeof getModuleAffixList === "function"
+    ? getModuleAffixList(module, type)
+    : Array.isArray(module?.[type === "prefix" ? "prefixes" : type === "suffix" ? "suffixes" : "substats"])
+      ? module[type === "prefix" ? "prefixes" : type === "suffix" ? "suffixes" : "substats"]
+      : [];
+  return {
+    affixes: getList("prefix").concat(getList("suffix")),
+    substats: getList("substat")
+  };
+}
+
+function getRecoveredModuleAffixText(affix) {
+  const display = typeof getModuleAffixDisplayText === "function" ? getModuleAffixDisplayText(affix) : "";
+  const label = getSafeModuleText(affix?.label, "Affix");
+  return display ? `${label}: ${display}` : label;
+}
+
+function getRecoveredModuleShortAffixSummary(module) {
+  const groups = getRecoveredModuleAffixGroups(module);
+  const entries = groups.affixes.concat(groups.substats);
+  if (!entries.length) {
+    return "BASE STAT ONLY";
+  }
+
+  const first = getSafeModuleText(entries[0]?.label, "AFFIX");
+  return entries.length > 1 ? `${first} / +${entries.length - 1} MORE` : first;
+}
+
+function buildRecoveredModuleAffixDetailMarkup(module) {
+  const groups = getRecoveredModuleAffixGroups(module);
+  if (!groups.affixes.length && !groups.substats.length) {
+    return '<div class="battle-module-affix-empty">NO AFFIXES / STABLE BASE ROLL</div>';
+  }
+
+  return `
+    <div class="battle-module-affix-grid">
+      ${groups.affixes.length ? `
+        <div class="battle-module-affix-group">
+          <div class="battle-module-focus-label">AFFIXES</div>
+          ${groups.affixes.map((affix) => `<div class="battle-module-affix-line">${getRecoveredModuleAffixText(affix)}</div>`).join("")}
+        </div>
+      ` : ""}
+      ${groups.substats.length ? `
+        <div class="battle-module-affix-group is-substats">
+          <div class="battle-module-focus-label">SUBSTATS</div>
+          ${groups.substats.map((affix) => `<div class="battle-module-affix-line">${getRecoveredModuleAffixText(affix)}</div>`).join("")}
+        </div>
+      ` : ""}
+    </div>
+  `;
 }
 
 function getFocusedModuleChoiceIndex(state, choices) {
@@ -1813,6 +1867,7 @@ function buildRecoveredModuleCardMarkup(module, index, focusedIndex = 0) {
         <span class="battle-module-rarity">${itemClass} / ${rarity} MODULE</span>
       </span>
       <span class="battle-module-stat">${primaryStat.text}</span>
+      <span class="battle-module-card-affix">${getRecoveredModuleShortAffixSummary(module)}</span>
       <span class="battle-module-source">SOURCE: ${source.sourceName}</span>
       <span class="battle-module-concept">CONCEPT: ${conceptLabel}</span>
     </button>
@@ -1853,6 +1908,7 @@ function buildRecoveredModuleFocusMarkup(module, state) {
         <div class="battle-module-focus-name">${name}</div>
         <div class="battle-module-focus-meta">${itemClass} / ${rarity} MODULE / CONCEPT: ${conceptLabel}</div>
         <div class="battle-module-focus-stat">${primaryStat.text}</div>
+        ${buildRecoveredModuleAffixDetailMarkup(module)}
         <div class="battle-module-focus-effect">${effectText}</div>
         <div class="battle-module-focus-description">${source.sourceDescription}</div>
         <div class="battle-module-focus-flavor">"${source.sourceLine}"</div>
@@ -1871,10 +1927,12 @@ function buildRecoveredModuleInstallPreviewMarkup(state, module) {
   const primaryStat = getRecoveredModulePrimaryStat(module);
   const bestFit = getRecoveredModuleBestFit(state, module);
   const fitLabel = bestFit || "ANY ACTIVE DEFENDER";
+  const affixSummary = getRecoveredModuleShortAffixSummary(module);
   return `
     <div class="battle-module-install-preview">
       <span>BEST FIT: ${fitLabel}</span>
       <span>INSTALL PREVIEW: ${fitLabel} gains ${primaryStat.text}</span>
+      <span>AFFIX PROFILE: ${affixSummary}</span>
     </div>
   `;
 }
