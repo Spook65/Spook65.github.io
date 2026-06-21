@@ -1189,6 +1189,125 @@ function buildStageCommandClusterMarkup(state) {
   `;
 }
 
+function formatDefenderInspectValue(value, suffix = "") {
+  return Number.isFinite(value) ? `${Math.round(value * 10) / 10}${suffix}` : `0${suffix}`;
+}
+
+function formatDefenderAccuracyRange(min, max) {
+  const safeMin = Number.isFinite(min) ? min : 100;
+  const safeMax = Number.isFinite(max) ? max : safeMin;
+  return safeMin === safeMax ? `${safeMin}%` : `${safeMin}-${safeMax}%`;
+}
+
+function buildDefenderEffectiveStatRow(stat) {
+  if (!stat || typeof stat !== "object") {
+    return "";
+  }
+
+  const isAccuracy = stat.key === "accuracyPct";
+  const bonus = Number.isFinite(stat.bonusPct) ? stat.bonusPct : Number.isFinite(stat.bonus) ? stat.bonus : 0;
+  const isFuture = bonus > 0 && stat.active === false;
+  const baseText = isAccuracy
+    ? formatDefenderAccuracyRange(stat.baseMin, stat.baseMax)
+    : formatDefenderInspectValue(stat.base);
+  const bonusSuffix = stat.key === "startGauge" ? "" : "%";
+  const bonusText = bonus > 0 ? `+${formatDefenderInspectValue(bonus, bonusSuffix)}` : "-";
+  let totalText = isAccuracy
+    ? formatDefenderAccuracyRange(stat.totalMin, stat.totalMax)
+    : formatDefenderInspectValue(stat.total);
+
+  if (stat.key === "defensePct" && bonus > 0) {
+    totalText = `${totalText} / ${formatDefenderInspectValue(bonus, "% DR")}`;
+  } else if (stat.unit === "percent") {
+    totalText = `+${formatDefenderInspectValue(stat.total, "%")}`;
+  } else if (stat.key === "startGauge") {
+    totalText = `+${formatDefenderInspectValue(stat.total)}`;
+  }
+
+  return `
+    <div class="combat-defender-stat-row ${isFuture ? "is-future" : ""}">
+      <div class="combat-defender-stat-name">${stat.label || "Stat"}</div>
+      <div class="combat-defender-stat-value" data-label="BASE">${baseText}</div>
+      <div class="combat-defender-stat-bonus" data-label="MODULE">${bonusText}</div>
+      <div class="combat-defender-stat-total" data-label="EFFECTIVE">${isFuture ? baseText : totalText}</div>
+      ${bonus > 0 ? `<div class="combat-defender-stat-state">${isFuture ? "PLANNED" : stat.partial ? "PARTIAL" : "ACTIVE"}</div>` : ""}
+    </div>
+  `;
+}
+
+function buildDefenderModuleContributionMarkup(module) {
+  if (!module) {
+    return '<div class="combat-defender-module-empty">UNIVERSAL MODULE SLOT EMPTY</div>';
+  }
+
+  const baseStat = typeof getModuleBaseStat === "function" ? getModuleBaseStat(module) : getRecoveredModulePrimaryStat(module);
+  const contributionGroups = [
+    { type: "prefix", label: "PREFIX" },
+    { type: "suffix", label: "SUFFIX" },
+    { type: "substat", label: "SUBSTAT" }
+  ];
+  const contributionRows = contributionGroups.flatMap((group) => {
+    const affixes = typeof getModuleAffixList === "function" ? getModuleAffixList(module, group.type) : [];
+    return affixes.map((affix) => `
+      <div class="combat-defender-module-line">
+        <span>${group.label}</span>
+        <strong>${getRecoveredModuleAffixText(affix)}</strong>
+        ${typeof getModuleStatSupport === "function" && !getModuleStatSupport(affix.statKey).active ? '<em>PLANNED</em>' : ""}
+      </div>
+    `);
+  });
+
+  return `
+    <div class="combat-defender-module-contribution">
+      <div class="combat-defender-section-label">MODULE CONTRIBUTION</div>
+      <div class="combat-defender-module-line is-base">
+        <span>BASE</span>
+        <strong>${baseStat?.label || baseStat?.text || "Module Power"}</strong>
+      </div>
+      ${contributionRows.join("")}
+    </div>
+  `;
+}
+
+function buildDefenderInspectMarkup(state, program) {
+  if (!program) {
+    return '<div class="combat-defender-inspect is-empty">NO DEFENDER SIGNAL.</div>';
+  }
+
+  const effective = typeof getDefenderEffectiveStats === "function"
+    ? getDefenderEffectiveStats(state, program)
+    : { module: program.equippedModule || null, stats: {} };
+  const module = effective.module || null;
+  const statRows = Object.values(effective.stats || {}).map(buildDefenderEffectiveStatRow).join("");
+  const moduleName = module?.name || "No Module Equipped";
+  const moduleMeta = module
+    ? `${getRecoveredModuleItemClass(module)} / ${getSafeModuleText(module.rarity, "common").toUpperCase()} MODULE`
+    : "UNIVERSAL MODULE SLOT / EMPTY";
+
+  return `
+    <section class="combat-defender-inspect ${module ? getModuleRarityClass(module) : ""}" aria-label="${program.name || "Defender"} effective stats">
+      <div class="combat-defender-inspect-head">
+        <div>
+          <div class="combat-defender-inspect-name">${program.name || "Defender"}</div>
+          <div class="combat-defender-inspect-meta">LVL ${program.level || 1} / HP ${program.hp || 0}/${program.maxHp || 0}</div>
+        </div>
+        <div class="combat-defender-module-chip">${module ? "MODULE ONLINE" : "SLOT EMPTY"}</div>
+      </div>
+      <div class="combat-defender-module-head">
+        <div class="combat-defender-section-label">EQUIPPED MODULE</div>
+        <div class="combat-defender-module-name">${moduleName}</div>
+        <div class="combat-defender-module-meta">${moduleMeta}</div>
+      </div>
+      ${buildDefenderModuleContributionMarkup(module)}
+      <div class="combat-defender-effective-stats">
+        <div class="combat-defender-section-label">EFFECTIVE STATS</div>
+        <div class="combat-defender-stat-columns" aria-hidden="true"><span>STAT</span><span>BASE</span><span>MODULE</span><span>EFFECTIVE</span></div>
+        ${statRows}
+      </div>
+    </section>
+  `;
+}
+
 function buildStageCommandSubmenuMarkup(state) {
   if (!state || state.actionLocked || state.battleIntroPlaying) {
     return "";
@@ -1205,6 +1324,8 @@ function buildStageCommandSubmenuMarkup(state) {
   }
 
   if (commandMode === "programs") {
+    const inspectedProgramId = state.inspectedProgramId || currentActor.ref.id;
+    const inspectedProgram = state.playerParty.find((program) => program.id === inspectedProgramId) || currentActor.ref;
     return `
       <div class="combat-stage-command-submenu is-programs" aria-label="Battlefield programs menu">
         <div class="combat-stage-command-submenu-header">
@@ -1212,27 +1333,23 @@ function buildStageCommandSubmenuMarkup(state) {
           <div class="combat-stage-command-submenu-copy">ACTIVE DEFENDER REVIEW</div>
         </div>
         <div class="combat-stage-command-submenu-body">
-          <div class="combat-stage-program-grid combat-party-grid">
-            ${state.playerParty.map((program) => {
-              const module = program.equippedModule || null;
-              const moduleStat = module ? getRecoveredModulePrimaryStat(module) : null;
-              return `
-                <div class="combat-stage-program-card combat-party-card ${program.id === currentActor.ref.id ? "is-active" : ""} ${program.hp <= 0 ? "is-down" : ""}">
-                  <div class="combat-party-name">${program.name}</div>
-                  <div class="combat-party-meta">HP ${program.hp}/${program.maxHp}</div>
-                  <div class="combat-party-meta">LVL ${program.level}</div>
-                  ${module ? `
-                    <div class="combat-party-module">
-                      <span class="combat-party-module-label">MODULE</span>
-                      <span class="combat-party-module-name">${module.name || "Recovered Module"}</span>
-                      ${moduleStat ? `<span class="combat-party-module-effect">${moduleStat.text}</span>` : ""}
-                      <span class="combat-party-module-affixes">${getRecoveredModuleShortAffixSummary(module)}</span>
-                    </div>
-                  ` : '<div class="combat-party-module is-empty">NO MODULE EQUIPPED</div>'}
-                  ${program.id === currentActor.ref.id ? '<div class="combat-party-tag">ACTIVE</div>' : ""}
-                </div>
-              `;
-            }).join("")}
+          <div class="combat-stage-program-layout">
+            <div class="combat-stage-program-grid combat-party-grid">
+              ${state.playerParty.map((program) => {
+                const module = program.equippedModule || null;
+                return `
+                  <button class="combat-stage-program-card combat-party-card ${program.id === currentActor.ref.id ? "is-active" : ""} ${program.id === inspectedProgram.id ? "is-inspected" : ""} ${program.hp <= 0 ? "is-down" : ""}" type="button" data-defender-inspect="${program.id}">
+                    <span class="combat-party-name">${program.name}</span>
+                    <span class="combat-party-meta">LVL ${program.level} / HP ${program.hp}/${program.maxHp}</span>
+                    <span class="combat-party-module-compact">${module?.name || "NO MODULE"}</span>
+                    ${program.id === currentActor.ref.id ? '<span class="combat-party-tag">ACTIVE</span>' : ""}
+                  </button>
+                `;
+              }).join("")}
+            </div>
+            <div class="combat-defender-inspect-slot" data-defender-inspect-preview>
+              ${buildDefenderInspectMarkup(state, inspectedProgram)}
+            </div>
           </div>
           <div class="combat-stage-command-submenu-note">SWITCHING COMING SOON.</div>
         </div>
@@ -2222,6 +2339,25 @@ function updateRecoveredModuleFocusPreview(choiceIndex) {
   });
 }
 
+function updateDefenderInspectPreview(programId) {
+  if (!combatState || combatState.commandMode !== "programs" || !programId) {
+    return;
+  }
+
+  const party = Array.isArray(combatState.playerParty) ? combatState.playerParty : [];
+  const program = party.find((candidate) => candidate?.id === programId);
+  const preview = threatPanelContent?.querySelector("[data-defender-inspect-preview]");
+  if (!program || !preview) {
+    return;
+  }
+
+  combatState.inspectedProgramId = program.id;
+  preview.innerHTML = buildDefenderInspectMarkup(combatState, program);
+  threatPanelContent.querySelectorAll("[data-defender-inspect]").forEach((button) => {
+    button.classList.toggle("is-inspected", button.getAttribute("data-defender-inspect") === program.id);
+  });
+}
+
 // renderBattleLostScreen() shows the failure branch without tearing down the overlay instantly.
 function renderBattleLostScreen() {
   threatPanelContent.innerHTML = buildBattleLostMarkup();
@@ -2234,6 +2370,13 @@ function renderBattleLostScreen() {
 // bindCombatButtons() reattaches button listeners after each render because the combat pane is rebuilt often.
 function bindCombatButtons() {
   const actor = combatState ? combatState.turnOrder[combatState.currentTurnIndex] : null;
+
+  threatPanelContent.querySelectorAll("[data-defender-inspect]").forEach((button) => {
+    const inspect = () => updateDefenderInspectPreview(button.getAttribute("data-defender-inspect"));
+    button.addEventListener("mouseenter", inspect);
+    button.addEventListener("focus", inspect);
+    button.addEventListener("click", inspect);
+  });
 
   threatPanelContent.querySelectorAll("[data-combat-command]").forEach((button) => {
     button.addEventListener("click", () => {
@@ -2314,6 +2457,7 @@ function bindCombatButtons() {
         combatState.attackFanFallbackActorId = "";
         combatState.attackFanFallbackReason = "";
         combatState.commandMode = "programs";
+        combatState.inspectedProgramId = actor.ref.id;
         combatState.battleMessage = "";
         combatState.battleSubmessage = "";
         renderCombatScreen();

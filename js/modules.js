@@ -60,6 +60,22 @@ const recoveredModuleStatLabels = {
   startGauge: "Starting Tactical Gauge"
 };
 
+const recoveredModuleStatSupport = {
+  accuracyPct: { active: true, note: "Applied to each move accuracy roll." },
+  defensePct: { active: true, note: "Reduces incoming threat damage." },
+  startGauge: { active: true, note: "Added when battle begins." },
+  containmentPowerPct: { active: true, note: "Strengthens containment responses." },
+  cleanupPowerPct: { active: true, note: "Strengthens purge responses." },
+  recoveryPowerPct: { active: true, note: "Strengthens recovery responses." },
+  detectionPowerPct: { active: true, partial: true, note: "Supports scan feedback and analysis." },
+  attackPct: { active: false, note: "Planned move-power modifier." },
+  speedPct: { active: false, note: "Planned initiative modifier." },
+  statusResistancePct: { active: false, note: "Planned status-resistance modifier." },
+  gaugeGainPct: { active: false, note: "Planned Tactical Gauge gain modifier." },
+  corruptionResistancePct: { active: false, note: "Planned corruption-resistance modifier." },
+  responseStrengthPct: { active: false, note: "Planned universal response modifier." }
+};
+
 // Affix definitions stay immutable; crafting can later mutate the rolled arrays stored on each module instance.
 const recoveredModuleAffixRegistry = {
   prefixes: [
@@ -610,6 +626,94 @@ function getModuleStatBonus(module, statKey) {
   return total;
 }
 
+function getModuleStatSupport(statKey) {
+  return recoveredModuleStatSupport[statKey] || { active: false, note: "Future module stat." };
+}
+
+function getDefenderBaseStats(program) {
+  const abilities = Array.isArray(program?.abilities) ? program.abilities : Array.isArray(program?.moves) ? program.moves : [];
+  const accuracyValues = abilities
+    .map((ability) => Number.isFinite(ability?.accuracy) ? ability.accuracy : null)
+    .filter(Number.isFinite);
+  const accuracyMin = accuracyValues.length ? Math.min(...accuracyValues) : 100;
+  const accuracyMax = accuracyValues.length ? Math.max(...accuracyValues) : 100;
+
+  return {
+    hp: Number.isFinite(program?.maxHp) ? program.maxHp : Number.isFinite(program?.hp) ? program.hp : 0,
+    currentHp: Number.isFinite(program?.hp) ? program.hp : 0,
+    attack: Number.isFinite(program?.atk) ? program.atk : 0,
+    defense: Number.isFinite(program?.def) ? program.def : 0,
+    specialAttack: Number.isFinite(program?.spAtk) ? program.spAtk : 0,
+    specialDefense: Number.isFinite(program?.spDef) ? program.spDef : 0,
+    speed: Number.isFinite(program?.spd) ? program.spd : 0,
+    moveAccuracyMin: accuracyMin,
+    moveAccuracyMax: accuracyMax
+  };
+}
+
+function getEquippedModuleForProgram(state, programId) {
+  if (!programId) {
+    return null;
+  }
+  const party = Array.isArray(state?.playerParty) ? state.playerParty : [];
+  return party.find((program) => program?.id === programId)?.equippedModule || null;
+}
+
+function getDefenderEffectiveStats(state, program) {
+  const base = getDefenderBaseStats(program);
+  const module = program?.equippedModule || getEquippedModuleForProgram(state, program?.id);
+  const bonus = (statKey) => getModuleStatBonus(module, statKey);
+  const accuracyBonus = bonus("accuracyPct");
+  const effectiveAccuracyMin = Math.min(100, base.moveAccuracyMin + accuracyBonus);
+  const effectiveAccuracyMax = Math.min(100, base.moveAccuracyMax + accuracyBonus);
+  const utilityKeys = [
+    "detectionPowerPct",
+    "containmentPowerPct",
+    "cleanupPowerPct",
+    "recoveryPowerPct",
+    "startGauge",
+    "statusResistancePct",
+    "gaugeGainPct",
+    "corruptionResistancePct",
+    "responseStrengthPct"
+  ];
+
+  const stats = {
+    hp: { key: "hp", label: "HP", base: base.hp, bonus: 0, total: base.hp, active: true },
+    attack: { key: "attackPct", label: "Attack", base: base.attack, bonusPct: bonus("attackPct"), total: base.attack, ...getModuleStatSupport("attackPct") },
+    defense: { key: "defensePct", label: "Defense", base: base.defense, bonusPct: bonus("defensePct"), total: base.defense, ...getModuleStatSupport("defensePct") },
+    speed: { key: "speedPct", label: "Speed", base: base.speed, bonusPct: bonus("speedPct"), total: base.speed, ...getModuleStatSupport("speedPct") },
+    accuracy: {
+      key: "accuracyPct",
+      label: "Move Accuracy",
+      baseMin: base.moveAccuracyMin,
+      baseMax: base.moveAccuracyMax,
+      bonusPct: accuracyBonus,
+      totalMin: effectiveAccuracyMin,
+      totalMax: effectiveAccuracyMax,
+      ...getModuleStatSupport("accuracyPct")
+    }
+  };
+
+  utilityKeys.forEach((statKey) => {
+    const moduleBonus = bonus(statKey);
+    if (moduleBonus <= 0) {
+      return;
+    }
+    stats[statKey] = {
+      key: statKey,
+      label: getModuleStatLabel(statKey),
+      base: 0,
+      bonus: moduleBonus,
+      total: moduleBonus,
+      unit: statKey === "startGauge" ? "flat" : "percent",
+      ...getModuleStatSupport(statKey)
+    };
+  });
+
+  return { base, module, stats };
+}
+
 function getRecoveredModuleShortLabel(module) {
   const name = String(module?.name || "MOD").trim();
   if (!name) {
@@ -662,7 +766,11 @@ if (typeof window !== "undefined") {
   window.getModuleAffixList = getModuleAffixList;
   window.getModuleAffixDisplayText = getModuleAffixDisplayText;
   window.getModuleStatLabel = getModuleStatLabel;
+  window.getModuleStatSupport = getModuleStatSupport;
   window.getModuleStatBonus = getModuleStatBonus;
+  window.getDefenderBaseStats = getDefenderBaseStats;
+  window.getEquippedModuleForProgram = getEquippedModuleForProgram;
+  window.getDefenderEffectiveStats = getDefenderEffectiveStats;
   window.getRecoveredModuleShortLabel = getRecoveredModuleShortLabel;
   window.getEquippedModuleForDefenderId = getEquippedModuleForDefenderId;
   window.equipRecoveredModule = equipRecoveredModule;

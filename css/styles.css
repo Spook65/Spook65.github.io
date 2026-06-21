@@ -9948,7 +9948,8 @@ body {
 /* Local submenu safe-zone anchors: keep Programs above the party HUD and
    keep Items tied to the command origin instead of floating too high. */
 .combat-stage-command-submenu.is-programs {
-  top: clamp(41%, 45%, 50%);
+  top: clamp(20%, 25%, 30%);
+  width: min(34rem, 48vw);
 }
 
 .combat-stage-command-submenu.is-items {
@@ -9985,6 +9986,13 @@ body {
   gap: 0.4rem;
 }
 
+.combat-stage-program-layout {
+  display: grid;
+  grid-template-columns: minmax(9.5rem, 0.72fr) minmax(17rem, 1.45fr);
+  gap: 0.7rem;
+  align-items: start;
+}
+
 .combat-stage-program-card {
   min-height: 3.2rem;
   padding: 0.58rem 0.72rem;
@@ -9994,6 +10002,9 @@ body {
   box-shadow:
     0 16px 30px rgba(0, 0, 0, 0.24),
     inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
 }
 
 .combat-stage-program-card.is-active {
@@ -10005,6 +10016,21 @@ body {
 
 .combat-stage-program-card:not(.is-active) {
   opacity: 0.82;
+}
+
+.combat-stage-program-card.is-inspected {
+  border-color: rgba(127, 183, 176, 0.62);
+  box-shadow:
+    0 0 0 1px rgba(127, 183, 176, 0.1),
+    0 14px 28px rgba(0, 0, 0, 0.28);
+  opacity: 1;
+  outline: none;
+}
+
+.combat-stage-program-card:focus-visible {
+  border-color: rgba(209, 179, 116, 0.72);
+  outline: 1px solid rgba(209, 179, 116, 0.34);
+  outline-offset: 2px;
 }
 
 .combat-stage-program-card .combat-party-name {
@@ -10020,6 +10046,243 @@ body {
 .combat-stage-program-card .combat-party-tag {
   color: rgba(209, 179, 116, 0.9);
   letter-spacing: 0.16em;
+}
+
+.combat-party-module-compact {
+  display: block;
+  margin-top: 0.34rem;
+  color: rgba(127, 183, 176, 0.82);
+  font-size: 0.38rem;
+  letter-spacing: 0.12em;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.combat-defender-inspect {
+  display: grid;
+  gap: 0.56rem;
+  max-height: min(30rem, 58vh);
+  overflow-y: auto;
+  padding: 0.72rem 0.78rem;
+  border: 1px solid rgba(127, 183, 176, 0.24);
+  background:
+    linear-gradient(115deg, rgba(127, 183, 176, 0.07), transparent 38%),
+    linear-gradient(180deg, rgba(9, 11, 15, 0.94), rgba(5, 7, 10, 0.96));
+  box-shadow:
+    0 18px 34px rgba(0, 0, 0, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.035);
+  scrollbar-color: rgba(127, 183, 176, 0.3) transparent;
+  scrollbar-width: thin;
+}
+
+.combat-defender-inspect-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.7rem;
+  padding-bottom: 0.48rem;
+  border-bottom: 1px solid rgba(236, 220, 186, 0.1);
+}
+
+.combat-defender-inspect-name {
+  color: rgba(236, 220, 186, 0.96);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.combat-defender-inspect-meta,
+.combat-defender-module-meta {
+  margin-top: 0.2rem;
+  color: rgba(236, 220, 186, 0.56);
+  font-size: 0.38rem;
+  letter-spacing: 0.12em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.combat-defender-module-chip {
+  flex: 0 0 auto;
+  padding: 0.22rem 0.3rem;
+  border: 1px solid rgba(127, 183, 176, 0.24);
+  color: rgba(127, 183, 176, 0.8);
+  font-size: 0.32rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.combat-defender-module-head,
+.combat-defender-module-contribution,
+.combat-defender-effective-stats {
+  display: grid;
+  gap: 0.28rem;
+}
+
+.combat-defender-section-label {
+  color: rgba(127, 183, 176, 0.7);
+  font-size: 0.33rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.combat-defender-module-name {
+  color: rgba(209, 179, 116, 0.94);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.combat-defender-module-contribution,
+.combat-defender-effective-stats {
+  padding-top: 0.48rem;
+  border-top: 1px solid rgba(127, 183, 176, 0.14);
+}
+
+.combat-defender-module-line {
+  display: grid;
+  grid-template-columns: 3.5rem minmax(0, 1fr) auto;
+  gap: 0.4rem;
+  align-items: baseline;
+  color: rgba(236, 220, 186, 0.72);
+  font-size: 0.38rem;
+  letter-spacing: 0.08em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.combat-defender-module-line span {
+  color: rgba(127, 183, 176, 0.58);
+  letter-spacing: 0.14em;
+}
+
+.combat-defender-module-line strong {
+  color: rgba(236, 220, 186, 0.86);
+  font-weight: 500;
+}
+
+.combat-defender-module-line em {
+  color: rgba(209, 179, 116, 0.72);
+  font-size: 0.3rem;
+  font-style: normal;
+  letter-spacing: 0.12em;
+}
+
+.combat-defender-module-line.is-base strong {
+  color: rgba(209, 179, 116, 0.92);
+}
+
+.combat-defender-module-empty {
+  padding: 0.48rem 0;
+  border-top: 1px solid rgba(127, 183, 176, 0.14);
+  color: rgba(236, 220, 186, 0.42);
+  font-size: 0.38rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.combat-defender-stat-columns,
+.combat-defender-stat-row {
+  display: grid;
+  grid-template-columns: minmax(5rem, 1.4fr) repeat(3, minmax(2.6rem, 0.7fr)) auto;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.combat-defender-stat-columns {
+  grid-template-columns: minmax(5rem, 1.4fr) repeat(3, minmax(2.6rem, 0.7fr));
+  color: rgba(236, 220, 186, 0.38);
+  font-size: 0.29rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.combat-defender-stat-row {
+  min-height: 1.35rem;
+  padding: 0.2rem 0;
+  border-top: 1px solid rgba(236, 220, 186, 0.06);
+  color: rgba(236, 220, 186, 0.78);
+  font-size: 0.36rem;
+  letter-spacing: 0.07em;
+  line-height: 1.25;
+  text-transform: uppercase;
+}
+
+.combat-defender-stat-name {
+  color: rgba(236, 220, 186, 0.7);
+}
+
+.combat-defender-stat-bonus,
+.combat-defender-stat-total {
+  color: rgba(209, 179, 116, 0.86);
+}
+
+.combat-defender-stat-state {
+  justify-self: end;
+  color: rgba(127, 183, 176, 0.72);
+  font-size: 0.27rem;
+  letter-spacing: 0.12em;
+}
+
+.combat-defender-stat-row.is-future .combat-defender-stat-bonus,
+.combat-defender-stat-row.is-future .combat-defender-stat-state {
+  color: rgba(209, 179, 116, 0.64);
+}
+
+@media (max-width: 1050px) {
+  .combat-stage-command-submenu.is-programs {
+    top: 18%;
+    width: min(29rem, 62vw);
+  }
+
+  .combat-stage-program-layout {
+    grid-template-columns: minmax(8.5rem, 0.65fr) minmax(15rem, 1.35fr);
+  }
+
+  .combat-defender-stat-columns,
+  .combat-defender-stat-row {
+    grid-template-columns: minmax(4.5rem, 1.3fr) repeat(3, minmax(2.25rem, 0.7fr)) auto;
+  }
+
+  .combat-defender-stat-columns {
+    grid-template-columns: minmax(4.5rem, 1.3fr) repeat(3, minmax(2.25rem, 0.7fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .combat-stage-command-submenu.is-programs {
+    left: 6%;
+    top: 12%;
+    width: min(24rem, 88vw);
+  }
+
+  .combat-stage-program-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .combat-stage-program-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .combat-stage-program-card {
+    min-height: 2.75rem;
+  }
+
+  .combat-defender-inspect {
+    max-height: 42vh;
+  }
+
+  .combat-defender-stat-columns {
+    display: none;
+  }
+
+  .combat-defender-stat-row {
+    grid-template-columns: minmax(5rem, 1.2fr) repeat(3, minmax(2.4rem, 0.7fr)) auto;
+  }
 }
 
 .combat-party-module,
