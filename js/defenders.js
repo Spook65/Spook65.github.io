@@ -1701,6 +1701,7 @@ function buildDefenderSelectionMarkup() {
         </div>
         <div class="defender-header-panel" aria-hidden="true">
           <div class="defender-header-panel-label">EXPEDITION MODE</div>
+          <div class="defender-header-panel-label">LOADOUT DEBUG: RPG RENDERER ACTIVE</div>
           <div class="defender-header-panel-value">LOADOUT UI: RPG V2. FUTURE HARDWARE SLOTS ARE LOCKED UNTIL FORGE SYSTEMS AWAKEN.</div>
         </div>
         <button id="defender-screen-back" class="back-button" type="button">← RETURN TO MENU</button>
