@@ -1868,48 +1868,9 @@ function buildDefenderSelectionMarkup() {
   `;
 }
 
-// buildDefenderSelectionLegacyMarkup() restores the original four-card lineup so we can fall back instantly if the roster screen misbehaves.
+// buildDefenderSelectionLegacyMarkup() is kept as a compatibility alias but no longer returns the retired card-grid UI.
 function buildDefenderSelectionLegacyMarkup() {
-  const selectedIds = defenderSelectionDraft.slice();
-  const starterCards = getStarterDefenderCatalog();
-  const unlockedIds = Array.isArray(defenderSaveState?.unlockedDefenders) ? defenderSaveState.unlockedDefenders : [];
-
-  return `
-    <div class="defender-shell">
-      <div class="defender-header">
-        <div class="defender-header-copy">
-          <div class="defender-kicker">OPERATOR LOADOUT / STAGE ONE</div>
-          <h2 class="briefing-title">STARTER LINEUP</h2>
-          <p class="briefing-copy defender-copy">CHOOSE FOUR ORIGINAL DEFENDERS TO SEED YOUR NEXT RUN. THE LOADOUT SAVES LOCALLY.</p>
-        </div>
-        <div class="defender-header-panel" aria-hidden="true">
-          <div class="defender-header-panel-label">LOADOUT DIRECTIVE</div>
-          <div class="defender-header-panel-value">ASSEMBLE A FOUR-DEFENDER PARTY, LOCK THE LOADOUT, THEN ENTER THREATGRID.</div>
-        </div>
-        <button id="defender-screen-back" class="back-button" type="button">← RETURN TO MENU</button>
-      </div>
-
-      <div class="defender-rule" aria-hidden="true"></div>
-
-      <div class="defender-status-row">
-        <div id="defender-selection-count" class="defender-selection-count">${selectedIds.length} / 4 SELECTED</div>
-        <div id="defender-selection-status" class="defender-selection-status">${selectedIds.length === 4 ? "LOADOUT READY. BEGIN THE RUN WHEN YOU ARE READY." : "SELECT A PARTY OF FOUR."}</div>
-      </div>
-
-      <div class="defender-grid">
-        ${starterCards.map((defender) => {
-          const isSelected = selectedIds.includes(defender.id);
-          const isLocked = !unlockedIds.includes(defender.id);
-          return buildDefenderCardMarkup(defender, isSelected, isLocked);
-        }).join("")}
-      </div>
-
-      <div class="defender-footer">
-        <button id="defender-screen-reset" class="menu-button" type="button">RESET LOADOUT</button>
-        <button id="defender-screen-confirm" class="menu-button" type="button" ${selectedIds.length === 4 ? "" : "disabled"}>BEGIN RUN</button>
-      </div>
-    </div>
-  `;
+  return buildDefenderSelectionMarkup();
 }
 
 // bindDefenderSelectionControls() wires the roster tiles and footer buttons after the screen is rendered.
@@ -1968,48 +1929,9 @@ function bindDefenderSelectionControls() {
   }
 }
 
-// bindDefenderSelectionLegacyControls() wires the original four-card layout when the roster-select screen is disabled.
+// bindDefenderSelectionLegacyControls() remains for older callers but delegates to the RPG loadout controls.
 function bindDefenderSelectionLegacyControls() {
-  const defenderScreenConfirm = document.getElementById("defender-screen-confirm");
-  const defenderScreenReset = document.getElementById("defender-screen-reset");
-  const defenderScreenBack = document.getElementById("defender-screen-back");
-
-  const selectionCards = defenderScreenContent.querySelectorAll("[data-defender-id]");
-  selectionCards.forEach((card) => {
-    card.addEventListener("click", () => {
-      toggleDefenderSelection(card.getAttribute("data-defender-id"));
-    });
-  });
-
-  if (defenderScreenBack) {
-    defenderScreenBack.addEventListener("click", () => {
-      showMenu();
-    });
-  }
-
-  if (defenderScreenReset) {
-    defenderScreenReset.addEventListener("click", () => {
-      updateSelectedDefenders(getDefaultStarterDefenderIds());
-      const statusNode = document.getElementById("defender-selection-status");
-      if (statusNode) {
-        statusNode.textContent = "DEFAULT PARTY RESTORED.";
-      }
-    });
-  }
-
-  if (defenderScreenConfirm) {
-    defenderScreenConfirm.addEventListener("click", () => {
-      if (defenderSelectionDraft.length !== 4) {
-        const statusNode = document.getElementById("defender-selection-status");
-        if (statusNode) {
-          statusNode.textContent = "LOCK IN FOUR DEFENDERS BEFORE STARTING THE RUN.";
-        }
-        return;
-      }
-
-      startRunWithSelectedDefenders();
-    });
-  }
+  bindDefenderSelectionControls();
 }
 
 // renderDefenderSelectionScreen() redraws the loadout editor and keeps the counter/status text current.
@@ -2046,46 +1968,39 @@ function renderStarterRosterSelect() {
   updateDefenderSelectionFocusDom();
 }
 
-// renderLegacyStarterLineup() keeps the original four-card layout available as a safety net.
+// renderLegacyStarterLineup() now routes to the RPG loadout shell so the old card-grid screen cannot reclaim the active path.
 function renderLegacyStarterLineup() {
   if (!defenderScreenContent) {
     return;
   }
 
-  console.log("[Starter Lineup] Rendering legacy fallback");
-
-  defenderScreenContent.innerHTML = buildDefenderSelectionLegacyMarkup();
-  console.log("[Starter Lineup] legacy content length:", defenderScreenContent.innerHTML.length);
-  console.log("[Starter Lineup] defender screen:", document.getElementById("defender-screen"));
-  console.log("[Starter Lineup] defender content:", defenderScreenContent);
-  const defenderSelectionCount = document.getElementById("defender-selection-count");
-  const defenderSelectionStatus = document.getElementById("defender-selection-status");
-
-  if (defenderSelectionCount) {
-    defenderSelectionCount.textContent = `${defenderSelectionDraft.length} / 4 SELECTED`;
-  }
-
-  if (defenderSelectionStatus) {
-    defenderSelectionStatus.textContent = defenderSelectionDraft.length === 4
-      ? "LOADOUT READY. BEGIN THE RUN WHEN YOU ARE READY."
-      : "SELECT A PARTY OF FOUR.";
-  }
-
-  bindDefenderSelectionLegacyControls();
+  renderStarterRosterSelect();
 }
 
 // renderDefenderSelectionScreen() redraws the loadout editor and keeps the counter/status text current.
 function renderDefenderSelectionScreen() {
   try {
-    if (defenderRosterSelectEnabled) {
-      renderStarterRosterSelect();
-      return;
-    }
-
-    renderLegacyStarterLineup();
+    renderStarterRosterSelect();
   } catch (error) {
-    console.error("[Starter Lineup] Roster render failed, falling back.", error);
-    renderLegacyStarterLineup();
+    console.error("[Expedition Loadout] RPG loadout render failed.", error);
+    if (defenderScreenContent) {
+      defenderScreenContent.innerHTML = `
+        <div class="defender-shell defender-loadout-shell">
+          <div class="defender-header">
+            <div class="defender-header-copy">
+              <div class="defender-kicker">EXPEDITION LOADOUT / RECOVERY MODE</div>
+              <h2 class="briefing-title">DEFENDER LOADOUT</h2>
+              <p class="briefing-copy defender-copy">LOADOUT DATA COULD NOT BE RENDERED. RESET THE LOADOUT OR RETURN TO MENU.</p>
+            </div>
+            <button id="defender-screen-back" class="back-button" type="button">← RETURN TO MENU</button>
+          </div>
+          <div class="defender-footer">
+            <button id="defender-screen-reset" class="menu-button" type="button">RESET LOADOUT</button>
+          </div>
+        </div>
+      `;
+      bindDefenderSelectionControls();
+    }
   }
 }
 
