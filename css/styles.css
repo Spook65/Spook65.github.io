@@ -7083,8 +7083,554 @@ body {
     grid-template-columns: 1fr;
   }
 
-.defender-screen .defender-footer .menu-button {
+  .defender-screen .defender-footer .menu-button {
     width: 100%;
+  }
+}
+
+/* Expedition Loadout turns the old starter document into a read-only RPG deployment hub. */
+.defender-screen .defender-loadout-shell {
+  width: min(1480px, 100%);
+  min-height: 100%;
+  gap: 12px;
+}
+
+.defender-screen .defender-header-panel {
+  max-width: 360px;
+  padding: 12px 14px;
+  border-left: 2px solid rgba(255, 110, 74, 0.54);
+  background:
+    linear-gradient(90deg, rgba(255, 110, 74, 0.08), transparent 76%),
+    rgba(6, 8, 14, 0.5);
+  text-align: right;
+}
+
+.defender-screen .defender-header-panel-label,
+.defender-screen .defender-panel-label,
+.defender-screen .defender-loadout-panel-label {
+  color: rgba(255, 206, 87, 0.82);
+  font-size: 0.58rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.defender-screen .defender-header-panel-value {
+  margin-top: 6px;
+  color: rgba(244, 239, 227, 0.68);
+  font-size: 0.64rem;
+  letter-spacing: 0.12em;
+  line-height: 1.45;
+  text-transform: uppercase;
+}
+
+.defender-screen .defender-loadout-grid {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.76fr) minmax(0, 2.6fr);
+  gap: 14px;
+  min-height: 0;
+  flex: 1;
+}
+
+.defender-screen .defender-roster-panel,
+.defender-screen .defender-focus-panel,
+.defender-screen .defender-loadout-panel,
+.defender-screen .defender-party-panel {
+  border: 1px solid rgba(244, 239, 227, 0.1);
+  background:
+    linear-gradient(135deg, rgba(244, 239, 227, 0.035), transparent 38%),
+    linear-gradient(180deg, rgba(13, 14, 22, 0.86), rgba(5, 7, 12, 0.9));
+  box-shadow:
+    inset 0 0 0 1px rgba(244, 239, 227, 0.025),
+    0 16px 34px rgba(0, 0, 0, 0.24);
+}
+
+.defender-screen .defender-roster-panel {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 10px;
+  min-height: 0;
+  padding: 14px;
+}
+
+.defender-screen .defender-roster-grid {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.defender-screen .defender-roster-tile {
+  appearance: none;
+  position: relative;
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  min-height: 112px;
+  padding: 12px 12px 10px;
+  border: 1px solid rgba(244, 239, 227, 0.1);
+  border-radius: 0;
+  background:
+    linear-gradient(90deg, var(--defender-accent-soft), transparent 46%),
+    rgba(7, 8, 14, 0.84);
+  color: var(--menu-text);
+  text-align: left;
+  cursor: pointer;
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%);
+  transition: transform 150ms ease, border-color 150ms ease, background 150ms ease, box-shadow 150ms ease;
+}
+
+.defender-screen .defender-roster-tile:hover,
+.defender-screen .defender-roster-tile:focus-visible,
+.defender-screen .defender-roster-tile.is-focused {
+  transform: translateX(4px);
+  border-color: color-mix(in srgb, var(--defender-accent) 62%, rgba(244, 239, 227, 0.16));
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--defender-accent) 24%, transparent),
+    0 0 22px color-mix(in srgb, var(--defender-accent) 12%, transparent);
+  outline: none;
+}
+
+.defender-screen .defender-roster-tile.is-empty {
+  opacity: 0.58;
+  cursor: default;
+}
+
+.defender-screen .defender-roster-tile-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.defender-screen .defender-roster-kicker,
+.defender-screen .defender-roster-role,
+.defender-screen .defender-roster-summary,
+.defender-screen .defender-roster-mini,
+.defender-screen .defender-readonly-note {
+  color: rgba(244, 239, 227, 0.58);
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.defender-screen .defender-roster-name {
+  color: var(--menu-text);
+  font-size: 0.88rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.defender-screen .defender-roster-badge {
+  border: 1px solid rgba(244, 239, 227, 0.12);
+  padding: 4px 7px;
+  color: rgba(255, 206, 87, 0.82);
+  font-size: 0.54rem;
+  letter-spacing: 0.14em;
+  white-space: nowrap;
+}
+
+.defender-screen .defender-roster-mini {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  color: rgba(244, 239, 227, 0.74);
+  font-variant-numeric: tabular-nums;
+}
+
+.defender-screen .defender-readonly-note {
+  padding-top: 8px;
+  border-top: 1px solid rgba(244, 239, 227, 0.08);
+}
+
+.defender-screen .defender-loadout-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.16fr) minmax(320px, 0.84fr);
+  gap: 14px;
+  min-width: 0;
+  min-height: 0;
+}
+
+.defender-screen .defender-focus-panel,
+.defender-screen .defender-loadout-panel {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  min-width: 0;
+  padding: 14px;
+}
+
+.defender-screen .defender-hero-card {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  min-height: 320px;
+  overflow: hidden;
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, var(--defender-accent) 34%, rgba(244, 239, 227, 0.08));
+  background:
+    radial-gradient(circle at 45% 36%, color-mix(in srgb, var(--defender-accent) 22%, transparent), transparent 30%),
+    linear-gradient(145deg, rgba(244, 239, 227, 0.035), transparent 42%),
+    rgba(5, 7, 12, 0.72);
+}
+
+.defender-screen .defender-hero-stage {
+  position: relative;
+  min-height: 190px;
+  display: grid;
+  place-items: center;
+}
+
+.defender-screen .defender-hero-watermark {
+  position: absolute;
+  inset-inline: 0;
+  top: 16%;
+  color: rgba(244, 239, 227, 0.035);
+  font-size: clamp(2.2rem, 5vw, 5.2rem);
+  letter-spacing: 0.12em;
+  text-align: center;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.defender-screen .defender-hero-orbit {
+  position: absolute;
+  width: min(220px, 44vw);
+  aspect-ratio: 1;
+  border: 1px solid color-mix(in srgb, var(--defender-accent) 48%, transparent);
+  border-radius: 50%;
+  box-shadow:
+    0 0 38px color-mix(in srgb, var(--defender-accent) 16%, transparent),
+    inset 0 0 38px rgba(244, 239, 227, 0.035);
+}
+
+.defender-screen .defender-hero-orbit::before,
+.defender-screen .defender-hero-orbit::after {
+  content: "";
+  position: absolute;
+  inset: 18%;
+  border: 1px solid rgba(244, 239, 227, 0.08);
+  transform: rotate(34deg) scaleX(1.35);
+}
+
+.defender-screen .defender-hero-emblem {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 118px;
+  aspect-ratio: 1;
+  border: 1px solid color-mix(in srgb, var(--defender-accent) 62%, rgba(244, 239, 227, 0.18));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--defender-accent) 28%, transparent), rgba(5, 7, 12, 0.84));
+  color: var(--menu-text);
+  font-size: 2rem;
+  letter-spacing: 0.12em;
+  clip-path: polygon(50% 0, 91% 24%, 91% 76%, 50% 100%, 9% 76%, 9% 24%);
+  text-shadow: 0 0 20px color-mix(in srgb, var(--defender-accent) 46%, transparent);
+}
+
+.defender-screen .defender-hero-copy {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 6px;
+  align-content: end;
+}
+
+.defender-screen .defender-focus-kicker,
+.defender-screen .defender-focus-role,
+.defender-screen .defender-focus-summary,
+.defender-screen .defender-focus-chip-label,
+.defender-screen .defender-focus-chip-value,
+.defender-screen .defender-loadout-move-type,
+.defender-screen .defender-loadout-move-stats,
+.defender-screen .defender-loadout-module-meta,
+.defender-screen .defender-loadout-module-source,
+.defender-screen .defender-loadout-module-theme,
+.defender-screen .defender-loadout-module-effect {
+  color: rgba(244, 239, 227, 0.62);
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  line-height: 1.45;
+  text-transform: uppercase;
+}
+
+.defender-screen .defender-focus-name {
+  margin: 0;
+  color: var(--menu-text);
+  font-size: clamp(1.45rem, 3vw, 2.45rem);
+  line-height: 0.95;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.defender-screen .defender-focus-summary {
+  max-width: 58ch;
+  color: rgba(244, 239, 227, 0.74);
+}
+
+.defender-screen .defender-focus-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.defender-screen .defender-focus-badge {
+  border: 1px solid rgba(244, 239, 227, 0.12);
+  padding: 5px 8px;
+  color: rgba(244, 239, 227, 0.72);
+  font-size: 0.55rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.defender-screen .defender-focus-badge.is-selected {
+  border-color: rgba(255, 206, 87, 0.4);
+  color: rgba(255, 206, 87, 0.86);
+}
+
+.defender-screen .defender-focus-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.defender-screen .defender-focus-chip,
+.defender-screen .defender-loadout-move,
+.defender-screen .defender-loadout-module-card,
+.defender-screen .defender-loadout-stats,
+.defender-screen .defender-loadout-gear {
+  border: 1px solid rgba(244, 239, 227, 0.09);
+  background: rgba(5, 7, 12, 0.46);
+}
+
+.defender-screen .defender-focus-chip {
+  display: grid;
+  gap: 5px;
+  padding: 10px;
+}
+
+.defender-screen .defender-focus-chip-value {
+  color: var(--menu-text);
+}
+
+.defender-screen .defender-loadout-moves {
+  display: grid;
+  gap: 8px;
+}
+
+.defender-screen .defender-loadout-move {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 12px;
+}
+
+.defender-screen .defender-loadout-move-name {
+  display: block;
+  color: var(--menu-text);
+  font-size: 0.76rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.defender-screen .defender-loadout-move-stats {
+  display: flex;
+  gap: 10px;
+  color: rgba(255, 206, 87, 0.75);
+  white-space: nowrap;
+}
+
+.defender-screen .defender-loadout-module-card,
+.defender-screen .defender-loadout-stats,
+.defender-screen .defender-loadout-gear {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+}
+
+.defender-screen .defender-loadout-module-card {
+  border-color: rgba(255, 206, 87, 0.16);
+}
+
+.defender-screen .defender-loadout-module-card.is-empty {
+  border-color: rgba(244, 239, 227, 0.08);
+}
+
+.defender-screen .defender-loadout-module-name {
+  color: var(--menu-text);
+  font-size: 1rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.defender-screen .defender-loadout-module-stat {
+  color: rgba(255, 206, 87, 0.88);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.defender-screen .defender-loadout-affix-lines {
+  display: grid;
+  gap: 6px;
+}
+
+.defender-screen .defender-loadout-affix-lines div {
+  display: grid;
+  gap: 3px;
+}
+
+.defender-screen .defender-loadout-affix-lines strong {
+  color: rgba(244, 239, 227, 0.5);
+  font-size: 0.52rem;
+  letter-spacing: 0.18em;
+}
+
+.defender-screen .defender-loadout-affix-lines span {
+  color: rgba(244, 239, 227, 0.72);
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.defender-screen .defender-loadout-stat-head,
+.defender-screen .defender-loadout-stat-row {
+  display: grid;
+  grid-template-columns: minmax(76px, 1.2fr) repeat(3, minmax(44px, 0.7fr)) minmax(62px, 0.9fr);
+  gap: 8px;
+  align-items: center;
+  font-size: 0.58rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+
+.defender-screen .defender-loadout-stat-head {
+  color: rgba(244, 239, 227, 0.42);
+}
+
+.defender-screen .defender-loadout-stat-row {
+  color: rgba(244, 239, 227, 0.74);
+}
+
+.defender-screen .defender-loadout-stat-row span:nth-child(3),
+.defender-screen .defender-loadout-stat-row .is-active {
+  color: rgba(255, 206, 87, 0.82);
+}
+
+.defender-screen .defender-loadout-stat-row .is-partial {
+  color: rgba(72, 214, 198, 0.78);
+}
+
+.defender-screen .defender-loadout-stat-row .is-planned {
+  color: rgba(244, 239, 227, 0.42);
+}
+
+.defender-screen .defender-loadout-gear-slot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-top: 1px solid rgba(244, 239, 227, 0.07);
+  padding-top: 7px;
+  color: rgba(244, 239, 227, 0.66);
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.defender-screen .defender-loadout-gear-slot strong {
+  color: rgba(244, 239, 227, 0.38);
+  font-size: 0.55rem;
+}
+
+.defender-screen .defender-lower-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: stretch;
+}
+
+.defender-screen .defender-party-panel {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+}
+
+.defender-screen .defender-party-slots {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.defender-screen .defender-party-slot {
+  min-height: 72px;
+  padding: 9px;
+  border: 1px solid rgba(244, 239, 227, 0.08);
+  background:
+    linear-gradient(90deg, var(--defender-accent-soft, rgba(244, 239, 227, 0.04)), transparent 52%),
+    rgba(5, 7, 12, 0.45);
+}
+
+.defender-screen .defender-party-slot-index,
+.defender-screen .defender-party-slot-role {
+  color: rgba(244, 239, 227, 0.5);
+  font-size: 0.54rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.defender-screen .defender-party-slot-name {
+  color: var(--menu-text);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.defender-screen .defender-party-slot-glyph {
+  float: right;
+  color: color-mix(in srgb, var(--defender-accent, rgba(244, 239, 227, 0.8)) 74%, rgba(244, 239, 227, 0.2));
+  font-size: 1rem;
+  letter-spacing: 0.08em;
+}
+
+@media (max-width: 1180px) {
+  .defender-screen .defender-loadout-grid,
+  .defender-screen .defender-loadout-detail-grid,
+  .defender-screen .defender-lower-row {
+    grid-template-columns: 1fr;
+  }
+
+  .defender-screen .defender-roster-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .defender-screen .defender-roster-grid,
+  .defender-screen .defender-focus-meta-grid,
+  .defender-screen .defender-party-slots {
+    grid-template-columns: 1fr;
+  }
+
+  .defender-screen .defender-header-panel {
+    max-width: none;
+    text-align: left;
+  }
+
+  .defender-screen .defender-loadout-move,
+  .defender-screen .defender-loadout-stat-head,
+  .defender-screen .defender-loadout-stat-row {
+    grid-template-columns: 1fr;
+  }
+
+  .defender-screen .defender-loadout-move-stats {
+    flex-wrap: wrap;
+    white-space: normal;
   }
 }
 

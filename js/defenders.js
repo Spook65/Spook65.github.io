@@ -746,8 +746,8 @@ let defenderSelectionDraft = [];
 // defenderSelectionFocusId tracks which roster entry is currently driving the preview panel.
 let defenderSelectionFocusId = null;
 
-// defenderRosterSelectEnabled stays false until the roster-select pass is fully stabilized.
-const defenderRosterSelectEnabled = false;
+// defenderRosterSelectEnabled keeps the RPG loadout hub on the primary render path.
+const defenderRosterSelectEnabled = true;
 
 // defenderScreenContent is the dynamic container for the starter-selection screen.
 const defenderSelectionScreenRoot = document.getElementById("defender-screen");
@@ -1261,10 +1261,152 @@ function getDefenderMonogram(defender) {
   return glyph || "TG";
 }
 
-// buildDefenderRosterTileMarkup() renders one compact roster tile with selection state, identity, and a tiny stat strip.
-function buildDefenderRosterTileMarkup(defender, isSelected, isLocked, isFocused) {
+function getDefenderLoadoutText(value, fallback = "-") {
+  const text = String(value || "").trim();
+  return text && text !== "undefined" && text !== "null" && text !== "NaN" ? text : fallback;
+}
+
+function getDefenderTraitName(trait, fallback = "UNLISTED") {
+  return trait && typeof trait === "object"
+    ? getDefenderLoadoutText(trait.name, fallback)
+    : getDefenderLoadoutText(trait, fallback);
+}
+
+function getDefenderTraitDescription(trait, fallback = "") {
+  return trait && typeof trait === "object" ? getDefenderLoadoutText(trait.description, fallback) : fallback;
+}
+
+function getLoadoutEquippedModule(defenderId) {
+  if (typeof getEquippedModuleForDefenderId !== "function") {
+    return null;
+  }
+  return getEquippedModuleForDefenderId(defenderSaveState?.currentRun, defenderId);
+}
+
+function getLoadoutModuleRarityClass(module) {
+  return `is-rarity-${getDefenderLoadoutText(module?.rarity, "common").toLowerCase()}`;
+}
+
+function getLoadoutModulePrimaryStat(module) {
+  const baseStat = typeof getModuleBaseStat === "function" ? getModuleBaseStat(module) : null;
+  const legacyStats = module?.statBonuses && typeof module.statBonuses === "object" ? module.statBonuses : {};
+  const legacyKey = Object.keys(legacyStats).find((statKey) => Number.isFinite(legacyStats[statKey]));
+  const statKey = baseStat?.statKey || legacyKey || "";
+  const value = Number.isFinite(baseStat?.value)
+    ? baseStat.value
+    : Number.isFinite(legacyStats[statKey])
+      ? legacyStats[statKey]
+      : 0;
+  const label = typeof getModuleStatLabel === "function" && statKey ? getModuleStatLabel(statKey) : "Module Power";
+  const suffix = statKey === "startGauge" ? "" : "%";
+
+  return {
+    statKey,
+    value,
+    label,
+    text: getDefenderLoadoutText(baseStat?.label, value ? `+${value}${suffix} ${label}` : "BASE SIGNAL STABLE")
+  };
+}
+
+function getLoadoutModuleAffixes(module) {
+  const getList = (type, legacyKey) => {
+    if (typeof getModuleAffixList === "function") {
+      return getModuleAffixList(module, type);
+    }
+    return Array.isArray(module?.[legacyKey]) ? module[legacyKey] : [];
+  };
+
+  return {
+    prefixes: getList("prefix", "prefixes"),
+    suffixes: getList("suffix", "suffixes"),
+    substats: getList("substat", "substats")
+  };
+}
+
+function getLoadoutModuleAffixSummary(module) {
+  const groups = getLoadoutModuleAffixes(module);
+  const entries = groups.prefixes.concat(groups.suffixes, groups.substats);
+  if (!entries.length) {
+    return "BASE STAT ONLY";
+  }
+
+  const first = getDefenderLoadoutText(entries[0]?.label, "AFFIX");
+  return entries.length > 1 ? `${first} / +${entries.length - 1} MORE` : first;
+}
+
+function buildLoadoutModuleAffixLines(module) {
+  const groups = getLoadoutModuleAffixes(module);
+  const renderLine = (affix) => {
+    const label = getDefenderLoadoutText(affix?.label, "Affix");
+    const display = typeof getModuleAffixDisplayText === "function" ? getModuleAffixDisplayText(affix) : "";
+    return `<span>${label}${display ? `: ${display}` : ""}</span>`;
+  };
+  const rows = [
+    groups.prefixes.length ? `<div><strong>PREFIX</strong>${groups.prefixes.map(renderLine).join("")}</div>` : "",
+    groups.suffixes.length ? `<div><strong>SUFFIX</strong>${groups.suffixes.map(renderLine).join("")}</div>` : "",
+    groups.substats.length ? `<div><strong>SUBSTAT</strong>${groups.substats.map(renderLine).join("")}</div>` : ""
+  ].filter(Boolean).join("");
+
+  return rows || '<div class="is-empty"><strong>AFFIXES</strong><span>No affixes installed.</span></div>';
+}
+
+function getLoadoutModuleBonus(module, statKey) {
+  return typeof getModuleStatBonus === "function" ? getModuleStatBonus(module, statKey) : 0;
+}
+
+function formatLoadoutStatValue(value, unit = "number") {
+  if (!Number.isFinite(value)) {
+    return "-";
+  }
+  if (unit === "percent") {
+    return `${Math.round(value)}%`;
+  }
+  return Number.isInteger(value) ? String(value) : value.toFixed(1);
+}
+
+function formatLoadoutModuleBonus(value, unit = "percent") {
+  if (!Number.isFinite(value) || value <= 0) {
+    return "-";
+  }
+  return unit === "flat" ? `+${value}` : `+${value}%`;
+}
+
+function buildLoadoutStatRows(defender, module) {
+  const statRows = [
+    { label: "HP", base: defender?.maxHp || defender?.hp, key: null, unit: "number" },
+    { label: "ATK", base: defender?.atk, key: "attackPct", unit: "number" },
+    { label: "DEF", base: defender?.def, key: "defensePct", unit: "number" },
+    { label: "SP ATK", base: defender?.spAtk, key: "detectionPowerPct", unit: "number", status: "PARTIAL" },
+    { label: "SP DEF", base: defender?.spDef, key: "responseStrengthPct", unit: "number", status: "PLANNED" },
+    { label: "SPD", base: defender?.spd, key: "speedPct", unit: "number", status: "PLANNED" },
+    { label: "ACCURACY", base: 100, key: "accuracyPct", unit: "percent" }
+  ];
+
+  return statRows.map((stat) => {
+    const base = Number.isFinite(stat.base) ? stat.base : 0;
+    const bonus = stat.key ? getLoadoutModuleBonus(module, stat.key) : 0;
+    const support = stat.key && typeof getModuleStatSupport === "function" ? getModuleStatSupport(stat.key) : { active: true };
+    const status = stat.status || (support.active ? "ACTIVE" : "PLANNED");
+    const total = stat.unit === "percent" ? Math.min(100, base + bonus) : base;
+
+    return `
+      <div class="defender-loadout-stat-row">
+        <span>${stat.label}</span>
+        <span>${formatLoadoutStatValue(base, stat.unit)}</span>
+        <span>${formatLoadoutModuleBonus(bonus, stat.key === "startGauge" ? "flat" : "percent")}</span>
+        <span>${formatLoadoutStatValue(total, stat.unit)}</span>
+        <span class="is-${status.toLowerCase()}">${status}</span>
+      </div>
+    `;
+  }).join("");
+}
+
+// buildDefenderRosterTileMarkup() renders one party-list entry for the read-only expedition loadout hub.
+function buildDefenderRosterTileMarkup(defender, isSelected, isLocked, isFocused, slotIndex = 0) {
   const cardAccent = defender.color || "#87e4ff";
-  const rosterStateLabel = isSelected ? "LOCKED" : isLocked ? "SEALED" : "READY";
+  const rosterStateLabel = isSelected ? `SLOT ${slotIndex + 1}` : isLocked ? "SEALED" : "RESERVE";
+  const module = getLoadoutEquippedModule(defender.id);
+  const moduleLabel = module ? getDefenderLoadoutText(module.name, "Recovered Module") : "EMPTY MODULE";
 
   return `
     <button
@@ -1278,13 +1420,13 @@ function buildDefenderRosterTileMarkup(defender, isSelected, isLocked, isFocused
     >
       <div class="defender-roster-tile-head">
         <div class="defender-roster-titleblock">
-          <div class="defender-roster-kicker">STARTER DEFENDER</div>
+          <div class="defender-roster-kicker">ACTIVE PARTY</div>
           <div class="defender-roster-name">${defender.name}</div>
           <div class="defender-roster-role">${defender.role} / ${defender.domain}</div>
         </div>
         <div class="defender-roster-badge ${isSelected ? "is-selected" : isLocked ? "is-locked" : "is-ready"}">${rosterStateLabel}</div>
       </div>
-      <div class="defender-roster-summary">${defender.summary}</div>
+      <div class="defender-roster-summary">${moduleLabel}</div>
       <div class="defender-roster-mini" aria-hidden="true">
         <span>HP ${defender.hp}</span>
         <span>DEF ${defender.def}</span>
@@ -1399,92 +1541,170 @@ function buildDefenderCardMarkup(defender, isSelected, isLocked) {
   `;
 }
 
-// buildDefenderDetailPanelMarkup() renders the active defender preview, detail fields, and move modules for the right-hand panel.
-function buildDefenderDetailPanelMarkup(defender, isSelected, isLocked, selectedCount) {
-  const cardAccent = defender.color || "#87e4ff";
-  const rarityLabel = String(defender.rarity || "standard").toUpperCase();
-  const coreTrait = defender.coreTrait && typeof defender.coreTrait === "object" ? defender.coreTrait.name : defender.coreTrait;
-  const passiveModule = defender.passiveModule && typeof defender.passiveModule === "object" ? defender.passiveModule.name : defender.passiveModule;
-  const coreTraitDescription = defender.coreTrait && typeof defender.coreTrait === "object" ? defender.coreTrait.description : "";
-  const passiveModuleDescription = defender.passiveModule && typeof defender.passiveModule === "object" ? defender.passiveModule.description : "";
-  const loadoutStateLabel = isSelected ? "LOCKED INTO PARTY" : isLocked ? "SEALED ROSTER" : "AVAILABLE";
-  const readinessLabel = selectedCount === 4 ? "LOADOUT READY" : "PARTY INCOMPLETE";
-  const movePreview = defender.moves.slice(0, 3).map((move) => {
-    const moveAccuracy = Number.isFinite(move.accuracy) ? `${move.accuracy}% ACC` : null;
-    const moveCharges = Number.isFinite(move.charges) && Number.isFinite(move.maxCharges)
-      ? `${move.charges}/${move.maxCharges} CHG`
-      : null;
-    const moveMeta = [move.domain, move.category]
-      .filter(Boolean)
-      .map((value) => String(value).toUpperCase())
-      .concat([`PWR ${move.power}`, moveAccuracy, moveCharges].filter(Boolean))
-      .join(" / ");
+function buildLoadoutMoveMarkup(defender) {
+  const moves = Array.isArray(defender?.moves) ? defender.moves : [];
+  if (!moves.length) {
+    return '<div class="defender-loadout-empty">NO MOVE MODULES INSTALLED.</div>';
+  }
+
+  return moves.map((move) => {
+    const category = getDefenderLoadoutText(move?.category, "move").toUpperCase();
+    const power = Number.isFinite(move?.power) ? move.power : 0;
+    const accuracy = Number.isFinite(move?.accuracy) ? `${move.accuracy}%` : "-";
+    const charges = Number.isFinite(move?.charges) && Number.isFinite(move?.maxCharges)
+      ? `${move.charges}/${move.maxCharges}`
+      : Number.isFinite(move?.charges)
+        ? String(move.charges)
+        : "-";
 
     return `
-      <div class="defender-focus-move">
-        <div class="defender-focus-move-name">
-          <span>${move.name}</span>
-          <span>${move.category.toUpperCase()}</span>
+      <div class="defender-loadout-move">
+        <div>
+          <span class="defender-loadout-move-name">${getDefenderLoadoutText(move?.name, "Unnamed Move")}</span>
+          <span class="defender-loadout-move-type">${getDefenderLoadoutText(move?.domain, "General")} / ${category}</span>
         </div>
-        <div class="defender-focus-move-meta">${moveMeta}</div>
-        <div class="defender-focus-move-desc">${move.description}</div>
+        <div class="defender-loadout-move-stats">
+          <span>PWR ${power}</span>
+          <span>ACC ${accuracy}</span>
+          <span>CHG ${charges}</span>
+        </div>
       </div>
     `;
   }).join("");
+}
+
+function buildLoadoutModulePanelMarkup(defender) {
+  const module = getLoadoutEquippedModule(defender?.id);
+  if (!module) {
+    return `
+      <div class="defender-loadout-module-card is-empty">
+        <div class="defender-loadout-panel-label">UNIVERSAL MODULE SLOT</div>
+        <div class="defender-loadout-module-name">EMPTY</div>
+        <div class="defender-loadout-module-meta">Recovered Modules can be installed after incidents.</div>
+      </div>
+    `;
+  }
+
+  const primaryStat = getLoadoutModulePrimaryStat(module);
+  const rarity = getDefenderLoadoutText(module.rarity, "common").toUpperCase();
+  const itemClass = getDefenderLoadoutText(module.itemClass, "Recovered Module");
+  const sourceName = getDefenderLoadoutText(module.sourceName, "Unknown Source");
+  const sourceTheme = getDefenderLoadoutText(module.sourceTheme, "Recovered Protocol");
 
   return `
-    <div class="defender-panel-label">ACTIVE DEFENDER PREVIEW</div>
-    <div
-      class="defender-focus-stage"
-      style="--defender-accent: ${cardAccent}; --defender-accent-soft: ${cardAccent}22;"
-    >
-      <div class="defender-focus-watermark" aria-hidden="true">${defender.name}</div>
-      <div class="defender-focus-emblem" aria-hidden="true">${getDefenderMonogram(defender)}</div>
-      <div class="defender-focus-header">
-        <div class="defender-focus-kicker">HOVER / FOCUS</div>
-        <h3 class="defender-focus-name">${defender.name}</h3>
-        <div class="defender-focus-role">${defender.role} / ${defender.domain} / ${defender.affinity}</div>
-      </div>
-      <div class="defender-focus-badges">
-        <span class="defender-focus-badge">${rarityLabel}</span>
-        <span class="defender-focus-badge ${isSelected ? "is-selected" : isLocked ? "is-locked" : "is-ready"}">${loadoutStateLabel}</span>
-        <span class="defender-focus-badge">${readinessLabel}</span>
-      </div>
-      <p class="defender-focus-summary">${defender.summary}</p>
+    <div class="defender-loadout-module-card ${getLoadoutModuleRarityClass(module)}">
+      <div class="defender-loadout-panel-label">UNIVERSAL MODULE SLOT</div>
+      <div class="defender-loadout-module-name">${getDefenderLoadoutText(module.name, "Recovered Module")}</div>
+      <div class="defender-loadout-module-meta">${itemClass} / ${rarity} MODULE</div>
+      <div class="defender-loadout-module-source">SOURCE: ${sourceName}</div>
+      <div class="defender-loadout-module-theme">${sourceTheme}</div>
+      <div class="defender-loadout-module-stat">${primaryStat.text}</div>
+      <div class="defender-loadout-affix-lines">${buildLoadoutModuleAffixLines(module)}</div>
+      <div class="defender-loadout-module-effect">${getDefenderLoadoutText(module.effectText, "Module effect stabilized.")}</div>
     </div>
+  `;
+}
 
-    <div class="defender-focus-meta-grid" aria-label="Defender traits">
-      <div class="defender-focus-chip">
-        <span class="defender-focus-chip-label">CORE TRAIT</span>
-        <span class="defender-focus-chip-value" title="${coreTraitDescription}">${coreTrait}</span>
-      </div>
-      <div class="defender-focus-chip">
-        <span class="defender-focus-chip-label">PASSIVE MODULE</span>
-        <span class="defender-focus-chip-value" title="${passiveModuleDescription}">${passiveModule}</span>
-      </div>
-      <div class="defender-focus-chip">
-        <span class="defender-focus-chip-label">TEMPERAMENT</span>
-        <span class="defender-focus-chip-value">${defender.temperament}</span>
-      </div>
-      <div class="defender-focus-chip">
-        <span class="defender-focus-chip-label">VARIANT</span>
-        <span class="defender-focus-chip-value">${defender.variant}</span>
-      </div>
-    </div>
+function buildLoadoutGearSlotsMarkup() {
+  const gearSlots = [
+    "Kernel Chip",
+    "Firewall Plate",
+    "Cache Module",
+    "Network Card",
+    "Firmware Key",
+    "Program Cartridge"
+  ];
 
-    <div class="defender-focus-stats" aria-label="Defender stats">
-      <div class="defender-focus-stat"><span class="defender-focus-stat-label">HP</span><span class="defender-focus-stat-value">${defender.hp}</span></div>
-      <div class="defender-focus-stat"><span class="defender-focus-stat-label">ATK</span><span class="defender-focus-stat-value">${defender.atk}</span></div>
-      <div class="defender-focus-stat"><span class="defender-focus-stat-label">DEF</span><span class="defender-focus-stat-value">${defender.def}</span></div>
-      <div class="defender-focus-stat"><span class="defender-focus-stat-label">SP ATK</span><span class="defender-focus-stat-value">${defender.spAtk}</span></div>
-      <div class="defender-focus-stat"><span class="defender-focus-stat-label">SP DEF</span><span class="defender-focus-stat-value">${defender.spDef}</span></div>
-      <div class="defender-focus-stat"><span class="defender-focus-stat-label">SPD</span><span class="defender-focus-stat-value">${defender.spd}</span></div>
+  return gearSlots.map((slotName) => `
+    <div class="defender-loadout-gear-slot">
+      <span>${slotName}</span>
+      <strong>LOCKED</strong>
     </div>
+  `).join("");
+}
 
-    <div class="defender-focus-moves">
-      <div class="defender-panel-label">MOVE MODULES</div>
-      ${movePreview}
-    </div>
+// buildDefenderDetailPanelMarkup() renders the focused defender across the RPG loadout visual and equipment panels.
+function buildDefenderDetailPanelMarkup(defender, isSelected, isLocked, selectedCount) {
+  const cardAccent = defender.color || "#87e4ff";
+  const rarityLabel = String(defender.rarity || "standard").toUpperCase();
+  const coreTrait = getDefenderTraitName(defender.coreTrait);
+  const passiveModule = getDefenderTraitName(defender.passiveModule);
+  const coreTraitDescription = getDefenderTraitDescription(defender.coreTrait);
+  const passiveModuleDescription = getDefenderTraitDescription(defender.passiveModule);
+  const loadoutStateLabel = isSelected ? "ACTIVE PARTY" : isLocked ? "SEALED ROSTER" : "RESERVE";
+  const readinessLabel = selectedCount === 4 ? "LOADOUT READY" : "PARTY INCOMPLETE";
+  const module = getLoadoutEquippedModule(defender.id);
+
+  return `
+    <section class="defender-focus-panel" aria-live="polite" aria-label="Focused defender deployment preview">
+      <div
+        class="defender-hero-card"
+        style="--defender-accent: ${cardAccent}; --defender-accent-soft: ${cardAccent}22;"
+      >
+        <div class="defender-panel-label">DEFENDER PREVIEW</div>
+        <div class="defender-hero-stage">
+          <div class="defender-hero-watermark" aria-hidden="true">${defender.name}</div>
+          <div class="defender-hero-orbit" aria-hidden="true"></div>
+          <div class="defender-hero-emblem" aria-hidden="true">${getDefenderMonogram(defender)}</div>
+        </div>
+        <div class="defender-hero-copy">
+          <div class="defender-focus-kicker">EXPEDITION UNIT</div>
+          <h3 class="defender-focus-name">${defender.name}</h3>
+          <div class="defender-focus-role">${defender.role} / ${defender.domain} / ${defender.affinity}</div>
+          <p class="defender-focus-summary">${defender.summary || "A Defender ready for deployment."}</p>
+        </div>
+        <div class="defender-focus-badges">
+          <span class="defender-focus-badge">${rarityLabel}</span>
+          <span class="defender-focus-badge ${isSelected ? "is-selected" : isLocked ? "is-locked" : "is-ready"}">${loadoutStateLabel}</span>
+          <span class="defender-focus-badge">${readinessLabel}</span>
+        </div>
+      </div>
+
+      <div class="defender-focus-meta-grid" aria-label="Defender traits">
+        <div class="defender-focus-chip">
+          <span class="defender-focus-chip-label">CORE TRAIT</span>
+          <span class="defender-focus-chip-value" title="${coreTraitDescription}">${coreTrait}</span>
+        </div>
+        <div class="defender-focus-chip">
+          <span class="defender-focus-chip-label">PASSIVE MODULE</span>
+          <span class="defender-focus-chip-value" title="${passiveModuleDescription}">${passiveModule}</span>
+        </div>
+        <div class="defender-focus-chip">
+          <span class="defender-focus-chip-label">TEMPERAMENT</span>
+          <span class="defender-focus-chip-value">${getDefenderLoadoutText(defender.temperament, "UNLISTED")}</span>
+        </div>
+        <div class="defender-focus-chip">
+          <span class="defender-focus-chip-label">VARIANT</span>
+          <span class="defender-focus-chip-value">${getDefenderLoadoutText(defender.variant, "STANDARD")}</span>
+        </div>
+      </div>
+
+      <div class="defender-loadout-moves">
+        <div class="defender-panel-label">MOVE MODULES</div>
+        ${buildLoadoutMoveMarkup(defender)}
+      </div>
+    </section>
+
+    <aside class="defender-loadout-panel" aria-label="Defender equipment and stats">
+      ${buildLoadoutModulePanelMarkup(defender)}
+
+      <div class="defender-loadout-stats" aria-label="Base and module stat summary">
+        <div class="defender-loadout-panel-label">EFFECTIVE STAT SUMMARY</div>
+        <div class="defender-loadout-stat-head">
+          <span>STAT</span>
+          <span>BASE</span>
+          <span>MODULE</span>
+          <span>TOTAL</span>
+          <span>STATE</span>
+        </div>
+        ${buildLoadoutStatRows(defender, module)}
+      </div>
+
+      <div class="defender-loadout-gear">
+        <div class="defender-loadout-panel-label">FUTURE HARDWARE SLOTS</div>
+        ${buildLoadoutGearSlotsMarkup()}
+      </div>
+    </aside>
   `;
 }
 
@@ -1577,16 +1797,16 @@ function buildDefenderSelectionMarkup() {
   const unlockedIds = Array.isArray(defenderSaveState?.unlockedDefenders) ? defenderSaveState.unlockedDefenders : getDefaultStarterDefenderIds();
 
   return `
-    <div class="defender-shell">
+    <div class="defender-shell defender-loadout-shell">
       <div class="defender-header">
         <div class="defender-header-copy">
-          <div class="defender-kicker">OPERATOR LOADOUT / STAGE ONE</div>
-          <h2 class="briefing-title">STARTER LINEUP</h2>
-          <p class="briefing-copy defender-copy">ASSEMBLE YOUR FOUR-DEFENDER PARTY, LOCK THE LOADOUT, THEN ENTER THREATGRID.</p>
+          <div class="defender-kicker">EXPEDITION LOADOUT / OPERATOR SUPPRESSION ORDER</div>
+          <h2 class="briefing-title">DEFENDER LOADOUT</h2>
+          <p class="briefing-copy defender-copy">ACTIVE PARTY IS LOCKED FOR THIS RUN. RECOVERED MODULES CAN BE INSTALLED AFTER INCIDENTS.</p>
         </div>
         <div class="defender-header-panel" aria-hidden="true">
-          <div class="defender-header-panel-label">LOADOUT DIRECTIVE</div>
-          <div class="defender-header-panel-value">ROSTER VIEW ACTIVE. HOVER A DEFENDER TO INSPECT THE LOADOUT, THEN LOCK FOUR FOR THE RUN.</div>
+          <div class="defender-header-panel-label">EXPEDITION MODE</div>
+          <div class="defender-header-panel-value">4 / 4 DEFENDERS DEPLOY. FUTURE HARDWARE SLOTS ARE LOCKED UNTIL FORGE SYSTEMS AWAKEN.</div>
         </div>
         <button id="defender-screen-back" class="back-button" type="button">← RETURN TO MENU</button>
       </div>
@@ -1598,32 +1818,42 @@ function buildDefenderSelectionMarkup() {
         <div id="defender-selection-status" class="defender-selection-status">${selectedIds.length === 4 ? "LOADOUT READY. BEGIN THE RUN WHEN YOU ARE READY." : "SELECT A PARTY OF FOUR."}</div>
       </div>
 
-      <div class="defender-workbench">
-        <section class="defender-roster-panel" aria-label="Defender roster">
-          <div class="defender-panel-label">DEFENDER ROSTER</div>
+      <div class="defender-loadout-grid">
+        <section class="defender-roster-panel" aria-label="Active party list">
+          <div class="defender-panel-label">ACTIVE PARTY</div>
           <div class="defender-roster-grid">
-            ${roster.map((defender) => {
-              const isSelected = selectedIds.includes(defender.id);
+            ${Array.from({ length: 4 }, (_, slotIndex) => {
+              const defender = selectedDefenders[slotIndex];
+              if (!defender) {
+                return `
+                  <div class="defender-roster-tile is-empty">
+                    <div class="defender-roster-kicker">SLOT ${slotIndex + 1}</div>
+                    <div class="defender-roster-name">EMPTY SLOT</div>
+                    <div class="defender-roster-summary">Reset loadout to restore default party.</div>
+                  </div>
+                `;
+              }
               const isLocked = !unlockedIds.includes(defender.id);
               const isFocused = activeDefender && activeDefender.id === defender.id;
-              return buildDefenderRosterTileMarkup(defender, isSelected, isLocked, isFocused);
+              return buildDefenderRosterTileMarkup(defender, true, isLocked, isFocused, slotIndex);
             }).join("")}
           </div>
+          <div class="defender-readonly-note">Choose your starting squad before deployment. Module management unlocks during the expedition.</div>
         </section>
 
-        <section id="defender-focus-panel" class="defender-focus-panel" aria-live="polite" aria-label="Active defender details">
+        <div id="defender-focus-panel" class="defender-loadout-detail-grid" aria-live="polite" aria-label="Focused defender loadout">
           ${activeDefender ? buildDefenderDetailPanelMarkup(
             activeDefender,
             selectedIds.includes(activeDefender.id),
             !unlockedIds.includes(activeDefender.id),
             selectedIds.length
           ) : ""}
-        </section>
+        </div>
       </div>
 
       <div class="defender-lower-row">
         <section class="defender-party-panel" aria-label="Locked party slots">
-          <div class="defender-panel-label">LOCKED PARTY / 4 SLOTS</div>
+          <div class="defender-panel-label">DEPLOYMENT STATUS</div>
           <div class="defender-party-slots">
             ${Array.from({ length: 4 }, (_, slotIndex) => buildDefenderPartySlotMarkup(selectedDefenders[slotIndex], slotIndex)).join("")}
           </div>
@@ -1702,7 +1932,6 @@ function bindDefenderSelectionControls() {
 
     tile.addEventListener("click", () => {
       setDefenderSelectionFocus(defenderId);
-      toggleDefenderSelection(defenderId);
     });
   });
 
