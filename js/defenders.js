@@ -1701,8 +1701,7 @@ function buildDefenderSelectionMarkup() {
         </div>
         <div class="defender-header-panel" aria-hidden="true">
           <div class="defender-header-panel-label">EXPEDITION MODE</div>
-          <div class="defender-header-panel-label">LOADOUT DEBUG: RPG RENDERER ACTIVE</div>
-          <div class="defender-header-panel-value">LOADOUT UI: RPG V2. FUTURE HARDWARE SLOTS ARE LOCKED UNTIL FORGE SYSTEMS AWAKEN.</div>
+          <div class="defender-header-panel-value">4 / 4 DEFENDERS DEPLOY. FUTURE HARDWARE SLOTS ARE LOCKED UNTIL FORGE SYSTEMS AWAKEN.</div>
         </div>
         <button id="defender-screen-back" class="back-button" type="button">← RETURN TO MENU</button>
       </div>
@@ -1841,18 +1840,9 @@ function renderStarterRosterSelect() {
   }
 
   const selectedDefenders = defenderSelectionDraft.map((defenderId) => getDefenderTemplate(defenderId)).filter(Boolean);
-  console.info("[LOADOUT RENDER] RPG renderer active", {
-    source: "renderStarterRosterSelect",
-    version: "rpg-expedition-v2",
-    selectedDefenderIds: defenderSelectionDraft.slice()
-  });
 
   defenderSelectionFocusId = getDefenderSelectionFocusId(defenderSelectionFocusId);
   defenderScreenContent.innerHTML = buildDefenderSelectionMarkup();
-  console.info("[LOADOUT SCREEN] mounted", {
-    version: "rpg-expedition-v2",
-    hasMarker: Boolean(defenderScreenContent.querySelector('[data-loadout-version="rpg-expedition-v2"]'))
-  });
 
   const defenderSelectionCount = document.getElementById("defender-selection-count");
   const defenderSelectionStatus = document.getElementById("defender-selection-status");
@@ -1877,9 +1867,6 @@ function renderLegacyStarterLineup() {
     return;
   }
 
-  console.info("[LOADOUT RENDER] legacy helper called but delegated", {
-    version: "rpg-expedition-v2"
-  });
   renderStarterRosterSelect();
 }
 
