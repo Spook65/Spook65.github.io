@@ -1436,111 +1436,6 @@ function buildDefenderRosterTileMarkup(defender, isSelected, isLocked, isFocused
   `;
 }
 
-// buildDefenderCardMarkup() keeps the original four-card selection UI available as a safe fallback.
-function buildDefenderCardMarkup(defender, isSelected, isLocked) {
-  const movePreview = defender.moves.slice(0, 2).map((move) => {
-    const moveAccuracy = Number.isFinite(move.accuracy) ? `${move.accuracy}% ACC` : null;
-    const moveCharges = Number.isFinite(move.charges) && Number.isFinite(move.maxCharges)
-      ? `${move.charges}/${move.maxCharges} CHG`
-      : null;
-    const moveMeta = [move.domain, move.category]
-      .filter(Boolean)
-      .map((value) => String(value).toUpperCase())
-      .concat([`PWR ${move.power}`, moveAccuracy, moveCharges].filter(Boolean))
-      .join(" / ");
-
-    return `
-      <div class="defender-move">
-        <div class="defender-move-name">${move.name}</div>
-        <div class="defender-move-meta">${moveMeta}</div>
-      </div>
-    `;
-  }).join("");
-  const coreTrait = defender.coreTrait && typeof defender.coreTrait === "object" ? defender.coreTrait.name : defender.coreTrait;
-  const passiveModule = defender.passiveModule && typeof defender.passiveModule === "object" ? defender.passiveModule.name : defender.passiveModule;
-  const coreTraitDescription = defender.coreTrait && typeof defender.coreTrait === "object" ? defender.coreTrait.description : "";
-  const passiveModuleDescription = defender.passiveModule && typeof defender.passiveModule === "object" ? defender.passiveModule.description : "";
-  const loadoutStateLabel = isSelected ? "LOCKED IN" : isLocked ? "LOCKED" : "READY";
-  const rarityLabel = String(defender.rarity || "standard").toUpperCase();
-  const cardAccent = defender.color || "#00ccff";
-
-  return `
-    <button
-      class="defender-card ${isSelected ? "is-selected" : ""} ${isLocked ? "is-locked" : ""}"
-      type="button"
-      data-defender-id="${defender.id}"
-      aria-pressed="${isSelected ? "true" : "false"}"
-      style="--defender-accent: ${cardAccent}; --defender-accent-soft: ${cardAccent}22;"
-      ${isLocked ? "disabled" : ""}
-    >
-      <div class="defender-card-topline">
-        <div class="defender-card-titleblock">
-          <div class="defender-card-kicker">STARTER DEFENDER</div>
-          <div class="defender-card-name">${defender.name}</div>
-          <div class="defender-card-domain">${defender.role} / ${defender.domain} / ${defender.affinity}</div>
-        </div>
-        <div class="defender-card-badges">
-          <div class="defender-card-badge">${rarityLabel}</div>
-          <div class="defender-card-badge ${isSelected ? "is-selected" : isLocked ? "is-locked" : "is-ready"}">${loadoutStateLabel}</div>
-        </div>
-      </div>
-      <div class="defender-card-summary">${defender.summary}</div>
-      <div class="defender-card-fields">
-        <div class="defender-card-field">
-          <span class="defender-card-field-label">CORE TRAIT</span>
-          <span class="defender-card-field-value" title="${coreTraitDescription}">${coreTrait}</span>
-        </div>
-        <div class="defender-card-field">
-          <span class="defender-card-field-label">PASSIVE MODULE</span>
-          <span class="defender-card-field-value" title="${passiveModuleDescription}">${passiveModule}</span>
-        </div>
-        <div class="defender-card-field">
-          <span class="defender-card-field-label">TEMPERAMENT</span>
-          <span class="defender-card-field-value">${defender.temperament}</span>
-        </div>
-        <div class="defender-card-field">
-          <span class="defender-card-field-label">VARIANT</span>
-          <span class="defender-card-field-value">${defender.variant}</span>
-        </div>
-      </div>
-      <div class="defender-card-stats" aria-label="Defender stats">
-        <div class="defender-stat">
-          <span class="defender-stat-label">HP</span>
-          <strong class="defender-stat-value">${defender.hp}</strong>
-        </div>
-        <div class="defender-stat">
-          <span class="defender-stat-label">ATK</span>
-          <strong class="defender-stat-value">${defender.atk}</strong>
-        </div>
-        <div class="defender-stat">
-          <span class="defender-stat-label">DEF</span>
-          <strong class="defender-stat-value">${defender.def}</strong>
-        </div>
-        <div class="defender-stat">
-          <span class="defender-stat-label">SP ATK</span>
-          <strong class="defender-stat-value">${defender.spAtk}</strong>
-        </div>
-        <div class="defender-stat">
-          <span class="defender-stat-label">SP DEF</span>
-          <strong class="defender-stat-value">${defender.spDef}</strong>
-        </div>
-        <div class="defender-stat">
-          <span class="defender-stat-label">SPD</span>
-          <strong class="defender-stat-value">${defender.spd}</strong>
-        </div>
-      </div>
-      <div class="defender-card-moves">
-        <div class="defender-section-label">MOVE MODULES</div>
-        <div class="defender-move-grid">${movePreview}</div>
-      </div>
-      <div class="defender-card-foot">
-        <span>${isSelected ? "LOCKED INTO LOADOUT" : "TAP TO ADD TO LOADOUT"}</span>
-        <span>LVL ${defender.level}</span>
-      </div>
-    </button>
-  `;
-}
-
 function buildLoadoutMoveMarkup(defender) {
   const moves = Array.isArray(defender?.moves) ? defender.moves : [];
   if (!moves.length) {
@@ -1797,7 +1692,7 @@ function buildDefenderSelectionMarkup() {
   const unlockedIds = Array.isArray(defenderSaveState?.unlockedDefenders) ? defenderSaveState.unlockedDefenders : getDefaultStarterDefenderIds();
 
   return `
-    <div class="defender-shell defender-loadout-shell">
+    <div class="defender-shell defender-loadout-shell" data-loadout-version="rpg-expedition-v2">
       <div class="defender-header">
         <div class="defender-header-copy">
           <div class="defender-kicker">EXPEDITION LOADOUT / OPERATOR SUPPRESSION ORDER</div>
@@ -1806,7 +1701,7 @@ function buildDefenderSelectionMarkup() {
         </div>
         <div class="defender-header-panel" aria-hidden="true">
           <div class="defender-header-panel-label">EXPEDITION MODE</div>
-          <div class="defender-header-panel-value">4 / 4 DEFENDERS DEPLOY. FUTURE HARDWARE SLOTS ARE LOCKED UNTIL FORGE SYSTEMS AWAKEN.</div>
+          <div class="defender-header-panel-value">LOADOUT UI: RPG V2. FUTURE HARDWARE SLOTS ARE LOCKED UNTIL FORGE SYSTEMS AWAKEN.</div>
         </div>
         <button id="defender-screen-back" class="back-button" type="button">← RETURN TO MENU</button>
       </div>
@@ -1945,11 +1840,18 @@ function renderStarterRosterSelect() {
   }
 
   const selectedDefenders = defenderSelectionDraft.map((defenderId) => getDefenderTemplate(defenderId)).filter(Boolean);
-  console.log("[Starter Lineup] Rendering roster select");
-  console.log("[Starter Lineup] Selected defenders:", selectedDefenders);
+  console.info("[LOADOUT RENDER] RPG renderer active", {
+    source: "renderStarterRosterSelect",
+    version: "rpg-expedition-v2",
+    selectedDefenderIds: defenderSelectionDraft.slice()
+  });
 
   defenderSelectionFocusId = getDefenderSelectionFocusId(defenderSelectionFocusId);
   defenderScreenContent.innerHTML = buildDefenderSelectionMarkup();
+  console.info("[LOADOUT SCREEN] mounted", {
+    version: "rpg-expedition-v2",
+    hasMarker: Boolean(defenderScreenContent.querySelector('[data-loadout-version="rpg-expedition-v2"]'))
+  });
 
   const defenderSelectionCount = document.getElementById("defender-selection-count");
   const defenderSelectionStatus = document.getElementById("defender-selection-status");
@@ -1974,6 +1876,9 @@ function renderLegacyStarterLineup() {
     return;
   }
 
+  console.info("[LOADOUT RENDER] legacy helper called but delegated", {
+    version: "rpg-expedition-v2"
+  });
   renderStarterRosterSelect();
 }
 
