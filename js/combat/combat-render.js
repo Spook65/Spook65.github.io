@@ -338,6 +338,86 @@ function buildBattleHistoryDrawerMarkup(state) {
   `;
 }
 
+function buildDefenderInspectOverlayMarkup(state) {
+  if (!state?.defenderInspectOpen || state?.battleIntroPlaying) {
+    return "";
+  }
+
+  const party = Array.isArray(state.playerParty) ? state.playerParty : [];
+  const activeProgram = getActiveBattleProgram(state);
+  const program = party.find((candidate) => candidate?.id === state.inspectedDefenderId) || activeProgram || party[0];
+  if (!program) {
+    return "";
+  }
+
+  const effective = typeof getDefenderEffectiveStats === "function"
+    ? getDefenderEffectiveStats(state, program)
+    : { module: program.equippedModule || null, stats: {} };
+  const module = effective.module || null;
+  const source = module ? getRecoveredModuleSourceDisplay(module) : null;
+  const moduleName = module?.name || "Empty Module Slot";
+  const moduleMeta = module
+    ? `${getRecoveredModuleItemClass(module)} / ${getSafeModuleText(module.rarity, "common").toUpperCase()} MODULE`
+    : "UNIVERSAL MODULE SLOT / EMPTY";
+  const statRows = Object.values(effective.stats || {}).map(buildDefenderEffectiveStatRow).join("");
+  const roleLine = [program.role, program.domain, program.affinity].filter(Boolean).join(" / ") || "Defender Protocol";
+  const moduleEffect = module ? getSafeModuleText(module.effectText, "Module effect online.") : "Install Recovered Modules after a contained incident.";
+
+  return `
+    <section class="combat-history-overlay combat-defender-inspect-overlay" aria-label="Defender Inspect overlay">
+      <button class="combat-history-backdrop" type="button" data-combat-command="close-defender-inspect" aria-label="Close Defender Inspect"></button>
+      <div class="combat-history-modal combat-defender-inspect-modal" role="dialog" aria-modal="true" aria-label="Defender Inspect">
+        <div class="combat-history-drawer-head combat-defender-inspect-modal-head">
+          <div>
+            <div class="combat-history-drawer-kicker">DEFENDER INSPECT</div>
+            <div class="combat-history-drawer-copy">EFFECTIVE STATS / UNIVERSAL MODULE LOADOUT</div>
+          </div>
+          <button class="combat-history-close" type="button" data-combat-command="close-defender-inspect">CLOSE</button>
+        </div>
+        <div class="combat-defender-inspect-modal-body">
+          <section class="combat-defender-portrait" style="--inspect-accent: ${program.color || "#7fb7b0"};">
+            <div class="combat-defender-portrait-grid" aria-hidden="true"></div>
+            <div class="combat-defender-portrait-visual">
+              <div class="combat-defender-portrait-aura" aria-hidden="true"></div>
+              ${renderCombatantSprite(program, "program")}
+            </div>
+            <div class="combat-defender-portrait-copy">
+              <div class="combat-defender-portrait-name">${program.name || "Defender"}</div>
+              <div class="combat-defender-portrait-role">${roleLine}</div>
+              <div class="combat-defender-portrait-vitals">
+                <span>LVL ${program.level || 1}</span>
+                <span>HP ${program.hp || 0}/${program.maxHp || 0}</span>
+              </div>
+              <div class="combat-defender-portrait-module ${module ? "is-online" : ""}">
+                <span>${module ? "MODULE ONLINE" : "MODULE EMPTY"}</span>
+                <strong>${moduleName}</strong>
+              </div>
+            </div>
+          </section>
+          <section class="combat-defender-loadout">
+            <div class="combat-defender-loadout-module ${module ? getModuleRarityClass(module) : "is-empty"}">
+              <div class="combat-defender-section-label">EQUIPPED MODULE</div>
+              <div class="combat-defender-loadout-name">${moduleName}</div>
+              <div class="combat-defender-module-meta">${moduleMeta}</div>
+              ${module ? `
+                <div class="combat-defender-loadout-source">SOURCE: ${source.sourceName}</div>
+                <div class="combat-defender-loadout-theme">${source.sourceTheme}</div>
+              ` : ""}
+            </div>
+            ${buildDefenderModuleContributionMarkup(module)}
+            <div class="combat-defender-loadout-effect">${moduleEffect}</div>
+            <div class="combat-defender-effective-stats is-modal">
+              <div class="combat-defender-section-label">EFFECTIVE STATS</div>
+              <div class="combat-defender-stat-columns" aria-hidden="true"><span>STAT</span><span>BASE</span><span>MODULE</span><span>TOTAL</span></div>
+              ${statRows}
+            </div>
+          </section>
+        </div>
+      </div>
+    </section>
+  `;
+}
+
 // buildPantheonBoonBriefMarkup() shows the active and opening Protocol God boon effects without adding a new screen.
 function buildPantheonBoonBriefMarkup(state) {
   const boonLines = Array.isArray(state.pantheonBoonMessages) ? state.pantheonBoonMessages : [];
@@ -1241,6 +1321,7 @@ function buildDefenderModuleContributionMarkup(module) {
   }
 
   const baseStat = typeof getModuleBaseStat === "function" ? getModuleBaseStat(module) : getRecoveredModulePrimaryStat(module);
+  const baseStatSupport = typeof getModuleStatSupport === "function" ? getModuleStatSupport(baseStat?.statKey) : { active: true };
   const contributionGroups = [
     { type: "prefix", label: "PREFIX" },
     { type: "suffix", label: "SUFFIX" },
@@ -1263,48 +1344,10 @@ function buildDefenderModuleContributionMarkup(module) {
       <div class="combat-defender-module-line is-base">
         <span>BASE</span>
         <strong>${baseStat?.label || baseStat?.text || "Module Power"}</strong>
+        ${baseStatSupport.active === false ? '<em>PLANNED</em>' : ""}
       </div>
       ${contributionRows.join("")}
     </div>
-  `;
-}
-
-function buildDefenderInspectMarkup(state, program) {
-  if (!program) {
-    return '<div class="combat-defender-inspect is-empty">NO DEFENDER SIGNAL.</div>';
-  }
-
-  const effective = typeof getDefenderEffectiveStats === "function"
-    ? getDefenderEffectiveStats(state, program)
-    : { module: program.equippedModule || null, stats: {} };
-  const module = effective.module || null;
-  const statRows = Object.values(effective.stats || {}).map(buildDefenderEffectiveStatRow).join("");
-  const moduleName = module?.name || "No Module Equipped";
-  const moduleMeta = module
-    ? `${getRecoveredModuleItemClass(module)} / ${getSafeModuleText(module.rarity, "common").toUpperCase()} MODULE`
-    : "UNIVERSAL MODULE SLOT / EMPTY";
-
-  return `
-    <section class="combat-defender-inspect ${module ? getModuleRarityClass(module) : ""}" aria-label="${program.name || "Defender"} effective stats">
-      <div class="combat-defender-inspect-head">
-        <div>
-          <div class="combat-defender-inspect-name">${program.name || "Defender"}</div>
-          <div class="combat-defender-inspect-meta">LVL ${program.level || 1} / HP ${program.hp || 0}/${program.maxHp || 0}</div>
-        </div>
-        <div class="combat-defender-module-chip">${module ? "MODULE ONLINE" : "SLOT EMPTY"}</div>
-      </div>
-      <div class="combat-defender-module-head">
-        <div class="combat-defender-section-label">EQUIPPED MODULE</div>
-        <div class="combat-defender-module-name">${moduleName}</div>
-        <div class="combat-defender-module-meta">${moduleMeta}</div>
-      </div>
-      ${buildDefenderModuleContributionMarkup(module)}
-      <div class="combat-defender-effective-stats">
-        <div class="combat-defender-section-label">EFFECTIVE STATS</div>
-        <div class="combat-defender-stat-columns" aria-hidden="true"><span>STAT</span><span>BASE</span><span>MODULE</span><span>EFFECTIVE</span></div>
-        ${statRows}
-      </div>
-    </section>
   `;
 }
 
@@ -1324,8 +1367,6 @@ function buildStageCommandSubmenuMarkup(state) {
   }
 
   if (commandMode === "programs") {
-    const inspectedProgramId = state.inspectedProgramId || currentActor.ref.id;
-    const inspectedProgram = state.playerParty.find((program) => program.id === inspectedProgramId) || currentActor.ref;
     return `
       <div class="combat-stage-command-submenu is-programs" aria-label="Battlefield programs menu">
         <div class="combat-stage-command-submenu-header">
@@ -1333,23 +1374,19 @@ function buildStageCommandSubmenuMarkup(state) {
           <div class="combat-stage-command-submenu-copy">ACTIVE DEFENDER REVIEW</div>
         </div>
         <div class="combat-stage-command-submenu-body">
-          <div class="combat-stage-program-layout">
-            <div class="combat-stage-program-grid combat-party-grid">
-              ${state.playerParty.map((program) => {
-                const module = program.equippedModule || null;
-                return `
-                  <button class="combat-stage-program-card combat-party-card ${program.id === currentActor.ref.id ? "is-active" : ""} ${program.id === inspectedProgram.id ? "is-inspected" : ""} ${program.hp <= 0 ? "is-down" : ""}" type="button" data-defender-inspect="${program.id}">
-                    <span class="combat-party-name">${program.name}</span>
-                    <span class="combat-party-meta">LVL ${program.level} / HP ${program.hp}/${program.maxHp}</span>
-                    <span class="combat-party-module-compact">${module?.name || "NO MODULE"}</span>
-                    ${program.id === currentActor.ref.id ? '<span class="combat-party-tag">ACTIVE</span>' : ""}
-                  </button>
-                `;
-              }).join("")}
-            </div>
-            <div class="combat-defender-inspect-slot" data-defender-inspect-preview>
-              ${buildDefenderInspectMarkup(state, inspectedProgram)}
-            </div>
+          <div class="combat-stage-program-grid combat-party-grid">
+            ${state.playerParty.map((program) => {
+              const module = program.equippedModule || null;
+              return `
+                <button class="combat-stage-program-card combat-party-card ${program.id === currentActor.ref.id ? "is-active" : ""} ${program.hp <= 0 ? "is-down" : ""}" type="button" data-combat-command="open-defender-inspect" data-defender-id="${program.id}">
+                  <span class="combat-party-name">${program.name}</span>
+                  <span class="combat-party-meta">LVL ${program.level} / HP ${program.hp}/${program.maxHp}</span>
+                  <span class="combat-party-module-compact">${module?.name || "NO MODULE"}</span>
+                  <span class="combat-party-inspect-affordance">INSPECT</span>
+                  ${program.id === currentActor.ref.id ? '<span class="combat-party-tag">ACTIVE</span>' : ""}
+                </button>
+              `;
+            }).join("")}
           </div>
           <div class="combat-stage-command-submenu-note">SWITCHING COMING SOON.</div>
         </div>
@@ -1666,6 +1703,7 @@ function buildCombatMarkup(state) {
   const combatFeedMarkup = buildCombatFeedMarkup(state);
   const battleHistoryDrawerMarkup = buildBattleHistoryDrawerMarkup(state);
   const cyberCodexOverlayMarkup = buildCyberCodexOverlayMarkup(state);
+  const defenderInspectOverlayMarkup = buildDefenderInspectOverlayMarkup(state);
   const stageFeedbackActive = Boolean(stageFeedbackToastMarkup);
   const collapseActiveHud = shouldCollapseActiveHud(state);
   if (state?.commandMode === "attack") {
@@ -1724,6 +1762,7 @@ function buildCombatMarkup(state) {
         ${combatFeedMarkup}
         ${battleHistoryDrawerMarkup}
         ${cyberCodexOverlayMarkup}
+        ${defenderInspectOverlayMarkup}
         <div class="combat-reserve-strip">
           <div class="combat-reserve-row">
             ${buildReserveStripMarkup(state, currentProgram.id)}
@@ -2339,25 +2378,6 @@ function updateRecoveredModuleFocusPreview(choiceIndex) {
   });
 }
 
-function updateDefenderInspectPreview(programId) {
-  if (!combatState || combatState.commandMode !== "programs" || !programId) {
-    return;
-  }
-
-  const party = Array.isArray(combatState.playerParty) ? combatState.playerParty : [];
-  const program = party.find((candidate) => candidate?.id === programId);
-  const preview = threatPanelContent?.querySelector("[data-defender-inspect-preview]");
-  if (!program || !preview) {
-    return;
-  }
-
-  combatState.inspectedProgramId = program.id;
-  preview.innerHTML = buildDefenderInspectMarkup(combatState, program);
-  threatPanelContent.querySelectorAll("[data-defender-inspect]").forEach((button) => {
-    button.classList.toggle("is-inspected", button.getAttribute("data-defender-inspect") === program.id);
-  });
-}
-
 // renderBattleLostScreen() shows the failure branch without tearing down the overlay instantly.
 function renderBattleLostScreen() {
   threatPanelContent.innerHTML = buildBattleLostMarkup();
@@ -2371,25 +2391,43 @@ function renderBattleLostScreen() {
 function bindCombatButtons() {
   const actor = combatState ? combatState.turnOrder[combatState.currentTurnIndex] : null;
 
-  threatPanelContent.querySelectorAll("[data-defender-inspect]").forEach((button) => {
-    const inspect = () => updateDefenderInspectPreview(button.getAttribute("data-defender-inspect"));
-    button.addEventListener("mouseenter", inspect);
-    button.addEventListener("focus", inspect);
-    button.addEventListener("click", inspect);
-  });
-
   threatPanelContent.querySelectorAll("[data-combat-command]").forEach((button) => {
     button.addEventListener("click", () => {
-      if (!combatState || !actor) {
+      if (!combatState) {
         return;
       }
 
       const command = button.getAttribute("data-combat-command");
 
+      if (command === "open-defender-inspect") {
+        const defenderId = button.getAttribute("data-defender-id") || actor?.ref?.id || combatState.activeProgramId;
+        const defender = Array.isArray(combatState.playerParty)
+          ? combatState.playerParty.find((program) => program?.id === defenderId)
+          : null;
+        if (!defender) {
+          return;
+        }
+        combatState.inspectedDefenderId = defender.id;
+        combatState.defenderInspectOpen = true;
+        combatState.historyDrawerOpen = false;
+        combatState.cyberCodexOpen = false;
+        renderCombatScreen();
+        return;
+      }
+
+      if (command === "close-defender-inspect") {
+        combatState.defenderInspectOpen = false;
+        combatState.inspectedDefenderId = null;
+        renderCombatScreen();
+        return;
+      }
+
       if (command === "toggle-history") {
         combatState.historyDrawerOpen = !combatState.historyDrawerOpen;
         if (combatState.historyDrawerOpen) {
           combatState.cyberCodexOpen = false;
+          combatState.defenderInspectOpen = false;
+          combatState.inspectedDefenderId = null;
         }
         renderCombatScreen();
         return;
@@ -2406,6 +2444,8 @@ function bindCombatButtons() {
         combatState.cyberCodexOpen = !combatState.cyberCodexOpen;
         if (combatState.cyberCodexOpen) {
           combatState.historyDrawerOpen = false;
+          combatState.defenderInspectOpen = false;
+          combatState.inspectedDefenderId = null;
         }
         console.log("[THREAT INTEL] toggle open:", combatState.cyberCodexOpen);
         renderCombatScreen();
@@ -2416,6 +2456,10 @@ function bindCombatButtons() {
         console.log("[THREAT INTEL] close");
         combatState.cyberCodexOpen = false;
         renderCombatScreen();
+        return;
+      }
+
+      if (!actor) {
         return;
       }
 
@@ -2457,7 +2501,6 @@ function bindCombatButtons() {
         combatState.attackFanFallbackActorId = "";
         combatState.attackFanFallbackReason = "";
         combatState.commandMode = "programs";
-        combatState.inspectedProgramId = actor.ref.id;
         combatState.battleMessage = "";
         combatState.battleSubmessage = "";
         renderCombatScreen();

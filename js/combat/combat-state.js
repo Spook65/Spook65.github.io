@@ -1589,6 +1589,8 @@ function buildCombatState(sourceThreat) {
     battleHistory: [],
     historyDrawerOpen: false,
     cyberCodexOpen: false,
+    defenderInspectOpen: false,
+    inspectedDefenderId: null,
     threatAnalyzed: false,
     revealedThreatInfo: {},
     learningObjective,
