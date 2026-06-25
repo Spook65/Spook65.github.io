@@ -848,6 +848,7 @@ function createDefaultSave() {
       nextBattleOpeningDamageBonus: 0,
       nextThreatHint: "",
       damageReductionRunPercent: 0,
+      recoveredModules: [],
       equippedModulesByDefenderId: {},
       lastPantheonChoiceId: null,
       lastPantheonDialogue: "",
@@ -946,6 +947,9 @@ function normalizeDefenderSave(saveData) {
       nextBattleOpeningDamageBonus: Number.isFinite(currentRunSource.nextBattleOpeningDamageBonus) ? currentRunSource.nextBattleOpeningDamageBonus : fallback.currentRun.nextBattleOpeningDamageBonus,
       nextThreatHint: typeof currentRunSource.nextThreatHint === "string" ? currentRunSource.nextThreatHint : fallback.currentRun.nextThreatHint,
       damageReductionRunPercent: Number.isFinite(currentRunSource.damageReductionRunPercent) ? currentRunSource.damageReductionRunPercent : fallback.currentRun.damageReductionRunPercent,
+      recoveredModules: Array.isArray(currentRunSource.recoveredModules) ? currentRunSource.recoveredModules.map((module) => (
+        typeof normalizeCurrentRunModule === "function" ? normalizeCurrentRunModule(module) : cloneDefenderBlueprint(module)
+      )).filter(Boolean) : fallback.currentRun.recoveredModules.slice(),
       equippedModulesByDefenderId: currentRunSource.equippedModulesByDefenderId && typeof currentRunSource.equippedModulesByDefenderId === "object" ? { ...currentRunSource.equippedModulesByDefenderId } : { ...fallback.currentRun.equippedModulesByDefenderId },
       lastPantheonChoiceId: typeof currentRunSource.lastPantheonChoiceId === "string" ? currentRunSource.lastPantheonChoiceId : fallback.currentRun.lastPantheonChoiceId,
       lastPantheonDialogue: typeof currentRunSource.lastPantheonDialogue === "string" ? currentRunSource.lastPantheonDialogue : fallback.currentRun.lastPantheonDialogue,
@@ -975,6 +979,9 @@ function loadSave() {
   }
 
   defenderSaveState = normalizeDefenderSave(parsedSave);
+  if (typeof ensureCurrentRunModuleInventory === "function") {
+    ensureCurrentRunModuleInventory(defenderSaveState.currentRun);
+  }
   return defenderSaveState;
 }
 
@@ -1160,6 +1167,7 @@ function markDefenderRunStarted() {
     nextBattleOpeningDamageBonus: 0,
     nextThreatHint: "",
     damageReductionRunPercent: 0,
+    recoveredModules: [],
     equippedModulesByDefenderId: {},
     lastPantheonChoiceId: null,
     lastPantheonDialogue: "",
@@ -1518,6 +1526,50 @@ function buildLoadoutGearSlotsMarkup() {
   `).join("");
 }
 
+function buildCurrentRunModuleInventoryMarkup(selectedDefenders = []) {
+  const runModules = typeof getCurrentRunModules === "function"
+    ? getCurrentRunModules(defenderSaveState?.currentRun)
+    : [];
+  const defenderNameById = selectedDefenders.reduce((lookup, defender) => {
+    if (defender?.id) {
+      lookup[defender.id] = defender.name || defender.id;
+    }
+    return lookup;
+  }, {});
+
+  if (!runModules.length) {
+    return `
+      <div class="defender-loadout-inventory">
+        <div class="defender-loadout-panel-label">CURRENT RUN MODULES</div>
+        <div class="defender-loadout-empty">No recovered modules stored yet. Win incidents to recover run-only modules.</div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="defender-loadout-inventory">
+      <div class="defender-loadout-panel-label">CURRENT RUN MODULES</div>
+      ${runModules.map((module) => {
+        const primaryStat = getLoadoutModulePrimaryStat(module);
+        const rarity = getDefenderLoadoutText(module?.rarity, "common").toUpperCase();
+        const itemClass = getDefenderLoadoutText(module?.itemClass, "Recovered Module");
+        const equippedDefenderId = getDefenderLoadoutText(module?.equippedToDefenderId, "");
+        const equippedName = equippedDefenderId ? getDefenderLoadoutText(defenderNameById[equippedDefenderId], equippedDefenderId) : "";
+        return `
+          <div class="defender-loadout-inventory-item ${module?.equippedToDefenderId ? "is-equipped" : "is-unequipped"}">
+            <div>
+              <span class="defender-loadout-inventory-name">${getDefenderLoadoutText(module?.name, "Recovered Module")}</span>
+              <span class="defender-loadout-inventory-meta">${rarity} ${itemClass}</span>
+            </div>
+            <div class="defender-loadout-inventory-stat">${primaryStat.text}</div>
+            <div class="defender-loadout-inventory-status">${equippedName ? `Equipped: ${equippedName}` : "Unequipped"}</div>
+          </div>
+        `;
+      }).join("")}
+    </div>
+  `;
+}
+
 // buildDefenderDetailPanelMarkup() renders the focused defender across the RPG loadout visual and equipment panels.
 function buildDefenderDetailPanelMarkup(defender, isSelected, isLocked, selectedCount) {
   const cardAccent = defender.color || "#87e4ff";
@@ -1582,6 +1634,7 @@ function buildDefenderDetailPanelMarkup(defender, isSelected, isLocked, selected
 
     <aside class="defender-loadout-panel" aria-label="Defender equipment and stats">
       ${buildLoadoutModulePanelMarkup(defender)}
+      ${buildCurrentRunModuleInventoryMarkup(getSelectedDefenderIds().map((defenderId) => getDefenderTemplate(defenderId)).filter(Boolean))}
 
       <div class="defender-loadout-stats" aria-label="Base and module stat summary">
         <div class="defender-loadout-panel-label">EFFECTIVE STAT SUMMARY</div>

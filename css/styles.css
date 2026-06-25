@@ -7400,6 +7400,7 @@ body {
 .defender-screen .defender-focus-chip,
 .defender-screen .defender-loadout-move,
 .defender-screen .defender-loadout-module-card,
+.defender-screen .defender-loadout-inventory,
 .defender-screen .defender-loadout-stats,
 .defender-screen .defender-loadout-gear {
   border: 1px solid rgba(244, 239, 227, 0.09);
@@ -7445,6 +7446,7 @@ body {
 }
 
 .defender-screen .defender-loadout-module-card,
+.defender-screen .defender-loadout-inventory,
 .defender-screen .defender-loadout-stats,
 .defender-screen .defender-loadout-gear {
   display: grid;
@@ -7495,6 +7497,61 @@ body {
   font-size: 0.6rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
+}
+
+.defender-screen .defender-loadout-inventory {
+  max-height: 230px;
+  overflow: auto;
+}
+
+.defender-screen .defender-loadout-empty {
+  color: rgba(244, 239, 227, 0.52);
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+.defender-screen .defender-loadout-inventory-item {
+  display: grid;
+  gap: 5px;
+  padding: 9px 10px;
+  border: 1px solid rgba(244, 239, 227, 0.08);
+  background: rgba(5, 7, 12, 0.42);
+}
+
+.defender-screen .defender-loadout-inventory-item.is-equipped {
+  border-color: rgba(255, 206, 87, 0.2);
+  background:
+    linear-gradient(90deg, rgba(255, 206, 87, 0.06), transparent 58%),
+    rgba(5, 7, 12, 0.48);
+}
+
+.defender-screen .defender-loadout-inventory-name {
+  display: block;
+  color: var(--menu-text);
+  font-size: 0.68rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.defender-screen .defender-loadout-inventory-meta,
+.defender-screen .defender-loadout-inventory-stat,
+.defender-screen .defender-loadout-inventory-status {
+  display: block;
+  color: rgba(244, 239, 227, 0.56);
+  font-size: 0.56rem;
+  letter-spacing: 0.11em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.defender-screen .defender-loadout-inventory-stat {
+  color: rgba(255, 206, 87, 0.74);
+}
+
+.defender-screen .defender-loadout-inventory-status {
+  color: rgba(72, 214, 198, 0.72);
 }
 
 .defender-screen .defender-loadout-stat-head,

@@ -723,13 +723,98 @@ function getRecoveredModuleShortLabel(module) {
   return name.split(/\s+/).map((part) => part.charAt(0)).join("").slice(0, 3).toUpperCase() || "MOD";
 }
 
+function createRecoveredModuleInstanceId(module) {
+  if (typeof module?.instanceId === "string" && module.instanceId.trim()) {
+    return module.instanceId;
+  }
+
+  const baseId = typeof module?.id === "string" && module.id.trim() ? module.id.trim() : "module";
+  return `${baseId}-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
+}
+
+function normalizeCurrentRunModule(module, equippedToDefenderId = null) {
+  if (!module || typeof module !== "object") {
+    return null;
+  }
+
+  const normalized = JSON.parse(JSON.stringify(module));
+  normalized.instanceId = createRecoveredModuleInstanceId(normalized);
+  normalized.name = String(normalized.name || "Recovered Module");
+  normalized.rarity = String(normalized.rarity || "common");
+  normalized.itemClass = String(normalized.itemClass || "Recovered Module");
+  normalized.equippedToDefenderId = equippedToDefenderId || normalized.equippedToDefenderId || null;
+  normalized.acquiredAt = Number.isFinite(normalized.acquiredAt)
+    ? normalized.acquiredAt
+    : Number.isFinite(normalized.createdAt)
+      ? normalized.createdAt
+      : Date.now();
+  return normalized;
+}
+
+function ensureCurrentRunModuleInventory(runState) {
+  if (!runState || typeof runState !== "object") {
+    return [];
+  }
+
+  runState.recoveredModules = Array.isArray(runState.recoveredModules)
+    ? runState.recoveredModules.map((module) => normalizeCurrentRunModule(module)).filter(Boolean)
+    : [];
+  runState.equippedModulesByDefenderId = runState.equippedModulesByDefenderId && typeof runState.equippedModulesByDefenderId === "object"
+    ? runState.equippedModulesByDefenderId
+    : {};
+
+  Object.entries(runState.equippedModulesByDefenderId).forEach(([defenderId, equippedModule]) => {
+    if (!equippedModule) {
+      return;
+    }
+
+    if (typeof equippedModule === "string") {
+      const inventoryMatch = runState.recoveredModules.find((module) => module.instanceId === equippedModule);
+      if (inventoryMatch) {
+        inventoryMatch.equippedToDefenderId = defenderId;
+        runState.equippedModulesByDefenderId[defenderId] = inventoryMatch;
+      }
+      return;
+    }
+
+    const normalizedModule = normalizeCurrentRunModule(equippedModule, defenderId);
+    if (!normalizedModule) {
+      delete runState.equippedModulesByDefenderId[defenderId];
+      return;
+    }
+
+    const existingIndex = runState.recoveredModules.findIndex((module) => module.instanceId === normalizedModule.instanceId);
+    if (existingIndex === -1) {
+      runState.recoveredModules.push(normalizedModule);
+    } else {
+      runState.recoveredModules[existingIndex] = {
+        ...runState.recoveredModules[existingIndex],
+        ...normalizedModule,
+        equippedToDefenderId: defenderId
+      };
+    }
+    runState.equippedModulesByDefenderId[defenderId] = runState.recoveredModules.find((module) => module.instanceId === normalizedModule.instanceId) || normalizedModule;
+  });
+
+  return runState.recoveredModules;
+}
+
+function getCurrentRunModules(runState) {
+  return ensureCurrentRunModuleInventory(runState);
+}
+
 function getEquippedModuleForDefenderId(runState, defenderId) {
+  ensureCurrentRunModuleInventory(runState);
   const equipped = runState?.equippedModulesByDefenderId;
   if (!equipped || typeof equipped !== "object" || !defenderId) {
     return null;
   }
 
-  return equipped[defenderId] || null;
+  const equippedModule = equipped[defenderId] || null;
+  if (typeof equippedModule === "string") {
+    return runState.recoveredModules.find((module) => module.instanceId === equippedModule) || null;
+  }
+  return equippedModule;
 }
 
 function equipRecoveredModule(runState, defenderId, moduleInstance) {
@@ -737,15 +822,46 @@ function equipRecoveredModule(runState, defenderId, moduleInstance) {
     return null;
   }
 
-  runState.equippedModulesByDefenderId = runState.equippedModulesByDefenderId && typeof runState.equippedModulesByDefenderId === "object"
-    ? runState.equippedModulesByDefenderId
-    : {};
-  const previousModule = runState.equippedModulesByDefenderId[defenderId] || null;
-  runState.equippedModulesByDefenderId[defenderId] = {
-    ...moduleInstance,
-    equippedToDefenderId: defenderId,
-    equippedAt: Date.now()
-  };
+  ensureCurrentRunModuleInventory(runState);
+  const previousModule = getEquippedModuleForDefenderId(runState, defenderId);
+  const nextModule = normalizeCurrentRunModule(moduleInstance, defenderId);
+  if (!nextModule) {
+    return previousModule;
+  }
+
+  nextModule.equippedAt = Date.now();
+
+  if (previousModule?.instanceId && previousModule.instanceId !== nextModule.instanceId) {
+    const previousIndex = runState.recoveredModules.findIndex((module) => module.instanceId === previousModule.instanceId);
+    const unequippedPrevious = normalizeCurrentRunModule(previousModule, null);
+    if (unequippedPrevious) {
+      unequippedPrevious.equippedToDefenderId = null;
+      delete unequippedPrevious.equippedAt;
+      if (previousIndex === -1) {
+        runState.recoveredModules.push(unequippedPrevious);
+      } else {
+        runState.recoveredModules[previousIndex] = {
+          ...runState.recoveredModules[previousIndex],
+          ...unequippedPrevious,
+          equippedToDefenderId: null
+        };
+      }
+    }
+  }
+
+  const nextIndex = runState.recoveredModules.findIndex((module) => module.instanceId === nextModule.instanceId);
+  if (nextIndex === -1) {
+    runState.recoveredModules.push(nextModule);
+  } else {
+    runState.recoveredModules[nextIndex] = {
+      ...runState.recoveredModules[nextIndex],
+      ...nextModule,
+      equippedToDefenderId: defenderId
+    };
+  }
+
+  const equippedInventoryModule = runState.recoveredModules.find((module) => module.instanceId === nextModule.instanceId) || nextModule;
+  runState.equippedModulesByDefenderId[defenderId] = equippedInventoryModule;
   return previousModule;
 }
 
@@ -772,6 +888,10 @@ if (typeof window !== "undefined") {
   window.getEquippedModuleForProgram = getEquippedModuleForProgram;
   window.getDefenderEffectiveStats = getDefenderEffectiveStats;
   window.getRecoveredModuleShortLabel = getRecoveredModuleShortLabel;
+  window.createRecoveredModuleInstanceId = createRecoveredModuleInstanceId;
+  window.normalizeCurrentRunModule = normalizeCurrentRunModule;
+  window.ensureCurrentRunModuleInventory = ensureCurrentRunModuleInventory;
+  window.getCurrentRunModules = getCurrentRunModules;
   window.getEquippedModuleForDefenderId = getEquippedModuleForDefenderId;
   window.equipRecoveredModule = equipRecoveredModule;
   window.getDefenderModuleStat = getDefenderModuleStat;
