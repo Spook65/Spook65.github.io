@@ -1132,49 +1132,74 @@ function markDefenderRunStarted() {
   }
 
   const starterIds = normalizeStarterSelection(defenderSaveState.selectedDefenders || defenderSaveState.selectedStarterIds || []);
+  const existingRun = defenderSaveState.currentRun && typeof defenderSaveState.currentRun === "object" ? defenderSaveState.currentRun : {};
+  if (typeof ensureCurrentRunModuleInventory === "function") {
+    ensureCurrentRunModuleInventory(existingRun);
+  }
+
+  const preserveExistingRun = Boolean(existingRun.active);
+  const preservedRecoveredModules = preserveExistingRun && Array.isArray(existingRun.recoveredModules)
+    ? existingRun.recoveredModules.map((module) => JSON.parse(JSON.stringify(module)))
+    : [];
+  const preservedEquippedModules = preserveExistingRun && existingRun.equippedModulesByDefenderId && typeof existingRun.equippedModulesByDefenderId === "object"
+    ? JSON.parse(JSON.stringify(existingRun.equippedModulesByDefenderId))
+    : {};
+  const now = Date.now();
+
   defenderSaveState.story = normalizeStoryState(defenderSaveState.story);
-  defenderSaveState.story.totalRunsStarted += 1;
+  if (!preserveExistingRun) {
+    defenderSaveState.story.totalRunsStarted += 1;
+  }
   defenderSaveState.story.lastPantheonDialogue = "";
 
+  // Re-entering battle from an active expedition should preserve current-run loot.
+  // A fresh run still starts with an empty recovered module inventory.
   defenderSaveState.currentRun = {
-    ...defenderSaveState.currentRun,
+    ...existingRun,
     active: true,
-    runStartedAt: Date.now(),
-    startedAt: Date.now(),
+    runStartedAt: preserveExistingRun && Number.isFinite(existingRun.runStartedAt) ? existingRun.runStartedAt : now,
+    startedAt: preserveExistingRun && Number.isFinite(existingRun.startedAt) ? existingRun.startedAt : now,
     runEndedAt: null,
     endedAt: null,
     starterLoadoutIds: starterIds.slice(),
-    party: buildSavedDefenderParty(starterIds),
-    defeatedThreats: [],
-    currentZone: 1,
-    clearedThreatIds: [],
-    capturedThreatIds: [],
-    discoveredVariants: [],
-    pantheonHistory: {
-      entityId: null,
-      choiceId: null,
-      outcome: null,
-      effectType: null
-    },
-    recoveredNarrativeEncounters: [],
-    loreFragmentsPreserved: [],
-    activeBoons: [],
-    pendingNextBattleBoons: [],
-    consumedBoons: [],
-    chargeRestoreBattleGaugeBonus: 0,
-    nextBattleGaugeBonus: 0,
-    nextBattleAccuracyBonus: 0,
-    nextBattleOpeningDamageBonus: 0,
-    nextThreatHint: "",
-    damageReductionRunPercent: 0,
-    recoveredModules: [],
-    equippedModulesByDefenderId: {},
-    lastPantheonChoiceId: null,
-    lastPantheonDialogue: "",
-    lastDefeatLine: "",
-    choiceHistory: [],
-    boonHistory: []
+    party: preserveExistingRun && Array.isArray(existingRun.party) && existingRun.party.length
+      ? existingRun.party.map((member) => cloneDefenderBlueprint(member))
+      : buildSavedDefenderParty(starterIds),
+    defeatedThreats: preserveExistingRun && Array.isArray(existingRun.defeatedThreats) ? existingRun.defeatedThreats.slice() : [],
+    currentZone: preserveExistingRun && Number.isFinite(existingRun.currentZone) ? existingRun.currentZone : 1,
+    clearedThreatIds: preserveExistingRun && Array.isArray(existingRun.clearedThreatIds) ? existingRun.clearedThreatIds.slice() : [],
+    capturedThreatIds: preserveExistingRun && Array.isArray(existingRun.capturedThreatIds) ? existingRun.capturedThreatIds.slice() : [],
+    discoveredVariants: preserveExistingRun && Array.isArray(existingRun.discoveredVariants) ? existingRun.discoveredVariants.slice() : [],
+    pantheonHistory: preserveExistingRun && existingRun.pantheonHistory && typeof existingRun.pantheonHistory === "object"
+      ? { ...existingRun.pantheonHistory }
+      : {
+        entityId: null,
+        choiceId: null,
+        outcome: null,
+        effectType: null
+      },
+    recoveredNarrativeEncounters: preserveExistingRun && Array.isArray(existingRun.recoveredNarrativeEncounters) ? existingRun.recoveredNarrativeEncounters.slice() : [],
+    loreFragmentsPreserved: preserveExistingRun && Array.isArray(existingRun.loreFragmentsPreserved) ? existingRun.loreFragmentsPreserved.slice() : [],
+    activeBoons: preserveExistingRun && Array.isArray(existingRun.activeBoons) ? existingRun.activeBoons.slice() : [],
+    pendingNextBattleBoons: preserveExistingRun && Array.isArray(existingRun.pendingNextBattleBoons) ? existingRun.pendingNextBattleBoons.slice() : [],
+    consumedBoons: preserveExistingRun && Array.isArray(existingRun.consumedBoons) ? existingRun.consumedBoons.slice() : [],
+    chargeRestoreBattleGaugeBonus: preserveExistingRun && Number.isFinite(existingRun.chargeRestoreBattleGaugeBonus) ? existingRun.chargeRestoreBattleGaugeBonus : 0,
+    nextBattleGaugeBonus: preserveExistingRun && Number.isFinite(existingRun.nextBattleGaugeBonus) ? existingRun.nextBattleGaugeBonus : 0,
+    nextBattleAccuracyBonus: preserveExistingRun && Number.isFinite(existingRun.nextBattleAccuracyBonus) ? existingRun.nextBattleAccuracyBonus : 0,
+    nextBattleOpeningDamageBonus: preserveExistingRun && Number.isFinite(existingRun.nextBattleOpeningDamageBonus) ? existingRun.nextBattleOpeningDamageBonus : 0,
+    nextThreatHint: preserveExistingRun && typeof existingRun.nextThreatHint === "string" ? existingRun.nextThreatHint : "",
+    damageReductionRunPercent: preserveExistingRun && Number.isFinite(existingRun.damageReductionRunPercent) ? existingRun.damageReductionRunPercent : 0,
+    recoveredModules: preservedRecoveredModules,
+    equippedModulesByDefenderId: preservedEquippedModules,
+    lastPantheonChoiceId: preserveExistingRun ? existingRun.lastPantheonChoiceId || null : null,
+    lastPantheonDialogue: preserveExistingRun && typeof existingRun.lastPantheonDialogue === "string" ? existingRun.lastPantheonDialogue : "",
+    lastDefeatLine: preserveExistingRun && typeof existingRun.lastDefeatLine === "string" ? existingRun.lastDefeatLine : "",
+    choiceHistory: preserveExistingRun && Array.isArray(existingRun.choiceHistory) ? existingRun.choiceHistory.slice() : [],
+    boonHistory: preserveExistingRun && Array.isArray(existingRun.boonHistory) ? existingRun.boonHistory.slice() : []
   };
+  if (typeof ensureCurrentRunModuleInventory === "function") {
+    ensureCurrentRunModuleInventory(defenderSaveState.currentRun);
+  }
   saveGame();
 }
 

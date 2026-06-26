@@ -655,8 +655,17 @@ function getEquippedModuleForProgram(state, programId) {
   if (!programId) {
     return null;
   }
+
   const party = Array.isArray(state?.playerParty) ? state.playerParty : [];
-  return party.find((program) => program?.id === programId)?.equippedModule || null;
+  const partyModule = party.find((program) => program?.id === programId)?.equippedModule || null;
+  if (partyModule) {
+    return partyModule;
+  }
+
+  const runState = state?.currentRun || state;
+  return typeof getEquippedModuleForDefenderId === "function"
+    ? getEquippedModuleForDefenderId(runState, programId)
+    : null;
 }
 
 function getDefenderEffectiveStats(state, program) {
@@ -756,15 +765,29 @@ function ensureCurrentRunModuleInventory(runState) {
     return [];
   }
 
-  runState.recoveredModules = Array.isArray(runState.recoveredModules)
+  const normalizedModules = Array.isArray(runState.recoveredModules)
     ? runState.recoveredModules.map((module) => normalizeCurrentRunModule(module)).filter(Boolean)
     : [];
+  runState.recoveredModules = normalizedModules.reduce((modules, module) => {
+    const existingIndex = modules.findIndex((existingModule) => existingModule.instanceId === module.instanceId);
+    if (existingIndex === -1) {
+      modules.push(module);
+    } else {
+      modules[existingIndex] = {
+        ...modules[existingIndex],
+        ...module,
+        equippedToDefenderId: module.equippedToDefenderId || modules[existingIndex].equippedToDefenderId || null
+      };
+    }
+    return modules;
+  }, []);
   runState.equippedModulesByDefenderId = runState.equippedModulesByDefenderId && typeof runState.equippedModulesByDefenderId === "object"
     ? runState.equippedModulesByDefenderId
     : {};
 
   Object.entries(runState.equippedModulesByDefenderId).forEach(([defenderId, equippedModule]) => {
     if (!equippedModule) {
+      delete runState.equippedModulesByDefenderId[defenderId];
       return;
     }
 
@@ -773,6 +796,8 @@ function ensureCurrentRunModuleInventory(runState) {
       if (inventoryMatch) {
         inventoryMatch.equippedToDefenderId = defenderId;
         runState.equippedModulesByDefenderId[defenderId] = inventoryMatch;
+      } else {
+        delete runState.equippedModulesByDefenderId[defenderId];
       }
       return;
     }
@@ -796,6 +821,25 @@ function ensureCurrentRunModuleInventory(runState) {
     runState.equippedModulesByDefenderId[defenderId] = runState.recoveredModules.find((module) => module.instanceId === normalizedModule.instanceId) || normalizedModule;
   });
 
+  runState.recoveredModules.forEach((module) => {
+    const defenderId = typeof module?.equippedToDefenderId === "string" ? module.equippedToDefenderId : "";
+    if (!defenderId) {
+      return;
+    }
+
+    const currentEntry = runState.equippedModulesByDefenderId[defenderId] || null;
+    const currentModule = typeof currentEntry === "string"
+      ? runState.recoveredModules.find((candidate) => candidate.instanceId === currentEntry) || null
+      : currentEntry;
+    const currentStillExists = currentModule?.instanceId
+      ? runState.recoveredModules.some((candidate) => candidate.instanceId === currentModule.instanceId)
+      : false;
+
+    if (!currentStillExists) {
+      runState.equippedModulesByDefenderId[defenderId] = module;
+    }
+  });
+
   return runState.recoveredModules;
 }
 
@@ -804,15 +848,16 @@ function getCurrentRunModules(runState) {
 }
 
 function getEquippedModuleForDefenderId(runState, defenderId) {
-  ensureCurrentRunModuleInventory(runState);
-  const equipped = runState?.equippedModulesByDefenderId;
+  const sourceRun = runState?.currentRun || runState;
+  ensureCurrentRunModuleInventory(sourceRun);
+  const equipped = sourceRun?.equippedModulesByDefenderId;
   if (!equipped || typeof equipped !== "object" || !defenderId) {
     return null;
   }
 
   const equippedModule = equipped[defenderId] || null;
   if (typeof equippedModule === "string") {
-    return runState.recoveredModules.find((module) => module.instanceId === equippedModule) || null;
+    return sourceRun.recoveredModules.find((module) => module.instanceId === equippedModule) || null;
   }
   return equippedModule;
 }
