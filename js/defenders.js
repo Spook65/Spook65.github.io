@@ -1067,6 +1067,28 @@ function getSelectedDefenderIds() {
   return defenderSaveState.selectedDefenders.slice();
 }
 
+function getExpeditionLoadoutDefenders() {
+  if (!defenderSaveState) {
+    loadSave();
+  }
+
+  const runParty = Array.isArray(defenderSaveState?.currentRun?.party)
+    ? defenderSaveState.currentRun.party
+    : [];
+  const activeParty = runParty
+    .map((defender) => {
+      const template = getDefenderTemplate(defender?.id);
+      return template ? { ...template, ...defender } : defender;
+    })
+    .filter((defender) => defender?.id);
+
+  if (activeParty.length) {
+    return activeParty.slice(0, 4);
+  }
+
+  return getSelectedDefenderIds().map((defenderId) => getDefenderTemplate(defenderId)).filter(Boolean);
+}
+
 // getSelectedStarterIds() keeps the previous helper name available for the combat bootstrap.
 function getSelectedStarterIds() {
   return getSelectedDefenderIds();
@@ -1596,7 +1618,7 @@ function buildCurrentRunModuleInventoryMarkup(selectedDefenders = []) {
 }
 
 // buildDefenderDetailPanelMarkup() renders the focused defender across the RPG loadout visual and equipment panels.
-function buildDefenderDetailPanelMarkup(defender, isSelected, isLocked, selectedCount) {
+function buildDefenderDetailPanelMarkup(defender, isSelected, isLocked, selectedCount, partyDefenders = null) {
   const cardAccent = defender.color || "#87e4ff";
   const rarityLabel = String(defender.rarity || "standard").toUpperCase();
   const coreTrait = getDefenderTraitName(defender.coreTrait);
@@ -1659,7 +1681,7 @@ function buildDefenderDetailPanelMarkup(defender, isSelected, isLocked, selected
 
     <aside class="defender-loadout-panel" aria-label="Defender equipment and stats">
       ${buildLoadoutModulePanelMarkup(defender)}
-      ${buildCurrentRunModuleInventoryMarkup(getSelectedDefenderIds().map((defenderId) => getDefenderTemplate(defenderId)).filter(Boolean))}
+      ${buildCurrentRunModuleInventoryMarkup(Array.isArray(partyDefenders) ? partyDefenders : getSelectedDefenderIds().map((defenderId) => getDefenderTemplate(defenderId)).filter(Boolean))}
 
       <div class="defender-loadout-stats" aria-label="Base and module stat summary">
         <div class="defender-loadout-panel-label">EFFECTIVE STAT SUMMARY</div>
@@ -1717,13 +1739,16 @@ function updateDefenderSelectionFocusDom() {
   const activeFocusId = getDefenderSelectionFocusId();
   defenderSelectionFocusId = activeFocusId;
 
-  const activeDefender = getDefenderTemplate(activeFocusId);
+  const isExpeditionLoadout = screenState === "expedition-loadout";
+  const activeParty = isExpeditionLoadout ? getExpeditionLoadoutDefenders() : null;
+  const activeDefender = (Array.isArray(activeParty) ? activeParty.find((defender) => defender.id === activeFocusId) : null) || getDefenderTemplate(activeFocusId);
   if (!activeDefender) {
     return;
   }
 
   const activeDefenderId = activeDefender.id;
-  const activeIsSelected = defenderSelectionDraft.includes(activeDefenderId);
+  const activePartyIds = Array.isArray(activeParty) ? activeParty.map((defender) => defender.id) : defenderSelectionDraft;
+  const activeIsSelected = activePartyIds.includes(activeDefenderId);
   const activeIsLocked = !Array.isArray(defenderSaveState?.unlockedDefenders) || !defenderSaveState.unlockedDefenders.includes(activeDefenderId);
   const defenderFocusPanel = document.getElementById("defender-focus-panel");
 
@@ -1739,7 +1764,8 @@ function updateDefenderSelectionFocusDom() {
       activeDefender,
       activeIsSelected,
       activeIsLocked,
-      defenderSelectionDraft.length
+      activePartyIds.length,
+      activeParty
     );
   }
 }
@@ -1753,7 +1779,7 @@ function setDefenderSelectionFocus(defenderId) {
 
   defenderSelectionFocusId = nextFocusId;
 
-  if (screenState === "defenders" && defenderScreenContent) {
+  if ((screenState === "defenders" || screenState === "expedition-loadout") && defenderScreenContent) {
     updateDefenderSelectionFocusDom();
   }
 
@@ -1761,34 +1787,56 @@ function setDefenderSelectionFocus(defenderId) {
 }
 
 // buildDefenderSelectionMarkup() assembles the roster grid, the active preview, the party slots, and the action bar.
-function buildDefenderSelectionMarkup() {
-  const selectedIds = defenderSelectionDraft.slice();
+function buildDefenderSelectionMarkup(options = {}) {
+  const isExpeditionLoadout = options.mode === "expedition";
+  const selectedIds = isExpeditionLoadout
+    ? getExpeditionLoadoutDefenders().map((defender) => defender.id)
+    : defenderSelectionDraft.slice();
   const roster = getStarterDefenderCatalog();
   const activeFocusId = getDefenderSelectionFocusId();
-  const activeDefender = getDefenderTemplate(activeFocusId) || roster[0];
-  const selectedDefenders = selectedIds.map((defenderId) => getDefenderTemplate(defenderId)).filter(Boolean);
+  const expeditionDefenders = isExpeditionLoadout ? getExpeditionLoadoutDefenders() : [];
+  const selectedDefenders = isExpeditionLoadout
+    ? expeditionDefenders
+    : selectedIds.map((defenderId) => getDefenderTemplate(defenderId)).filter(Boolean);
+  const activeDefender = (isExpeditionLoadout ? selectedDefenders.find((defender) => defender.id === activeFocusId) : null) || getDefenderTemplate(activeFocusId) || roster[0];
   const unlockedIds = Array.isArray(defenderSaveState?.unlockedDefenders) ? defenderSaveState.unlockedDefenders : getDefaultStarterDefenderIds();
+  const headerKicker = isExpeditionLoadout ? "EXPEDITION LOADOUT / BETWEEN INCIDENTS" : "EXPEDITION LOADOUT / OPERATOR SUPPRESSION ORDER";
+  const headerTitle = isExpeditionLoadout ? "LOADOUT / MODULES" : "DEFENDER LOADOUT";
+  const headerCopy = isExpeditionLoadout
+    ? "ACTIVE PARTY AND RECOVERED MODULES FOR THIS RUN. INSPECTION ONLY; SWAPPING AND FORGE SYSTEMS ARE LOCKED."
+    : "ACTIVE PARTY IS LOCKED FOR THIS RUN. RECOVERED MODULES CAN BE INSTALLED AFTER INCIDENTS.";
+  const headerPanelLabel = isExpeditionLoadout ? "CURRENT EXPEDITION" : "EXPEDITION MODE";
+  const headerPanelValue = isExpeditionLoadout
+    ? `${selectedDefenders.length} / 4 DEFENDERS ACTIVE. CURRENT-RUN MODULES REMAIN STORED UNTIL THE EXPEDITION ENDS.`
+    : "4 / 4 DEFENDERS DEPLOY. FUTURE HARDWARE SLOTS ARE LOCKED UNTIL FORGE SYSTEMS AWAKEN.";
+  const backLabel = isExpeditionLoadout ? "← RETURN TO EXPEDITION" : "← RETURN TO MENU";
+  const statusText = isExpeditionLoadout
+    ? "READ-ONLY EXPEDITION INVENTORY. THREAT NODES REMAIN WAITING ON THE GLOBE."
+    : selectedIds.length === 4 ? "LOADOUT READY. BEGIN THE RUN WHEN YOU ARE READY." : "SELECT A PARTY OF FOUR.";
+  const readonlyNote = isExpeditionLoadout
+    ? "Module swapping and forge actions are locked. Recovered modules stay visible here between incidents."
+    : "Choose your starting squad before deployment. Module management unlocks during the expedition.";
 
   return `
-    <div class="defender-shell defender-loadout-shell" data-loadout-version="rpg-expedition-v2">
+    <div class="defender-shell defender-loadout-shell ${isExpeditionLoadout ? "is-expedition-access" : ""}" data-loadout-version="rpg-expedition-v2" data-loadout-context="${isExpeditionLoadout ? "expedition" : "pre-run"}">
       <div class="defender-header">
         <div class="defender-header-copy">
-          <div class="defender-kicker">EXPEDITION LOADOUT / OPERATOR SUPPRESSION ORDER</div>
-          <h2 class="briefing-title">DEFENDER LOADOUT</h2>
-          <p class="briefing-copy defender-copy">ACTIVE PARTY IS LOCKED FOR THIS RUN. RECOVERED MODULES CAN BE INSTALLED AFTER INCIDENTS.</p>
+          <div class="defender-kicker">${headerKicker}</div>
+          <h2 class="briefing-title">${headerTitle}</h2>
+          <p class="briefing-copy defender-copy">${headerCopy}</p>
         </div>
         <div class="defender-header-panel" aria-hidden="true">
-          <div class="defender-header-panel-label">EXPEDITION MODE</div>
-          <div class="defender-header-panel-value">4 / 4 DEFENDERS DEPLOY. FUTURE HARDWARE SLOTS ARE LOCKED UNTIL FORGE SYSTEMS AWAKEN.</div>
+          <div class="defender-header-panel-label">${headerPanelLabel}</div>
+          <div class="defender-header-panel-value">${headerPanelValue}</div>
         </div>
-        <button id="defender-screen-back" class="back-button" type="button">← RETURN TO MENU</button>
+        <button id="defender-screen-back" class="back-button" type="button">${backLabel}</button>
       </div>
 
       <div class="defender-rule" aria-hidden="true"></div>
 
       <div class="defender-status-row">
-        <div id="defender-selection-count" class="defender-selection-count">${selectedIds.length} / 4 SELECTED</div>
-        <div id="defender-selection-status" class="defender-selection-status">${selectedIds.length === 4 ? "LOADOUT READY. BEGIN THE RUN WHEN YOU ARE READY." : "SELECT A PARTY OF FOUR."}</div>
+        <div id="defender-selection-count" class="defender-selection-count">${selectedIds.length} / 4 ${isExpeditionLoadout ? "ACTIVE" : "SELECTED"}</div>
+        <div id="defender-selection-status" class="defender-selection-status">${statusText}</div>
       </div>
 
       <div class="defender-loadout-grid">
@@ -1811,7 +1859,7 @@ function buildDefenderSelectionMarkup() {
               return buildDefenderRosterTileMarkup(defender, true, isLocked, isFocused, slotIndex);
             }).join("")}
           </div>
-          <div class="defender-readonly-note">Choose your starting squad before deployment. Module management unlocks during the expedition.</div>
+          <div class="defender-readonly-note">${readonlyNote}</div>
         </section>
 
         <div id="defender-focus-panel" class="defender-loadout-detail-grid" aria-live="polite" aria-label="Focused defender loadout">
@@ -1819,7 +1867,8 @@ function buildDefenderSelectionMarkup() {
             activeDefender,
             selectedIds.includes(activeDefender.id),
             !unlockedIds.includes(activeDefender.id),
-            selectedIds.length
+            selectedIds.length,
+            selectedDefenders
           ) : ""}
         </div>
       </div>
@@ -1833,8 +1882,12 @@ function buildDefenderSelectionMarkup() {
         </section>
 
         <div class="defender-footer">
-          <button id="defender-screen-reset" class="menu-button" type="button">RESET LOADOUT</button>
-          <button id="defender-screen-confirm" class="menu-button" type="button" ${selectedIds.length === 4 ? "" : "disabled"}>BEGIN RUN</button>
+          ${isExpeditionLoadout
+            ? '<button id="defender-screen-close-expedition" class="menu-button" type="button">RETURN TO EXPEDITION</button>'
+            : `
+              <button id="defender-screen-reset" class="menu-button" type="button">RESET LOADOUT</button>
+              <button id="defender-screen-confirm" class="menu-button" type="button" ${selectedIds.length === 4 ? "" : "disabled"}>BEGIN RUN</button>
+            `}
         </div>
       </div>
     </div>
@@ -1851,6 +1904,7 @@ function bindDefenderSelectionControls() {
   const defenderScreenConfirm = document.getElementById("defender-screen-confirm");
   const defenderScreenReset = document.getElementById("defender-screen-reset");
   const defenderScreenBack = document.getElementById("defender-screen-back");
+  const defenderScreenCloseExpedition = document.getElementById("defender-screen-close-expedition");
 
   const rosterTiles = defenderScreenContent.querySelectorAll("[data-defender-id]");
   rosterTiles.forEach((tile) => {
@@ -1871,7 +1925,20 @@ function bindDefenderSelectionControls() {
 
   if (defenderScreenBack) {
     defenderScreenBack.addEventListener("click", () => {
+      if (screenState === "expedition-loadout" && typeof closeExpeditionLoadout === "function") {
+        closeExpeditionLoadout();
+        return;
+      }
+
       showMenu();
+    });
+  }
+
+  if (defenderScreenCloseExpedition) {
+    defenderScreenCloseExpedition.addEventListener("click", () => {
+      if (typeof closeExpeditionLoadout === "function") {
+        closeExpeditionLoadout();
+      }
     });
   }
 
@@ -1934,6 +2001,27 @@ function renderStarterRosterSelect() {
       ? "LOADOUT READY. BEGIN THE RUN WHEN YOU ARE READY."
       : "SELECT A PARTY OF FOUR.";
   }
+
+  bindDefenderSelectionControls();
+  updateDefenderSelectionFocusDom();
+}
+
+function renderExpeditionLoadoutScreen() {
+  if (!defenderScreenContent) {
+    return;
+  }
+
+  if (!defenderSaveState) {
+    loadSave();
+  }
+
+  const expeditionDefenders = getExpeditionLoadoutDefenders();
+  const fallbackFocusId = expeditionDefenders[0]?.id || getDefenderSelectionFocusId(defenderSelectionFocusId);
+  defenderSelectionFocusId = expeditionDefenders.some((defender) => defender.id === defenderSelectionFocusId)
+    ? defenderSelectionFocusId
+    : fallbackFocusId;
+  defenderSelectionDraft = expeditionDefenders.map((defender) => defender.id);
+  defenderScreenContent.innerHTML = buildDefenderSelectionMarkup({ mode: "expedition" });
 
   bindDefenderSelectionControls();
   updateDefenderSelectionFocusDom();

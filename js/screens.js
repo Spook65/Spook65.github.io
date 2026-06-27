@@ -1,6 +1,6 @@
 /* Screen-state and mode-selection behavior for THREATGRID's menu, briefing, and gameplay transitions. */
 // screenState controls which overlay is visible: menu, briefing, defender setup, gameplay, combat, or the end-state branch.
-let screenState = "menu"; // 'menu' | 'howtoplay' | 'defenders' | 'game' | 'combat' | 'game-over'
+let screenState = "menu"; // 'menu' | 'howtoplay' | 'defenders' | 'expedition-loadout' | 'game' | 'combat' | 'game-over'
 let globeStarted = false;
 
 // gameMode is chosen before the game starts so later UI logic knows whether to show passive or typed actions.
@@ -18,6 +18,7 @@ const howtoButton = document.getElementById("howto-button");
 const backButton = document.getElementById("back-button");
 const returnButton = document.getElementById("return-button");
 const hudMenuButton = document.getElementById("hud-menu-button");
+const expeditionLoadoutButton = document.getElementById("expedition-loadout-button");
 const menuModeDescription = document.getElementById("menu-mode-description");
 
 // The mode descriptions explain the two start paths without adding another full menu screen.
@@ -62,7 +63,7 @@ function setScreen(nextScreen) {
   menuScreen.classList.toggle("is-active", nextScreen === "menu");
   howtoScreen.classList.toggle("is-active", nextScreen === "howtoplay");
   if (defenderScreen) {
-    defenderScreen.classList.toggle("is-active", nextScreen === "defenders");
+    defenderScreen.classList.toggle("is-active", nextScreen === "defenders" || nextScreen === "expedition-loadout");
   }
 }
 
@@ -95,6 +96,35 @@ function showDefenderSelection() {
   if (typeof renderDefenderSelectionScreen === "function") {
     renderDefenderSelectionScreen();
   }
+}
+
+// showExpeditionLoadout() reuses the RPG loadout shell as a read-only between-battle overlay.
+function showExpeditionLoadout() {
+  if (screenState !== "game" || typeof combatState !== "undefined" && combatState) {
+    return;
+  }
+
+  bootOverlay.style.display = "block";
+  bootOverlay.classList.remove("is-hiding");
+  setScreen("expedition-loadout");
+  if (typeof renderExpeditionLoadoutScreen === "function") {
+    renderExpeditionLoadoutScreen();
+  }
+}
+
+// closeExpeditionLoadout() returns to the already-running globe without resetting currentRun or nodes.
+function closeExpeditionLoadout() {
+  if (screenState !== "expedition-loadout") {
+    return;
+  }
+
+  setScreen("game");
+  bootOverlay.classList.add("is-hiding");
+  window.setTimeout(() => {
+    if (screenState === "game") {
+      bootOverlay.style.display = "none";
+    }
+  }, 150);
 }
 
 // startGame() resets the run, fades the overlay out, and boots the globe exactly once.
@@ -161,6 +191,9 @@ defenderSetupButton.addEventListener("click", showDefenderSelection);
 backButton.addEventListener("click", showMenu);
 returnButton.addEventListener("click", showMenu);
 hudMenuButton.addEventListener("click", requestReturnToMenu);
+if (expeditionLoadoutButton) {
+  expeditionLoadoutButton.addEventListener("click", showExpeditionLoadout);
+}
 
 // Mode selection now opens the starter lineup screen before the run begins.
 analystModeButton.addEventListener("click", () => {
@@ -179,3 +212,5 @@ updateModeDescription(gameMode);
 
 // Exposes showMenu for older non-module game flow code that calls it from main.js.
 window.showMenu = showMenu;
+window.showExpeditionLoadout = showExpeditionLoadout;
+window.closeExpeditionLoadout = closeExpeditionLoadout;

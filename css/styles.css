@@ -65,9 +65,9 @@ canvas {
 }
 
 /* The in-game menu button sits on the HUD, so pointer events must be re-enabled on the button itself. */
-.hud-menu-button {
+.hud-menu-button,
+.hud-loadout-button {
   position: absolute;
-  left: 18px;
   bottom: 18px;
   z-index: 3;
   pointer-events: auto;
@@ -87,9 +87,20 @@ canvas {
   transition: background 150ms ease, border-color 150ms ease, box-shadow 150ms ease, color 150ms ease, text-shadow 150ms ease;
 }
 
+.hud-menu-button {
+  left: 18px;
+}
+
+.hud-loadout-button {
+  right: 18px;
+  bottom: 134px;
+}
+
 /* The button gets the same terminal hover treatment as the other HUD-style controls. */
 .hud-menu-button:hover,
-.hud-menu-button:focus-visible {
+.hud-menu-button:focus-visible,
+.hud-loadout-button:hover,
+.hud-loadout-button:focus-visible {
   background: rgba(0, 255, 136, 0.1);
   border-color: rgba(0, 255, 136, 1);
   box-shadow: 0 0 18px rgba(0, 255, 136, 0.16), inset 0 0 0 1px rgba(0, 255, 136, 0.05);
@@ -4626,6 +4637,7 @@ body {
 }
 
 .hud-menu-button,
+.hud-loadout-button,
 .hud-flag-button,
 .menu-button,
 .back-button,
@@ -4646,6 +4658,8 @@ body {
 
 .hud-menu-button:hover,
 .hud-menu-button:focus-visible,
+.hud-loadout-button:hover,
+.hud-loadout-button:focus-visible,
 .hud-flag-button:hover,
 .hud-flag-button:focus-visible,
 .menu-button:hover,
