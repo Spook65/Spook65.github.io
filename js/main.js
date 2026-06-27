@@ -1567,7 +1567,7 @@ threatPanelClose.addEventListener("click", () => {
   closeCombatOverlay(true);
 });
 
-// The expedition flag fully restores the party between battles.
+// The restore control keeps the old expedition flag's between-battle heal behavior, but labels it plainly.
 if (expeditionFlagButton) {
   expeditionFlagButton.addEventListener("click", () => {
     if (screenState !== "game" || combatState) {
@@ -1575,7 +1575,7 @@ if (expeditionFlagButton) {
     }
 
     healProgramRoster();
-    addBattleLog("EXPEDITION FLAG DEPLOYED. PARTY RESTORED TO FULL CAPACITY.", "buff");
+    addBattleLog("EXPEDITION PARTY RESTORED TO FULL CAPACITY.", "buff");
     updateScoreDisplay();
   });
 }
