@@ -45,7 +45,6 @@ const threatPanelClose = document.getElementById("threat-panel-close");
 const scoreDisplay = document.getElementById("score-display");
 const accuracyDisplay = document.getElementById("accuracy-display");
 const deadlineDisplay = document.getElementById("deadline-display");
-const expeditionFlagButton = document.getElementById("expedition-flag-button");
 const encounterOverlay = document.getElementById("encounter-overlay");
 const gameStateContent = document.getElementById("game-state-content");
 
@@ -1566,23 +1565,6 @@ function resetRunState() {
 threatPanelClose.addEventListener("click", () => {
   closeCombatOverlay(true);
 });
-
-// The restore control keeps the old expedition flag's between-battle heal behavior, but labels it plainly.
-if (expeditionFlagButton) {
-  console.info("[HUD] bound restore party button", Boolean(expeditionFlagButton));
-  expeditionFlagButton.addEventListener("click", (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    console.info("[HUD] RESTORE PARTY clicked", { screenState, combatOpen: Boolean(combatState) });
-    if (combatState) {
-      return;
-    }
-
-    healProgramRoster();
-    addBattleLog("EXPEDITION PARTY RESTORED TO FULL CAPACITY.", "buff");
-    updateScoreDisplay();
-  });
-}
 
 // Start on the main menu so the globe can boot behind it when the player is ready.
 updateScoreDisplay();

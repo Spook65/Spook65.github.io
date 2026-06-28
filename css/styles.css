@@ -2207,11 +2207,19 @@ canvas {
 }
 
 /* Combat HUD control positioned above the score block for quick between-battle recovery. */
-.hud-flag-button {
+.hud-actions-right {
   position: absolute;
   right: 18px;
   bottom: 86px;
   z-index: 4;
+  display: grid;
+  gap: 12px;
+  justify-items: end;
+  pointer-events: none;
+}
+
+.hud-flag-button {
+  position: relative;
   pointer-events: auto;
   appearance: none;
   border: 1px solid rgba(0, 255, 136, 0.6);

@@ -18,7 +18,6 @@ const howtoButton = document.getElementById("howto-button");
 const backButton = document.getElementById("back-button");
 const returnButton = document.getElementById("return-button");
 const hudMenuButton = document.getElementById("hud-menu-button");
-const expeditionLoadoutButton = document.getElementById("expedition-loadout-button");
 const menuModeDescription = document.getElementById("menu-mode-description");
 
 // The mode descriptions explain the two start paths without adding another full menu screen.
@@ -127,6 +126,77 @@ function closeExpeditionLoadout() {
   }, 150);
 }
 
+// logHudButtonDebugState() is intentionally concise so hit-testing bugs can be confirmed in-browser.
+function logHudButtonDebugState() {
+  console.info("[HUD DEBUG] menu", document.getElementById("hud-menu-button"));
+  console.info("[HUD DEBUG] loadout", document.getElementById("expedition-loadout-button"));
+  console.info("[HUD DEBUG] restore", document.getElementById("expedition-flag-button"));
+  console.info("[HUD DEBUG] loadout count", document.querySelectorAll("#expedition-loadout-button").length);
+  console.info("[HUD DEBUG] restore count", document.querySelectorAll("#expedition-flag-button").length);
+}
+
+function restoreExpeditionPartyFromHud() {
+  if (typeof combatState !== "undefined" && combatState) {
+    return;
+  }
+
+  if (typeof healProgramRoster === "function") {
+    healProgramRoster();
+  }
+
+  if (typeof addBattleLog === "function") {
+    addBattleLog("EXPEDITION PARTY RESTORED TO FULL CAPACITY.", "buff");
+  }
+
+  if (typeof updateScoreDisplay === "function") {
+    updateScoreDisplay();
+  }
+}
+
+function getExpeditionHudAction(event) {
+  return event.target?.closest?.("#expedition-loadout-button, #expedition-flag-button") || null;
+}
+
+function handleExpeditionHudAction(event) {
+  const actionButton = getExpeditionHudAction(event);
+  if (!actionButton) {
+    return;
+  }
+
+  event.preventDefault();
+  event.stopPropagation();
+
+  if (actionButton.id === "expedition-loadout-button") {
+    console.info("[HUD] LOADOUT / MODULES clicked", { screenState, combatOpen: typeof combatState !== "undefined" && Boolean(combatState) });
+    showExpeditionLoadout();
+    return;
+  }
+
+  if (actionButton.id === "expedition-flag-button") {
+    console.info("[HUD] RESTORE PARTY clicked", { screenState, combatOpen: typeof combatState !== "undefined" && Boolean(combatState) });
+    restoreExpeditionPartyFromHud();
+  }
+}
+
+document.addEventListener("pointerdown", (event) => {
+  const actionButton = getExpeditionHudAction(event);
+  if (!actionButton) {
+    return;
+  }
+
+  console.info(`[HUD DEBUG] document captured ${actionButton.id === "expedition-loadout-button" ? "loadout" : "restore"} pointerdown`, event.target);
+}, true);
+
+document.addEventListener("click", (event) => {
+  const actionButton = getExpeditionHudAction(event);
+  if (!actionButton) {
+    return;
+  }
+
+  console.info(`[HUD DEBUG] document captured ${actionButton.id === "expedition-loadout-button" ? "loadout" : "restore"} click`, event.target);
+  handleExpeditionHudAction(event);
+}, true);
+
 // startGame() resets the run, fades the overlay out, and boots the globe exactly once.
 function startGame() {
   if (typeof resetRunState === "function") {
@@ -191,15 +261,7 @@ defenderSetupButton.addEventListener("click", showDefenderSelection);
 backButton.addEventListener("click", showMenu);
 returnButton.addEventListener("click", showMenu);
 hudMenuButton.addEventListener("click", requestReturnToMenu);
-if (expeditionLoadoutButton) {
-  console.info("[HUD] bound expedition loadout button", Boolean(expeditionLoadoutButton));
-  expeditionLoadoutButton.addEventListener("click", (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    console.info("[HUD] LOADOUT / MODULES clicked", { screenState, combatOpen: typeof combatState !== "undefined" && Boolean(combatState) });
-    showExpeditionLoadout();
-  });
-}
+logHudButtonDebugState();
 
 // Mode selection now opens the starter lineup screen before the run begins.
 analystModeButton.addEventListener("click", () => {
