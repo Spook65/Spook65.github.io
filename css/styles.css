@@ -2229,10 +2229,6 @@ canvas {
 }
 
 .hud-expedition-button--loadout {
-  bottom: 134px;
-}
-
-.hud-expedition-button--restore {
   bottom: 88px;
 }
 

@@ -19,7 +19,6 @@ const backButton = document.getElementById("back-button");
 const returnButton = document.getElementById("return-button");
 const hudMenuButton = document.getElementById("hud-menu-button");
 const expeditionLoadoutButton = document.getElementById("expedition-loadout-button");
-const expeditionFlagButton = document.getElementById("expedition-flag-button");
 const menuModeDescription = document.getElementById("menu-mode-description");
 
 // The mode descriptions explain the two start paths without adding another full menu screen.
@@ -211,7 +210,6 @@ backButton.addEventListener("click", showMenu);
 returnButton.addEventListener("click", showMenu);
 hudMenuButton.addEventListener("click", requestReturnToMenu);
 console.info("[HUD BIND] loadout", Boolean(expeditionLoadoutButton));
-console.info("[HUD BIND] restore", Boolean(expeditionFlagButton));
 
 if (expeditionLoadoutButton) {
   expeditionLoadoutButton.addEventListener("click", (event) => {
@@ -219,15 +217,6 @@ if (expeditionLoadoutButton) {
     event.stopPropagation();
     console.info("[HUD] LOADOUT / MODULES clicked");
     showExpeditionLoadout();
-  });
-}
-
-if (expeditionFlagButton) {
-  expeditionFlagButton.addEventListener("click", (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    console.info("[HUD] RESTORE PARTY clicked");
-    restoreExpeditionPartyFromHud();
   });
 }
 
@@ -250,3 +239,4 @@ updateModeDescription(gameMode);
 window.showMenu = showMenu;
 window.showExpeditionLoadout = showExpeditionLoadout;
 window.closeExpeditionLoadout = closeExpeditionLoadout;
+window.devRestoreParty = restoreExpeditionPartyFromHud;
