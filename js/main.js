@@ -1569,8 +1569,12 @@ threatPanelClose.addEventListener("click", () => {
 
 // The restore control keeps the old expedition flag's between-battle heal behavior, but labels it plainly.
 if (expeditionFlagButton) {
-  expeditionFlagButton.addEventListener("click", () => {
-    if (screenState !== "game" || combatState) {
+  console.info("[HUD] bound restore party button", Boolean(expeditionFlagButton));
+  expeditionFlagButton.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    console.info("[HUD] RESTORE PARTY clicked", { screenState, combatOpen: Boolean(combatState) });
+    if (combatState) {
       return;
     }
 

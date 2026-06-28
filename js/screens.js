@@ -100,7 +100,7 @@ function showDefenderSelection() {
 
 // showExpeditionLoadout() reuses the RPG loadout shell as a read-only between-battle overlay.
 function showExpeditionLoadout() {
-  if (screenState !== "game" || typeof combatState !== "undefined" && combatState) {
+  if (typeof combatState !== "undefined" && combatState) {
     return;
   }
 
@@ -192,7 +192,13 @@ backButton.addEventListener("click", showMenu);
 returnButton.addEventListener("click", showMenu);
 hudMenuButton.addEventListener("click", requestReturnToMenu);
 if (expeditionLoadoutButton) {
-  expeditionLoadoutButton.addEventListener("click", showExpeditionLoadout);
+  console.info("[HUD] bound expedition loadout button", Boolean(expeditionLoadoutButton));
+  expeditionLoadoutButton.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    console.info("[HUD] LOADOUT / MODULES clicked", { screenState, combatOpen: typeof combatState !== "undefined" && Boolean(combatState) });
+    showExpeditionLoadout();
+  });
 }
 
 // Mode selection now opens the starter lineup screen before the run begins.
