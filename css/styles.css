@@ -2206,20 +2206,11 @@ canvas {
   }
 }
 
-/* Combat HUD control positioned above the score block for quick between-battle recovery. */
-.hud-actions-right {
+/* Expedition HUD controls mirror the menu button hitbox without changing MENU itself. */
+.hud-expedition-button {
   position: absolute;
   right: 18px;
-  bottom: 86px;
-  z-index: 4;
-  display: grid;
-  gap: 12px;
-  justify-items: end;
-  pointer-events: none;
-}
-
-.hud-flag-button {
-  position: relative;
+  z-index: 3;
   pointer-events: auto;
   appearance: none;
   border: 1px solid rgba(0, 255, 136, 0.6);
@@ -2237,8 +2228,16 @@ canvas {
   transition: background 150ms ease, border-color 150ms ease, box-shadow 150ms ease, color 150ms ease, text-shadow 150ms ease;
 }
 
-.hud-flag-button:hover,
-.hud-flag-button:focus-visible {
+.hud-expedition-button--loadout {
+  bottom: 134px;
+}
+
+.hud-expedition-button--restore {
+  bottom: 88px;
+}
+
+.hud-expedition-button:hover,
+.hud-expedition-button:focus-visible {
   background: rgba(0, 255, 136, 0.1);
   border-color: rgba(0, 255, 136, 1);
   box-shadow: 0 0 18px rgba(0, 255, 136, 0.16), inset 0 0 0 1px rgba(0, 255, 136, 0.05);
@@ -4638,7 +4637,7 @@ body {
 }
 
 .hud-menu-button,
-.hud-flag-button,
+.hud-expedition-button,
 .menu-button,
 .back-button,
 .panel-action-button,
@@ -4658,8 +4657,8 @@ body {
 
 .hud-menu-button:hover,
 .hud-menu-button:focus-visible,
-.hud-flag-button:hover,
-.hud-flag-button:focus-visible,
+.hud-expedition-button:hover,
+.hud-expedition-button:focus-visible,
 .menu-button:hover,
 .menu-button:focus-visible,
 .back-button:hover,
