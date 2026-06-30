@@ -876,6 +876,22 @@ function equipRecoveredModule(runState, defenderId, moduleInstance) {
 
   nextModule.equippedAt = Date.now();
 
+  Object.entries(runState.equippedModulesByDefenderId).forEach(([currentDefenderId, equippedModule]) => {
+    const currentModule = typeof equippedModule === "string"
+      ? runState.recoveredModules.find((module) => module.instanceId === equippedModule) || null
+      : equippedModule;
+    if (currentDefenderId !== defenderId && currentModule?.instanceId === nextModule.instanceId) {
+      delete runState.equippedModulesByDefenderId[currentDefenderId];
+    }
+  });
+
+  runState.recoveredModules.forEach((module) => {
+    if (module?.instanceId === nextModule.instanceId && module.equippedToDefenderId && module.equippedToDefenderId !== defenderId) {
+      module.equippedToDefenderId = null;
+      delete module.equippedAt;
+    }
+  });
+
   if (previousModule?.instanceId && previousModule.instanceId !== nextModule.instanceId) {
     const previousIndex = runState.recoveredModules.findIndex((module) => module.instanceId === previousModule.instanceId);
     const unequippedPrevious = normalizeCurrentRunModule(previousModule, null);
@@ -907,6 +923,12 @@ function equipRecoveredModule(runState, defenderId, moduleInstance) {
 
   const equippedInventoryModule = runState.recoveredModules.find((module) => module.instanceId === nextModule.instanceId) || nextModule;
   runState.equippedModulesByDefenderId[defenderId] = equippedInventoryModule;
+  runState.recoveredModules.forEach((module) => {
+    if (module?.instanceId !== equippedInventoryModule.instanceId && module?.equippedToDefenderId === defenderId) {
+      module.equippedToDefenderId = null;
+      delete module.equippedAt;
+    }
+  });
   return previousModule;
 }
 

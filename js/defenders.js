@@ -746,6 +746,10 @@ let defenderSelectionDraft = [];
 // defenderSelectionFocusId tracks which roster entry is currently driving the preview panel.
 let defenderSelectionFocusId = null;
 
+// expeditionSelectedModuleInstanceId tracks the module being installed from the current-run loadout view.
+let expeditionSelectedModuleInstanceId = null;
+let expeditionLoadoutActionMessage = "";
+
 // defenderRosterSelectEnabled keeps the RPG loadout hub on the primary render path.
 const defenderRosterSelectEnabled = true;
 
@@ -1338,6 +1342,78 @@ function getLoadoutEquippedModule(defenderId) {
   return getEquippedModuleForDefenderId(defenderSaveState?.currentRun, defenderId);
 }
 
+function getExpeditionSelectedModule() {
+  if (!expeditionSelectedModuleInstanceId || typeof getCurrentRunModules !== "function") {
+    return null;
+  }
+
+  return getCurrentRunModules(defenderSaveState?.currentRun)
+    .find((module) => module?.instanceId === expeditionSelectedModuleInstanceId) || null;
+}
+
+function getLoadoutModuleTargetLabel(defender, selectedModule = getExpeditionSelectedModule()) {
+  if (!defender || !selectedModule) {
+    return "";
+  }
+
+  const equippedModule = getLoadoutEquippedModule(defender.id);
+  if (equippedModule?.instanceId === selectedModule.instanceId) {
+    return "ALREADY EQUIPPED";
+  }
+
+  return equippedModule
+    ? `REPLACE ${getDefenderLoadoutText(equippedModule.name, "MODULE")}`
+    : "INSTALL HERE";
+}
+
+function equipSelectedLoadoutModuleToDefender(defenderId) {
+  if (!defenderId || !defenderSaveState?.currentRun || typeof equipRecoveredModule !== "function") {
+    return false;
+  }
+
+  const selectedModule = getExpeditionSelectedModule();
+  if (!selectedModule) {
+    expeditionLoadoutActionMessage = "SELECT A RECOVERED MODULE FIRST.";
+    return false;
+  }
+
+  const targetDefender = getExpeditionLoadoutDefenders().find((defender) => defender.id === defenderId) || getDefenderTemplate(defenderId);
+  const previousOwnerId = selectedModule.equippedToDefenderId || "";
+  const previousOwner = previousOwnerId ? getDefenderTemplate(previousOwnerId) : null;
+  const previousTargetModule = getLoadoutEquippedModule(defenderId);
+
+  if (previousTargetModule?.instanceId === selectedModule.instanceId) {
+    expeditionLoadoutActionMessage = `${getDefenderLoadoutText(selectedModule.name, "Module")} is already equipped to ${getDefenderLoadoutText(targetDefender?.name, defenderId)}.`;
+    setDefenderSelectionFocus(defenderId);
+    renderExpeditionLoadoutScreen();
+    return false;
+  }
+
+  const replacedModule = equipRecoveredModule(defenderSaveState.currentRun, defenderId, selectedModule);
+  if (typeof ensureCurrentRunModuleInventory === "function") {
+    ensureCurrentRunModuleInventory(defenderSaveState.currentRun);
+  }
+  if (typeof saveGame === "function") {
+    saveGame();
+  }
+
+  const moduleName = getDefenderLoadoutText(selectedModule.name, "Module");
+  const targetName = getDefenderLoadoutText(targetDefender?.name, defenderId);
+  const replacedName = replacedModule?.instanceId && replacedModule.instanceId !== selectedModule.instanceId
+    ? getDefenderLoadoutText(replacedModule.name, "Previous module")
+    : "";
+  const movedFrom = previousOwnerId && previousOwnerId !== defenderId
+    ? ` Moved from ${getDefenderLoadoutText(previousOwner?.name, previousOwnerId)}.`
+    : "";
+  const replacedText = replacedName ? ` ${replacedName} returned to inventory.` : "";
+
+  expeditionLoadoutActionMessage = `${moduleName} installed on ${targetName}.${replacedText}${movedFrom}`;
+  expeditionSelectedModuleInstanceId = selectedModule.instanceId;
+  setDefenderSelectionFocus(defenderId);
+  renderExpeditionLoadoutScreen();
+  return true;
+}
+
 function getLoadoutModuleRarityClass(module) {
   return `is-rarity-${getDefenderLoadoutText(module?.rarity, "common").toLowerCase()}`;
 }
@@ -1462,12 +1538,15 @@ function buildDefenderRosterTileMarkup(defender, isSelected, isLocked, isFocused
   const rosterStateLabel = isSelected ? `SLOT ${slotIndex + 1}` : isLocked ? "SEALED" : "RESERVE";
   const module = getLoadoutEquippedModule(defender.id);
   const moduleLabel = module ? getDefenderLoadoutText(module.name, "Recovered Module") : "EMPTY MODULE";
+  const selectedModule = screenState === "expedition-loadout" ? getExpeditionSelectedModule() : null;
+  const targetLabel = selectedModule ? getLoadoutModuleTargetLabel(defender, selectedModule) : "";
 
   return `
     <button
-      class="defender-roster-tile ${isSelected ? "is-selected" : ""} ${isLocked ? "is-locked" : ""} ${isFocused ? "is-focused" : ""}"
+      class="defender-roster-tile ${isSelected ? "is-selected" : ""} ${isLocked ? "is-locked" : ""} ${isFocused ? "is-focused" : ""} ${targetLabel ? "is-module-target" : ""}"
       type="button"
       data-defender-id="${defender.id}"
+      ${selectedModule ? `data-module-target-defender-id="${defender.id}"` : ""}
       aria-pressed="${isSelected ? "true" : "false"}"
       aria-current="${isFocused ? "true" : "false"}"
       style="--defender-accent: ${cardAccent}; --defender-accent-soft: ${cardAccent}24;"
@@ -1482,6 +1561,7 @@ function buildDefenderRosterTileMarkup(defender, isSelected, isLocked, isFocused
         <div class="defender-roster-badge ${isSelected ? "is-selected" : isLocked ? "is-locked" : "is-ready"}">${rosterStateLabel}</div>
       </div>
       <div class="defender-roster-summary">${moduleLabel}</div>
+      ${targetLabel ? `<div class="defender-roster-target">${targetLabel}</div>` : ""}
       <div class="defender-roster-mini" aria-hidden="true">
         <span>HP ${defender.hp}</span>
         <span>DEF ${defender.def}</span>
@@ -1577,6 +1657,7 @@ function buildCurrentRunModuleInventoryMarkup(selectedDefenders = []) {
   const runModules = typeof getCurrentRunModules === "function"
     ? getCurrentRunModules(defenderSaveState?.currentRun)
     : [];
+  const selectedModule = getExpeditionSelectedModule();
   const defenderNameById = selectedDefenders.reduce((lookup, defender) => {
     if (defender?.id) {
       lookup[defender.id] = defender.name || defender.id;
@@ -1588,6 +1669,7 @@ function buildCurrentRunModuleInventoryMarkup(selectedDefenders = []) {
     return `
       <div class="defender-loadout-inventory">
         <div class="defender-loadout-panel-label">CURRENT RUN MODULES</div>
+        <div class="defender-loadout-inventory-help">Select a recovered module to install it into one active Defender.</div>
         <div class="defender-loadout-empty">No recovered modules stored yet. Win incidents to recover run-only modules.</div>
       </div>
     `;
@@ -1596,21 +1678,29 @@ function buildCurrentRunModuleInventoryMarkup(selectedDefenders = []) {
   return `
     <div class="defender-loadout-inventory">
       <div class="defender-loadout-panel-label">CURRENT RUN MODULES</div>
+      <div class="defender-loadout-inventory-help">${selectedModule ? "Choose a Defender to install this module." : "Select a recovered module to install it into one active Defender."}</div>
+      ${expeditionLoadoutActionMessage ? `<div class="defender-loadout-action-message">${expeditionLoadoutActionMessage}</div>` : ""}
       ${runModules.map((module) => {
         const primaryStat = getLoadoutModulePrimaryStat(module);
         const rarity = getDefenderLoadoutText(module?.rarity, "common").toUpperCase();
         const itemClass = getDefenderLoadoutText(module?.itemClass, "Recovered Module");
         const equippedDefenderId = getDefenderLoadoutText(module?.equippedToDefenderId, "");
         const equippedName = equippedDefenderId ? getDefenderLoadoutText(defenderNameById[equippedDefenderId], equippedDefenderId) : "";
+        const isSelected = selectedModule?.instanceId === module?.instanceId;
         return `
-          <div class="defender-loadout-inventory-item ${module?.equippedToDefenderId ? "is-equipped" : "is-unequipped"}">
+          <button
+            class="defender-loadout-inventory-item ${module?.equippedToDefenderId ? "is-equipped" : "is-unequipped"} ${isSelected ? "is-selected" : ""}"
+            type="button"
+            data-module-instance-id="${getDefenderLoadoutText(module?.instanceId, "")}"
+            aria-pressed="${isSelected ? "true" : "false"}"
+          >
             <div>
               <span class="defender-loadout-inventory-name">${getDefenderLoadoutText(module?.name, "Recovered Module")}</span>
               <span class="defender-loadout-inventory-meta">${rarity} ${itemClass}</span>
             </div>
             <div class="defender-loadout-inventory-stat">${primaryStat.text}</div>
             <div class="defender-loadout-inventory-status">${equippedName ? `Equipped: ${equippedName}` : "Unequipped"}</div>
-          </div>
+          </button>
         `;
       }).join("")}
     </div>
@@ -1803,7 +1893,7 @@ function buildDefenderSelectionMarkup(options = {}) {
   const headerKicker = isExpeditionLoadout ? "EXPEDITION LOADOUT / BETWEEN INCIDENTS" : "EXPEDITION LOADOUT / OPERATOR SUPPRESSION ORDER";
   const headerTitle = isExpeditionLoadout ? "LOADOUT / MODULES" : "DEFENDER LOADOUT";
   const headerCopy = isExpeditionLoadout
-    ? "ACTIVE PARTY AND RECOVERED MODULES FOR THIS RUN. INSPECTION ONLY; SWAPPING AND FORGE SYSTEMS ARE LOCKED."
+    ? "ACTIVE PARTY AND RECOVERED MODULES FOR THIS RUN. SELECT A MODULE, THEN CHOOSE A DEFENDER TO INSTALL OR SWAP."
     : "ACTIVE PARTY IS LOCKED FOR THIS RUN. RECOVERED MODULES CAN BE INSTALLED AFTER INCIDENTS.";
   const headerPanelLabel = isExpeditionLoadout ? "CURRENT EXPEDITION" : "EXPEDITION MODE";
   const headerPanelValue = isExpeditionLoadout
@@ -1811,10 +1901,10 @@ function buildDefenderSelectionMarkup(options = {}) {
     : "4 / 4 DEFENDERS DEPLOY. FUTURE HARDWARE SLOTS ARE LOCKED UNTIL FORGE SYSTEMS AWAKEN.";
   const backLabel = isExpeditionLoadout ? "← RETURN TO EXPEDITION" : "← RETURN TO MENU";
   const statusText = isExpeditionLoadout
-    ? "READ-ONLY EXPEDITION INVENTORY. THREAT NODES REMAIN WAITING ON THE GLOBE."
+    ? (expeditionSelectedModuleInstanceId ? "MODULE SELECTED. CHOOSE AN ACTIVE DEFENDER TARGET." : "SELECT A RECOVERED MODULE TO INSTALL OR SWAP.")
     : selectedIds.length === 4 ? "LOADOUT READY. BEGIN THE RUN WHEN YOU ARE READY." : "SELECT A PARTY OF FOUR.";
   const readonlyNote = isExpeditionLoadout
-    ? "Module swapping and forge actions are locked. Recovered modules stay visible here between incidents."
+    ? "Click a recovered module, then click an active Defender. Future hardware slots remain locked."
     : "Choose your starting squad before deployment. Module management unlocks during the expedition.";
 
   return `
@@ -1919,7 +2009,32 @@ function bindDefenderSelectionControls() {
     });
 
     tile.addEventListener("click", () => {
+      if (screenState === "expedition-loadout" && getExpeditionSelectedModule()) {
+        equipSelectedLoadoutModuleToDefender(defenderId);
+        return;
+      }
+
       setDefenderSelectionFocus(defenderId);
+    });
+  });
+
+  defenderScreenContent.querySelectorAll("[data-module-instance-id]").forEach((button) => {
+    button.addEventListener("click", () => {
+      if (screenState !== "expedition-loadout") {
+        return;
+      }
+
+      const moduleInstanceId = button.getAttribute("data-module-instance-id");
+      if (!moduleInstanceId) {
+        return;
+      }
+
+      expeditionSelectedModuleInstanceId = moduleInstanceId;
+      const selectedModule = getExpeditionSelectedModule();
+      expeditionLoadoutActionMessage = selectedModule
+        ? `${getDefenderLoadoutText(selectedModule.name, "Module")} selected. Choose a Defender to install it.`
+        : "SELECT A RECOVERED MODULE FIRST.";
+      renderExpeditionLoadoutScreen();
     });
   });
 
@@ -2013,6 +2128,14 @@ function renderExpeditionLoadoutScreen() {
 
   if (!defenderSaveState) {
     loadSave();
+  }
+
+  if (typeof ensureCurrentRunModuleInventory === "function") {
+    ensureCurrentRunModuleInventory(defenderSaveState.currentRun);
+  }
+  if (expeditionSelectedModuleInstanceId && !getExpeditionSelectedModule()) {
+    expeditionSelectedModuleInstanceId = null;
+    expeditionLoadoutActionMessage = "";
   }
 
   const expeditionDefenders = getExpeditionLoadoutDefenders();

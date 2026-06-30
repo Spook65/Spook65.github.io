@@ -7198,6 +7198,10 @@ body {
   outline: none;
 }
 
+.defender-screen .defender-roster-tile.is-module-target {
+  border-color: color-mix(in srgb, var(--defender-accent) 44%, rgba(255, 206, 87, 0.26));
+}
+
 .defender-screen .defender-roster-tile.is-empty {
   opacity: 0.58;
   cursor: default;
@@ -7213,6 +7217,7 @@ body {
 .defender-screen .defender-roster-kicker,
 .defender-screen .defender-roster-role,
 .defender-screen .defender-roster-summary,
+.defender-screen .defender-roster-target,
 .defender-screen .defender-roster-mini,
 .defender-screen .defender-readonly-note {
   color: rgba(244, 239, 227, 0.58);
@@ -7220,6 +7225,15 @@ body {
   letter-spacing: 0.12em;
   line-height: 1.35;
   text-transform: uppercase;
+}
+
+.defender-screen .defender-roster-target {
+  display: inline-flex;
+  width: fit-content;
+  border: 1px solid rgba(255, 206, 87, 0.22);
+  padding: 4px 7px;
+  color: rgba(255, 206, 87, 0.86);
+  background: rgba(255, 206, 87, 0.055);
 }
 
 .defender-screen .defender-roster-name {
@@ -7511,6 +7525,23 @@ body {
   overflow: auto;
 }
 
+.defender-screen .defender-loadout-inventory-help,
+.defender-screen .defender-loadout-action-message {
+  margin: 8px 0;
+  color: rgba(244, 239, 227, 0.58);
+  font-size: 0.56rem;
+  letter-spacing: 0.12em;
+  line-height: 1.45;
+  text-transform: uppercase;
+}
+
+.defender-screen .defender-loadout-action-message {
+  border: 1px solid rgba(72, 214, 198, 0.2);
+  padding: 7px 8px;
+  color: rgba(72, 214, 198, 0.8);
+  background: rgba(72, 214, 198, 0.055);
+}
+
 .defender-screen .defender-loadout-empty {
   color: rgba(244, 239, 227, 0.52);
   font-size: 0.6rem;
@@ -7520,11 +7551,16 @@ body {
 }
 
 .defender-screen .defender-loadout-inventory-item {
+  appearance: none;
   display: grid;
   gap: 5px;
+  width: 100%;
   padding: 9px 10px;
   border: 1px solid rgba(244, 239, 227, 0.08);
   background: rgba(5, 7, 12, 0.42);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 150ms ease, box-shadow 150ms ease, background 150ms ease;
 }
 
 .defender-screen .defender-loadout-inventory-item.is-equipped {
@@ -7532,6 +7568,17 @@ body {
   background:
     linear-gradient(90deg, rgba(255, 206, 87, 0.06), transparent 58%),
     rgba(5, 7, 12, 0.48);
+}
+
+.defender-screen .defender-loadout-inventory-item:hover,
+.defender-screen .defender-loadout-inventory-item:focus-visible,
+.defender-screen .defender-loadout-inventory-item.is-selected {
+  border-color: rgba(72, 214, 198, 0.58);
+  background:
+    linear-gradient(90deg, rgba(72, 214, 198, 0.075), transparent 62%),
+    rgba(5, 7, 12, 0.58);
+  box-shadow: 0 0 18px rgba(72, 214, 198, 0.12);
+  outline: none;
 }
 
 .defender-screen .defender-loadout-inventory-name {
