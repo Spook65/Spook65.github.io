@@ -1366,6 +1366,22 @@ function getLoadoutModuleTargetLabel(defender, selectedModule = getExpeditionSel
     : "INSTALL HERE";
 }
 
+function getLoadoutModuleActionLabel(defender, selectedModule = getExpeditionSelectedModule()) {
+  if (!defender || !selectedModule) {
+    return "";
+  }
+
+  const equippedModule = getLoadoutEquippedModule(defender.id);
+  const defenderName = getDefenderLoadoutText(defender.name, defender.id);
+  if (equippedModule?.instanceId === selectedModule.instanceId) {
+    return `ALREADY EQUIPPED TO ${defenderName}`;
+  }
+
+  return equippedModule
+    ? `REPLACE ${getDefenderLoadoutText(equippedModule.name, "MODULE")} ON ${defenderName}`
+    : `INSTALL TO ${defenderName}`;
+}
+
 function equipSelectedLoadoutModuleToDefender(defenderId) {
   if (!defenderId || !defenderSaveState?.currentRun || typeof equipRecoveredModule !== "function") {
     return false;
@@ -1389,6 +1405,7 @@ function equipSelectedLoadoutModuleToDefender(defenderId) {
     return false;
   }
 
+  console.info("[LOADOUT MODULE] equipped", { module: selectedModule.name, defenderId });
   const replacedModule = equipRecoveredModule(defenderSaveState.currentRun, defenderId, selectedModule);
   if (typeof ensureCurrentRunModuleInventory === "function") {
     ensureCurrentRunModuleInventory(defenderSaveState.currentRun);
@@ -1412,6 +1429,44 @@ function equipSelectedLoadoutModuleToDefender(defenderId) {
   setDefenderSelectionFocus(defenderId);
   renderExpeditionLoadoutScreen();
   return true;
+}
+
+function buildSelectedLoadoutModuleActionMarkup(focusedDefender, selectedModule = getExpeditionSelectedModule()) {
+  if (!selectedModule) {
+    return "";
+  }
+
+  const targetDefender = focusedDefender || getDefenderTemplate(defenderSelectionFocusId);
+  const primaryStat = getLoadoutModulePrimaryStat(selectedModule);
+  const equippedDefenderId = selectedModule.equippedToDefenderId || "";
+  const equippedDefender = equippedDefenderId ? getDefenderTemplate(equippedDefenderId) : null;
+  const targetModule = targetDefender?.id ? getLoadoutEquippedModule(targetDefender.id) : null;
+  const alreadyEquipped = Boolean(targetModule?.instanceId && targetModule.instanceId === selectedModule.instanceId);
+  const actionLabel = getLoadoutModuleActionLabel(targetDefender, selectedModule);
+
+  return `
+    <div class="defender-loadout-install-preview">
+      <div class="defender-loadout-panel-label">SELECTED MODULE</div>
+      <div class="defender-loadout-install-grid">
+        <div>
+          <span class="defender-loadout-install-name">${getDefenderLoadoutText(selectedModule.name, "Recovered Module")}</span>
+          <span class="defender-loadout-install-meta">${primaryStat.text}</span>
+          <span class="defender-loadout-install-meta">${equippedDefender ? `CURRENTLY: ${getDefenderLoadoutText(equippedDefender.name, equippedDefenderId)}` : "CURRENTLY: UNEQUIPPED"}</span>
+        </div>
+        <div>
+          <span class="defender-loadout-install-label">TARGET</span>
+          <span class="defender-loadout-install-name">${getDefenderLoadoutText(targetDefender?.name, "Select Defender")}</span>
+          <span class="defender-loadout-install-meta">CURRENT MODULE: ${targetModule ? getDefenderLoadoutText(targetModule.name, "Recovered Module") : "EMPTY"}</span>
+        </div>
+      </div>
+      <button
+        class="defender-loadout-install-button"
+        type="button"
+        data-install-selected-module-to="${getDefenderLoadoutText(targetDefender?.id, "")}"
+        ${alreadyEquipped || !targetDefender?.id ? "disabled" : ""}
+      >${actionLabel || "SELECT DEFENDER"}</button>
+    </div>
+  `;
 }
 
 function getLoadoutModuleRarityClass(module) {
@@ -1680,6 +1735,7 @@ function buildCurrentRunModuleInventoryMarkup(selectedDefenders = []) {
       <div class="defender-loadout-panel-label">CURRENT RUN MODULES</div>
       <div class="defender-loadout-inventory-help">${selectedModule ? "Choose a Defender to install this module." : "Select a recovered module to install it into one active Defender."}</div>
       ${expeditionLoadoutActionMessage ? `<div class="defender-loadout-action-message">${expeditionLoadoutActionMessage}</div>` : ""}
+      ${buildSelectedLoadoutModuleActionMarkup(getDefenderTemplate(defenderSelectionFocusId), selectedModule)}
       ${runModules.map((module) => {
         const primaryStat = getLoadoutModulePrimaryStat(module);
         const rarity = getDefenderLoadoutText(module?.rarity, "common").toUpperCase();
@@ -1696,10 +1752,11 @@ function buildCurrentRunModuleInventoryMarkup(selectedDefenders = []) {
           >
             <div>
               <span class="defender-loadout-inventory-name">${getDefenderLoadoutText(module?.name, "Recovered Module")}</span>
+              ${isSelected ? '<span class="defender-loadout-selected-badge">SELECTED</span>' : ""}
               <span class="defender-loadout-inventory-meta">${rarity} ${itemClass}</span>
             </div>
             <div class="defender-loadout-inventory-stat">${primaryStat.text}</div>
-            <div class="defender-loadout-inventory-status">${equippedName ? `Equipped: ${equippedName}` : "Unequipped"}</div>
+            <div class="defender-loadout-inventory-status">${equippedName ? `Equipped: ${equippedName}` : "Unequipped"}${isSelected ? " — choose a Defender or use install action" : ""}</div>
           </button>
         `;
       }).join("")}
@@ -2031,10 +2088,26 @@ function bindDefenderSelectionControls() {
 
       expeditionSelectedModuleInstanceId = moduleInstanceId;
       const selectedModule = getExpeditionSelectedModule();
+      console.info("[LOADOUT MODULE] selected", moduleInstanceId);
       expeditionLoadoutActionMessage = selectedModule
         ? `${getDefenderLoadoutText(selectedModule.name, "Module")} selected. Choose a Defender to install it.`
         : "SELECT A RECOVERED MODULE FIRST.";
       renderExpeditionLoadoutScreen();
+    });
+  });
+
+  defenderScreenContent.querySelectorAll("[data-install-selected-module-to]").forEach((button) => {
+    button.addEventListener("click", () => {
+      if (screenState !== "expedition-loadout") {
+        return;
+      }
+
+      const defenderId = button.getAttribute("data-install-selected-module-to");
+      if (!defenderId) {
+        return;
+      }
+
+      equipSelectedLoadoutModuleToDefender(defenderId);
     });
   });
 
