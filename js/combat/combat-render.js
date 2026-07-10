@@ -2118,25 +2118,28 @@ function buildRecoveredModuleRewardMarkup(state) {
   if (step === "installed" && installed) {
     const installedModule = installed.module || null;
     const primaryStat = getRecoveredModulePrimaryStat(installedModule);
+    const storedOnly = Boolean(installed.storedOnly);
     return `
       <div class="battle-narrative-screen is-pantheon battle-module-screen">
         <div class="battle-narrative-shell battle-module-shell is-installed">
           <div class="battle-module-scene-head">
             <div>
-              <div class="battle-narrative-sector">RECOVERED MODULE / INSTALL COMPLETE</div>
-              <div class="battle-module-scene-title">MODULE INSTALLED</div>
+              <div class="battle-narrative-sector">RECOVERED MODULE / ${storedOnly ? "STORED" : "INSTALL COMPLETE"}</div>
+              <div class="battle-module-scene-title">${storedOnly ? "MODULE STORED" : "MODULE INSTALLED"}</div>
             </div>
             <div class="battle-module-scene-stat">${primaryStat.text}</div>
           </div>
           ${buildRecoveredModuleFocusMarkup(installedModule, state)}
           <div class="battle-narrative-response-panel">
-            <div class="battle-narrative-response-title">MODULE INSTALLED</div>
+            <div class="battle-narrative-response-title">${storedOnly ? "MODULE STORED" : "MODULE INSTALLED"}</div>
             <div class="battle-narrative-response-quote">"${getSafeModuleText(installedModule?.sourceLine, installedModule?.flavorText || "The recovered module locks into place.")}"</div>
-            <div class="battle-narrative-response">${getSafeModuleText(installedModule?.name, "Recovered Module")} assigned to ${getSafeModuleText(installed.defenderName, "Defender")}.</div>
+            <div class="battle-narrative-response">${storedOnly
+              ? `${getSafeModuleText(installedModule?.name, "Recovered Module")} stored in current-run inventory. Install it later from LOADOUT / MODULES.`
+              : `${getSafeModuleText(installedModule?.name, "Recovered Module")} assigned to ${getSafeModuleText(installed.defenderName, "Defender")}.`}</div>
             <div class="battle-narrative-response-effect">
-              <div class="battle-narrative-result-label">ACTIVE EFFECT</div>
+              <div class="battle-narrative-result-label">${storedOnly ? "INVENTORY STATUS" : "ACTIVE EFFECT"}</div>
               <div class="battle-narrative-result-value">${getSafeModuleText(installedModule?.effectText, "Module effect online.")}</div>
-              <div class="battle-narrative-result-meta">${installed.replacedModule?.name ? `REPLACED ${installed.replacedModule.name}` : "UNIVERSAL MODULE SLOT"}</div>
+              <div class="battle-narrative-result-meta">${storedOnly ? "UNEQUIPPED / CURRENT RUN MODULES" : installed.replacedModule?.name ? `REPLACED ${installed.replacedModule.name}` : "UNIVERSAL MODULE SLOT"}</div>
             </div>
             <div class="battle-module-ready-line">READY FOR NEXT INCIDENT.</div>
           </div>
@@ -2162,9 +2165,13 @@ function buildRecoveredModuleRewardMarkup(state) {
           <div class="battle-module-focus-slot" data-module-focus-preview>
             ${buildRecoveredModuleFocusMarkup(pendingModule, state)}
           </div>
-          <div class="battle-module-install-copy">Choose an active Defender. One universal module slot is available this run.</div>
+          <div class="battle-module-install-copy">Install now, or store the module in current-run inventory for later loadout swaps.</div>
+          <div class="battle-module-install-mode-label">INSTALL TO DEFENDER</div>
           <div class="battle-module-target-grid">
             ${targets.length ? targets.map((program) => buildRecoveredModuleInstallTargetMarkup(state, program)).join("") : '<div class="battle-module-empty">NO ACTIVE DEFENDERS AVAILABLE.</div>'}
+          </div>
+          <div class="battle-module-store-row">
+            <button class="battle-narrative-button battle-module-store-button" type="button" data-module-store>STORE IN INVENTORY</button>
           </div>
         </div>
       </div>
@@ -2655,6 +2662,15 @@ function bindCombatButtons() {
       }
     });
   });
+
+  const moduleStoreButton = threatPanelContent.querySelector("[data-module-store]");
+  if (moduleStoreButton) {
+    moduleStoreButton.addEventListener("click", () => {
+      if (typeof storeRecoveredModuleReward === "function") {
+        storeRecoveredModuleReward();
+      }
+    });
+  }
 
   const moduleContinueButton = threatPanelContent.querySelector("[data-module-continue]");
   if (moduleContinueButton) {

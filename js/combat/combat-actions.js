@@ -540,6 +540,64 @@ function installRecoveredModuleReward(defenderId) {
   renderRecoveredModuleReward();
 }
 
+function storeRecoveredModuleReward() {
+  if (!combatState || combatState.moduleRewardStep !== "install" || !combatState.pendingModuleReward) {
+    return;
+  }
+
+  const runState = typeof defenderSaveState !== "undefined" && defenderSaveState?.currentRun ? defenderSaveState.currentRun : null;
+  if (!runState) {
+    return;
+  }
+
+  if (typeof ensureCurrentRunModuleInventory === "function") {
+    ensureCurrentRunModuleInventory(runState);
+  }
+
+  const moduleToStore = JSON.parse(JSON.stringify(combatState.pendingModuleReward));
+  const storedModule = typeof normalizeCurrentRunModule === "function"
+    ? normalizeCurrentRunModule(moduleToStore, null)
+    : moduleToStore;
+  if (!storedModule) {
+    return;
+  }
+
+  storedModule.equippedToDefenderId = null;
+  delete storedModule.equippedAt;
+
+  runState.recoveredModules = Array.isArray(runState.recoveredModules) ? runState.recoveredModules : [];
+  const existingIndex = runState.recoveredModules.findIndex((module) => module?.instanceId === storedModule.instanceId);
+  if (existingIndex === -1) {
+    runState.recoveredModules.push(storedModule);
+  } else {
+    runState.recoveredModules[existingIndex] = {
+      ...runState.recoveredModules[existingIndex],
+      ...storedModule,
+      equippedToDefenderId: null
+    };
+    delete runState.recoveredModules[existingIndex].equippedAt;
+  }
+
+  if (typeof ensureCurrentRunModuleInventory === "function") {
+    ensureCurrentRunModuleInventory(runState);
+  }
+
+  combatState.moduleRewardInstalled = {
+    module: storedModule,
+    defenderId: null,
+    defenderName: "",
+    replacedModule: null,
+    storedOnly: true
+  };
+  combatState.moduleRewardStep = "installed";
+
+  if (typeof saveGame === "function") {
+    saveGame();
+  }
+
+  renderRecoveredModuleReward();
+}
+
 // showCombatDefeatScreen() handles the defeat branch without colliding with the boot screen game-over UI.
 function showCombatDefeatScreen(outcome) {
   if (outcome !== "lose") {

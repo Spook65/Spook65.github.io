@@ -8306,6 +8306,28 @@ body {
   color: rgba(244, 239, 227, 0.78);
 }
 
+.battle-module-install-mode-label {
+  width: max-content;
+  border: 1px solid rgba(72, 214, 198, 0.22);
+  background: rgba(72, 214, 198, 0.055);
+  color: rgba(72, 214, 198, 0.82);
+  font-size: 0.56rem;
+  letter-spacing: 0.18em;
+  padding: 6px 9px;
+  text-transform: uppercase;
+}
+
+.battle-module-store-row {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 12px;
+}
+
+.battle-module-store-button {
+  border-color: rgba(244, 239, 227, 0.24);
+  color: rgba(244, 239, 227, 0.88);
+}
+
 .battle-module-focus {
   --module-accent: rgba(127, 183, 176, 0.88);
   --module-accent-soft: rgba(127, 183, 176, 0.13);

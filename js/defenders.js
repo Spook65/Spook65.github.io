@@ -749,6 +749,7 @@ let defenderSelectionFocusId = null;
 // expeditionSelectedModuleInstanceId tracks the module being installed from the current-run loadout view.
 let expeditionSelectedModuleInstanceId = null;
 let expeditionLoadoutActionMessage = "";
+let defenderLoadoutDelegationBound = false;
 
 // defenderRosterSelectEnabled keeps the RPG loadout hub on the primary render path.
 const defenderRosterSelectEnabled = true;
@@ -1351,6 +1352,36 @@ function getExpeditionSelectedModule() {
     .find((module) => module?.instanceId === expeditionSelectedModuleInstanceId) || null;
 }
 
+function selectExpeditionLoadoutModule(moduleInstanceId) {
+  if (screenState !== "expedition-loadout" || !moduleInstanceId) {
+    return false;
+  }
+
+  if (typeof ensureCurrentRunModuleInventory === "function") {
+    ensureCurrentRunModuleInventory(defenderSaveState?.currentRun);
+  }
+
+  const selectedModule = typeof getCurrentRunModules === "function"
+    ? getCurrentRunModules(defenderSaveState?.currentRun).find((module) => module?.instanceId === moduleInstanceId)
+    : null;
+  if (!selectedModule) {
+    expeditionSelectedModuleInstanceId = null;
+    expeditionLoadoutActionMessage = "SELECTED MODULE WAS NOT FOUND IN CURRENT RUN INVENTORY.";
+    renderExpeditionLoadoutScreen();
+    return false;
+  }
+
+  expeditionSelectedModuleInstanceId = selectedModule.instanceId;
+  expeditionLoadoutActionMessage = `${getDefenderLoadoutText(selectedModule.name, "Module")} selected. Install it to the focused Defender or choose another active Defender target.`;
+  console.info("[LOADOUT MODULE] selected", {
+    instanceId: selectedModule.instanceId,
+    moduleName: selectedModule.name || "Recovered Module",
+    context: screenState
+  });
+  renderExpeditionLoadoutScreen();
+  return true;
+}
+
 function getLoadoutModuleTargetLabel(defender, selectedModule = getExpeditionSelectedModule()) {
   if (!defender || !selectedModule) {
     return "";
@@ -1405,7 +1436,6 @@ function equipSelectedLoadoutModuleToDefender(defenderId) {
     return false;
   }
 
-  console.info("[LOADOUT MODULE] equipped", { module: selectedModule.name, defenderId });
   const replacedModule = equipRecoveredModule(defenderSaveState.currentRun, defenderId, selectedModule);
   if (typeof ensureCurrentRunModuleInventory === "function") {
     ensureCurrentRunModuleInventory(defenderSaveState.currentRun);
@@ -1427,6 +1457,12 @@ function equipSelectedLoadoutModuleToDefender(defenderId) {
   expeditionLoadoutActionMessage = `${moduleName} installed on ${targetName}.${replacedText}${movedFrom}`;
   expeditionSelectedModuleInstanceId = selectedModule.instanceId;
   setDefenderSelectionFocus(defenderId);
+  console.info("[LOADOUT MODULE] equipped", {
+    moduleName,
+    targetDefenderId: defenderId,
+    previousOwnerId,
+    replacedModuleName: replacedName
+  });
   renderExpeditionLoadoutScreen();
   return true;
 }
@@ -1443,6 +1479,11 @@ function buildSelectedLoadoutModuleActionMarkup(focusedDefender, selectedModule 
   const targetModule = targetDefender?.id ? getLoadoutEquippedModule(targetDefender.id) : null;
   const alreadyEquipped = Boolean(targetModule?.instanceId && targetModule.instanceId === selectedModule.instanceId);
   const actionLabel = getLoadoutModuleActionLabel(targetDefender, selectedModule);
+  console.info("[LOADOUT MODULE DEBUG] selected action panel", {
+    selectedModuleInstanceId: selectedModule.instanceId || null,
+    inspectedDefenderId: targetDefender?.id || null,
+    canInstall: Boolean(targetDefender?.id && !alreadyEquipped)
+  });
 
   return `
     <div class="defender-loadout-install-preview">
@@ -1712,6 +1753,9 @@ function buildCurrentRunModuleInventoryMarkup(selectedDefenders = []) {
   const runModules = typeof getCurrentRunModules === "function"
     ? getCurrentRunModules(defenderSaveState?.currentRun)
     : [];
+  if (screenState === "expedition-loadout") {
+    console.info("[LOADOUT MODULE DEBUG] rendering modules", runModules.length);
+  }
   const selectedModule = getExpeditionSelectedModule();
   const defenderNameById = selectedDefenders.reduce((lookup, defender) => {
     if (defender?.id) {
@@ -1875,6 +1919,60 @@ function buildDefenderPartySlotMarkup(defender, slotIndex) {
       <div class="defender-party-slot-role">${defender.role}</div>
     </div>
   `;
+}
+
+function handleDefenderLoadoutDelegatedClick(event) {
+  if (screenState !== "expedition-loadout" || !defenderScreenContent) {
+    return;
+  }
+
+  const installButton = event.target.closest?.("[data-install-selected-module-to]");
+  if (installButton && defenderScreenContent.contains(installButton)) {
+    event.preventDefault();
+    event.stopPropagation();
+    const defenderId = installButton.getAttribute("data-install-selected-module-to");
+    const selectedModule = getExpeditionSelectedModule();
+    console.info("[LOADOUT MODULE] install action clicked", {
+      moduleName: selectedModule?.name || "Recovered Module",
+      targetDefenderId: defenderId || ""
+    });
+    if (defenderId) {
+      equipSelectedLoadoutModuleToDefender(defenderId);
+    }
+    return;
+  }
+
+  const moduleButton = event.target.closest?.("[data-module-instance-id]");
+  if (moduleButton && defenderScreenContent.contains(moduleButton)) {
+    event.preventDefault();
+    event.stopPropagation();
+    selectExpeditionLoadoutModule(moduleButton.getAttribute("data-module-instance-id"));
+    return;
+  }
+
+  const targetButton = event.target.closest?.("[data-module-target-defender-id]");
+  if (targetButton && defenderScreenContent.contains(targetButton) && getExpeditionSelectedModule()) {
+    event.preventDefault();
+    event.stopPropagation();
+    const defenderId = targetButton.getAttribute("data-module-target-defender-id");
+    const selectedModule = getExpeditionSelectedModule();
+    console.info("[LOADOUT MODULE] install action clicked", {
+      moduleName: selectedModule?.name || "Recovered Module",
+      targetDefenderId: defenderId || ""
+    });
+    if (defenderId) {
+      equipSelectedLoadoutModuleToDefender(defenderId);
+    }
+  }
+}
+
+function bindDefenderLoadoutDelegation() {
+  if (!defenderScreenContent || defenderLoadoutDelegationBound) {
+    return;
+  }
+
+  defenderScreenContent.addEventListener("click", handleDefenderLoadoutDelegatedClick);
+  defenderLoadoutDelegationBound = true;
 }
 
 // updateDefenderSelectionFocusDom() swaps just the preview panel and focus highlight without rebuilding the whole screen.
@@ -2048,6 +2146,7 @@ function buildDefenderSelectionLegacyMarkup() {
 
 // bindDefenderSelectionControls() wires the roster tiles and footer buttons after the screen is rendered.
 function bindDefenderSelectionControls() {
+  bindDefenderLoadoutDelegation();
   const defenderScreenConfirm = document.getElementById("defender-screen-confirm");
   const defenderScreenReset = document.getElementById("defender-screen-reset");
   const defenderScreenBack = document.getElementById("defender-screen-back");
@@ -2067,47 +2166,12 @@ function bindDefenderSelectionControls() {
 
     tile.addEventListener("click", () => {
       if (screenState === "expedition-loadout" && getExpeditionSelectedModule()) {
-        equipSelectedLoadoutModuleToDefender(defenderId);
+        // Expedition module installs are handled by the stable container delegate
+        // so a tile re-render cannot swallow the target click before equip runs.
         return;
       }
 
       setDefenderSelectionFocus(defenderId);
-    });
-  });
-
-  defenderScreenContent.querySelectorAll("[data-module-instance-id]").forEach((button) => {
-    button.addEventListener("click", () => {
-      if (screenState !== "expedition-loadout") {
-        return;
-      }
-
-      const moduleInstanceId = button.getAttribute("data-module-instance-id");
-      if (!moduleInstanceId) {
-        return;
-      }
-
-      expeditionSelectedModuleInstanceId = moduleInstanceId;
-      const selectedModule = getExpeditionSelectedModule();
-      console.info("[LOADOUT MODULE] selected", moduleInstanceId);
-      expeditionLoadoutActionMessage = selectedModule
-        ? `${getDefenderLoadoutText(selectedModule.name, "Module")} selected. Choose a Defender to install it.`
-        : "SELECT A RECOVERED MODULE FIRST.";
-      renderExpeditionLoadoutScreen();
-    });
-  });
-
-  defenderScreenContent.querySelectorAll("[data-install-selected-module-to]").forEach((button) => {
-    button.addEventListener("click", () => {
-      if (screenState !== "expedition-loadout") {
-        return;
-      }
-
-      const defenderId = button.getAttribute("data-install-selected-module-to");
-      if (!defenderId) {
-        return;
-      }
-
-      equipSelectedLoadoutModuleToDefender(defenderId);
     });
   });
 
