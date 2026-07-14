@@ -749,7 +749,25 @@ let defenderSelectionFocusId = null;
 // expeditionSelectedModuleInstanceId tracks the module being installed from the current-run loadout view.
 let expeditionSelectedModuleInstanceId = null;
 let expeditionLoadoutActionMessage = "";
+let expeditionLoadoutActionTone = "";
 let defenderLoadoutDelegationBound = false;
+
+function shouldLogLoadoutModuleDebug() {
+  return typeof window !== "undefined" && window.THREATGRID_LOADOUT_MODULE_DEBUG === true;
+}
+
+function logLoadoutModuleDebug(message, payload = null) {
+  if (!shouldLogLoadoutModuleDebug()) {
+    return;
+  }
+
+  if (payload === null) {
+    console.info(message);
+    return;
+  }
+
+  console.info(message, payload);
+}
 
 // defenderRosterSelectEnabled keeps the RPG loadout hub on the primary render path.
 const defenderRosterSelectEnabled = true;
@@ -1367,13 +1385,15 @@ function selectExpeditionLoadoutModule(moduleInstanceId) {
   if (!selectedModule) {
     expeditionSelectedModuleInstanceId = null;
     expeditionLoadoutActionMessage = "SELECTED MODULE WAS NOT FOUND IN CURRENT RUN INVENTORY.";
+    expeditionLoadoutActionTone = "warning";
     renderExpeditionLoadoutScreen();
     return false;
   }
 
   expeditionSelectedModuleInstanceId = selectedModule.instanceId;
   expeditionLoadoutActionMessage = `${getDefenderLoadoutText(selectedModule.name, "Module")} selected. Install it to the focused Defender or choose another active Defender target.`;
-  console.info("[LOADOUT MODULE] selected", {
+  expeditionLoadoutActionTone = "selected";
+  logLoadoutModuleDebug("[LOADOUT MODULE] selected", {
     instanceId: selectedModule.instanceId,
     moduleName: selectedModule.name || "Recovered Module",
     context: screenState
@@ -1421,6 +1441,7 @@ function equipSelectedLoadoutModuleToDefender(defenderId) {
   const selectedModule = getExpeditionSelectedModule();
   if (!selectedModule) {
     expeditionLoadoutActionMessage = "SELECT A RECOVERED MODULE FIRST.";
+    expeditionLoadoutActionTone = "warning";
     return false;
   }
 
@@ -1431,6 +1452,7 @@ function equipSelectedLoadoutModuleToDefender(defenderId) {
 
   if (previousTargetModule?.instanceId === selectedModule.instanceId) {
     expeditionLoadoutActionMessage = `${getDefenderLoadoutText(selectedModule.name, "Module")} is already equipped to ${getDefenderLoadoutText(targetDefender?.name, defenderId)}.`;
+    expeditionLoadoutActionTone = "selected";
     setDefenderSelectionFocus(defenderId);
     renderExpeditionLoadoutScreen();
     return false;
@@ -1455,9 +1477,10 @@ function equipSelectedLoadoutModuleToDefender(defenderId) {
   const replacedText = replacedName ? ` ${replacedName} returned to inventory.` : "";
 
   expeditionLoadoutActionMessage = `${moduleName} installed on ${targetName}.${replacedText}${movedFrom}`;
+  expeditionLoadoutActionTone = "success";
   expeditionSelectedModuleInstanceId = selectedModule.instanceId;
   setDefenderSelectionFocus(defenderId);
-  console.info("[LOADOUT MODULE] equipped", {
+  logLoadoutModuleDebug("[LOADOUT MODULE] equipped", {
     moduleName,
     targetDefenderId: defenderId,
     previousOwnerId,
@@ -1479,7 +1502,7 @@ function buildSelectedLoadoutModuleActionMarkup(focusedDefender, selectedModule 
   const targetModule = targetDefender?.id ? getLoadoutEquippedModule(targetDefender.id) : null;
   const alreadyEquipped = Boolean(targetModule?.instanceId && targetModule.instanceId === selectedModule.instanceId);
   const actionLabel = getLoadoutModuleActionLabel(targetDefender, selectedModule);
-  console.info("[LOADOUT MODULE DEBUG] selected action panel", {
+  logLoadoutModuleDebug("[LOADOUT MODULE DEBUG] selected action panel", {
     selectedModuleInstanceId: selectedModule.instanceId || null,
     inspectedDefenderId: targetDefender?.id || null,
     canInstall: Boolean(targetDefender?.id && !alreadyEquipped)
@@ -1636,10 +1659,11 @@ function buildDefenderRosterTileMarkup(defender, isSelected, isLocked, isFocused
   const moduleLabel = module ? getDefenderLoadoutText(module.name, "Recovered Module") : "EMPTY MODULE";
   const selectedModule = screenState === "expedition-loadout" ? getExpeditionSelectedModule() : null;
   const targetLabel = selectedModule ? getLoadoutModuleTargetLabel(defender, selectedModule) : "";
+  const isActiveInstallTarget = Boolean(selectedModule && isFocused);
 
   return `
     <button
-      class="defender-roster-tile ${isSelected ? "is-selected" : ""} ${isLocked ? "is-locked" : ""} ${isFocused ? "is-focused" : ""} ${targetLabel ? "is-module-target" : ""}"
+      class="defender-roster-tile ${isSelected ? "is-selected" : ""} ${isLocked ? "is-locked" : ""} ${isFocused ? "is-focused" : ""} ${targetLabel ? "is-module-target" : ""} ${isActiveInstallTarget ? "is-active-install-target" : ""}"
       type="button"
       data-defender-id="${defender.id}"
       ${selectedModule ? `data-module-target-defender-id="${defender.id}"` : ""}
@@ -1754,7 +1778,7 @@ function buildCurrentRunModuleInventoryMarkup(selectedDefenders = []) {
     ? getCurrentRunModules(defenderSaveState?.currentRun)
     : [];
   if (screenState === "expedition-loadout") {
-    console.info("[LOADOUT MODULE DEBUG] rendering modules", runModules.length);
+    logLoadoutModuleDebug("[LOADOUT MODULE DEBUG] rendering modules", runModules.length);
   }
   const selectedModule = getExpeditionSelectedModule();
   const defenderNameById = selectedDefenders.reduce((lookup, defender) => {
@@ -1778,9 +1802,10 @@ function buildCurrentRunModuleInventoryMarkup(selectedDefenders = []) {
     <div class="defender-loadout-inventory">
       <div class="defender-loadout-panel-label">CURRENT RUN MODULES</div>
       <div class="defender-loadout-inventory-help">${selectedModule ? "Choose a Defender to install this module." : "Select a recovered module to install it into one active Defender."}</div>
-      ${expeditionLoadoutActionMessage ? `<div class="defender-loadout-action-message">${expeditionLoadoutActionMessage}</div>` : ""}
+      ${expeditionLoadoutActionMessage ? `<div class="defender-loadout-action-message is-${getDefenderLoadoutText(expeditionLoadoutActionTone, "notice")}">${expeditionLoadoutActionMessage}</div>` : ""}
       ${buildSelectedLoadoutModuleActionMarkup(getDefenderTemplate(defenderSelectionFocusId), selectedModule)}
-      ${runModules.map((module) => {
+      <div class="defender-loadout-inventory-list" aria-label="Current run recovered modules">
+        ${runModules.map((module) => {
         const primaryStat = getLoadoutModulePrimaryStat(module);
         const rarity = getDefenderLoadoutText(module?.rarity, "common").toUpperCase();
         const itemClass = getDefenderLoadoutText(module?.itemClass, "Recovered Module");
@@ -1804,6 +1829,7 @@ function buildCurrentRunModuleInventoryMarkup(selectedDefenders = []) {
           </button>
         `;
       }).join("")}
+      </div>
     </div>
   `;
 }
@@ -1932,7 +1958,7 @@ function handleDefenderLoadoutDelegatedClick(event) {
     event.stopPropagation();
     const defenderId = installButton.getAttribute("data-install-selected-module-to");
     const selectedModule = getExpeditionSelectedModule();
-    console.info("[LOADOUT MODULE] install action clicked", {
+    logLoadoutModuleDebug("[LOADOUT MODULE] install action clicked", {
       moduleName: selectedModule?.name || "Recovered Module",
       targetDefenderId: defenderId || ""
     });
@@ -1956,7 +1982,7 @@ function handleDefenderLoadoutDelegatedClick(event) {
     event.stopPropagation();
     const defenderId = targetButton.getAttribute("data-module-target-defender-id");
     const selectedModule = getExpeditionSelectedModule();
-    console.info("[LOADOUT MODULE] install action clicked", {
+    logLoadoutModuleDebug("[LOADOUT MODULE] install action clicked", {
       moduleName: selectedModule?.name || "Recovered Module",
       targetDefenderId: defenderId || ""
     });
