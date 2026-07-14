@@ -7229,6 +7229,7 @@ body {
 .defender-screen .defender-roster-role,
 .defender-screen .defender-roster-summary,
 .defender-screen .defender-roster-target,
+.defender-screen .defender-roster-inspect,
 .defender-screen .defender-roster-mini,
 .defender-screen .defender-readonly-note {
   color: rgba(244, 239, 227, 0.58);
@@ -7245,6 +7246,15 @@ body {
   padding: 4px 7px;
   color: rgba(255, 206, 87, 0.86);
   background: rgba(255, 206, 87, 0.055);
+}
+
+.defender-screen .defender-roster-inspect {
+  display: inline-flex;
+  width: fit-content;
+  border: 1px solid rgba(72, 214, 198, 0.18);
+  padding: 4px 7px;
+  color: rgba(72, 214, 198, 0.72);
+  background: rgba(72, 214, 198, 0.04);
 }
 
 .defender-screen .defender-roster-name {
@@ -7602,6 +7612,7 @@ body {
 .defender-screen .defender-loadout-install-name,
 .defender-screen .defender-loadout-install-meta,
 .defender-screen .defender-loadout-install-label,
+.defender-screen .defender-loadout-install-result,
 .defender-screen .defender-loadout-selected-badge {
   display: block;
   text-transform: uppercase;
@@ -7625,6 +7636,16 @@ body {
 .defender-screen .defender-loadout-install-label,
 .defender-screen .defender-loadout-selected-badge {
   color: rgba(255, 206, 87, 0.82);
+}
+
+.defender-screen .defender-loadout-install-result {
+  border-left: 2px solid rgba(255, 206, 87, 0.52);
+  padding: 8px 10px;
+  color: rgba(244, 239, 227, 0.82);
+  background: rgba(255, 206, 87, 0.055);
+  font-size: 0.58rem;
+  letter-spacing: 0.1em;
+  line-height: 1.45;
 }
 
 .defender-screen .defender-loadout-install-button {
@@ -7661,6 +7682,16 @@ body {
 .defender-screen .defender-loadout-install-button:disabled {
   cursor: default;
   opacity: 0.52;
+}
+
+.defender-screen .defender-loadout-install-button.is-replace {
+  border-color: rgba(255, 206, 87, 0.46);
+}
+
+.defender-screen .defender-loadout-install-button.is-current {
+  border-color: rgba(244, 239, 227, 0.18);
+  color: rgba(244, 239, 227, 0.58);
+  background: rgba(244, 239, 227, 0.035);
 }
 
 .defender-screen .defender-loadout-empty {
@@ -7709,10 +7740,37 @@ body {
   text-transform: uppercase;
 }
 
-.defender-screen .defender-loadout-selected-badge {
-  margin-top: 4px;
+.defender-screen .defender-loadout-inventory-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 5px;
+}
+
+.defender-screen .defender-loadout-selected-badge,
+.defender-screen .defender-loadout-status-badge {
+  display: inline-flex;
+  width: fit-content;
+  border: 1px solid rgba(244, 239, 227, 0.14);
+  padding: 3px 6px;
+  color: rgba(244, 239, 227, 0.62);
+  background: rgba(244, 239, 227, 0.035);
   font-size: 0.5rem;
   letter-spacing: 0.16em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.defender-screen .defender-loadout-selected-badge {
+  border-color: rgba(72, 214, 198, 0.42);
+  color: rgba(72, 214, 198, 0.9);
+  background: rgba(72, 214, 198, 0.07);
+}
+
+.defender-screen .defender-loadout-inventory-item.is-equipped .defender-loadout-status-badge {
+  border-color: rgba(255, 206, 87, 0.34);
+  color: rgba(255, 206, 87, 0.82);
+  background: rgba(255, 206, 87, 0.055);
 }
 
 .defender-screen .defender-loadout-inventory-meta,

@@ -1409,12 +1409,12 @@ function getLoadoutModuleTargetLabel(defender, selectedModule = getExpeditionSel
 
   const equippedModule = getLoadoutEquippedModule(defender.id);
   if (equippedModule?.instanceId === selectedModule.instanceId) {
-    return "ALREADY EQUIPPED";
+    return "CURRENTLY EQUIPPED";
   }
 
   return equippedModule
     ? `REPLACE ${getDefenderLoadoutText(equippedModule.name, "MODULE")}`
-    : "INSTALL HERE";
+    : `INSTALL TO ${getDefenderLoadoutText(defender.name, defender.id)}`;
 }
 
 function getLoadoutModuleActionLabel(defender, selectedModule = getExpeditionSelectedModule()) {
@@ -1425,11 +1425,11 @@ function getLoadoutModuleActionLabel(defender, selectedModule = getExpeditionSel
   const equippedModule = getLoadoutEquippedModule(defender.id);
   const defenderName = getDefenderLoadoutText(defender.name, defender.id);
   if (equippedModule?.instanceId === selectedModule.instanceId) {
-    return `ALREADY EQUIPPED TO ${defenderName}`;
+    return "CURRENTLY EQUIPPED";
   }
 
   return equippedModule
-    ? `REPLACE ${getDefenderLoadoutText(equippedModule.name, "MODULE")} ON ${defenderName}`
+    ? `REPLACE ${getDefenderLoadoutText(equippedModule.name, "MODULE")}`
     : `INSTALL TO ${defenderName}`;
 }
 
@@ -1502,6 +1502,15 @@ function buildSelectedLoadoutModuleActionMarkup(focusedDefender, selectedModule 
   const targetModule = targetDefender?.id ? getLoadoutEquippedModule(targetDefender.id) : null;
   const alreadyEquipped = Boolean(targetModule?.instanceId && targetModule.instanceId === selectedModule.instanceId);
   const actionLabel = getLoadoutModuleActionLabel(targetDefender, selectedModule);
+  const selectedModuleName = getDefenderLoadoutText(selectedModule.name, "Recovered Module");
+  const targetDefenderName = getDefenderLoadoutText(targetDefender?.name, "Select Defender");
+  const targetModuleName = targetModule ? getDefenderLoadoutText(targetModule.name, "Recovered Module") : "";
+  const equippedStatus = equippedDefender ? `Equipped to ${getDefenderLoadoutText(equippedDefender.name, equippedDefenderId)}` : "Unequipped";
+  const resultText = alreadyEquipped
+    ? `${selectedModuleName} is already equipped to ${targetDefenderName}.`
+    : targetModule
+      ? `${selectedModuleName} will replace ${targetModuleName} on ${targetDefenderName}.`
+      : `${selectedModuleName} will be installed on ${targetDefenderName}.`;
   logLoadoutModuleDebug("[LOADOUT MODULE DEBUG] selected action panel", {
     selectedModuleInstanceId: selectedModule.instanceId || null,
     inspectedDefenderId: targetDefender?.id || null,
@@ -1515,16 +1524,20 @@ function buildSelectedLoadoutModuleActionMarkup(focusedDefender, selectedModule 
         <div>
           <span class="defender-loadout-install-name">${getDefenderLoadoutText(selectedModule.name, "Recovered Module")}</span>
           <span class="defender-loadout-install-meta">${primaryStat.text}</span>
-          <span class="defender-loadout-install-meta">${equippedDefender ? `CURRENTLY: ${getDefenderLoadoutText(equippedDefender.name, equippedDefenderId)}` : "CURRENTLY: UNEQUIPPED"}</span>
+          <span class="defender-loadout-install-meta">STATUS: ${equippedStatus}</span>
         </div>
         <div>
-          <span class="defender-loadout-install-label">TARGET</span>
-          <span class="defender-loadout-install-name">${getDefenderLoadoutText(targetDefender?.name, "Select Defender")}</span>
+          <span class="defender-loadout-install-label">TARGET DEFENDER</span>
+          <span class="defender-loadout-install-name">${targetDefenderName}</span>
           <span class="defender-loadout-install-meta">CURRENT MODULE: ${targetModule ? getDefenderLoadoutText(targetModule.name, "Recovered Module") : "EMPTY"}</span>
         </div>
       </div>
+      <div class="defender-loadout-install-result">
+        <span class="defender-loadout-install-label">RESULT</span>
+        <span>${resultText}</span>
+      </div>
       <button
-        class="defender-loadout-install-button"
+        class="defender-loadout-install-button ${alreadyEquipped ? "is-current" : targetModule ? "is-replace" : "is-install"}"
         type="button"
         data-install-selected-module-to="${getDefenderLoadoutText(targetDefender?.id, "")}"
         ${alreadyEquipped || !targetDefender?.id ? "disabled" : ""}
@@ -1656,7 +1669,7 @@ function buildDefenderRosterTileMarkup(defender, isSelected, isLocked, isFocused
   const cardAccent = defender.color || "#87e4ff";
   const rosterStateLabel = isSelected ? `SLOT ${slotIndex + 1}` : isLocked ? "SEALED" : "RESERVE";
   const module = getLoadoutEquippedModule(defender.id);
-  const moduleLabel = module ? getDefenderLoadoutText(module.name, "Recovered Module") : "EMPTY MODULE";
+  const moduleLabel = module ? `EQUIPPED: ${getDefenderLoadoutText(module.name, "Recovered Module")}` : "EMPTY MODULE SLOT";
   const selectedModule = screenState === "expedition-loadout" ? getExpeditionSelectedModule() : null;
   const targetLabel = selectedModule ? getLoadoutModuleTargetLabel(defender, selectedModule) : "";
   const isActiveInstallTarget = Boolean(selectedModule && isFocused);
@@ -1681,7 +1694,7 @@ function buildDefenderRosterTileMarkup(defender, isSelected, isLocked, isFocused
         <div class="defender-roster-badge ${isSelected ? "is-selected" : isLocked ? "is-locked" : "is-ready"}">${rosterStateLabel}</div>
       </div>
       <div class="defender-roster-summary">${moduleLabel}</div>
-      ${targetLabel ? `<div class="defender-roster-target">${targetLabel}</div>` : ""}
+      ${targetLabel ? `<div class="defender-roster-target">${targetLabel}</div>` : '<div class="defender-roster-inspect">VIEW LOADOUT</div>'}
       <div class="defender-roster-mini" aria-hidden="true">
         <span>HP ${defender.hp}</span>
         <span>DEF ${defender.def}</span>
@@ -1801,7 +1814,7 @@ function buildCurrentRunModuleInventoryMarkup(selectedDefenders = []) {
   return `
     <div class="defender-loadout-inventory">
       <div class="defender-loadout-panel-label">CURRENT RUN MODULES</div>
-      <div class="defender-loadout-inventory-help">${selectedModule ? "Choose a Defender to install this module." : "Select a recovered module to install it into one active Defender."}</div>
+      <div class="defender-loadout-inventory-help">${selectedModule ? "Choose a Defender target, or use the action below." : "Select a module to preview install options."}</div>
       ${expeditionLoadoutActionMessage ? `<div class="defender-loadout-action-message is-${getDefenderLoadoutText(expeditionLoadoutActionTone, "notice")}">${expeditionLoadoutActionMessage}</div>` : ""}
       ${buildSelectedLoadoutModuleActionMarkup(getDefenderTemplate(defenderSelectionFocusId), selectedModule)}
       <div class="defender-loadout-inventory-list" aria-label="Current run recovered modules">
@@ -1812,6 +1825,8 @@ function buildCurrentRunModuleInventoryMarkup(selectedDefenders = []) {
         const equippedDefenderId = getDefenderLoadoutText(module?.equippedToDefenderId, "");
         const equippedName = equippedDefenderId ? getDefenderLoadoutText(defenderNameById[equippedDefenderId], equippedDefenderId) : "";
         const isSelected = selectedModule?.instanceId === module?.instanceId;
+        const statusBadge = equippedName ? `EQUIPPED: ${equippedName}` : "UNEQUIPPED";
+        const statusHint = isSelected ? "Choose a target Defender" : equippedName ? `Equipped to ${equippedName}` : "Ready to install";
         return `
           <button
             class="defender-loadout-inventory-item ${module?.equippedToDefenderId ? "is-equipped" : "is-unequipped"} ${isSelected ? "is-selected" : ""}"
@@ -1821,11 +1836,14 @@ function buildCurrentRunModuleInventoryMarkup(selectedDefenders = []) {
           >
             <div>
               <span class="defender-loadout-inventory-name">${getDefenderLoadoutText(module?.name, "Recovered Module")}</span>
-              ${isSelected ? '<span class="defender-loadout-selected-badge">SELECTED</span>' : ""}
+              <span class="defender-loadout-inventory-badges">
+                ${isSelected ? '<span class="defender-loadout-selected-badge">SELECTED</span>' : ""}
+                <span class="defender-loadout-status-badge">${statusBadge}</span>
+              </span>
               <span class="defender-loadout-inventory-meta">${rarity} ${itemClass}</span>
             </div>
             <div class="defender-loadout-inventory-stat">${primaryStat.text}</div>
-            <div class="defender-loadout-inventory-status">${equippedName ? `Equipped: ${equippedName}` : "Unequipped"}${isSelected ? " — choose a Defender or use install action" : ""}</div>
+            <div class="defender-loadout-inventory-status">${statusHint}</div>
           </button>
         `;
       }).join("")}
