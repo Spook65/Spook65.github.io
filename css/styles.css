@@ -7666,39 +7666,44 @@ body {
 
 .defender-screen .defender-loadout-inventory-list {
   display: grid;
-  gap: 7px;
-  max-height: 178px;
+  gap: 10px;
+  max-height: 430px;
   overflow: auto;
-  padding-right: 2px;
+  padding: 2px 4px 2px 2px;
 }
 
 .defender-screen .defender-loadout-filter-tabs {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin: 8px 0;
+  margin: 10px 0;
 }
 
 .defender-screen .defender-loadout-filter-tab {
   appearance: none;
-  border: 1px solid rgba(244, 239, 227, 0.14);
+  border: 1px solid rgba(72, 214, 198, 0.22);
   border-radius: 0;
-  background: rgba(5, 7, 12, 0.46);
-  color: rgba(244, 239, 227, 0.58);
+  background:
+    linear-gradient(180deg, rgba(72, 214, 198, 0.045), transparent),
+    rgba(5, 7, 12, 0.72);
+  color: rgba(244, 239, 227, 0.72);
   cursor: pointer;
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-  font-size: 0.52rem;
+  font-size: 0.54rem;
   letter-spacing: 0.16em;
-  padding: 6px 8px;
+  padding: 7px 10px;
   text-transform: uppercase;
 }
 
 .defender-screen .defender-loadout-filter-tab:hover,
 .defender-screen .defender-loadout-filter-tab:focus-visible,
 .defender-screen .defender-loadout-filter-tab.is-active {
-  border-color: rgba(72, 214, 198, 0.52);
-  color: rgba(72, 214, 198, 0.9);
-  background: rgba(72, 214, 198, 0.065);
+  border-color: rgba(72, 214, 198, 0.72);
+  color: rgba(174, 255, 243, 0.96);
+  background:
+    linear-gradient(90deg, rgba(72, 214, 198, 0.2), transparent 72%),
+    rgba(7, 14, 20, 0.88);
+  box-shadow: 0 0 16px rgba(72, 214, 198, 0.11);
   outline: none;
 }
 
@@ -7760,49 +7765,76 @@ body {
 .defender-screen .module-loot-card {
   --module-accent: rgba(127, 183, 176, 0.84);
   --module-accent-soft: rgba(127, 183, 176, 0.11);
+  --rarity-frame: rgba(127, 183, 176, 0.62);
   appearance: none;
   position: relative;
   display: grid;
-  grid-template-columns: 38px minmax(0, 1fr);
-  gap: 10px;
+  grid-template-columns: 56px minmax(0, 1fr);
+  gap: 14px;
   width: 100%;
-  min-height: 112px;
-  padding: 10px;
-  border: 1px solid color-mix(in srgb, var(--module-accent) 34%, rgba(244, 239, 227, 0.08));
+  min-height: 144px;
+  padding: 14px 14px 13px;
+  border: 1px solid color-mix(in srgb, var(--rarity-frame) 72%, rgba(244, 239, 227, 0.12));
   border-radius: 0;
   background:
-    linear-gradient(135deg, var(--module-accent-soft), transparent 58%),
-    rgba(5, 7, 12, 0.64);
+    radial-gradient(circle at 22px 22px, color-mix(in srgb, var(--module-accent) 22%, transparent), transparent 42px),
+    linear-gradient(135deg, color-mix(in srgb, var(--module-accent-soft) 170%, transparent), transparent 62%),
+    linear-gradient(180deg, rgba(244, 239, 227, 0.045), transparent 42%),
+    rgba(8, 10, 16, 0.92);
   color: var(--menu-text);
   cursor: pointer;
   overflow: hidden;
   text-align: left;
   transition: border-color 150ms ease, box-shadow 150ms ease, background 150ms ease, transform 150ms ease;
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
+}
+
+.defender-screen .module-loot-card::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto auto;
+  width: 56px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--rarity-frame) 72%, transparent));
 }
 
 .defender-screen .module-loot-card::before {
   content: "";
   position: absolute;
   inset: 0 auto 0 0;
-  width: 3px;
-  background: var(--module-accent);
-  opacity: 0.78;
+  width: 5px;
+  background: linear-gradient(180deg, var(--module-accent), color-mix(in srgb, var(--module-accent) 24%, transparent));
+  opacity: 0.95;
 }
 
 .defender-screen .module-loot-card:hover,
 .defender-screen .module-loot-card:focus-visible,
 .defender-screen .module-loot-card.is-selected {
   transform: translateX(2px);
-  border-color: color-mix(in srgb, var(--module-accent) 72%, rgba(244, 239, 227, 0.18));
+  border-color: color-mix(in srgb, var(--rarity-frame) 88%, rgba(244, 239, 227, 0.22));
   background:
-    linear-gradient(135deg, color-mix(in srgb, var(--module-accent-soft) 130%, transparent), transparent 64%),
-    rgba(5, 7, 12, 0.78);
-  box-shadow: 0 0 22px color-mix(in srgb, var(--module-accent) 18%, transparent);
+    radial-gradient(circle at 22px 22px, color-mix(in srgb, var(--module-accent) 32%, transparent), transparent 48px),
+    linear-gradient(135deg, color-mix(in srgb, var(--module-accent-soft) 220%, transparent), transparent 66%),
+    linear-gradient(180deg, rgba(244, 239, 227, 0.065), transparent 44%),
+    rgba(10, 13, 20, 0.98);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--rarity-frame) 28%, transparent),
+    0 0 30px color-mix(in srgb, var(--module-accent) 28%, transparent);
   outline: none;
 }
 
+.defender-screen .module-loot-card.is-selected {
+  border-color: color-mix(in srgb, var(--rarity-frame) 90%, rgba(255, 255, 255, 0.26));
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--rarity-frame) 48%, transparent),
+    0 0 32px color-mix(in srgb, var(--module-accent) 34%, transparent),
+    inset 0 0 22px rgba(72, 214, 198, 0.045);
+}
+
 .defender-screen .module-loot-card.is-equipped {
-  box-shadow: inset 0 0 0 1px rgba(255, 206, 87, 0.08);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 206, 87, 0.14),
+    0 0 18px rgba(255, 206, 87, 0.055);
 }
 
 .defender-screen .module-loot-card.is-rarity-common {
@@ -7864,11 +7896,15 @@ body {
   align-self: start;
   display: grid;
   place-items: center;
-  width: 34px;
-  height: 34px;
-  border: 1px solid color-mix(in srgb, var(--module-accent) 58%, rgba(244, 239, 227, 0.12));
-  background: rgba(5, 7, 12, 0.72);
-  box-shadow: inset 0 0 16px var(--module-accent-soft);
+  width: 52px;
+  height: 52px;
+  border: 1px solid color-mix(in srgb, var(--module-accent) 76%, rgba(244, 239, 227, 0.2));
+  background:
+    radial-gradient(circle, color-mix(in srgb, var(--module-accent) 20%, transparent), transparent 62%),
+    rgba(3, 5, 10, 0.82);
+  box-shadow:
+    inset 0 0 22px color-mix(in srgb, var(--module-accent) 16%, transparent),
+    0 0 18px color-mix(in srgb, var(--module-accent) 14%, transparent);
 }
 
 .defender-screen .module-loot-sigil::before,
@@ -7883,32 +7919,32 @@ body {
 }
 
 .defender-screen .is-relic-lens .module-loot-sigil::before {
-  width: 13px;
-  height: 13px;
-  border: 1px solid var(--module-accent);
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--module-accent);
   border-radius: 50%;
 }
 
 .defender-screen .is-relic-lens .module-loot-sigil::after {
-  width: 4px;
-  height: 4px;
+  width: 7px;
+  height: 7px;
   background: var(--module-accent);
   border-radius: 50%;
 }
 
 .defender-screen .is-relic-relay .module-loot-sigil::before {
-  width: 21px;
-  height: 21px;
-  border: 1px solid var(--module-accent);
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--module-accent);
   border-radius: 50%;
 }
 
 .defender-screen .is-relic-relay .module-loot-sigil::after {
-  width: 8px;
-  height: 8px;
+  width: 11px;
+  height: 11px;
   background: var(--module-accent);
   border-radius: 50%;
-  transform: translate(8px, -4px);
+  transform: translate(12px, -7px);
 }
 
 .defender-screen .is-relic-shield .module-loot-sigil {
@@ -7916,23 +7952,23 @@ body {
 }
 
 .defender-screen .is-relic-shield .module-loot-sigil::before {
-  width: 14px;
-  height: 14px;
-  border: 1px solid var(--module-accent);
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--module-accent);
   transform: rotate(45deg);
 }
 
 .defender-screen .is-relic-plate .module-loot-sigil::before {
-  width: 18px;
-  height: 18px;
-  border: 1px solid var(--module-accent);
+  width: 28px;
+  height: 28px;
+  border: 2px solid var(--module-accent);
 }
 
 .defender-screen .is-relic-plate .module-loot-sigil::after {
-  width: 22px;
-  height: 1px;
+  width: 34px;
+  height: 2px;
   background: var(--module-accent);
-  box-shadow: 0 7px 0 var(--module-accent), 0 -7px 0 var(--module-accent);
+  box-shadow: 0 10px 0 var(--module-accent), 0 -10px 0 var(--module-accent);
 }
 
 .defender-screen .is-relic-disk .module-loot-sigil {
@@ -7940,37 +7976,37 @@ body {
 }
 
 .defender-screen .is-relic-disk .module-loot-sigil::before {
-  width: 20px;
-  height: 20px;
-  border: 1px solid var(--module-accent);
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--module-accent);
   border-radius: 50%;
 }
 
 .defender-screen .is-relic-disk .module-loot-sigil::after {
-  width: 6px;
-  height: 6px;
-  border: 1px solid var(--module-accent);
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--module-accent);
   border-radius: 50%;
 }
 
 .defender-screen .is-relic-web .module-loot-sigil::before {
-  width: 20px;
-  height: 20px;
-  border: 1px solid var(--module-accent);
+  width: 30px;
+  height: 30px;
+  border: 2px solid var(--module-accent);
   transform: rotate(45deg);
 }
 
 .defender-screen .is-relic-web .module-loot-sigil::after {
-  width: 24px;
-  height: 1px;
+  width: 36px;
+  height: 2px;
   background: var(--module-accent);
-  box-shadow: 0 0 0 0 var(--module-accent);
+  box-shadow: 0 0 0 0 var(--module-accent), 0 10px 0 color-mix(in srgb, var(--module-accent) 54%, transparent), 0 -10px 0 color-mix(in srgb, var(--module-accent) 54%, transparent);
   transform: rotate(45deg);
 }
 
 .defender-screen .module-loot-main {
   display: grid;
-  gap: 5px;
+  gap: 6px;
   min-width: 0;
 }
 
@@ -7985,13 +8021,26 @@ body {
   min-width: 0;
 }
 
+.defender-screen .module-loot-card .module-loot-name {
+  color: rgba(250, 247, 238, 0.98);
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  line-height: 1.15;
+  text-shadow: 0 0 16px color-mix(in srgb, var(--module-accent) 24%, transparent);
+}
+
 .defender-screen .module-loot-rarity {
-  border: 1px solid color-mix(in srgb, var(--rarity-frame, var(--module-accent)) 58%, transparent);
-  color: color-mix(in srgb, var(--rarity-frame, var(--module-accent)) 82%, rgba(244, 239, 227, 0.65));
+  border: 1px solid color-mix(in srgb, var(--rarity-frame, var(--module-accent)) 74%, transparent);
+  color: color-mix(in srgb, var(--rarity-frame, var(--module-accent)) 88%, rgba(255, 255, 255, 0.72));
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--rarity-frame, var(--module-accent)) 18%, transparent), transparent 80%),
+    rgba(5, 7, 12, 0.82);
   flex: 0 0 auto;
-  font-size: 0.46rem;
+  font-size: 0.48rem;
+  font-weight: 800;
   letter-spacing: 0.16em;
-  padding: 3px 5px;
+  padding: 4px 6px;
   text-transform: uppercase;
 }
 
@@ -8002,14 +8051,42 @@ body {
 }
 
 .defender-screen .module-loot-source {
-  color: color-mix(in srgb, var(--module-accent) 78%, rgba(244, 239, 227, 0.58));
-  font-size: 0.5rem;
+  display: inline-flex;
+  width: fit-content;
+  border-left: 2px solid var(--module-accent);
+  color: color-mix(in srgb, var(--module-accent) 82%, rgba(244, 239, 227, 0.7));
+  background: color-mix(in srgb, var(--module-accent) 8%, rgba(5, 7, 12, 0.38));
+  font-size: 0.54rem;
+  font-weight: 700;
   letter-spacing: 0.13em;
+  padding: 3px 7px;
   text-transform: uppercase;
 }
 
 .defender-screen .module-loot-badges {
   margin-top: 0;
+}
+
+.defender-screen .module-loot-card .module-loot-class {
+  color: rgba(244, 239, 227, 0.72);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+}
+
+.defender-screen .module-loot-card .module-loot-stat {
+  color: rgba(255, 210, 104, 0.98);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  line-height: 1.25;
+  text-shadow: 0 0 14px rgba(255, 206, 87, 0.12);
+}
+
+.defender-screen .module-loot-card .module-loot-status {
+  color: rgba(196, 255, 246, 0.76);
+  font-size: 0.54rem;
+  letter-spacing: 0.12em;
 }
 
 .defender-screen .defender-loadout-inventory-item.is-equipped {
@@ -8045,7 +8122,8 @@ body {
 }
 
 .defender-screen .defender-loadout-selected-badge,
-.defender-screen .defender-loadout-status-badge {
+.defender-screen .defender-loadout-status-badge,
+.defender-screen .defender-loadout-ready-badge {
   display: inline-flex;
   width: fit-content;
   border: 1px solid rgba(244, 239, 227, 0.14);
@@ -8059,15 +8137,34 @@ body {
 }
 
 .defender-screen .defender-loadout-selected-badge {
-  border-color: rgba(72, 214, 198, 0.42);
-  color: rgba(72, 214, 198, 0.9);
-  background: rgba(72, 214, 198, 0.07);
+  border-color: rgba(72, 214, 198, 0.7);
+  color: rgba(183, 255, 245, 0.98);
+  background: rgba(72, 214, 198, 0.14);
+  box-shadow: 0 0 14px rgba(72, 214, 198, 0.1);
 }
 
 .defender-screen .defender-loadout-inventory-item.is-equipped .defender-loadout-status-badge {
   border-color: rgba(255, 206, 87, 0.34);
   color: rgba(255, 206, 87, 0.82);
   background: rgba(255, 206, 87, 0.055);
+}
+
+.defender-screen .module-loot-card .defender-loadout-status-badge {
+  border-color: rgba(244, 239, 227, 0.24);
+  color: rgba(244, 239, 227, 0.82);
+  background: rgba(244, 239, 227, 0.055);
+}
+
+.defender-screen .module-loot-card.is-equipped .defender-loadout-status-badge {
+  border-color: rgba(255, 206, 87, 0.5);
+  color: rgba(255, 220, 132, 0.96);
+  background: rgba(255, 206, 87, 0.1);
+}
+
+.defender-screen .module-loot-card .defender-loadout-ready-badge {
+  border-color: rgba(72, 214, 198, 0.42);
+  color: rgba(174, 255, 243, 0.9);
+  background: rgba(72, 214, 198, 0.075);
 }
 
 .defender-screen .defender-loadout-inventory-meta,
