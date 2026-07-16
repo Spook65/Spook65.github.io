@@ -7672,6 +7672,48 @@ body {
   padding-right: 2px;
 }
 
+.defender-screen .defender-loadout-filter-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0;
+}
+
+.defender-screen .defender-loadout-filter-tab {
+  appearance: none;
+  border: 1px solid rgba(244, 239, 227, 0.14);
+  border-radius: 0;
+  background: rgba(5, 7, 12, 0.46);
+  color: rgba(244, 239, 227, 0.58);
+  cursor: pointer;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.52rem;
+  letter-spacing: 0.16em;
+  padding: 6px 8px;
+  text-transform: uppercase;
+}
+
+.defender-screen .defender-loadout-filter-tab:hover,
+.defender-screen .defender-loadout-filter-tab:focus-visible,
+.defender-screen .defender-loadout-filter-tab.is-active {
+  border-color: rgba(72, 214, 198, 0.52);
+  color: rgba(72, 214, 198, 0.9);
+  background: rgba(72, 214, 198, 0.065);
+  outline: none;
+}
+
+.defender-screen .defender-loadout-filter-note {
+  border: 1px solid rgba(255, 206, 87, 0.24);
+  background: rgba(255, 206, 87, 0.045);
+  color: rgba(255, 206, 87, 0.82);
+  font-size: 0.54rem;
+  letter-spacing: 0.12em;
+  line-height: 1.45;
+  margin: 8px 0;
+  padding: 8px 9px;
+  text-transform: uppercase;
+}
+
 .defender-screen .defender-loadout-install-button:hover,
 .defender-screen .defender-loadout-install-button:focus-visible {
   border-color: rgba(255, 206, 87, 0.82);
@@ -7713,6 +7755,261 @@ body {
   text-align: left;
   cursor: pointer;
   transition: border-color 150ms ease, box-shadow 150ms ease, background 150ms ease;
+}
+
+.defender-screen .module-loot-card {
+  --module-accent: rgba(127, 183, 176, 0.84);
+  --module-accent-soft: rgba(127, 183, 176, 0.11);
+  appearance: none;
+  position: relative;
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  gap: 10px;
+  width: 100%;
+  min-height: 112px;
+  padding: 10px;
+  border: 1px solid color-mix(in srgb, var(--module-accent) 34%, rgba(244, 239, 227, 0.08));
+  border-radius: 0;
+  background:
+    linear-gradient(135deg, var(--module-accent-soft), transparent 58%),
+    rgba(5, 7, 12, 0.64);
+  color: var(--menu-text);
+  cursor: pointer;
+  overflow: hidden;
+  text-align: left;
+  transition: border-color 150ms ease, box-shadow 150ms ease, background 150ms ease, transform 150ms ease;
+}
+
+.defender-screen .module-loot-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: var(--module-accent);
+  opacity: 0.78;
+}
+
+.defender-screen .module-loot-card:hover,
+.defender-screen .module-loot-card:focus-visible,
+.defender-screen .module-loot-card.is-selected {
+  transform: translateX(2px);
+  border-color: color-mix(in srgb, var(--module-accent) 72%, rgba(244, 239, 227, 0.18));
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--module-accent-soft) 130%, transparent), transparent 64%),
+    rgba(5, 7, 12, 0.78);
+  box-shadow: 0 0 22px color-mix(in srgb, var(--module-accent) 18%, transparent);
+  outline: none;
+}
+
+.defender-screen .module-loot-card.is-equipped {
+  box-shadow: inset 0 0 0 1px rgba(255, 206, 87, 0.08);
+}
+
+.defender-screen .module-loot-card.is-rarity-common {
+  --rarity-frame: rgba(127, 183, 176, 0.52);
+}
+
+.defender-screen .module-loot-card.is-rarity-uncommon {
+  --rarity-frame: rgba(61, 220, 177, 0.66);
+}
+
+.defender-screen .module-loot-card.is-rarity-rare {
+  --rarity-frame: rgba(97, 220, 255, 0.72);
+}
+
+.defender-screen .module-loot-card.is-rarity-epic {
+  --rarity-frame: rgba(199, 126, 255, 0.72);
+}
+
+.defender-screen .module-loot-card.is-rarity-legendary {
+  --rarity-frame: rgba(255, 174, 74, 0.78);
+}
+
+.defender-screen .module-loot-card {
+  border-color: color-mix(in srgb, var(--rarity-frame, var(--module-accent)) 54%, rgba(244, 239, 227, 0.08));
+}
+
+.defender-screen .module-loot-card.is-source-hermes-relay {
+  --module-accent: rgba(61, 220, 177, 0.9);
+  --module-accent-soft: rgba(61, 220, 177, 0.12);
+}
+
+.defender-screen .module-loot-card.is-source-oracle-ids {
+  --module-accent: rgba(97, 220, 255, 0.92);
+  --module-accent-soft: rgba(97, 220, 255, 0.13);
+}
+
+.defender-screen .module-loot-card.is-source-athena-firewall {
+  --module-accent: rgba(255, 206, 87, 0.86);
+  --module-accent-soft: rgba(255, 206, 87, 0.11);
+}
+
+.defender-screen .module-loot-card.is-source-asclepius-recovery {
+  --module-accent: rgba(103, 232, 168, 0.86);
+  --module-accent-soft: rgba(103, 232, 168, 0.11);
+}
+
+.defender-screen .module-loot-card.is-source-hephaestus-forge {
+  --module-accent: rgba(255, 128, 86, 0.86);
+  --module-accent-soft: rgba(255, 128, 86, 0.11);
+}
+
+.defender-screen .module-loot-card.is-source-arachne-web {
+  --module-accent: rgba(199, 126, 255, 0.86);
+  --module-accent-soft: rgba(199, 126, 255, 0.12);
+}
+
+.defender-screen .module-loot-sigil {
+  position: relative;
+  align-self: start;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid color-mix(in srgb, var(--module-accent) 58%, rgba(244, 239, 227, 0.12));
+  background: rgba(5, 7, 12, 0.72);
+  box-shadow: inset 0 0 16px var(--module-accent-soft);
+}
+
+.defender-screen .module-loot-sigil::before,
+.defender-screen .module-loot-sigil::after {
+  content: "";
+  position: absolute;
+  border-color: var(--module-accent);
+}
+
+.defender-screen .is-relic-lens .module-loot-sigil {
+  border-radius: 50%;
+}
+
+.defender-screen .is-relic-lens .module-loot-sigil::before {
+  width: 13px;
+  height: 13px;
+  border: 1px solid var(--module-accent);
+  border-radius: 50%;
+}
+
+.defender-screen .is-relic-lens .module-loot-sigil::after {
+  width: 4px;
+  height: 4px;
+  background: var(--module-accent);
+  border-radius: 50%;
+}
+
+.defender-screen .is-relic-relay .module-loot-sigil::before {
+  width: 21px;
+  height: 21px;
+  border: 1px solid var(--module-accent);
+  border-radius: 50%;
+}
+
+.defender-screen .is-relic-relay .module-loot-sigil::after {
+  width: 8px;
+  height: 8px;
+  background: var(--module-accent);
+  border-radius: 50%;
+  transform: translate(8px, -4px);
+}
+
+.defender-screen .is-relic-shield .module-loot-sigil {
+  clip-path: polygon(50% 0, 88% 20%, 78% 82%, 50% 100%, 22% 82%, 12% 20%);
+}
+
+.defender-screen .is-relic-shield .module-loot-sigil::before {
+  width: 14px;
+  height: 14px;
+  border: 1px solid var(--module-accent);
+  transform: rotate(45deg);
+}
+
+.defender-screen .is-relic-plate .module-loot-sigil::before {
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--module-accent);
+}
+
+.defender-screen .is-relic-plate .module-loot-sigil::after {
+  width: 22px;
+  height: 1px;
+  background: var(--module-accent);
+  box-shadow: 0 7px 0 var(--module-accent), 0 -7px 0 var(--module-accent);
+}
+
+.defender-screen .is-relic-disk .module-loot-sigil {
+  border-radius: 50%;
+}
+
+.defender-screen .is-relic-disk .module-loot-sigil::before {
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--module-accent);
+  border-radius: 50%;
+}
+
+.defender-screen .is-relic-disk .module-loot-sigil::after {
+  width: 6px;
+  height: 6px;
+  border: 1px solid var(--module-accent);
+  border-radius: 50%;
+}
+
+.defender-screen .is-relic-web .module-loot-sigil::before {
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--module-accent);
+  transform: rotate(45deg);
+}
+
+.defender-screen .is-relic-web .module-loot-sigil::after {
+  width: 24px;
+  height: 1px;
+  background: var(--module-accent);
+  box-shadow: 0 0 0 0 var(--module-accent);
+  transform: rotate(45deg);
+}
+
+.defender-screen .module-loot-main {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.defender-screen .module-loot-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.defender-screen .module-loot-name {
+  min-width: 0;
+}
+
+.defender-screen .module-loot-rarity {
+  border: 1px solid color-mix(in srgb, var(--rarity-frame, var(--module-accent)) 58%, transparent);
+  color: color-mix(in srgb, var(--rarity-frame, var(--module-accent)) 82%, rgba(244, 239, 227, 0.65));
+  flex: 0 0 auto;
+  font-size: 0.46rem;
+  letter-spacing: 0.16em;
+  padding: 3px 5px;
+  text-transform: uppercase;
+}
+
+.defender-screen .module-loot-class,
+.defender-screen .module-loot-source,
+.defender-screen .module-loot-status {
+  display: block;
+}
+
+.defender-screen .module-loot-source {
+  color: color-mix(in srgb, var(--module-accent) 78%, rgba(244, 239, 227, 0.58));
+  font-size: 0.5rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.defender-screen .module-loot-badges {
+  margin-top: 0;
 }
 
 .defender-screen .defender-loadout-inventory-item.is-equipped {

@@ -750,6 +750,7 @@ let defenderSelectionFocusId = null;
 let expeditionSelectedModuleInstanceId = null;
 let expeditionLoadoutActionMessage = "";
 let expeditionLoadoutActionTone = "";
+let expeditionModuleInventoryFilter = "all";
 let defenderLoadoutDelegationBound = false;
 
 function shouldLogLoadoutModuleDebug() {
@@ -1555,6 +1556,35 @@ function getLoadoutModuleRarityClass(module) {
   return `is-rarity-${getDefenderLoadoutText(module?.rarity, "common").toLowerCase()}`;
 }
 
+function getLoadoutModuleSourceClass(module) {
+  const sourceId = getDefenderLoadoutText(module?.sourceId, "hermes_relay")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+  return `is-source-${sourceId || "hermes-relay"}`;
+}
+
+function getLoadoutModuleRelicClass(module) {
+  const relicType = getDefenderLoadoutText(module?.relicType, "lens")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+  return `is-relic-${relicType || "lens"}`;
+}
+
+function getLoadoutModuleRelicLabel(module) {
+  const relicType = getDefenderLoadoutText(module?.relicType, "lens").toLowerCase();
+  const labels = {
+    disk: "Disk",
+    lens: "Lens",
+    plate: "Plate",
+    relay: "Relay",
+    shield: "Shield",
+    web: "Web"
+  };
+  return labels[relicType] || "Module";
+}
+
 function getLoadoutModulePrimaryStat(module) {
   const baseStat = typeof getModuleBaseStat === "function" ? getModuleBaseStat(module) : null;
   const legacyStats = module?.statBonuses && typeof module.statBonuses === "object" ? module.statBonuses : {};
@@ -1794,6 +1824,7 @@ function buildCurrentRunModuleInventoryMarkup(selectedDefenders = []) {
   const runModules = typeof getCurrentRunModules === "function"
     ? getCurrentRunModules(defenderSaveState?.currentRun)
     : [];
+  const isExpeditionInventory = screenState === "expedition-loadout";
   if (screenState === "expedition-loadout") {
     logLoadoutModuleDebug("[LOADOUT MODULE DEBUG] rendering modules", runModules.length);
   }
@@ -1815,42 +1846,110 @@ function buildCurrentRunModuleInventoryMarkup(selectedDefenders = []) {
     `;
   }
 
+  const activeFilter = ["all", "equipped", "unequipped"].includes(expeditionModuleInventoryFilter)
+    ? expeditionModuleInventoryFilter
+    : "all";
+  const visibleRunModules = isExpeditionInventory
+    ? runModules.filter((module) => {
+      if (activeFilter === "equipped") {
+        return Boolean(module?.equippedToDefenderId);
+      }
+      if (activeFilter === "unequipped") {
+        return !module?.equippedToDefenderId;
+      }
+      return true;
+    })
+    : runModules;
+  const isSelectedHidden = Boolean(selectedModule && isExpeditionInventory && !visibleRunModules.some((module) => module?.instanceId === selectedModule.instanceId));
+  const filterMarkup = isExpeditionInventory ? `
+    <div class="defender-loadout-filter-tabs" aria-label="Current run module filters">
+      ${[
+        { id: "all", label: "ALL" },
+        { id: "equipped", label: "EQUIPPED" },
+        { id: "unequipped", label: "UNEQUIPPED" }
+      ].map((filter) => `
+        <button
+          class="defender-loadout-filter-tab ${activeFilter === filter.id ? "is-active" : ""}"
+          type="button"
+          data-module-filter="${filter.id}"
+          aria-pressed="${activeFilter === filter.id ? "true" : "false"}"
+        >${filter.label}</button>
+      `).join("")}
+    </div>
+  ` : "";
+  const hiddenSelectionMarkup = isSelectedHidden
+    ? '<div class="defender-loadout-filter-note">Selected module is hidden by this filter. Switch to ALL to preview it again.</div>'
+    : "";
+
   return `
     <div class="defender-loadout-inventory">
       <div class="defender-loadout-panel-label">CURRENT RUN MODULES</div>
       <div class="defender-loadout-inventory-help">${selectedModule ? "Click a Defender to preview it. Use the action below to confirm equipment changes." : "Select a module to preview install options."}</div>
+      ${filterMarkup}
+      ${hiddenSelectionMarkup}
       ${expeditionLoadoutActionMessage ? `<div class="defender-loadout-action-message is-${getDefenderLoadoutText(expeditionLoadoutActionTone, "notice")}">${expeditionLoadoutActionMessage}</div>` : ""}
-      ${buildSelectedLoadoutModuleActionMarkup(getDefenderTemplate(defenderSelectionFocusId), selectedModule)}
+      ${isSelectedHidden ? "" : buildSelectedLoadoutModuleActionMarkup(getDefenderTemplate(defenderSelectionFocusId), selectedModule)}
       <div class="defender-loadout-inventory-list" aria-label="Current run recovered modules">
-        ${runModules.map((module) => {
+        ${visibleRunModules.length ? visibleRunModules.map((module) => {
         const primaryStat = getLoadoutModulePrimaryStat(module);
         const rarity = getDefenderLoadoutText(module?.rarity, "common").toUpperCase();
         const itemClass = getDefenderLoadoutText(module?.itemClass, "Recovered Module");
+        const sourceName = getDefenderLoadoutText(module?.sourceName, "Unknown Source");
         const equippedDefenderId = getDefenderLoadoutText(module?.equippedToDefenderId, "");
         const equippedName = equippedDefenderId ? getDefenderLoadoutText(defenderNameById[equippedDefenderId], equippedDefenderId) : "";
         const isSelected = selectedModule?.instanceId === module?.instanceId;
         const statusBadge = equippedName ? `EQUIPPED: ${equippedName}` : "UNEQUIPPED";
         const statusHint = isSelected ? "Preview focused Defender, then confirm below" : equippedName ? `Equipped to ${equippedName}` : "Ready to install";
+        if (!isExpeditionInventory) {
+          return `
+            <button
+              class="defender-loadout-inventory-item ${module?.equippedToDefenderId ? "is-equipped" : "is-unequipped"} ${isSelected ? "is-selected" : ""}"
+              type="button"
+              data-module-instance-id="${getDefenderLoadoutText(module?.instanceId, "")}"
+              aria-pressed="${isSelected ? "true" : "false"}"
+            >
+              <div>
+                <span class="defender-loadout-inventory-name">${getDefenderLoadoutText(module?.name, "Recovered Module")}</span>
+                <span class="defender-loadout-inventory-badges">
+                  ${isSelected ? '<span class="defender-loadout-selected-badge">SELECTED</span>' : ""}
+                  <span class="defender-loadout-status-badge">${statusBadge}</span>
+                </span>
+                <span class="defender-loadout-inventory-meta">${rarity} ${itemClass}</span>
+              </div>
+              <div class="defender-loadout-inventory-stat">${primaryStat.text}</div>
+              <div class="defender-loadout-inventory-status">${statusHint}</div>
+            </button>
+          `;
+        }
+        const cardClass = isExpeditionInventory
+          ? `module-loot-card ${getLoadoutModuleRarityClass(module)} ${getLoadoutModuleSourceClass(module)} ${getLoadoutModuleRelicClass(module)}`
+          : "defender-loadout-inventory-item";
         return `
           <button
-            class="defender-loadout-inventory-item ${module?.equippedToDefenderId ? "is-equipped" : "is-unequipped"} ${isSelected ? "is-selected" : ""}"
+            class="${cardClass} ${module?.equippedToDefenderId ? "is-equipped" : "is-unequipped"} ${isSelected ? "is-selected" : ""}"
             type="button"
             data-module-instance-id="${getDefenderLoadoutText(module?.instanceId, "")}"
             aria-pressed="${isSelected ? "true" : "false"}"
           >
-            <div>
-              <span class="defender-loadout-inventory-name">${getDefenderLoadoutText(module?.name, "Recovered Module")}</span>
-              <span class="defender-loadout-inventory-badges">
+            <span class="module-loot-sigil" aria-hidden="true" data-relic-label="${getLoadoutModuleRelicLabel(module)}"></span>
+            <div class="module-loot-main">
+              <div class="module-loot-head">
+                <span class="defender-loadout-inventory-name module-loot-name">${getDefenderLoadoutText(module?.name, "Recovered Module")}</span>
+                <span class="module-loot-rarity">${rarity}</span>
+              </div>
+              <span class="defender-loadout-inventory-meta module-loot-class">${itemClass}</span>
+              <div class="defender-loadout-inventory-stat module-loot-stat">${primaryStat.text}</div>
+              <div class="module-loot-source">SOURCE: ${sourceName}</div>
+              <span class="defender-loadout-inventory-badges module-loot-badges">
                 ${isSelected ? '<span class="defender-loadout-selected-badge">SELECTED</span>' : ""}
                 <span class="defender-loadout-status-badge">${statusBadge}</span>
+                ${!equippedName ? '<span class="defender-loadout-ready-badge">READY</span>' : ""}
               </span>
-              <span class="defender-loadout-inventory-meta">${rarity} ${itemClass}</span>
+              <div class="defender-loadout-inventory-status module-loot-status">${statusHint}</div>
             </div>
-            <div class="defender-loadout-inventory-stat">${primaryStat.text}</div>
-            <div class="defender-loadout-inventory-status">${statusHint}</div>
           </button>
         `;
-      }).join("")}
+      }).join("") : '<div class="defender-loadout-empty">No modules match this filter.</div>'}
       </div>
     </div>
   `;
@@ -1996,6 +2095,15 @@ function handleDefenderLoadoutDelegatedClick(event) {
     event.stopPropagation();
     selectExpeditionLoadoutModule(moduleButton.getAttribute("data-module-instance-id"));
     return;
+  }
+
+  const filterButton = event.target.closest?.("[data-module-filter]");
+  if (filterButton && defenderScreenContent.contains(filterButton)) {
+    event.preventDefault();
+    event.stopPropagation();
+    const nextFilter = filterButton.getAttribute("data-module-filter");
+    expeditionModuleInventoryFilter = ["all", "equipped", "unequipped"].includes(nextFilter) ? nextFilter : "all";
+    renderExpeditionLoadoutScreen();
   }
 }
 
