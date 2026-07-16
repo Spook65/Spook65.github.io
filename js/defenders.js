@@ -1409,12 +1409,12 @@ function getLoadoutModuleTargetLabel(defender, selectedModule = getExpeditionSel
 
   const equippedModule = getLoadoutEquippedModule(defender.id);
   if (equippedModule?.instanceId === selectedModule.instanceId) {
-    return "CURRENTLY EQUIPPED";
+    return "CURRENT HOLDER";
   }
 
   return equippedModule
-    ? `REPLACE ${getDefenderLoadoutText(equippedModule.name, "MODULE")}`
-    : `INSTALL TO ${getDefenderLoadoutText(defender.name, defender.id)}`;
+    ? `WOULD REPLACE ${getDefenderLoadoutText(equippedModule.name, "MODULE")}`
+    : "WOULD INSTALL";
 }
 
 function getLoadoutModuleActionLabel(defender, selectedModule = getExpeditionSelectedModule()) {
@@ -1429,7 +1429,7 @@ function getLoadoutModuleActionLabel(defender, selectedModule = getExpeditionSel
   }
 
   return equippedModule
-    ? `REPLACE ${getDefenderLoadoutText(equippedModule.name, "MODULE")}`
+    ? `REPLACE ${getDefenderLoadoutText(equippedModule.name, "MODULE")} ON ${defenderName}`
     : `INSTALL TO ${defenderName}`;
 }
 
@@ -1506,11 +1506,16 @@ function buildSelectedLoadoutModuleActionMarkup(focusedDefender, selectedModule 
   const targetDefenderName = getDefenderLoadoutText(targetDefender?.name, "Select Defender");
   const targetModuleName = targetModule ? getDefenderLoadoutText(targetModule.name, "Recovered Module") : "";
   const equippedStatus = equippedDefender ? `Equipped to ${getDefenderLoadoutText(equippedDefender.name, equippedDefenderId)}` : "Unequipped";
+  const moveText = equippedDefender && equippedDefender.id !== targetDefender?.id
+    ? ` will move from ${getDefenderLoadoutText(equippedDefender.name, equippedDefenderId)} and`
+    : "";
   const resultText = alreadyEquipped
     ? `${selectedModuleName} is already equipped to ${targetDefenderName}.`
     : targetModule
-      ? `${selectedModuleName} will replace ${targetModuleName} on ${targetDefenderName}.`
-      : `${selectedModuleName} will be installed on ${targetDefenderName}.`;
+      ? `${selectedModuleName}${moveText} replace ${targetModuleName} on ${targetDefenderName}.`
+      : equippedDefender && equippedDefender.id !== targetDefender?.id
+        ? `${selectedModuleName} will move from ${getDefenderLoadoutText(equippedDefender.name, equippedDefenderId)} and be installed on ${targetDefenderName}.`
+        : `${selectedModuleName} will be installed on ${targetDefenderName}.`;
   logLoadoutModuleDebug("[LOADOUT MODULE DEBUG] selected action panel", {
     selectedModuleInstanceId: selectedModule.instanceId || null,
     inspectedDefenderId: targetDefender?.id || null,
@@ -1527,7 +1532,7 @@ function buildSelectedLoadoutModuleActionMarkup(focusedDefender, selectedModule 
           <span class="defender-loadout-install-meta">STATUS: ${equippedStatus}</span>
         </div>
         <div>
-          <span class="defender-loadout-install-label">TARGET DEFENDER</span>
+          <span class="defender-loadout-install-label">FOCUSED DEFENDER</span>
           <span class="defender-loadout-install-name">${targetDefenderName}</span>
           <span class="defender-loadout-install-meta">CURRENT MODULE: ${targetModule ? getDefenderLoadoutText(targetModule.name, "Recovered Module") : "EMPTY"}</span>
         </div>
@@ -1679,7 +1684,6 @@ function buildDefenderRosterTileMarkup(defender, isSelected, isLocked, isFocused
       class="defender-roster-tile ${isSelected ? "is-selected" : ""} ${isLocked ? "is-locked" : ""} ${isFocused ? "is-focused" : ""} ${targetLabel ? "is-module-target" : ""} ${isActiveInstallTarget ? "is-active-install-target" : ""}"
       type="button"
       data-defender-id="${defender.id}"
-      ${selectedModule ? `data-module-target-defender-id="${defender.id}"` : ""}
       aria-pressed="${isSelected ? "true" : "false"}"
       aria-current="${isFocused ? "true" : "false"}"
       style="--defender-accent: ${cardAccent}; --defender-accent-soft: ${cardAccent}24;"
@@ -1814,7 +1818,7 @@ function buildCurrentRunModuleInventoryMarkup(selectedDefenders = []) {
   return `
     <div class="defender-loadout-inventory">
       <div class="defender-loadout-panel-label">CURRENT RUN MODULES</div>
-      <div class="defender-loadout-inventory-help">${selectedModule ? "Choose a Defender target, or use the action below." : "Select a module to preview install options."}</div>
+      <div class="defender-loadout-inventory-help">${selectedModule ? "Click a Defender to preview it. Use the action below to confirm equipment changes." : "Select a module to preview install options."}</div>
       ${expeditionLoadoutActionMessage ? `<div class="defender-loadout-action-message is-${getDefenderLoadoutText(expeditionLoadoutActionTone, "notice")}">${expeditionLoadoutActionMessage}</div>` : ""}
       ${buildSelectedLoadoutModuleActionMarkup(getDefenderTemplate(defenderSelectionFocusId), selectedModule)}
       <div class="defender-loadout-inventory-list" aria-label="Current run recovered modules">
@@ -1826,7 +1830,7 @@ function buildCurrentRunModuleInventoryMarkup(selectedDefenders = []) {
         const equippedName = equippedDefenderId ? getDefenderLoadoutText(defenderNameById[equippedDefenderId], equippedDefenderId) : "";
         const isSelected = selectedModule?.instanceId === module?.instanceId;
         const statusBadge = equippedName ? `EQUIPPED: ${equippedName}` : "UNEQUIPPED";
-        const statusHint = isSelected ? "Choose a target Defender" : equippedName ? `Equipped to ${equippedName}` : "Ready to install";
+        const statusHint = isSelected ? "Preview focused Defender, then confirm below" : equippedName ? `Equipped to ${equippedName}` : "Ready to install";
         return `
           <button
             class="defender-loadout-inventory-item ${module?.equippedToDefenderId ? "is-equipped" : "is-unequipped"} ${isSelected ? "is-selected" : ""}"
@@ -1992,21 +1996,6 @@ function handleDefenderLoadoutDelegatedClick(event) {
     event.stopPropagation();
     selectExpeditionLoadoutModule(moduleButton.getAttribute("data-module-instance-id"));
     return;
-  }
-
-  const targetButton = event.target.closest?.("[data-module-target-defender-id]");
-  if (targetButton && defenderScreenContent.contains(targetButton) && getExpeditionSelectedModule()) {
-    event.preventDefault();
-    event.stopPropagation();
-    const defenderId = targetButton.getAttribute("data-module-target-defender-id");
-    const selectedModule = getExpeditionSelectedModule();
-    logLoadoutModuleDebug("[LOADOUT MODULE] install action clicked", {
-      moduleName: selectedModule?.name || "Recovered Module",
-      targetDefenderId: defenderId || ""
-    });
-    if (defenderId) {
-      equipSelectedLoadoutModuleToDefender(defenderId);
-    }
   }
 }
 
@@ -2209,12 +2198,6 @@ function bindDefenderSelectionControls() {
     });
 
     tile.addEventListener("click", () => {
-      if (screenState === "expedition-loadout" && getExpeditionSelectedModule()) {
-        // Expedition module installs are handled by the stable container delegate
-        // so a tile re-render cannot swallow the target click before equip runs.
-        return;
-      }
-
       setDefenderSelectionFocus(defenderId);
     });
   });
