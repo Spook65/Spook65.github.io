@@ -1882,14 +1882,14 @@ function buildCurrentRunModuleInventoryMarkup(selectedDefenders = []) {
     : "";
 
   return `
-    <div class="defender-loadout-inventory">
+    <div class="defender-loadout-inventory ${isExpeditionInventory ? "is-loot-card-inventory" : ""}" data-inventory-version="${isExpeditionInventory ? "loot-cards-v2" : "compact-list"}">
       <div class="defender-loadout-panel-label">CURRENT RUN MODULES</div>
       <div class="defender-loadout-inventory-help">${selectedModule ? "Click a Defender to preview it. Use the action below to confirm equipment changes." : "Select a module to preview install options."}</div>
       ${filterMarkup}
       ${hiddenSelectionMarkup}
       ${expeditionLoadoutActionMessage ? `<div class="defender-loadout-action-message is-${getDefenderLoadoutText(expeditionLoadoutActionTone, "notice")}">${expeditionLoadoutActionMessage}</div>` : ""}
       ${isSelectedHidden ? "" : buildSelectedLoadoutModuleActionMarkup(getDefenderTemplate(defenderSelectionFocusId), selectedModule)}
-      <div class="defender-loadout-inventory-list" aria-label="Current run recovered modules">
+      <div class="defender-loadout-inventory-list ${isExpeditionInventory ? "is-loot-card-list" : ""}" aria-label="Current run recovered modules">
         ${visibleRunModules.length ? visibleRunModules.map((module) => {
         const primaryStat = getLoadoutModulePrimaryStat(module);
         const rarity = getDefenderLoadoutText(module?.rarity, "common").toUpperCase();
@@ -1932,8 +1932,8 @@ function buildCurrentRunModuleInventoryMarkup(selectedDefenders = []) {
             aria-pressed="${isSelected ? "true" : "false"}"
           >
             <span class="module-loot-sigil" aria-hidden="true" data-relic-label="${getLoadoutModuleRelicLabel(module)}"></span>
-            <div class="module-loot-main">
-              <div class="module-loot-head">
+            <div class="module-loot-body">
+              <div class="module-loot-topline">
                 <span class="defender-loadout-inventory-name module-loot-name">${getDefenderLoadoutText(module?.name, "Recovered Module")}</span>
                 <span class="module-loot-rarity">${rarity}</span>
               </div>

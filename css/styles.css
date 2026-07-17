@@ -7672,6 +7672,16 @@ body {
   padding: 2px 4px 2px 2px;
 }
 
+.defender-screen .is-loot-card-inventory {
+  --loot-card-bg: rgba(8, 10, 16, 0.96);
+}
+
+.defender-screen .is-loot-card-list {
+  gap: 12px;
+  max-height: 520px;
+  padding: 4px 6px 4px 2px;
+}
+
 .defender-screen .defender-loadout-filter-tabs {
   display: flex;
   flex-wrap: wrap;
@@ -7762,7 +7772,8 @@ body {
   transition: border-color 150ms ease, box-shadow 150ms ease, background 150ms ease;
 }
 
-.defender-screen .module-loot-card {
+.defender-screen .module-loot-card,
+.defender-screen .defender-loadout-shell.is-expedition-access .defender-loadout-inventory-list > .defender-loadout-inventory-item {
   --module-accent: rgba(127, 183, 176, 0.84);
   --module-accent-soft: rgba(127, 183, 176, 0.11);
   --rarity-frame: rgba(127, 183, 176, 0.62);
@@ -7772,8 +7783,8 @@ body {
   grid-template-columns: 56px minmax(0, 1fr);
   gap: 14px;
   width: 100%;
-  min-height: 144px;
-  padding: 14px 14px 13px;
+  min-height: 124px;
+  padding: 14px 14px 13px 16px;
   border: 1px solid color-mix(in srgb, var(--rarity-frame) 72%, rgba(244, 239, 227, 0.12));
   border-radius: 0;
   background:
@@ -7789,7 +7800,8 @@ body {
   clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
 }
 
-.defender-screen .module-loot-card::after {
+.defender-screen .module-loot-card::after,
+.defender-screen .defender-loadout-shell.is-expedition-access .defender-loadout-inventory-list > .defender-loadout-inventory-item::after {
   content: "";
   position: absolute;
   inset: 0 0 auto auto;
@@ -7798,7 +7810,8 @@ body {
   background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--rarity-frame) 72%, transparent));
 }
 
-.defender-screen .module-loot-card::before {
+.defender-screen .module-loot-card::before,
+.defender-screen .defender-loadout-shell.is-expedition-access .defender-loadout-inventory-list > .defender-loadout-inventory-item::before {
   content: "";
   position: absolute;
   inset: 0 auto 0 0;
@@ -7809,7 +7822,10 @@ body {
 
 .defender-screen .module-loot-card:hover,
 .defender-screen .module-loot-card:focus-visible,
-.defender-screen .module-loot-card.is-selected {
+.defender-screen .module-loot-card.is-selected,
+.defender-screen .defender-loadout-shell.is-expedition-access .defender-loadout-inventory-list > .defender-loadout-inventory-item:hover,
+.defender-screen .defender-loadout-shell.is-expedition-access .defender-loadout-inventory-list > .defender-loadout-inventory-item:focus-visible,
+.defender-screen .defender-loadout-shell.is-expedition-access .defender-loadout-inventory-list > .defender-loadout-inventory-item.is-selected {
   transform: translateX(2px);
   border-color: color-mix(in srgb, var(--rarity-frame) 88%, rgba(244, 239, 227, 0.22));
   background:
@@ -7823,7 +7839,8 @@ body {
   outline: none;
 }
 
-.defender-screen .module-loot-card.is-selected {
+.defender-screen .module-loot-card.is-selected,
+.defender-screen .defender-loadout-shell.is-expedition-access .defender-loadout-inventory-list > .defender-loadout-inventory-item.is-selected {
   border-color: color-mix(in srgb, var(--rarity-frame) 90%, rgba(255, 255, 255, 0.26));
   box-shadow:
     0 0 0 1px color-mix(in srgb, var(--rarity-frame) 48%, transparent),
@@ -7831,7 +7848,8 @@ body {
     inset 0 0 22px rgba(72, 214, 198, 0.045);
 }
 
-.defender-screen .module-loot-card.is-equipped {
+.defender-screen .module-loot-card.is-equipped,
+.defender-screen .defender-loadout-shell.is-expedition-access .defender-loadout-inventory-list > .defender-loadout-inventory-item.is-equipped {
   box-shadow:
     inset 0 0 0 1px rgba(255, 206, 87, 0.14),
     0 0 18px rgba(255, 206, 87, 0.055);
@@ -8004,12 +8022,14 @@ body {
   transform: rotate(45deg);
 }
 
+.defender-screen .module-loot-body,
 .defender-screen .module-loot-main {
   display: grid;
   gap: 6px;
   min-width: 0;
 }
 
+.defender-screen .module-loot-topline,
 .defender-screen .module-loot-head {
   display: flex;
   align-items: start;
@@ -8021,7 +8041,8 @@ body {
   min-width: 0;
 }
 
-.defender-screen .module-loot-card .module-loot-name {
+.defender-screen .module-loot-card .module-loot-name,
+.defender-screen .defender-loadout-shell.is-expedition-access .defender-loadout-inventory-list > .defender-loadout-inventory-item .defender-loadout-inventory-name {
   color: rgba(250, 247, 238, 0.98);
   font-size: 0.8rem;
   font-weight: 800;
@@ -8067,14 +8088,16 @@ body {
   margin-top: 0;
 }
 
-.defender-screen .module-loot-card .module-loot-class {
+.defender-screen .module-loot-card .module-loot-class,
+.defender-screen .defender-loadout-shell.is-expedition-access .defender-loadout-inventory-list > .defender-loadout-inventory-item .defender-loadout-inventory-meta {
   color: rgba(244, 239, 227, 0.72);
   font-size: 0.58rem;
   font-weight: 700;
   letter-spacing: 0.13em;
 }
 
-.defender-screen .module-loot-card .module-loot-stat {
+.defender-screen .module-loot-card .module-loot-stat,
+.defender-screen .defender-loadout-shell.is-expedition-access .defender-loadout-inventory-list > .defender-loadout-inventory-item .defender-loadout-inventory-stat {
   color: rgba(255, 210, 104, 0.98);
   font-size: 0.68rem;
   font-weight: 800;
@@ -8083,7 +8106,8 @@ body {
   text-shadow: 0 0 14px rgba(255, 206, 87, 0.12);
 }
 
-.defender-screen .module-loot-card .module-loot-status {
+.defender-screen .module-loot-card .module-loot-status,
+.defender-screen .defender-loadout-shell.is-expedition-access .defender-loadout-inventory-list > .defender-loadout-inventory-item .defender-loadout-inventory-status {
   color: rgba(196, 255, 246, 0.76);
   font-size: 0.54rem;
   letter-spacing: 0.12em;
@@ -8165,6 +8189,41 @@ body {
   border-color: rgba(72, 214, 198, 0.42);
   color: rgba(174, 255, 243, 0.9);
   background: rgba(72, 214, 198, 0.075);
+}
+
+.defender-screen .defender-loadout-shell.is-expedition-access .defender-loadout-inventory-list > .defender-loadout-inventory-item:not(.module-loot-card) {
+  display: block;
+  min-height: 124px;
+  padding: 15px 14px 14px 84px;
+  box-shadow:
+    inset 5px 0 0 var(--module-accent),
+    0 0 0 1px rgba(127, 183, 176, 0.08);
+}
+
+.defender-screen .defender-loadout-shell.is-expedition-access .defender-loadout-inventory-list > .defender-loadout-inventory-item:not(.module-loot-card)::before {
+  inset: 16px auto auto 18px;
+  width: 48px;
+  height: 48px;
+  border: 1px solid rgba(72, 214, 198, 0.76);
+  background:
+    radial-gradient(circle, rgba(72, 214, 198, 0.24), transparent 62%),
+    linear-gradient(135deg, rgba(72, 214, 198, 0.13), transparent),
+    rgba(3, 5, 10, 0.88);
+  box-shadow:
+    inset 0 0 20px rgba(72, 214, 198, 0.13),
+    0 0 18px rgba(72, 214, 198, 0.14);
+  opacity: 1;
+}
+
+.defender-screen .defender-loadout-shell.is-expedition-access .defender-loadout-inventory-list > .defender-loadout-inventory-item:not(.module-loot-card)::after {
+  inset: 28px auto auto 30px;
+  width: 24px;
+  height: 24px;
+  border: 2px solid rgba(174, 255, 243, 0.86);
+  background:
+    radial-gradient(circle, rgba(174, 255, 243, 0.9) 0 3px, transparent 4px),
+    transparent;
+  transform: rotate(45deg);
 }
 
 .defender-screen .defender-loadout-inventory-meta,
