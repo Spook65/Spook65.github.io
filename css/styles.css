@@ -7102,6 +7102,49 @@ body {
   gap: 12px;
 }
 
+.defender-screen .defender-loadout-shell.is-expedition-access {
+  height: calc(100dvh - 32px);
+  min-height: 0;
+  overflow: hidden;
+}
+
+.defender-screen .defender-loadout-shell.is-expedition-access .defender-header {
+  position: sticky;
+  top: 0;
+  z-index: 12;
+  align-items: center;
+  padding: 6px 0 10px;
+  background:
+    linear-gradient(180deg, rgba(4, 5, 10, 0.98), rgba(4, 5, 10, 0.86) 72%, transparent);
+}
+
+.defender-screen .defender-loadout-shell.is-expedition-access #defender-screen-back {
+  flex: 0 0 auto;
+  box-shadow: 0 0 24px rgba(72, 214, 198, 0.12);
+}
+
+.defender-screen .defender-loadout-shell.is-expedition-access .briefing-title {
+  font-size: clamp(1.35rem, 2.45vw, 1.95rem);
+}
+
+.defender-screen .defender-loadout-shell.is-expedition-access .briefing-copy {
+  max-width: 840px;
+  line-height: 1.45;
+}
+
+.defender-screen .defender-loadout-shell.is-expedition-access .defender-header-panel {
+  padding: 9px 12px;
+}
+
+.defender-screen .defender-loadout-shell.is-expedition-access .defender-rule {
+  flex: 0 0 auto;
+}
+
+.defender-screen .defender-loadout-shell.is-expedition-access .defender-status-row {
+  flex: 0 0 auto;
+  padding: 8px 11px;
+}
+
 .defender-screen .defender-header-panel {
   max-width: 360px;
   padding: 12px 14px;
@@ -7138,6 +7181,11 @@ body {
   flex: 1;
 }
 
+.defender-screen .defender-loadout-shell.is-expedition-access .defender-loadout-grid {
+  height: 100%;
+  overflow: hidden;
+}
+
 .defender-screen .defender-roster-panel,
 .defender-screen .defender-focus-panel,
 .defender-screen .defender-loadout-panel,
@@ -7159,12 +7207,23 @@ body {
   padding: 14px;
 }
 
+.defender-screen .defender-loadout-shell.is-expedition-access .defender-roster-panel,
+.defender-screen .defender-loadout-shell.is-expedition-access .defender-focus-panel,
+.defender-screen .defender-loadout-shell.is-expedition-access .defender-loadout-panel {
+  max-height: 100%;
+  overflow: hidden;
+}
+
 .defender-screen .defender-roster-grid {
   display: grid;
   gap: 10px;
   align-content: start;
   overflow: auto;
   padding-right: 2px;
+}
+
+.defender-screen .defender-loadout-shell.is-expedition-access .defender-roster-grid {
+  min-height: 0;
 }
 
 .defender-screen .defender-roster-tile {
@@ -7292,6 +7351,7 @@ body {
   gap: 14px;
   min-width: 0;
   min-height: 0;
+  overflow: hidden;
 }
 
 .defender-screen .defender-focus-panel,
@@ -7301,6 +7361,14 @@ body {
   gap: 12px;
   min-width: 0;
   padding: 14px;
+}
+
+.defender-screen .defender-loadout-shell.is-expedition-access .defender-focus-panel,
+.defender-screen .defender-loadout-shell.is-expedition-access .defender-loadout-panel {
+  align-content: stretch;
+  gap: 10px;
+  overflow: auto;
+  padding: 12px;
 }
 
 .defender-screen .defender-hero-card {
@@ -7317,11 +7385,29 @@ body {
     rgba(5, 7, 12, 0.72);
 }
 
+.defender-screen .defender-loadout-shell.is-expedition-access .defender-hero-card {
+  min-height: 250px;
+  padding: 12px;
+}
+
 .defender-screen .defender-hero-stage {
   position: relative;
   min-height: 190px;
   display: grid;
   place-items: center;
+}
+
+.defender-screen .defender-loadout-shell.is-expedition-access .defender-hero-stage {
+  min-height: 128px;
+}
+
+.defender-screen .defender-loadout-shell.is-expedition-access .defender-hero-orbit {
+  width: min(170px, 34vw);
+}
+
+.defender-screen .defender-loadout-shell.is-expedition-access .defender-hero-emblem {
+  width: 96px;
+  font-size: 1.65rem;
 }
 
 .defender-screen .defender-hero-watermark {
@@ -7464,12 +7550,20 @@ body {
   gap: 8px;
 }
 
+.defender-screen .defender-loadout-shell.is-expedition-access .defender-loadout-moves {
+  gap: 6px;
+}
+
 .defender-screen .defender-loadout-move {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 12px;
   align-items: center;
   padding: 10px 12px;
+}
+
+.defender-screen .defender-loadout-shell.is-expedition-access .defender-loadout-move {
+  padding: 8px 10px;
 }
 
 .defender-screen .defender-loadout-move-name {
@@ -7494,6 +7588,21 @@ body {
   display: grid;
   gap: 8px;
   padding: 12px;
+}
+
+.defender-screen .defender-loadout-shell.is-expedition-access .defender-loadout-module-card,
+.defender-screen .defender-loadout-shell.is-expedition-access .defender-loadout-stats,
+.defender-screen .defender-loadout-shell.is-expedition-access .defender-loadout-gear {
+  padding: 10px;
+}
+
+.defender-screen .defender-loadout-shell.is-expedition-access .defender-loadout-inventory.is-loot-card-inventory {
+  display: grid;
+  grid-template-rows: auto auto auto auto auto minmax(0, 1fr);
+  min-height: 320px;
+  max-height: min(60vh, 620px);
+  overflow: hidden;
+  padding: 10px;
 }
 
 .defender-screen .defender-loadout-module-card {
@@ -7603,6 +7712,16 @@ body {
   box-shadow: 0 0 28px rgba(255, 206, 87, 0.08);
 }
 
+.defender-screen .defender-loadout-shell.is-expedition-access .defender-loadout-install-preview {
+  top: 0;
+  margin: 6px 0 8px;
+  padding: 10px;
+}
+
+.defender-screen .defender-loadout-shell.is-expedition-access .defender-loadout-install-result {
+  padding: 7px 9px;
+}
+
 .defender-screen .defender-loadout-install-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -7678,7 +7797,8 @@ body {
 
 .defender-screen .is-loot-card-list {
   gap: 12px;
-  max-height: 520px;
+  max-height: none;
+  min-height: 0;
   padding: 4px 6px 4px 2px;
 }
 
@@ -8347,6 +8467,36 @@ body {
 }
 
 @media (max-width: 1180px) {
+  .defender-screen .defender-loadout-shell.is-expedition-access {
+    height: auto;
+    min-height: 100%;
+    overflow: visible;
+  }
+
+  .defender-screen .defender-loadout-shell.is-expedition-access .defender-header {
+    align-items: flex-start;
+  }
+
+  .defender-screen .defender-loadout-shell.is-expedition-access .defender-loadout-grid,
+  .defender-screen .defender-loadout-shell.is-expedition-access .defender-loadout-detail-grid {
+    overflow: visible;
+  }
+
+  .defender-screen .defender-loadout-shell.is-expedition-access .defender-roster-panel,
+  .defender-screen .defender-loadout-shell.is-expedition-access .defender-focus-panel,
+  .defender-screen .defender-loadout-shell.is-expedition-access .defender-loadout-panel {
+    max-height: none;
+    overflow: visible;
+  }
+
+  .defender-screen .defender-loadout-shell.is-expedition-access .defender-loadout-inventory.is-loot-card-inventory {
+    max-height: none;
+  }
+
+  .defender-screen .defender-loadout-shell.is-expedition-access .is-loot-card-list {
+    max-height: 460px;
+  }
+
   .defender-screen .defender-loadout-grid,
   .defender-screen .defender-loadout-detail-grid,
   .defender-screen .defender-lower-row {

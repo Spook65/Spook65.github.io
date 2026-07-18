@@ -1884,7 +1884,7 @@ function buildCurrentRunModuleInventoryMarkup(selectedDefenders = []) {
   return `
     <div class="defender-loadout-inventory ${isExpeditionInventory ? "is-loot-card-inventory" : ""}" data-inventory-version="${isExpeditionInventory ? "loot-cards-v2" : "compact-list"}">
       <div class="defender-loadout-panel-label">CURRENT RUN MODULES</div>
-      <div class="defender-loadout-inventory-help">${selectedModule ? "Click a Defender to preview it. Use the action below to confirm equipment changes." : "Select a module to preview install options."}</div>
+      <div class="defender-loadout-inventory-help">${selectedModule ? "Click a Defender to preview. Equipment changes only happen from the confirm button." : "Select a module to preview install options."}</div>
       ${filterMarkup}
       ${hiddenSelectionMarkup}
       ${expeditionLoadoutActionMessage ? `<div class="defender-loadout-action-message is-${getDefenderLoadoutText(expeditionLoadoutActionTone, "notice")}">${expeditionLoadoutActionMessage}</div>` : ""}
@@ -2189,7 +2189,7 @@ function buildDefenderSelectionMarkup(options = {}) {
   const headerKicker = isExpeditionLoadout ? "EXPEDITION LOADOUT / BETWEEN INCIDENTS" : "EXPEDITION LOADOUT / OPERATOR SUPPRESSION ORDER";
   const headerTitle = isExpeditionLoadout ? "LOADOUT / MODULES" : "DEFENDER LOADOUT";
   const headerCopy = isExpeditionLoadout
-    ? "ACTIVE PARTY AND RECOVERED MODULES FOR THIS RUN. SELECT A MODULE, THEN CHOOSE A DEFENDER TO INSTALL OR SWAP."
+    ? "ACTIVE PARTY AND RECOVERED MODULES FOR THIS RUN. SELECT A MODULE, PREVIEW A DEFENDER, THEN CONFIRM BELOW."
     : "ACTIVE PARTY IS LOCKED FOR THIS RUN. RECOVERED MODULES CAN BE INSTALLED AFTER INCIDENTS.";
   const headerPanelLabel = isExpeditionLoadout ? "CURRENT EXPEDITION" : "EXPEDITION MODE";
   const headerPanelValue = isExpeditionLoadout
@@ -2197,10 +2197,10 @@ function buildDefenderSelectionMarkup(options = {}) {
     : "4 / 4 DEFENDERS DEPLOY. FUTURE HARDWARE SLOTS ARE LOCKED UNTIL FORGE SYSTEMS AWAKEN.";
   const backLabel = isExpeditionLoadout ? "← RETURN TO EXPEDITION" : "← RETURN TO MENU";
   const statusText = isExpeditionLoadout
-    ? (expeditionSelectedModuleInstanceId ? "MODULE SELECTED. CHOOSE AN ACTIVE DEFENDER TARGET." : "SELECT A RECOVERED MODULE TO INSTALL OR SWAP.")
+    ? (expeditionSelectedModuleInstanceId ? "MODULE SELECTED. PREVIEW A DEFENDER, THEN CONFIRM BELOW." : "SELECT A RECOVERED MODULE TO PREVIEW INSTALL OPTIONS.")
     : selectedIds.length === 4 ? "LOADOUT READY. BEGIN THE RUN WHEN YOU ARE READY." : "SELECT A PARTY OF FOUR.";
   const readonlyNote = isExpeditionLoadout
-    ? "Click a recovered module, then click an active Defender. Future hardware slots remain locked."
+    ? "Defender cards preview loadouts only. Equipment changes happen from the confirm button."
     : "Choose your starting squad before deployment. Module management unlocks during the expedition.";
 
   return `
