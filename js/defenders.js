@@ -1392,13 +1392,25 @@ function selectExpeditionLoadoutModule(moduleInstanceId) {
   }
 
   expeditionSelectedModuleInstanceId = selectedModule.instanceId;
-  expeditionLoadoutActionMessage = `${getDefenderLoadoutText(selectedModule.name, "Module")} selected. Install it to the focused Defender or choose another active Defender target.`;
+  expeditionLoadoutActionMessage = `${getDefenderLoadoutText(selectedModule.name, "Module")} selected. Preview a Defender, then use the confirm button to equip.`;
   expeditionLoadoutActionTone = "selected";
   logLoadoutModuleDebug("[LOADOUT MODULE] selected", {
     instanceId: selectedModule.instanceId,
     moduleName: selectedModule.name || "Recovered Module",
     context: screenState
   });
+  renderExpeditionLoadoutScreen();
+  return true;
+}
+
+function clearExpeditionLoadoutModuleSelection(message = "Module selection cleared. Browse recovered modules or choose another filter.") {
+  if (screenState !== "expedition-loadout") {
+    return false;
+  }
+
+  expeditionSelectedModuleInstanceId = null;
+  expeditionLoadoutActionMessage = message;
+  expeditionLoadoutActionTone = "selected";
   renderExpeditionLoadoutScreen();
   return true;
 }
@@ -1548,6 +1560,11 @@ function buildSelectedLoadoutModuleActionMarkup(focusedDefender, selectedModule 
         data-install-selected-module-to="${getDefenderLoadoutText(targetDefender?.id, "")}"
         ${alreadyEquipped || !targetDefender?.id ? "disabled" : ""}
       >${actionLabel || "SELECT DEFENDER"}</button>
+      <button
+        class="defender-loadout-clear-selection"
+        type="button"
+        data-clear-selected-module="true"
+      >CLEAR SELECTION</button>
     </div>
   `;
 }
@@ -1878,7 +1895,12 @@ function buildCurrentRunModuleInventoryMarkup(selectedDefenders = []) {
     </div>
   ` : "";
   const hiddenSelectionMarkup = isSelectedHidden
-    ? '<div class="defender-loadout-filter-note">Selected module is hidden by this filter. Switch to ALL to preview it again.</div>'
+    ? `
+      <div class="defender-loadout-filter-note">
+        <span>Selected module is hidden by this filter.</span>
+        <button class="defender-loadout-clear-selection" type="button" data-clear-selected-module="true">CLEAR SELECTION</button>
+      </div>
+    `
     : "";
 
   return `
@@ -2089,6 +2111,14 @@ function handleDefenderLoadoutDelegatedClick(event) {
     return;
   }
 
+  const clearSelectionButton = event.target.closest?.("[data-clear-selected-module]");
+  if (clearSelectionButton && defenderScreenContent.contains(clearSelectionButton)) {
+    event.preventDefault();
+    event.stopPropagation();
+    clearExpeditionLoadoutModuleSelection();
+    return;
+  }
+
   const moduleButton = event.target.closest?.("[data-module-instance-id]");
   if (moduleButton && defenderScreenContent.contains(moduleButton)) {
     event.preventDefault();
@@ -2259,23 +2289,21 @@ function buildDefenderSelectionMarkup(options = {}) {
         </div>
       </div>
 
-      <div class="defender-lower-row">
-        <section class="defender-party-panel" aria-label="Locked party slots">
-          <div class="defender-panel-label">DEPLOYMENT STATUS</div>
-          <div class="defender-party-slots">
-            ${Array.from({ length: 4 }, (_, slotIndex) => buildDefenderPartySlotMarkup(selectedDefenders[slotIndex], slotIndex)).join("")}
-          </div>
-        </section>
+      ${isExpeditionLoadout ? "" : `
+        <div class="defender-lower-row">
+          <section class="defender-party-panel" aria-label="Locked party slots">
+            <div class="defender-panel-label">DEPLOYMENT STATUS</div>
+            <div class="defender-party-slots">
+              ${Array.from({ length: 4 }, (_, slotIndex) => buildDefenderPartySlotMarkup(selectedDefenders[slotIndex], slotIndex)).join("")}
+            </div>
+          </section>
 
-        <div class="defender-footer">
-          ${isExpeditionLoadout
-            ? '<button id="defender-screen-close-expedition" class="menu-button" type="button">RETURN TO EXPEDITION</button>'
-            : `
-              <button id="defender-screen-reset" class="menu-button" type="button">RESET LOADOUT</button>
-              <button id="defender-screen-confirm" class="menu-button" type="button" ${selectedIds.length === 4 ? "" : "disabled"}>BEGIN RUN</button>
-            `}
+          <div class="defender-footer">
+            <button id="defender-screen-reset" class="menu-button" type="button">RESET LOADOUT</button>
+            <button id="defender-screen-confirm" class="menu-button" type="button" ${selectedIds.length === 4 ? "" : "disabled"}>BEGIN RUN</button>
+          </div>
         </div>
-      </div>
+      `}
     </div>
   `;
 }
@@ -2291,7 +2319,6 @@ function bindDefenderSelectionControls() {
   const defenderScreenConfirm = document.getElementById("defender-screen-confirm");
   const defenderScreenReset = document.getElementById("defender-screen-reset");
   const defenderScreenBack = document.getElementById("defender-screen-back");
-  const defenderScreenCloseExpedition = document.getElementById("defender-screen-close-expedition");
 
   const rosterTiles = defenderScreenContent.querySelectorAll("[data-defender-id]");
   rosterTiles.forEach((tile) => {
@@ -2318,14 +2345,6 @@ function bindDefenderSelectionControls() {
       }
 
       showMenu();
-    });
-  }
-
-  if (defenderScreenCloseExpedition) {
-    defenderScreenCloseExpedition.addEventListener("click", () => {
-      if (typeof closeExpeditionLoadout === "function") {
-        closeExpeditionLoadout();
-      }
     });
   }
 

@@ -7783,6 +7783,37 @@ body {
   text-transform: uppercase;
 }
 
+.defender-screen .defender-loadout-clear-selection {
+  appearance: none;
+  width: fit-content;
+  border: 1px solid rgba(244, 239, 227, 0.18);
+  border-radius: 0;
+  background:
+    linear-gradient(90deg, rgba(244, 239, 227, 0.07), transparent 70%),
+    rgba(5, 7, 12, 0.72);
+  color: rgba(244, 239, 227, 0.76);
+  cursor: pointer;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.54rem;
+  letter-spacing: 0.14em;
+  padding: 7px 9px;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.defender-screen .defender-loadout-clear-selection:hover,
+.defender-screen .defender-loadout-clear-selection:focus-visible {
+  border-color: rgba(72, 214, 198, 0.54);
+  color: rgba(174, 255, 243, 0.92);
+  box-shadow: 0 0 16px rgba(72, 214, 198, 0.1);
+  outline: none;
+}
+
+.defender-screen .defender-loadout-install-preview .defender-loadout-clear-selection {
+  width: 100%;
+  color: rgba(244, 239, 227, 0.68);
+}
+
 .defender-screen .defender-loadout-inventory-list {
   display: grid;
   gap: 10px;
@@ -7838,6 +7869,8 @@ body {
 }
 
 .defender-screen .defender-loadout-filter-note {
+  display: grid;
+  gap: 8px;
   border: 1px solid rgba(255, 206, 87, 0.24);
   background: rgba(255, 206, 87, 0.045);
   color: rgba(255, 206, 87, 0.82);
