@@ -7713,7 +7713,9 @@ body {
 }
 
 .defender-screen .defender-loadout-shell.is-expedition-access .defender-loadout-install-preview {
-  top: 0;
+  position: relative;
+  top: auto;
+  z-index: 1;
   margin: 6px 0 8px;
   padding: 10px;
 }
@@ -7830,7 +7832,7 @@ body {
   gap: 12px;
   max-height: none;
   min-height: 0;
-  padding: 4px 6px 4px 2px;
+  padding: 6px 12px 8px 8px;
 }
 
 .defender-screen .defender-loadout-filter-tabs {

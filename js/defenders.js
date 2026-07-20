@@ -2133,6 +2133,17 @@ function handleDefenderLoadoutDelegatedClick(event) {
     event.stopPropagation();
     const nextFilter = filterButton.getAttribute("data-module-filter");
     expeditionModuleInventoryFilter = ["all", "equipped", "unequipped"].includes(nextFilter) ? nextFilter : "all";
+    const selectedModule = getExpeditionSelectedModule();
+    if (selectedModule) {
+      const selectionVisible = expeditionModuleInventoryFilter === "all"
+        || (expeditionModuleInventoryFilter === "equipped" && Boolean(selectedModule.equippedToDefenderId))
+        || (expeditionModuleInventoryFilter === "unequipped" && !selectedModule.equippedToDefenderId);
+      if (!selectionVisible) {
+        expeditionSelectedModuleInstanceId = null;
+        expeditionLoadoutActionMessage = "Selection cleared because it is hidden by this filter.";
+        expeditionLoadoutActionTone = "selected";
+      }
+    }
     renderExpeditionLoadoutScreen();
   }
 }
@@ -2232,9 +2243,30 @@ function buildDefenderSelectionMarkup(options = {}) {
   const readonlyNote = isExpeditionLoadout
     ? "Defender cards preview loadouts only. Equipment changes happen from the confirm button."
     : "Choose your starting squad before deployment. Module management unlocks during the expedition.";
+  const lowerRowMarkup = isExpeditionLoadout ? "" : `
+    <div class="defender-lower-row">
+      <section class="defender-party-panel" aria-label="Locked party slots">
+        <div class="defender-panel-label">DEPLOYMENT STATUS</div>
+        <div class="defender-party-slots">
+          ${Array.from({ length: 4 }, (_, slotIndex) => buildDefenderPartySlotMarkup(selectedDefenders[slotIndex], slotIndex)).join("")}
+        </div>
+      </section>
+
+      <div class="defender-footer">
+        <button id="defender-screen-reset" class="menu-button" type="button">RESET LOADOUT</button>
+        <button id="defender-screen-confirm" class="menu-button" type="button" ${selectedIds.length === 4 ? "" : "disabled"}>BEGIN RUN</button>
+      </div>
+    </div>
+  `;
 
   return `
-    <div class="defender-shell defender-loadout-shell ${isExpeditionLoadout ? "is-expedition-access" : ""}" data-loadout-version="rpg-expedition-v2" data-loadout-context="${isExpeditionLoadout ? "expedition" : "pre-run"}">
+    <div
+      class="defender-shell defender-loadout-shell ${isExpeditionLoadout ? "is-expedition-access" : ""}"
+      data-loadout-version="rpg-expedition-v2"
+      data-loadout-context="${isExpeditionLoadout ? "expedition" : "pre-run"}"
+      data-expedition-cleanup-version="${isExpeditionLoadout ? "v2" : "starter"}"
+      data-lower-row-rendered="${lowerRowMarkup ? "true" : "false"}"
+    >
       <div class="defender-header">
         <div class="defender-header-copy">
           <div class="defender-kicker">${headerKicker}</div>
@@ -2289,21 +2321,7 @@ function buildDefenderSelectionMarkup(options = {}) {
         </div>
       </div>
 
-      ${isExpeditionLoadout ? "" : `
-        <div class="defender-lower-row">
-          <section class="defender-party-panel" aria-label="Locked party slots">
-            <div class="defender-panel-label">DEPLOYMENT STATUS</div>
-            <div class="defender-party-slots">
-              ${Array.from({ length: 4 }, (_, slotIndex) => buildDefenderPartySlotMarkup(selectedDefenders[slotIndex], slotIndex)).join("")}
-            </div>
-          </section>
-
-          <div class="defender-footer">
-            <button id="defender-screen-reset" class="menu-button" type="button">RESET LOADOUT</button>
-            <button id="defender-screen-confirm" class="menu-button" type="button" ${selectedIds.length === 4 ? "" : "disabled"}>BEGIN RUN</button>
-          </div>
-        </div>
-      `}
+      ${lowerRowMarkup}
     </div>
   `;
 }
@@ -2427,6 +2445,17 @@ function renderExpeditionLoadoutScreen() {
   if (expeditionSelectedModuleInstanceId && !getExpeditionSelectedModule()) {
     expeditionSelectedModuleInstanceId = null;
     expeditionLoadoutActionMessage = "";
+  }
+  const selectedModule = getExpeditionSelectedModule();
+  if (selectedModule && ["equipped", "unequipped"].includes(expeditionModuleInventoryFilter)) {
+    const selectionVisible = expeditionModuleInventoryFilter === "equipped"
+      ? Boolean(selectedModule.equippedToDefenderId)
+      : !selectedModule.equippedToDefenderId;
+    if (!selectionVisible) {
+      expeditionSelectedModuleInstanceId = null;
+      expeditionLoadoutActionMessage = "Selection cleared because it is hidden by this filter.";
+      expeditionLoadoutActionTone = "selected";
+    }
   }
 
   const expeditionDefenders = getExpeditionLoadoutDefenders();
