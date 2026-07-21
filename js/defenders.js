@@ -770,6 +770,56 @@ function logLoadoutModuleDebug(message, payload = null) {
   console.info(message, payload);
 }
 
+function shouldLogLoadoutLayoutDebug() {
+  return typeof window !== "undefined" && window.THREATGRID_LOADOUT_LAYOUT_DEBUG === true;
+}
+
+function getLayoutDebugRect(element) {
+  if (!element || typeof element.getBoundingClientRect !== "function") {
+    return null;
+  }
+
+  const rect = element.getBoundingClientRect();
+  return {
+    top: Math.round(rect.top),
+    right: Math.round(rect.right),
+    bottom: Math.round(rect.bottom),
+    left: Math.round(rect.left),
+    width: Math.round(rect.width),
+    height: Math.round(rect.height)
+  };
+}
+
+function logExpeditionLoadoutLayoutDebug() {
+  if (!shouldLogLoadoutLayoutDebug() || !defenderScreenContent || screenState !== "expedition-loadout") {
+    return;
+  }
+
+  window.requestAnimationFrame(() => {
+    const rightPanel = defenderScreenContent.querySelector(".defender-loadout-panel");
+    const inventoryPanel = defenderScreenContent.querySelector(".defender-loadout-inventory");
+    const selectedPanel = defenderScreenContent.querySelector(".defender-loadout-install-preview");
+    const inventoryList = defenderScreenContent.querySelector(".defender-loadout-inventory-list");
+    const confirmButton = defenderScreenContent.querySelector("[data-install-selected-module-to]");
+    const clearButton = defenderScreenContent.querySelector("[data-clear-module-selection]");
+    const unequipButton = defenderScreenContent.querySelector("[data-unequip-module-from]");
+
+    console.info("[LOADOUT LAYOUT DEBUG]", {
+      rightPanel: getLayoutDebugRect(rightPanel),
+      rightPanelScrollHeight: rightPanel?.scrollHeight || 0,
+      rightPanelClientHeight: rightPanel?.clientHeight || 0,
+      inventoryPanel: getLayoutDebugRect(inventoryPanel),
+      inventoryPanelScrollHeight: inventoryPanel?.scrollHeight || 0,
+      inventoryPanelClientHeight: inventoryPanel?.clientHeight || 0,
+      selectedPanel: getLayoutDebugRect(selectedPanel),
+      inventoryList: getLayoutDebugRect(inventoryList),
+      confirmButton: getLayoutDebugRect(confirmButton),
+      clearButton: getLayoutDebugRect(clearButton),
+      unequipButton: getLayoutDebugRect(unequipButton)
+    });
+  });
+}
+
 // defenderRosterSelectEnabled keeps the RPG loadout hub on the primary render path.
 const defenderRosterSelectEnabled = true;
 
@@ -1503,6 +1553,65 @@ function equipSelectedLoadoutModuleToDefender(defenderId) {
   return true;
 }
 
+function unequipLoadoutModuleFromDefender(defenderId) {
+  if (screenState !== "expedition-loadout" || !defenderId || !defenderSaveState?.currentRun) {
+    return false;
+  }
+
+  if (typeof ensureCurrentRunModuleInventory === "function") {
+    ensureCurrentRunModuleInventory(defenderSaveState.currentRun);
+  }
+
+  const runState = defenderSaveState.currentRun;
+  const equippedModule = getLoadoutEquippedModule(defenderId);
+  const targetDefender = getDefenderTemplate(defenderId);
+  if (!equippedModule?.instanceId) {
+    expeditionLoadoutActionMessage = `${getDefenderLoadoutText(targetDefender?.name, defenderId)} has no module to unequip.`;
+    expeditionLoadoutActionTone = "warning";
+    setDefenderSelectionFocus(defenderId);
+    renderExpeditionLoadoutScreen();
+    return false;
+  }
+
+  const moduleName = getDefenderLoadoutText(equippedModule.name, "Recovered Module");
+  const defenderName = getDefenderLoadoutText(targetDefender?.name, defenderId);
+  const runModules = typeof getCurrentRunModules === "function" ? getCurrentRunModules(runState) : [];
+  const inventoryModule = runModules.find((module) => module?.instanceId === equippedModule.instanceId) || equippedModule;
+
+  inventoryModule.equippedToDefenderId = null;
+  delete inventoryModule.equippedAt;
+  equippedModule.equippedToDefenderId = null;
+  delete equippedModule.equippedAt;
+
+  if (runState.equippedModulesByDefenderId && typeof runState.equippedModulesByDefenderId === "object") {
+    Object.entries(runState.equippedModulesByDefenderId).forEach(([currentDefenderId, equippedEntry]) => {
+      const currentModule = typeof equippedEntry === "string"
+        ? runModules.find((module) => module?.instanceId === equippedEntry) || null
+        : equippedEntry;
+      if (currentDefenderId === defenderId || currentModule?.instanceId === inventoryModule.instanceId) {
+        delete runState.equippedModulesByDefenderId[currentDefenderId];
+      }
+    });
+  }
+
+  if (typeof ensureCurrentRunModuleInventory === "function") {
+    ensureCurrentRunModuleInventory(runState);
+  }
+  if (typeof saveGame === "function") {
+    saveGame();
+  }
+
+  expeditionLoadoutActionMessage = `${moduleName} returned to inventory from ${defenderName}.`;
+  expeditionLoadoutActionTone = "success";
+  setDefenderSelectionFocus(defenderId);
+  logLoadoutModuleDebug("[LOADOUT MODULE] unequipped", {
+    moduleName,
+    defenderId
+  });
+  renderExpeditionLoadoutScreen();
+  return true;
+}
+
 function buildSelectedLoadoutModuleActionMarkup(focusedDefender, selectedModule = getExpeditionSelectedModule()) {
   if (!selectedModule) {
     return "";
@@ -1563,6 +1672,7 @@ function buildSelectedLoadoutModuleActionMarkup(focusedDefender, selectedModule 
       <button
         class="defender-loadout-clear-selection"
         type="button"
+        data-clear-module-selection="true"
         data-clear-selected-module="true"
       >CLEAR SELECTION</button>
     </div>
@@ -1789,6 +1899,7 @@ function buildLoadoutMoveMarkup(defender) {
 
 function buildLoadoutModulePanelMarkup(defender) {
   const module = getLoadoutEquippedModule(defender?.id);
+  const isExpeditionLoadout = screenState === "expedition-loadout";
   if (!module) {
     return `
       <div class="defender-loadout-module-card is-empty">
@@ -1815,6 +1926,13 @@ function buildLoadoutModulePanelMarkup(defender) {
       <div class="defender-loadout-module-stat">${primaryStat.text}</div>
       <div class="defender-loadout-affix-lines">${buildLoadoutModuleAffixLines(module)}</div>
       <div class="defender-loadout-module-effect">${getDefenderLoadoutText(module.effectText, "Module effect stabilized.")}</div>
+      ${isExpeditionLoadout ? `
+        <button
+          class="defender-loadout-unequip-button"
+          type="button"
+          data-unequip-module-from="${getDefenderLoadoutText(defender?.id, "")}"
+        >UNEQUIP ${getDefenderLoadoutText(module.name, "MODULE")}</button>
+      ` : ""}
     </div>
   `;
 }
@@ -1898,7 +2016,7 @@ function buildCurrentRunModuleInventoryMarkup(selectedDefenders = []) {
     ? `
       <div class="defender-loadout-filter-note">
         <span>Selected module is hidden by this filter.</span>
-        <button class="defender-loadout-clear-selection" type="button" data-clear-selected-module="true">CLEAR SELECTION</button>
+        <button class="defender-loadout-clear-selection" type="button" data-clear-module-selection="true" data-clear-selected-module="true">CLEAR SELECTION</button>
       </div>
     `
     : "";
@@ -1906,7 +2024,7 @@ function buildCurrentRunModuleInventoryMarkup(selectedDefenders = []) {
   return `
     <div class="defender-loadout-inventory ${isExpeditionInventory ? "is-loot-card-inventory" : ""}" data-inventory-version="${isExpeditionInventory ? "loot-cards-v2" : "compact-list"}">
       <div class="defender-loadout-panel-label">CURRENT RUN MODULES</div>
-      <div class="defender-loadout-inventory-help">${selectedModule ? "Click a Defender to preview. Equipment changes only happen from the confirm button." : "Select a module to preview install options."}</div>
+      <div class="defender-loadout-inventory-help">${selectedModule ? "Click a Defender to preview. Use the confirm button to equip." : "Select a module to preview install options."}</div>
       ${filterMarkup}
       ${hiddenSelectionMarkup}
       ${expeditionLoadoutActionMessage ? `<div class="defender-loadout-action-message is-${getDefenderLoadoutText(expeditionLoadoutActionTone, "notice")}">${expeditionLoadoutActionMessage}</div>` : ""}
@@ -2095,6 +2213,17 @@ function handleDefenderLoadoutDelegatedClick(event) {
     return;
   }
 
+  const unequipButton = event.target.closest?.("[data-unequip-module-from]");
+  if (unequipButton && defenderScreenContent.contains(unequipButton)) {
+    event.preventDefault();
+    event.stopPropagation();
+    const defenderId = unequipButton.getAttribute("data-unequip-module-from");
+    if (defenderId) {
+      unequipLoadoutModuleFromDefender(defenderId);
+    }
+    return;
+  }
+
   const installButton = event.target.closest?.("[data-install-selected-module-to]");
   if (installButton && defenderScreenContent.contains(installButton)) {
     event.preventDefault();
@@ -2111,7 +2240,7 @@ function handleDefenderLoadoutDelegatedClick(event) {
     return;
   }
 
-  const clearSelectionButton = event.target.closest?.("[data-clear-selected-module]");
+  const clearSelectionButton = event.target.closest?.("[data-clear-module-selection], [data-clear-selected-module]");
   if (clearSelectionButton && defenderScreenContent.contains(clearSelectionButton)) {
     event.preventDefault();
     event.stopPropagation();
@@ -2195,6 +2324,8 @@ function updateDefenderSelectionFocusDom() {
       activeParty
     );
   }
+
+  logExpeditionLoadoutLayoutDebug();
 }
 
 // setDefenderSelectionFocus() updates the current preview target and refreshes the visible preview when the screen is open.

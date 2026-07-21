@@ -7371,6 +7371,13 @@ body {
   padding: 12px;
 }
 
+.defender-screen .defender-loadout-shell.is-expedition-access .defender-loadout-panel {
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
 .defender-screen .defender-hero-card {
   position: relative;
   isolation: isolate;
@@ -7596,12 +7603,24 @@ body {
   padding: 10px;
 }
 
+.defender-screen .defender-loadout-shell.is-expedition-access .defender-loadout-stats,
+.defender-screen .defender-loadout-shell.is-expedition-access .defender-loadout-gear {
+  flex: 0 0 auto;
+  max-height: clamp(9rem, 23vh, 14rem);
+  overflow-y: auto;
+}
+
+.defender-screen .defender-loadout-shell.is-expedition-access .defender-loadout-gear {
+  max-height: clamp(7rem, 18vh, 10rem);
+}
+
 .defender-screen .defender-loadout-shell.is-expedition-access .defender-loadout-inventory.is-loot-card-inventory {
-  display: grid;
-  grid-template-rows: auto auto auto auto auto minmax(0, 1fr);
-  min-height: 320px;
-  max-height: min(60vh, 620px);
-  overflow: hidden;
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  min-height: 0;
+  max-height: none;
+  overflow: visible;
   padding: 10px;
 }
 
@@ -7785,6 +7804,33 @@ body {
   text-transform: uppercase;
 }
 
+.defender-screen .defender-loadout-unequip-button {
+  appearance: none;
+  width: 100%;
+  margin-top: 2px;
+  border: 1px solid rgba(255, 105, 129, 0.34);
+  border-radius: 0;
+  background:
+    linear-gradient(90deg, rgba(255, 105, 129, 0.11), transparent 72%),
+    rgba(5, 7, 12, 0.78);
+  color: rgba(255, 168, 181, 0.92);
+  cursor: pointer;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.56rem;
+  letter-spacing: 0.14em;
+  padding: 8px 10px;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.defender-screen .defender-loadout-unequip-button:hover,
+.defender-screen .defender-loadout-unequip-button:focus-visible {
+  border-color: rgba(255, 143, 160, 0.72);
+  color: rgba(255, 215, 221, 0.96);
+  box-shadow: 0 0 18px rgba(255, 105, 129, 0.12);
+  outline: none;
+}
+
 .defender-screen .defender-loadout-clear-selection {
   appearance: none;
   width: fit-content;
@@ -7830,8 +7876,9 @@ body {
 
 .defender-screen .is-loot-card-list {
   gap: 12px;
-  max-height: none;
+  max-height: clamp(13rem, 34vh, 27rem);
   min-height: 0;
+  overflow-y: auto;
   padding: 6px 12px 8px 8px;
 }
 
