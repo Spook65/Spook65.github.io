@@ -7037,10 +7037,28 @@ body {
   --menu-button-accent: var(--menu-coral);
 }
 
+.defender-screen .defender-header-actions {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: min(100%, 420px);
+}
+
+.defender-screen .defender-header-actions .back-button,
+.defender-screen .defender-header-actions .menu-button {
+  min-height: 44px;
+  padding: 10px 13px;
+  font-size: 0.58rem;
+  letter-spacing: 0.16em;
+}
+
 .defender-screen .defender-footer {
   padding-top: 0;
 }
 
+.defender-screen .menu-button:disabled,
 .defender-screen .defender-footer .menu-button:disabled {
   opacity: 0.42;
   cursor: not-allowed;
@@ -7108,6 +7126,22 @@ body {
   overflow: hidden;
 }
 
+.defender-screen .defender-loadout-shell.is-starter-access {
+  height: calc(100dvh - 32px);
+  min-height: 0;
+  overflow: hidden;
+}
+
+.defender-screen .defender-loadout-shell.is-starter-access .defender-header {
+  position: sticky;
+  top: 0;
+  z-index: 12;
+  align-items: center;
+  padding: 6px 0 10px;
+  background:
+    linear-gradient(180deg, rgba(4, 5, 10, 0.98), rgba(4, 5, 10, 0.86) 72%, transparent);
+}
+
 .defender-screen .defender-loadout-shell.is-expedition-access .defender-header {
   position: sticky;
   top: 0;
@@ -7143,6 +7177,11 @@ body {
 .defender-screen .defender-loadout-shell.is-expedition-access .defender-status-row {
   flex: 0 0 auto;
   padding: 8px 11px;
+}
+
+.defender-screen .defender-loadout-shell.is-starter-access .defender-rule,
+.defender-screen .defender-loadout-shell.is-starter-access .defender-status-row {
+  flex: 0 0 auto;
 }
 
 .defender-screen .defender-header-panel {
@@ -7186,6 +7225,11 @@ body {
   overflow: hidden;
 }
 
+.defender-screen .defender-loadout-shell.is-starter-access .defender-loadout-grid {
+  height: 100%;
+  overflow: hidden;
+}
+
 .defender-screen .defender-roster-panel,
 .defender-screen .defender-focus-panel,
 .defender-screen .defender-loadout-panel,
@@ -7210,6 +7254,13 @@ body {
 .defender-screen .defender-loadout-shell.is-expedition-access .defender-roster-panel,
 .defender-screen .defender-loadout-shell.is-expedition-access .defender-focus-panel,
 .defender-screen .defender-loadout-shell.is-expedition-access .defender-loadout-panel {
+  max-height: 100%;
+  overflow: hidden;
+}
+
+.defender-screen .defender-loadout-shell.is-starter-access .defender-roster-panel,
+.defender-screen .defender-loadout-shell.is-starter-access .defender-focus-panel,
+.defender-screen .defender-loadout-shell.is-starter-access .defender-loadout-panel {
   max-height: 100%;
   overflow: hidden;
 }
@@ -7371,7 +7422,22 @@ body {
   padding: 12px;
 }
 
+.defender-screen .defender-loadout-shell.is-starter-access .defender-focus-panel,
+.defender-screen .defender-loadout-shell.is-starter-access .defender-loadout-panel {
+  align-content: stretch;
+  gap: 10px;
+  overflow: auto;
+  padding: 12px;
+}
+
 .defender-screen .defender-loadout-shell.is-expedition-access .defender-loadout-panel {
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.defender-screen .defender-loadout-shell.is-starter-access .defender-loadout-panel {
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
@@ -7714,6 +7780,33 @@ body {
   background:
     linear-gradient(90deg, rgba(255, 105, 129, 0.13), transparent 62%),
     rgba(255, 105, 129, 0.055);
+}
+
+.defender-screen .defender-loadout-starter-summary {
+  display: grid;
+  gap: 8px;
+  border: 1px solid rgba(72, 214, 198, 0.18);
+  background:
+    linear-gradient(135deg, rgba(72, 214, 198, 0.08), transparent 58%),
+    rgba(5, 7, 12, 0.5);
+  padding: 12px;
+}
+
+.defender-screen .defender-loadout-starter-line,
+.defender-screen .defender-loadout-starter-module {
+  color: rgba(244, 239, 227, 0.66);
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+.defender-screen .defender-loadout-starter-module {
+  border-left: 2px solid rgba(72, 214, 198, 0.46);
+  margin-top: 2px;
+  padding: 7px 9px;
+  color: rgba(174, 255, 243, 0.82);
+  background: rgba(72, 214, 198, 0.045);
 }
 
 .defender-screen .defender-loadout-install-preview {
@@ -8549,6 +8642,28 @@ body {
 }
 
 @media (max-width: 1180px) {
+  .defender-screen .defender-loadout-shell.is-starter-access {
+    height: auto;
+    min-height: 100%;
+    overflow: visible;
+  }
+
+  .defender-screen .defender-loadout-shell.is-starter-access .defender-header {
+    align-items: flex-start;
+  }
+
+  .defender-screen .defender-loadout-shell.is-starter-access .defender-loadout-grid,
+  .defender-screen .defender-loadout-shell.is-starter-access .defender-loadout-detail-grid {
+    overflow: visible;
+  }
+
+  .defender-screen .defender-loadout-shell.is-starter-access .defender-roster-panel,
+  .defender-screen .defender-loadout-shell.is-starter-access .defender-focus-panel,
+  .defender-screen .defender-loadout-shell.is-starter-access .defender-loadout-panel {
+    max-height: none;
+    overflow: visible;
+  }
+
   .defender-screen .defender-loadout-shell.is-expedition-access {
     height: auto;
     min-height: 100%;

@@ -1955,6 +1955,23 @@ function buildLoadoutGearSlotsMarkup() {
   `).join("");
 }
 
+function buildStarterLoadoutGuidanceMarkup(defender) {
+  const module = getLoadoutEquippedModule(defender?.id);
+  const moduleLine = module
+    ? `${getDefenderLoadoutText(module.name, "Recovered Module")} is linked read-only for this preview.`
+    : "No recovered module is linked before deployment.";
+
+  return `
+    <div class="defender-loadout-starter-summary" aria-label="Starting loadout rules">
+      <div class="defender-loadout-panel-label">STARTING LOADOUT</div>
+      <div class="defender-loadout-starter-line">Choose and review the four Defenders deploying into this run.</div>
+      <div class="defender-loadout-starter-line">Recovered Modules unlock after incidents and can be managed between encounters.</div>
+      <div class="defender-loadout-starter-line">Module editing is disabled before deployment.</div>
+      <div class="defender-loadout-starter-module">${moduleLine}</div>
+    </div>
+  `;
+}
+
 function buildCurrentRunModuleInventoryMarkup(selectedDefenders = []) {
   const runModules = typeof getCurrentRunModules === "function"
     ? getCurrentRunModules(defenderSaveState?.currentRun)
@@ -2159,7 +2176,9 @@ function buildDefenderDetailPanelMarkup(defender, isSelected, isLocked, selected
 
     <aside class="defender-loadout-panel" aria-label="Defender equipment and stats">
       ${buildLoadoutModulePanelMarkup(defender)}
-      ${buildCurrentRunModuleInventoryMarkup(Array.isArray(partyDefenders) ? partyDefenders : getSelectedDefenderIds().map((defenderId) => getDefenderTemplate(defenderId)).filter(Boolean))}
+      ${screenState === "expedition-loadout"
+        ? buildCurrentRunModuleInventoryMarkup(Array.isArray(partyDefenders) ? partyDefenders : getSelectedDefenderIds().map((defenderId) => getDefenderTemplate(defenderId)).filter(Boolean))
+        : buildStarterLoadoutGuidanceMarkup(defender)}
 
       <div class="defender-loadout-stats" aria-label="Base and module stat summary">
         <div class="defender-loadout-panel-label">EFFECTIVE STAT SUMMARY</div>
@@ -2368,33 +2387,28 @@ function buildDefenderSelectionMarkup(options = {}) {
     ? `${selectedDefenders.length} / 4 DEFENDERS ACTIVE. CURRENT-RUN MODULES REMAIN STORED UNTIL THE EXPEDITION ENDS.`
     : "4 / 4 DEFENDERS DEPLOY. FUTURE HARDWARE SLOTS ARE LOCKED UNTIL FORGE SYSTEMS AWAKEN.";
   const backLabel = isExpeditionLoadout ? "← RETURN TO EXPEDITION" : "← RETURN TO MENU";
+  const headerActionsMarkup = isExpeditionLoadout ? `
+    <button id="defender-screen-back" class="back-button" type="button">${backLabel}</button>
+  ` : `
+    <div class="defender-header-actions" aria-label="Starter loadout actions">
+      <button id="defender-screen-back" class="back-button" type="button">${backLabel}</button>
+      <button id="defender-screen-reset" class="menu-button" type="button">RESET LOADOUT</button>
+      <button id="defender-screen-confirm" class="menu-button" type="button" ${selectedIds.length === 4 ? "" : "disabled"}>BEGIN RUN</button>
+    </div>
+  `;
   const statusText = isExpeditionLoadout
     ? (expeditionSelectedModuleInstanceId ? "MODULE SELECTED. PREVIEW A DEFENDER, THEN CONFIRM BELOW." : "SELECT A RECOVERED MODULE TO PREVIEW INSTALL OPTIONS.")
     : selectedIds.length === 4 ? "LOADOUT READY. BEGIN THE RUN WHEN YOU ARE READY." : "SELECT A PARTY OF FOUR.";
   const readonlyNote = isExpeditionLoadout
     ? "Defender cards preview loadouts only. Equipment changes happen from the confirm button."
     : "Choose your starting squad before deployment. Module management unlocks during the expedition.";
-  const lowerRowMarkup = isExpeditionLoadout ? "" : `
-    <div class="defender-lower-row">
-      <section class="defender-party-panel" aria-label="Locked party slots">
-        <div class="defender-panel-label">DEPLOYMENT STATUS</div>
-        <div class="defender-party-slots">
-          ${Array.from({ length: 4 }, (_, slotIndex) => buildDefenderPartySlotMarkup(selectedDefenders[slotIndex], slotIndex)).join("")}
-        </div>
-      </section>
-
-      <div class="defender-footer">
-        <button id="defender-screen-reset" class="menu-button" type="button">RESET LOADOUT</button>
-        <button id="defender-screen-confirm" class="menu-button" type="button" ${selectedIds.length === 4 ? "" : "disabled"}>BEGIN RUN</button>
-      </div>
-    </div>
-  `;
+  const lowerRowMarkup = "";
 
   return `
     <div
-      class="defender-shell defender-loadout-shell ${isExpeditionLoadout ? "is-expedition-access" : ""}"
+      class="defender-shell defender-loadout-shell ${isExpeditionLoadout ? "is-expedition-access" : "is-starter-access"}"
       data-loadout-version="rpg-expedition-v2"
-      data-loadout-context="${isExpeditionLoadout ? "expedition" : "pre-run"}"
+      data-loadout-context="${isExpeditionLoadout ? "expedition" : "starter"}"
       data-expedition-cleanup-version="${isExpeditionLoadout ? "v2" : "starter"}"
       data-lower-row-rendered="${lowerRowMarkup ? "true" : "false"}"
     >
@@ -2408,7 +2422,7 @@ function buildDefenderSelectionMarkup(options = {}) {
           <div class="defender-header-panel-label">${headerPanelLabel}</div>
           <div class="defender-header-panel-value">${headerPanelValue}</div>
         </div>
-        <button id="defender-screen-back" class="back-button" type="button">${backLabel}</button>
+        ${headerActionsMarkup}
       </div>
 
       <div class="defender-rule" aria-hidden="true"></div>
