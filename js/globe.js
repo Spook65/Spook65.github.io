@@ -27,6 +27,8 @@ class ThreatGlobe {
     // Layer 2 will subscribe through this hook when it needs to react to clicks.
     this.clickHandlers = [];
     this.hoveredThreatId = null;
+    this.hologram = null;
+    this.hologramThreatId = null;
 
     // Drag state stores the last pointer position so rotation can follow the mouse.
     this.dragState = {
@@ -91,10 +93,20 @@ class ThreatGlobe {
     // The backdrop, globe, nodes, and input listeners all need to exist before animation starts.
     this.addBackdrop();
     this.createGlobe();
+    this.mountThreatHologram();
     this.syncThreatNodes();
     this.attachEvents();
     this.updateActiveCount();
     this.animate();
+  }
+
+  // mountThreatHologram() creates one click-through HTML overlay so hover previews never block node clicks.
+  mountThreatHologram() {
+    const host = this.container.parentElement || document.body;
+    this.hologram = document.createElement("aside");
+    this.hologram.className = "globe-threat-hologram";
+    this.hologram.setAttribute("aria-hidden", "true");
+    host.appendChild(this.hologram);
   }
 
   // addBackdrop() creates a star field by scattering random points on a large sphere shell.
@@ -392,7 +404,7 @@ class ThreatGlobe {
         this.rotationVelocity.x = deltaY * 0.0002;
       }
 
-      this.updateHoverState();
+      this.updateHoverState(event);
     });
 
     // pointerup ends the drag, and a short movement threshold lets clicks register cleanly.
@@ -434,6 +446,226 @@ class ThreatGlobe {
     return intersections[0] || null;
   }
 
+  getSafeHologramText(value, fallback = "UNKNOWN") {
+    const text = String(value || "").trim();
+    if (!text || text === "undefined" || text === "null" || text === "NaN") {
+      return fallback;
+    }
+    return text;
+  }
+
+  escapeHologramText(value, fallback = "UNKNOWN") {
+    return this.getSafeHologramText(value, fallback)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  formatHologramLabel(value, fallback = "Unknown") {
+    return this.getSafeHologramText(value, fallback)
+      .replace(/[_-]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .replace(/\b\w/g, (character) => character.toUpperCase());
+  }
+
+  getThreatConceptLabels(threat) {
+    const conceptIds = typeof getThreatLearningConcepts === "function"
+      ? getThreatLearningConcepts(threat)
+      : [
+        ...(Array.isArray(threat?.teachesConcepts) ? threat.teachesConcepts : []),
+        ...(Array.isArray(threat?.recommendedConcepts) ? threat.recommendedConcepts : [])
+      ];
+    const seen = new Set();
+    return conceptIds
+      .map((conceptId) => {
+        const normalizedId = this.getSafeHologramText(conceptId, "").toLowerCase();
+        if (!normalizedId || seen.has(normalizedId)) {
+          return "";
+        }
+        seen.add(normalizedId);
+        const concept = typeof getCyberConcept === "function" ? getCyberConcept(normalizedId) : null;
+        return concept?.title || this.formatHologramLabel(normalizedId);
+      })
+      .filter(Boolean);
+  }
+
+  getThreatRiskScore(threat) {
+    const severityBase = {
+      low: 2.8,
+      medium: 5.4,
+      high: 7.6,
+      critical: 9.2
+    };
+    const severity = this.getSafeHologramText(threat?.severity, "medium").toLowerCase();
+    const baseScore = severityBase[severity] ?? severityBase.medium;
+    const tier = Number.isFinite(threat?.difficultyTier) ? threat.difficultyTier : 3;
+    const level = Number.isFinite(threat?.level) ? threat.level : 2;
+    const tierAdjustment = Math.max(-0.5, Math.min(0.5, (tier - 4) * 0.08));
+    const levelAdjustment = Math.max(-0.3, Math.min(0.3, (level - 3) * 0.07));
+    const score = Math.max(0.1, Math.min(10, baseScore + tierAdjustment + levelAdjustment));
+    return Number(score.toFixed(1));
+  }
+
+  getThreatSeverityFromScore(score) {
+    if (score >= 9) {
+      return "critical";
+    }
+    if (score >= 7) {
+      return "high";
+    }
+    if (score >= 4) {
+      return "medium";
+    }
+    return "low";
+  }
+
+  getThreatSuggestedResponse(threat, conceptLabels = []) {
+    const weakTo = Array.isArray(threat?.weakTo) ? threat.weakTo : [];
+    const recommended = Array.isArray(threat?.recommendedConcepts) ? threat.recommendedConcepts : [];
+    const firstWeakness = weakTo.find(Boolean);
+    if (firstWeakness) {
+      return `Try ${this.formatHologramLabel(firstWeakness)} response pressure.`;
+    }
+    const firstRecommendation = recommended.find(Boolean);
+    if (firstRecommendation) {
+      const concept = typeof getCyberConcept === "function" ? getCyberConcept(firstRecommendation) : null;
+      return `Prepare ${concept?.title || this.formatHologramLabel(firstRecommendation)} counterplay.`;
+    }
+    if (conceptLabels.length) {
+      return `Scan first, then answer the ${conceptLabels[0]} pattern.`;
+    }
+    return "Scan first, then choose a response.";
+  }
+
+  getThreatRewardHint(threat, conceptLabels = []) {
+    const firstConcept = conceptLabels[0] || "";
+    const threatType = this.getSafeHologramText(threat?.type, "").replace(/-/g, " ");
+    if (firstConcept) {
+      return `${firstConcept} module fragment possible.`;
+    }
+    if (threatType) {
+      return `${threatType} recovery module possible.`;
+    }
+    return "Recovered module fragment possible.";
+  }
+
+  // getThreatRiskProfile() derives a fictional game risk index from existing metadata, not real CVE/CVSS data.
+  getThreatRiskProfile(threat) {
+    const score = this.getThreatRiskScore(threat);
+    const severity = this.getThreatSeverityFromScore(score);
+    const conceptLabels = this.getThreatConceptLabels(threat);
+    const level = Number.isFinite(threat?.level) ? threat.level : 1;
+    const tier = Number.isFinite(threat?.difficultyTier) ? threat.difficultyTier : level;
+    return {
+      threatName: this.getSafeHologramText(threat?.title, "Unknown Threat"),
+      typeLabel: this.formatHologramLabel(threat?.type, "Unknown Vector"),
+      level,
+      tier,
+      score,
+      severity,
+      vector: this.getSafeHologramText(threat?.vector, "Unknown vector"),
+      concepts: conceptLabels.length ? conceptLabels.slice(0, 4).join(" / ") : "Unknown concept",
+      objective: this.getSafeHologramText(threat?.learningObjective || threat?.beginnerSummary, "Assess behavior before committing."),
+      response: this.getThreatSuggestedResponse(threat, conceptLabels),
+      reward: this.getThreatRewardHint(threat, conceptLabels)
+    };
+  }
+
+  buildThreatHologramMarkup(profile) {
+    return `
+      <div class="globe-threat-hologram-scan" aria-hidden="true"></div>
+      <div class="globe-threat-hologram-kicker">THREAT PROFILE</div>
+      <div class="globe-threat-hologram-title">${this.escapeHologramText(profile.threatName)}</div>
+      <div class="globe-threat-hologram-risk">
+        <span>RISK INDEX</span>
+        <strong>${this.escapeHologramText(profile.score)} / ${this.escapeHologramText(profile.severity.toUpperCase())}</strong>
+      </div>
+      <div class="globe-threat-hologram-grid">
+        <span>CLASS</span>
+        <strong>${this.escapeHologramText(profile.typeLabel)} / LVL ${this.escapeHologramText(profile.level)}</strong>
+        <span>VECTOR</span>
+        <strong>${this.escapeHologramText(profile.vector)}</strong>
+        <span>TEACHES</span>
+        <strong>${this.escapeHologramText(profile.concepts)}</strong>
+        <span>OBJECTIVE</span>
+        <strong>${this.escapeHologramText(profile.objective)}</strong>
+        <span>RESPONSE</span>
+        <strong>${this.escapeHologramText(profile.response)}</strong>
+        <span>RECOVERY</span>
+        <strong>${this.escapeHologramText(profile.reward)}</strong>
+      </div>
+    `;
+  }
+
+  positionThreatHologram(x, y) {
+    if (!this.hologram) {
+      return;
+    }
+
+    const margin = 18;
+    const offset = 22;
+    const rect = this.hologram.getBoundingClientRect();
+    const width = rect.width || 320;
+    const height = rect.height || 260;
+    let left = x + offset;
+    let top = y - Math.min(140, height * 0.38);
+
+    if (left + width + margin > window.innerWidth) {
+      left = x - width - offset;
+    }
+    if (top + height + margin > window.innerHeight) {
+      top = window.innerHeight - height - margin;
+    }
+    if (top < margin) {
+      top = margin;
+    }
+    if (left < margin) {
+      left = margin;
+    }
+
+    this.hologram.style.setProperty("--hologram-x", `${Math.round(left)}px`);
+    this.hologram.style.setProperty("--hologram-y", `${Math.round(top)}px`);
+  }
+
+  showThreatHologram(threat, event) {
+    if (!this.hologram || !threat) {
+      return;
+    }
+
+    const profile = this.getThreatRiskProfile(threat);
+    if (this.hologramThreatId !== threat.id) {
+      this.hologram.className = `globe-threat-hologram is-visible is-${profile.severity}`;
+      this.hologram.innerHTML = this.buildThreatHologramMarkup(profile);
+      this.hologramThreatId = threat.id;
+      if (typeof window !== "undefined" && window.THREATGRID_GLOBE_HOLOGRAM_DEBUG === true) {
+        console.info("[HOLOGRAM] show", { threatId: threat.id, score: profile.score, severity: profile.severity });
+        console.info("[HOLOGRAM] profile", profile);
+      }
+    } else if (!this.hologram.classList.contains("is-visible")) {
+      this.hologram.classList.add("is-visible");
+    }
+
+    this.hologram.setAttribute("aria-hidden", "false");
+    this.positionThreatHologram(event?.clientX || window.innerWidth - 380, event?.clientY || 180);
+  }
+
+  hideThreatHologram() {
+    if (!this.hologram) {
+      return;
+    }
+
+    if (typeof window !== "undefined" && window.THREATGRID_GLOBE_HOLOGRAM_DEBUG === true && this.hologram.classList.contains("is-visible")) {
+      console.info("[HOLOGRAM] hide");
+    }
+
+    this.hologram.classList.remove("is-visible", "is-low", "is-medium", "is-high", "is-critical");
+    this.hologram.setAttribute("aria-hidden", "true");
+    this.hologramThreatId = null;
+  }
+
   // handleClick() uses the raycast result to find the threat object and pass it to the registered callbacks.
   handleClick(event) {
     this.updatePointer(event);
@@ -448,15 +680,20 @@ class ThreatGlobe {
       return;
     }
 
+    this.hideThreatHologram();
     this.clickHandlers.forEach((callback) => callback(node.threat));
   }
 
   // updateHoverState() changes the cursor and marks the hovered node so the pulse can brighten.
-  updateHoverState() {
+  updateHoverState(event = null) {
     const intersection = this.getThreatIntersection();
     const nextId = intersection ? intersection.object.userData.threatId : null;
 
     if (this.hoveredThreatId === nextId) {
+      if (nextId && event) {
+        const node = this.nodeMap.get(nextId);
+        this.showThreatHologram(node?.threat, event);
+      }
       return;
     }
 
@@ -466,6 +703,13 @@ class ThreatGlobe {
     this.nodeMap.forEach((node, id) => {
       node.group.userData.hovered = id === nextId;
     });
+
+    if (nextId) {
+      const node = this.nodeMap.get(nextId);
+      this.showThreatHologram(node?.threat, event);
+    } else {
+      this.hideThreatHologram();
+    }
   }
 
   // clearHoverState() resets any highlight when the pointer leaves the globe area.
@@ -475,6 +719,7 @@ class ThreatGlobe {
     this.nodeMap.forEach((node) => {
       node.group.userData.hovered = false;
     });
+    this.hideThreatHologram();
   }
 
   // updateActiveCount() reads the threats array directly so the HUD stays in sync with global state.

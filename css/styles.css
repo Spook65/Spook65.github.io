@@ -118,6 +118,179 @@ canvas {
   color: var(--hud);
 }
 
+/* Globe threat holograms are hover-only tactical scans, not real CVE/CVSS reports. */
+.globe-threat-hologram {
+  --hologram-accent: rgba(0, 255, 204, 0.86);
+  --hologram-accent-soft: rgba(0, 255, 204, 0.12);
+  position: fixed;
+  left: var(--hologram-x, 24px);
+  top: var(--hologram-y, 24px);
+  z-index: 3;
+  width: min(340px, calc(100vw - 36px));
+  pointer-events: none;
+  opacity: 0;
+  transform: translate3d(0, 8px, 0) scale(0.985);
+  transition: opacity 130ms ease, transform 130ms ease;
+}
+
+.globe-threat-hologram.is-visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+}
+
+.globe-threat-hologram::before {
+  content: "";
+  position: absolute;
+  inset: -10px;
+  border: 1px solid color-mix(in srgb, var(--hologram-accent) 18%, transparent);
+  background:
+    radial-gradient(circle at 20% 10%, color-mix(in srgb, var(--hologram-accent) 18%, transparent), transparent 34%),
+    linear-gradient(135deg, color-mix(in srgb, var(--hologram-accent-soft) 160%, transparent), transparent 58%);
+  filter: blur(2px);
+  opacity: 0.72;
+  clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+}
+
+.globe-threat-hologram::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--hologram-accent) 10%, transparent) 0 1px,
+      transparent 1px 7px
+    );
+  mix-blend-mode: screen;
+  opacity: 0.18;
+}
+
+.globe-threat-hologram > * {
+  position: relative;
+  z-index: 1;
+}
+
+.globe-threat-hologram {
+  border: 1px solid color-mix(in srgb, var(--hologram-accent) 58%, rgba(244, 239, 227, 0.08));
+  background:
+    linear-gradient(90deg, var(--hologram-accent) 0 3px, transparent 3px),
+    linear-gradient(145deg, rgba(244, 239, 227, 0.055), transparent 38%),
+    rgba(4, 7, 12, 0.9);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--hologram-accent) 12%, transparent),
+    0 20px 46px rgba(0, 0, 0, 0.38),
+    0 0 32px color-mix(in srgb, var(--hologram-accent) 18%, transparent);
+  clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+  padding: 13px 14px 14px 16px;
+}
+
+.globe-threat-hologram.is-low {
+  --hologram-accent: rgba(0, 255, 204, 0.86);
+  --hologram-accent-soft: rgba(0, 255, 204, 0.13);
+}
+
+.globe-threat-hologram.is-medium {
+  --hologram-accent: rgba(255, 206, 87, 0.92);
+  --hologram-accent-soft: rgba(255, 206, 87, 0.14);
+}
+
+.globe-threat-hologram.is-high {
+  --hologram-accent: rgba(255, 110, 74, 0.94);
+  --hologram-accent-soft: rgba(255, 110, 74, 0.15);
+}
+
+.globe-threat-hologram.is-critical {
+  --hologram-accent: rgba(255, 72, 130, 0.96);
+  --hologram-accent-soft: rgba(255, 72, 130, 0.17);
+}
+
+.globe-threat-hologram-scan {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  clip-path: inherit;
+}
+
+.globe-threat-hologram-scan::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -26%;
+  height: 28%;
+  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--hologram-accent) 20%, transparent), transparent);
+  animation: globe-hologram-scan 2.8s linear infinite;
+}
+
+.globe-threat-hologram-kicker,
+.globe-threat-hologram-risk span,
+.globe-threat-hologram-grid span {
+  color: color-mix(in srgb, var(--hologram-accent) 74%, rgba(244, 239, 227, 0.42));
+  font-size: 0.54rem;
+  letter-spacing: 0.18em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.globe-threat-hologram-title {
+  margin-top: 6px;
+  color: rgba(244, 239, 227, 0.94);
+  font-size: 0.86rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  line-height: 1.18;
+  text-transform: uppercase;
+  text-shadow: 0 0 18px color-mix(in srgb, var(--hologram-accent) 18%, transparent);
+}
+
+.globe-threat-hologram-risk {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 11px 0 10px;
+  border: 1px solid color-mix(in srgb, var(--hologram-accent) 24%, transparent);
+  background: color-mix(in srgb, var(--hologram-accent-soft) 80%, rgba(5, 7, 12, 0.72));
+  padding: 8px 9px;
+}
+
+.globe-threat-hologram-risk strong {
+  color: var(--hologram-accent);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  white-space: nowrap;
+}
+
+.globe-threat-hologram-grid {
+  display: grid;
+  grid-template-columns: 5.5rem minmax(0, 1fr);
+  gap: 6px 10px;
+  align-items: start;
+}
+
+.globe-threat-hologram-grid strong {
+  color: rgba(244, 239, 227, 0.76);
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  line-height: 1.38;
+  text-transform: uppercase;
+}
+
+@keyframes globe-hologram-scan {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  18% {
+    opacity: 0.82;
+  }
+  100% {
+    transform: translateY(460%);
+    opacity: 0;
+  }
+}
+
 /* The threat panel is fixed to the right and slides on/off screen without dimming the globe. */
 .threat-panel {
   position: fixed;
