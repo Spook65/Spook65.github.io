@@ -29,6 +29,7 @@ class ThreatGlobe {
     this.hoveredThreatId = null;
     this.hologram = null;
     this.hologramThreatId = null;
+    this.lastHologramPointerLogAt = 0;
 
     // Drag state stores the last pointer position so rotation can follow the mouse.
     this.dragState = {
@@ -107,6 +108,11 @@ class ThreatGlobe {
     this.hologram.className = "globe-threat-hologram";
     this.hologram.setAttribute("aria-hidden", "true");
     host.appendChild(this.hologram);
+
+    if (typeof window !== "undefined") {
+      window.devShowThreatHologram = (index = 0) => this.devShowThreatHologram(index);
+      window.devHideThreatHologram = () => this.hideThreatHologram();
+    }
   }
 
   // addBackdrop() creates a star field by scattering random points on a large sphere shell.
@@ -317,6 +323,16 @@ class ThreatGlobe {
     });
     const glowMesh = new THREE.Mesh(glowGeometry, glowMaterial);
 
+    // The visual marker is intentionally small, so this transparent sphere provides comfortable hover/click hit testing.
+    const hitGeometry = new THREE.SphereGeometry(0.19 * severity.baseScale, 18, 18);
+    const hitMaterial = new THREE.MeshBasicMaterial({
+      color: new THREE.Color(severity.color),
+      transparent: true,
+      opacity: 0,
+      depthWrite: false
+    });
+    const hitMesh = new THREE.Mesh(hitGeometry, hitMaterial);
+
     const position = this.latLngToVector3(
       threat.location.lat,
       threat.location.lng,
@@ -336,7 +352,9 @@ class ThreatGlobe {
     pointMesh.userData.threatId = threat.id;
     ringMesh.userData.threatId = threat.id;
     glowMesh.userData.threatId = threat.id;
+    hitMesh.userData.threatId = threat.id;
 
+    nodeGroup.add(hitMesh);
     nodeGroup.add(glowMesh);
     nodeGroup.add(ringMesh);
     nodeGroup.add(pointMesh);
@@ -347,6 +365,7 @@ class ThreatGlobe {
       pointMesh,
       ringMesh,
       glowMesh,
+      hitMesh,
       threat
     });
   }
@@ -381,6 +400,7 @@ class ThreatGlobe {
     // pointermove drives both drag rotation and hover checks as the mouse moves.
     window.addEventListener("pointermove", (event) => {
       this.updatePointer(event);
+      this.logHologramPointerMove();
 
       if (this.dragState.isDragging) {
         // Rotation is based on pointer delta so the globe follows the drag direction naturally.
@@ -440,10 +460,45 @@ class ThreatGlobe {
 
   // getThreatIntersection() asks the raycaster which node, if any, is under the pointer.
   getThreatIntersection() {
-    const pointMeshes = Array.from(this.nodeMap.values()).map((node) => node.pointMesh);
+    const hitTargets = Array.from(this.nodeMap.values()).map((node) => node.hitMesh || node.pointMesh);
     this.raycaster.setFromCamera(this.pointer, this.camera);
-    const intersections = this.raycaster.intersectObjects(pointMeshes, false);
+    const intersections = this.raycaster.intersectObjects(hitTargets, false);
+    this.logHologramDebug(`[HOLOGRAM DEBUG] intersects count: ${intersections.length}`);
     return intersections[0] || null;
+  }
+
+  shouldLogHologramDebug() {
+    return typeof window !== "undefined" && window.THREATGRID_GLOBE_HOLOGRAM_DEBUG === true;
+  }
+
+  logHologramDebug(message, payload = null) {
+    if (!this.shouldLogHologramDebug()) {
+      return;
+    }
+
+    if (payload === null) {
+      console.info(message);
+      return;
+    }
+
+    console.info(message, payload);
+  }
+
+  logHologramPointerMove() {
+    if (!this.shouldLogHologramDebug()) {
+      return;
+    }
+
+    const now = Date.now();
+    if (now - this.lastHologramPointerLogAt < 250) {
+      return;
+    }
+
+    this.lastHologramPointerLogAt = now;
+    console.info("[HOLOGRAM DEBUG] pointer move", {
+      x: Number(this.pointer.x.toFixed(3)),
+      y: Number(this.pointer.y.toFixed(3))
+    });
   }
 
   getSafeHologramText(value, fallback = "UNKNOWN") {
@@ -631,7 +686,12 @@ class ThreatGlobe {
   }
 
   showThreatHologram(threat, event) {
-    if (!this.hologram || !threat) {
+    if (!this.hologram) {
+      this.logHologramDebug("[HOLOGRAM ERROR] missing hologram element");
+      return;
+    }
+
+    if (!threat) {
       return;
     }
 
@@ -640,10 +700,8 @@ class ThreatGlobe {
       this.hologram.className = `globe-threat-hologram is-visible is-${profile.severity}`;
       this.hologram.innerHTML = this.buildThreatHologramMarkup(profile);
       this.hologramThreatId = threat.id;
-      if (typeof window !== "undefined" && window.THREATGRID_GLOBE_HOLOGRAM_DEBUG === true) {
-        console.info("[HOLOGRAM] show", { threatId: threat.id, score: profile.score, severity: profile.severity });
-        console.info("[HOLOGRAM] profile", profile);
-      }
+      this.logHologramDebug("[HOLOGRAM] show", { threatId: threat.id, score: profile.score, severity: profile.severity });
+      this.logHologramDebug("[HOLOGRAM] profile", profile);
     } else if (!this.hologram.classList.contains("is-visible")) {
       this.hologram.classList.add("is-visible");
     }
@@ -654,16 +712,32 @@ class ThreatGlobe {
 
   hideThreatHologram() {
     if (!this.hologram) {
+      this.logHologramDebug("[HOLOGRAM ERROR] missing hologram element");
       return;
     }
 
-    if (typeof window !== "undefined" && window.THREATGRID_GLOBE_HOLOGRAM_DEBUG === true && this.hologram.classList.contains("is-visible")) {
+    if (this.shouldLogHologramDebug() && this.hologram.classList.contains("is-visible")) {
       console.info("[HOLOGRAM] hide");
     }
 
     this.hologram.classList.remove("is-visible", "is-low", "is-medium", "is-high", "is-critical");
     this.hologram.setAttribute("aria-hidden", "true");
     this.hologramThreatId = null;
+  }
+
+  devShowThreatHologram(index = 0) {
+    const activeNodes = Array.from(this.nodeMap.values()).filter((node) => node?.threat?.status === "active");
+    const safeIndex = Math.max(0, Math.min(activeNodes.length - 1, Math.floor(Number(index) || 0)));
+    const node = activeNodes[safeIndex] || activeNodes[0] || null;
+    if (!node) {
+      this.logHologramDebug("[HOLOGRAM ERROR] no active threat nodes available");
+      return null;
+    }
+
+    const profile = this.getThreatRiskProfile(node.threat);
+    this.showThreatHologram(node.threat, { clientX: window.innerWidth - 390, clientY: 180 });
+    this.logHologramDebug("[HOLOGRAM] profile", profile);
+    return profile;
   }
 
   // handleClick() uses the raycast result to find the threat object and pass it to the registered callbacks.
@@ -699,6 +773,11 @@ class ThreatGlobe {
 
     this.hoveredThreatId = nextId;
     document.body.style.cursor = nextId ? "pointer" : "default";
+    if (nextId) {
+      const node = this.nodeMap.get(nextId);
+      const title = node?.threat?.title || "Unknown Threat";
+      this.logHologramDebug(`[HOLOGRAM DEBUG] hovered threat: ${title} (${nextId})`);
+    }
 
     this.nodeMap.forEach((node, id) => {
       node.group.userData.hovered = id === nextId;
