@@ -30,6 +30,8 @@ class ThreatGlobe {
     this.hologram = null;
     this.hologramThreatId = null;
     this.lastHologramPointerLogAt = 0;
+    this.isThreatHoverLocked = false;
+    this.projectedHoverRadius = 78;
 
     // Drag state stores the last pointer position so rotation can follow the mouse.
     this.dragState = {
@@ -103,16 +105,25 @@ class ThreatGlobe {
 
   // mountThreatHologram() creates one click-through HTML overlay so hover previews never block node clicks.
   mountThreatHologram() {
-    const host = this.container.parentElement || document.body;
-    this.hologram = document.createElement("aside");
-    this.hologram.className = "globe-threat-hologram";
-    this.hologram.setAttribute("aria-hidden", "true");
-    host.appendChild(this.hologram);
+    this.hologram = document.querySelector(".globe-threat-hologram");
+    if (!this.hologram) {
+      this.hologram = document.createElement("aside");
+      this.hologram.className = "globe-threat-hologram";
+      this.hologram.setAttribute("aria-hidden", "true");
+      document.body.appendChild(this.hologram);
+    }
 
     if (typeof window !== "undefined") {
       window.devShowThreatHologram = (index = 0) => this.devShowThreatHologram(index);
       window.devHideThreatHologram = () => this.hideThreatHologram();
     }
+  }
+
+  ensureThreatHologram() {
+    if (!this.hologram || !this.hologram.isConnected) {
+      this.mountThreatHologram();
+    }
+    return this.hologram;
   }
 
   // addBackdrop() creates a star field by scattering random points on a large sphere shell.
@@ -324,7 +335,7 @@ class ThreatGlobe {
     const glowMesh = new THREE.Mesh(glowGeometry, glowMaterial);
 
     // The visual marker is intentionally small, so this transparent sphere provides comfortable hover/click hit testing.
-    const hitGeometry = new THREE.SphereGeometry(0.19 * severity.baseScale, 18, 18);
+    const hitGeometry = new THREE.SphereGeometry(0.28 * severity.baseScale, 20, 20);
     const hitMaterial = new THREE.MeshBasicMaterial({
       color: new THREE.Color(severity.color),
       transparent: true,
@@ -398,7 +409,11 @@ class ThreatGlobe {
     });
 
     // pointermove drives both drag rotation and hover checks as the mouse moves.
-    window.addEventListener("pointermove", (event) => {
+    const handlePointerMove = (event) => {
+      if (event.threatgridGlobeHandled === true) {
+        return;
+      }
+      event.threatgridGlobeHandled = true;
       this.updatePointer(event);
       this.logHologramPointerMove();
 
@@ -425,7 +440,11 @@ class ThreatGlobe {
       }
 
       this.updateHoverState(event);
-    });
+    };
+
+    window.addEventListener("pointermove", handlePointerMove);
+    this.renderer.domElement.addEventListener("pointermove", handlePointerMove);
+    this.renderer.domElement.addEventListener("mousemove", handlePointerMove);
 
     // pointerup ends the drag, and a short movement threshold lets clicks register cleanly.
     window.addEventListener("pointerup", (event) => {
@@ -464,7 +483,53 @@ class ThreatGlobe {
     this.raycaster.setFromCamera(this.pointer, this.camera);
     const intersections = this.raycaster.intersectObjects(hitTargets, false);
     this.logHologramDebug(`[HOLOGRAM DEBUG] intersects count: ${intersections.length}`);
-    return intersections[0] || null;
+    return intersections[0] || this.getProjectedThreatIntersection();
+  }
+
+  getProjectedThreatIntersection() {
+    if (!this.camera || !this.renderer) {
+      return null;
+    }
+
+    const rect = this.renderer.domElement.getBoundingClientRect();
+    const pointerX = ((this.pointer.x + 1) / 2) * rect.width + rect.left;
+    const pointerY = ((1 - this.pointer.y) / 2) * rect.height + rect.top;
+    let closest = null;
+
+    this.nodeMap.forEach((node) => {
+      const worldPosition = new THREE.Vector3();
+      node.group.getWorldPosition(worldPosition);
+      const projected = worldPosition.clone().project(this.camera);
+      if (projected.z < -1 || projected.z > 1) {
+        return;
+      }
+
+      const screenX = ((projected.x + 1) / 2) * rect.width + rect.left;
+      const screenY = ((1 - projected.y) / 2) * rect.height + rect.top;
+      const distance = Math.hypot(pointerX - screenX, pointerY - screenY);
+      if (distance > this.projectedHoverRadius) {
+        return;
+      }
+
+      if (!closest || distance < closest.distance) {
+        closest = {
+          distance,
+          object: { userData: { threatId: node.threat.id } },
+          point: worldPosition,
+          projected: { x: Math.round(screenX), y: Math.round(screenY) }
+        };
+      }
+    });
+
+    if (closest) {
+      this.logHologramDebug("[HOLOGRAM DEBUG] projected hover fallback", {
+        threatId: closest.object.userData.threatId,
+        distance: Number(closest.distance.toFixed(1)),
+        projected: closest.projected
+      });
+    }
+
+    return closest;
   }
 
   shouldLogHologramDebug() {
@@ -498,6 +563,35 @@ class ThreatGlobe {
     console.info("[HOLOGRAM DEBUG] pointer move", {
       x: Number(this.pointer.x.toFixed(3)),
       y: Number(this.pointer.y.toFixed(3))
+    });
+  }
+
+  logHologramDomState(label = "[HOLOGRAM DOM]") {
+    if (!this.shouldLogHologramDebug()) {
+      return;
+    }
+
+    const el = this.hologram;
+    const rect = el?.getBoundingClientRect();
+    const computed = el ? getComputedStyle(el) : null;
+    console.log(label, {
+      exists: Boolean(el),
+      className: el?.className || null,
+      text: el?.innerText?.slice(0, 120) || "",
+      rect: rect ? {
+        x: Math.round(rect.x),
+        y: Math.round(rect.y),
+        width: Math.round(rect.width),
+        height: Math.round(rect.height)
+      } : null,
+      computed: computed ? {
+        display: computed.display,
+        opacity: computed.opacity,
+        visibility: computed.visibility,
+        zIndex: computed.zIndex,
+        position: computed.position,
+        pointerEvents: computed.pointerEvents
+      } : null
     });
   }
 
@@ -655,7 +749,7 @@ class ThreatGlobe {
     `;
   }
 
-  positionThreatHologram(x, y) {
+  positionThreatHologram(x, y, options = {}) {
     if (!this.hologram) {
       return;
     }
@@ -665,6 +759,14 @@ class ThreatGlobe {
     const rect = this.hologram.getBoundingClientRect();
     const width = rect.width || 320;
     const height = rect.height || 260;
+    if (options.fixed === true) {
+      const fixedLeft = Math.max(margin, window.innerWidth - width - 34);
+      const fixedTop = Math.max(88, Math.round((window.innerHeight - height) / 2));
+      this.hologram.style.setProperty("--hologram-x", `${Math.round(fixedLeft)}px`);
+      this.hologram.style.setProperty("--hologram-y", `${Math.round(fixedTop)}px`);
+      return;
+    }
+
     let left = x + offset;
     let top = y - Math.min(140, height * 0.38);
 
@@ -685,7 +787,8 @@ class ThreatGlobe {
     this.hologram.style.setProperty("--hologram-y", `${Math.round(top)}px`);
   }
 
-  showThreatHologram(threat, event) {
+  showThreatHologram(threat, event, options = {}) {
+    this.ensureThreatHologram();
     if (!this.hologram) {
       this.logHologramDebug("[HOLOGRAM ERROR] missing hologram element");
       return;
@@ -697,7 +800,8 @@ class ThreatGlobe {
 
     const profile = this.getThreatRiskProfile(threat);
     if (this.hologramThreatId !== threat.id) {
-      this.hologram.className = `globe-threat-hologram is-visible is-${profile.severity}`;
+      const debugClass = this.shouldLogHologramDebug() ? " is-debug" : "";
+      this.hologram.className = `globe-threat-hologram is-visible is-${profile.severity}${debugClass}`;
       this.hologram.innerHTML = this.buildThreatHologramMarkup(profile);
       this.hologramThreatId = threat.id;
       this.logHologramDebug("[HOLOGRAM] show", { threatId: threat.id, score: profile.score, severity: profile.severity });
@@ -706,8 +810,15 @@ class ThreatGlobe {
       this.hologram.classList.add("is-visible");
     }
 
+    if (this.shouldLogHologramDebug()) {
+      this.hologram.classList.add("is-debug");
+    } else {
+      this.hologram.classList.remove("is-debug");
+    }
+
     this.hologram.setAttribute("aria-hidden", "false");
-    this.positionThreatHologram(event?.clientX || window.innerWidth - 380, event?.clientY || 180);
+    this.positionThreatHologram(event?.clientX || window.innerWidth - 380, event?.clientY || 180, options);
+    this.logHologramDomState();
   }
 
   hideThreatHologram() {
@@ -720,24 +831,43 @@ class ThreatGlobe {
       console.info("[HOLOGRAM] hide");
     }
 
-    this.hologram.classList.remove("is-visible", "is-low", "is-medium", "is-high", "is-critical");
+    this.hologram.classList.remove("is-visible", "is-low", "is-medium", "is-high", "is-critical", "is-debug");
     this.hologram.setAttribute("aria-hidden", "true");
     this.hologramThreatId = null;
+    this.setThreatHoverLock(false);
   }
 
   devShowThreatHologram(index = 0) {
+    this.ensureThreatHologram();
+    this.syncThreatNodes();
     const activeNodes = Array.from(this.nodeMap.values()).filter((node) => node?.threat?.status === "active");
-    const safeIndex = Math.max(0, Math.min(activeNodes.length - 1, Math.floor(Number(index) || 0)));
+    const activeThreats = Array.isArray(this.threats) ? this.threats.filter((threat) => threat?.status === "active") : [];
+    const safeIndex = Math.max(0, Math.min(Math.max(activeNodes.length, activeThreats.length) - 1, Math.floor(Number(index) || 0)));
     const node = activeNodes[safeIndex] || activeNodes[0] || null;
-    if (!node) {
+    const threat = node?.threat || activeThreats[safeIndex] || activeThreats[0] || null;
+    if (!threat) {
       this.logHologramDebug("[HOLOGRAM ERROR] no active threat nodes available");
       return null;
     }
 
-    const profile = this.getThreatRiskProfile(node.threat);
-    this.showThreatHologram(node.threat, { clientX: window.innerWidth - 390, clientY: 180 });
+    const profile = this.getThreatRiskProfile(threat);
+    this.showThreatHologram(threat, { clientX: window.innerWidth - 380, clientY: window.innerHeight / 2 }, { fixed: true });
+    this.setThreatHoverLock(true);
+    this.logHologramDebug("[HOLOGRAM] force show succeeded", {
+      threatId: threat.id,
+      threatName: profile.threatName
+    });
     this.logHologramDebug("[HOLOGRAM] profile", profile);
+    this.logHologramDomState();
     return profile;
+  }
+
+  setThreatHoverLock(isLocked) {
+    this.isThreatHoverLocked = Boolean(isLocked);
+    if (this.isThreatHoverLocked) {
+      this.rotationVelocity.x = 0;
+      this.rotationVelocity.y = 0;
+    }
   }
 
   // handleClick() uses the raycast result to find the threat object and pass it to the registered callbacks.
@@ -767,6 +897,7 @@ class ThreatGlobe {
       if (nextId && event) {
         const node = this.nodeMap.get(nextId);
         this.showThreatHologram(node?.threat, event);
+        this.setThreatHoverLock(true);
       }
       return;
     }
@@ -785,8 +916,10 @@ class ThreatGlobe {
 
     if (nextId) {
       const node = this.nodeMap.get(nextId);
+      this.setThreatHoverLock(true);
       this.showThreatHologram(node?.threat, event);
     } else {
+      this.logHologramDebug("[HOLOGRAM DEBUG] hover cleared");
       this.hideThreatHologram();
     }
   }
@@ -799,6 +932,7 @@ class ThreatGlobe {
       node.group.userData.hovered = false;
     });
     this.hideThreatHologram();
+    this.setThreatHoverLock(false);
   }
 
   // updateActiveCount() reads the threats array directly so the HUD stays in sync with global state.
@@ -826,14 +960,16 @@ class ThreatGlobe {
 
     const elapsed = this.clock.getElapsedTime();
 
-    // Auto-rotation keeps the globe moving even when the player is not dragging it.
-    this.globeGroup.rotation.y += this.autoRotateSpeed + this.rotationVelocity.y;
-    this.globeGroup.rotation.x += this.rotationVelocity.x;
-    this.globeGroup.rotation.x = Math.max(-0.85, Math.min(0.85, this.globeGroup.rotation.x));
+    if (!this.isThreatHoverLocked || this.dragState.isDragging) {
+      // Auto-rotation keeps the globe moving even when the player is not dragging it.
+      this.globeGroup.rotation.y += this.autoRotateSpeed + this.rotationVelocity.y;
+      this.globeGroup.rotation.x += this.rotationVelocity.x;
+      this.globeGroup.rotation.x = Math.max(-0.85, Math.min(0.85, this.globeGroup.rotation.x));
 
-    // Rotation velocity decays over time so drag input eases out instead of stopping instantly.
-    this.rotationVelocity.y *= 0.94;
-    this.rotationVelocity.x *= 0.9;
+      // Rotation velocity decays over time so drag input eases out instead of stopping instantly.
+      this.rotationVelocity.y *= 0.94;
+      this.rotationVelocity.x *= 0.9;
+    }
 
     this.nodeMap.forEach((node) => {
       const { group, pointMesh, ringMesh, glowMesh } = node;

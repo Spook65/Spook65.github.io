@@ -125,12 +125,20 @@ canvas {
   position: fixed;
   left: var(--hologram-x, 24px);
   top: var(--hologram-y, 24px);
-  z-index: 3;
+  z-index: 14;
   width: min(340px, calc(100vw - 36px));
   pointer-events: none;
   opacity: 0;
   transform: translate3d(0, 8px, 0) scale(0.985);
   transition: opacity 130ms ease, transform 130ms ease;
+}
+
+.globe-threat-hologram.is-debug {
+  outline: 2px solid rgba(255, 230, 118, 0.95);
+  box-shadow:
+    0 0 0 2px rgba(255, 230, 118, 0.18),
+    0 24px 58px rgba(0, 0, 0, 0.46),
+    0 0 42px color-mix(in srgb, var(--hologram-accent) 34%, transparent);
 }
 
 .globe-threat-hologram.is-visible {

@@ -1,5 +1,8 @@
 /* Main wiring for THREATGRID: create the globe, run game rules, and drive the Layer 2 and Layer 3 panel UI. */
 const globe = new ThreatGlobe(document.getElementById("globe-root"), threats);
+window.threatGlobe = globe;
+window.devShowThreatHologram = (index = 0) => globe.devShowThreatHologram(index);
+window.devHideThreatHologram = () => globe.hideThreatHologram();
 const initialThreatBlueprints = threats.map((threat) => JSON.parse(JSON.stringify(threat)));
 
 // activePanelThreat tracks which threat is currently being shown in the side panel.
