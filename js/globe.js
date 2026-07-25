@@ -31,7 +31,8 @@ class ThreatGlobe {
     this.hologramThreatId = null;
     this.lastHologramPointerLogAt = 0;
     this.isThreatHoverLocked = false;
-    this.projectedHoverRadius = 78;
+    this.projectedHoverRadius = 42;
+    this.lastInactiveHologramSkipState = null;
 
     // Drag state stores the last pointer position so rotation can follow the mouse.
     this.dragState = {
@@ -335,7 +336,7 @@ class ThreatGlobe {
     const glowMesh = new THREE.Mesh(glowGeometry, glowMaterial);
 
     // The visual marker is intentionally small, so this transparent sphere provides comfortable hover/click hit testing.
-    const hitGeometry = new THREE.SphereGeometry(0.28 * severity.baseScale, 20, 20);
+    const hitGeometry = new THREE.SphereGeometry(0.16 * severity.baseScale, 20, 20);
     const hitMaterial = new THREE.MeshBasicMaterial({
       color: new THREE.Color(severity.color),
       transparent: true,
@@ -414,6 +415,11 @@ class ThreatGlobe {
         return;
       }
       event.threatgridGlobeHandled = true;
+      if (!this.canShowGlobeThreatHologram()) {
+        this.logInactiveHologramSkip();
+        this.clearHoverState();
+        return;
+      }
       this.updatePointer(event);
       this.logHologramPointerMove();
 
@@ -483,6 +489,11 @@ class ThreatGlobe {
     this.raycaster.setFromCamera(this.pointer, this.camera);
     const intersections = this.raycaster.intersectObjects(hitTargets, false);
     this.logHologramDebug(`[HOLOGRAM DEBUG] intersects count: ${intersections.length}`);
+    if (intersections[0]) {
+      const threatId = intersections[0].object.userData.threatId;
+      const node = this.nodeMap.get(threatId);
+      this.logHologramDebug(`[HOLOGRAM DEBUG] raycast hit ${node?.threat?.title || threatId}`);
+    }
     return intersections[0] || this.getProjectedThreatIntersection();
   }
 
@@ -522,14 +533,45 @@ class ThreatGlobe {
     });
 
     if (closest) {
-      this.logHologramDebug("[HOLOGRAM DEBUG] projected hover fallback", {
-        threatId: closest.object.userData.threatId,
-        distance: Number(closest.distance.toFixed(1)),
-        projected: closest.projected
-      });
+      const node = this.nodeMap.get(closest.object.userData.threatId);
+      this.logHologramDebug(
+        `[HOLOGRAM DEBUG] fallback hit ${node?.threat?.title || closest.object.userData.threatId} distance ${Number(closest.distance.toFixed(1))}px`,
+        { projected: closest.projected }
+      );
     }
 
     return closest;
+  }
+
+  canShowGlobeThreatHologram() {
+    if (typeof screenState !== "undefined") {
+      return screenState === "game";
+    }
+    return typeof window !== "undefined" && window.screenState === "game";
+  }
+
+  getCurrentScreenStateLabel() {
+    if (typeof screenState !== "undefined") {
+      return screenState;
+    }
+    if (typeof window !== "undefined" && typeof window.screenState !== "undefined") {
+      return window.screenState;
+    }
+    return "unknown";
+  }
+
+  logInactiveHologramSkip() {
+    if (!this.shouldLogHologramDebug()) {
+      return;
+    }
+
+    const state = this.getCurrentScreenStateLabel();
+    if (this.lastInactiveHologramSkipState === state && !this.hoveredThreatId && !this.isThreatHoverLocked) {
+      return;
+    }
+
+    this.lastInactiveHologramSkipState = state;
+    console.info(`[HOLOGRAM DEBUG] skipped: inactive screen ${state}`);
   }
 
   shouldLogHologramDebug() {
@@ -788,6 +830,12 @@ class ThreatGlobe {
   }
 
   showThreatHologram(threat, event, options = {}) {
+    if (!options.force && !this.canShowGlobeThreatHologram()) {
+      this.logInactiveHologramSkip();
+      this.clearHoverState();
+      return;
+    }
+
     this.ensureThreatHologram();
     if (!this.hologram) {
       this.logHologramDebug("[HOLOGRAM ERROR] missing hologram element");
@@ -838,6 +886,12 @@ class ThreatGlobe {
   }
 
   devShowThreatHologram(index = 0) {
+    if (!this.canShowGlobeThreatHologram()) {
+      this.logInactiveHologramSkip();
+      this.clearHoverState();
+      return null;
+    }
+
     this.ensureThreatHologram();
     this.syncThreatNodes();
     const activeNodes = Array.from(this.nodeMap.values()).filter((node) => node?.threat?.status === "active");
@@ -863,15 +917,27 @@ class ThreatGlobe {
   }
 
   setThreatHoverLock(isLocked) {
+    if (this.isThreatHoverLocked === Boolean(isLocked)) {
+      return;
+    }
+
     this.isThreatHoverLocked = Boolean(isLocked);
     if (this.isThreatHoverLocked) {
       this.rotationVelocity.x = 0;
       this.rotationVelocity.y = 0;
+      this.logHologramDebug("[HOLOGRAM DEBUG] rotation paused");
+    } else {
+      this.logHologramDebug("[HOLOGRAM DEBUG] rotation resumed");
     }
   }
 
   // handleClick() uses the raycast result to find the threat object and pass it to the registered callbacks.
   handleClick(event) {
+    if (!this.canShowGlobeThreatHologram()) {
+      this.clearHoverState();
+      return;
+    }
+
     this.updatePointer(event);
     const intersection = this.getThreatIntersection();
     if (!intersection) {
@@ -884,12 +950,18 @@ class ThreatGlobe {
       return;
     }
 
-    this.hideThreatHologram();
+    this.clearHoverState();
     this.clickHandlers.forEach((callback) => callback(node.threat));
   }
 
   // updateHoverState() changes the cursor and marks the hovered node so the pulse can brighten.
   updateHoverState(event = null) {
+    if (!this.canShowGlobeThreatHologram()) {
+      this.logInactiveHologramSkip();
+      this.clearHoverState();
+      return;
+    }
+
     const intersection = this.getThreatIntersection();
     const nextId = intersection ? intersection.object.userData.threatId : null;
 
