@@ -232,6 +232,7 @@ canvas {
 
 .globe-threat-hologram-kicker,
 .globe-threat-hologram-risk span,
+.globe-threat-hologram-decision-strip span,
 .globe-threat-hologram-grid span {
   color: color-mix(in srgb, var(--hologram-accent) 74%, rgba(244, 239, 227, 0.42));
   font-size: 0.54rem;
@@ -267,6 +268,40 @@ canvas {
   font-size: 0.72rem;
   letter-spacing: 0.14em;
   white-space: nowrap;
+}
+
+.globe-threat-hologram-decision-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0 0 10px;
+}
+
+.globe-threat-hologram-decision-strip div {
+  min-width: 0;
+  border: 1px solid color-mix(in srgb, var(--hologram-accent) 22%, rgba(244, 239, 227, 0.07));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--hologram-accent-soft) 92%, transparent), rgba(4, 7, 12, 0.48));
+  padding: 7px 7px 6px;
+}
+
+.globe-threat-hologram-decision-strip span,
+.globe-threat-hologram-decision-strip strong {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.globe-threat-hologram-decision-strip strong {
+  margin-top: 3px;
+  color: rgba(244, 239, 227, 0.88);
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.25;
+  text-transform: uppercase;
 }
 
 .globe-threat-hologram-grid {

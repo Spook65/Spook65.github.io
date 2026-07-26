@@ -683,6 +683,165 @@ class ThreatGlobe {
       .filter(Boolean);
   }
 
+  getThreatConceptIds(threat) {
+    const conceptIds = [
+      ...(Array.isArray(threat?.recommendedConcepts) ? threat.recommendedConcepts : []),
+      ...(Array.isArray(threat?.teachesConcepts) ? threat.teachesConcepts : [])
+    ];
+    const seen = new Set();
+    return conceptIds
+      .map((conceptId) => this.getSafeHologramText(conceptId, "").toLowerCase().replace(/\s+/g, "_"))
+      .filter((conceptId) => {
+        if (!conceptId || seen.has(conceptId)) {
+          return false;
+        }
+        seen.add(conceptId);
+        return true;
+      });
+  }
+
+  getThreatRouteDecision(score, severity) {
+    const normalizedSeverity = this.getSafeHologramText(severity, "medium").toLowerCase();
+    if (normalizedSeverity === "critical" || score >= 9) {
+      return "Critical incident";
+    }
+    if (normalizedSeverity === "high" || score >= 7) {
+      return "Dangerous route";
+    }
+    if (normalizedSeverity === "medium" || score >= 4) {
+      return "Balanced incident";
+    }
+    return "Safer route";
+  }
+
+  getThreatConceptRouteGroup(conceptIds = []) {
+    const groups = [
+      {
+        ids: ["detection", "countertrace", "phishing", "incident_response"],
+        label: "Detection",
+        module: "Detection module possible",
+        tags: ["detection", "scan", "countertrace", "reveal", "incident_response"]
+      },
+      {
+        ids: ["containment", "lateral_movement"],
+        label: "Containment",
+        module: "Containment module possible",
+        tags: ["containment", "guard", "mitigate", "isolate"]
+      },
+      {
+        ids: ["malware_cleanup"],
+        label: "Cleanup",
+        module: "Cleanup module possible",
+        tags: ["malware_cleanup", "cleanup", "cleanse", "purge"]
+      },
+      {
+        ids: ["recovery", "encryption"],
+        label: "Recovery",
+        module: "Recovery module possible",
+        tags: ["recovery", "recover", "continuity"]
+      },
+      {
+        ids: ["hardening", "patching", "vulnerability", "privilege_escalation"],
+        label: "Defense",
+        module: "Defense module possible",
+        tags: ["hardening", "patching", "defense", "guard", "mitigate"]
+      }
+    ];
+    return groups.find((group) => group.ids.some((conceptId) => conceptIds.includes(conceptId))) || null;
+  }
+
+  getModuleReadinessTags(module) {
+    const tags = [
+      ...(Array.isArray(module?.conceptTags) ? module.conceptTags : []),
+      ...(Array.isArray(module?.prefixes) ? module.prefixes.flatMap((affix) => affix?.conceptTags || []) : []),
+      ...(Array.isArray(module?.suffixes) ? module.suffixes.flatMap((affix) => affix?.conceptTags || []) : []),
+      ...(Array.isArray(module?.substats) ? module.substats.flatMap((affix) => affix?.conceptTags || []) : [])
+    ];
+    return tags.map((tag) => this.getSafeHologramText(tag, "").toLowerCase()).filter(Boolean);
+  }
+
+  getPartyReadinessTags() {
+    const runState = typeof defenderSaveState !== "undefined" ? defenderSaveState?.currentRun : null;
+    const currentParty = Array.isArray(runState?.party) && runState.party.length
+      ? runState.party
+      : (typeof programs !== "undefined" && Array.isArray(programs) ? programs : []);
+    const tags = new Set();
+
+    currentParty.forEach((member) => {
+      const defenderId = member?.id;
+      const blueprint = typeof getDefenderById === "function" && defenderId ? getDefenderById(defenderId) : null;
+      const defender = blueprint || member;
+      [
+        defender?.domain,
+        defender?.affinity,
+        defender?.role,
+        defender?.archetype
+      ].forEach((value) => {
+        const normalized = this.getSafeHologramText(value, "").toLowerCase().replace(/\s+/g, "_");
+        if (normalized) {
+          tags.add(normalized);
+        }
+      });
+
+      (Array.isArray(defender?.responseTags) ? defender.responseTags : []).forEach((tag) => {
+        const normalized = this.getSafeHologramText(tag, "").toLowerCase();
+        if (normalized) {
+          tags.add(normalized);
+        }
+      });
+
+      (Array.isArray(defender?.moves) ? defender.moves : []).forEach((move) => {
+        (Array.isArray(move?.teachesConcepts) ? move.teachesConcepts : []).forEach((conceptId) => {
+          const normalized = this.getSafeHologramText(conceptId, "").toLowerCase();
+          if (normalized) {
+            tags.add(normalized);
+          }
+        });
+      });
+
+      const module = typeof getEquippedModuleForDefenderId === "function" && runState && defenderId
+        ? getEquippedModuleForDefenderId(runState, defenderId)
+        : null;
+      this.getModuleReadinessTags(module).forEach((tag) => tags.add(tag));
+    });
+
+    return Array.from(tags);
+  }
+
+  getThreatPartyReadiness(threat) {
+    const conceptIds = this.getThreatConceptIds(threat);
+    const group = this.getThreatConceptRouteGroup(conceptIds);
+    if (!group) {
+      return {
+        label: "Unknown readiness",
+        shortLabel: "Unknown readiness"
+      };
+    }
+
+    const partyTags = this.getPartyReadinessTags();
+    if (!partyTags.length) {
+      return {
+        label: "Unknown readiness.",
+        shortLabel: "Unknown readiness"
+      };
+    }
+
+    const isPrepared = group.tags.some((tag) => partyTags.includes(tag))
+      || group.ids.some((conceptId) => partyTags.includes(conceptId));
+
+    if (isPrepared) {
+      return {
+        label: `Prepared: ${group.label} available.`,
+        shortLabel: `${group.label} ready`
+      };
+    }
+
+    return {
+      label: `Warning: limited ${group.label.toLowerCase()} response.`,
+      shortLabel: `Limited ${group.label.toLowerCase()}`
+    };
+  }
+
   getThreatRiskScore(threat) {
     const severityBase = {
       low: 2.8,
@@ -732,6 +891,11 @@ class ThreatGlobe {
   }
 
   getThreatRewardHint(threat, conceptLabels = []) {
+    const conceptIds = this.getThreatConceptIds(threat);
+    const routeGroup = this.getThreatConceptRouteGroup(conceptIds);
+    if (routeGroup) {
+      return routeGroup.module;
+    }
     const firstConcept = conceptLabels[0] || "";
     const threatType = this.getSafeHologramText(threat?.type, "").replace(/-/g, " ");
     if (firstConcept) {
@@ -748,8 +912,10 @@ class ThreatGlobe {
     const score = this.getThreatRiskScore(threat);
     const severity = this.getThreatSeverityFromScore(score);
     const conceptLabels = this.getThreatConceptLabels(threat);
+    const partyReadiness = this.getThreatPartyReadiness(threat);
     const level = Number.isFinite(threat?.level) ? threat.level : 1;
     const tier = Number.isFinite(threat?.difficultyTier) ? threat.difficultyTier : level;
+    const reward = this.getThreatRewardHint(threat, conceptLabels);
     return {
       threatName: this.getSafeHologramText(threat?.title, "Unknown Threat"),
       typeLabel: this.formatHologramLabel(threat?.type, "Unknown Vector"),
@@ -757,11 +923,15 @@ class ThreatGlobe {
       tier,
       score,
       severity,
+      routeDecision: this.getThreatRouteDecision(score, severity),
       vector: this.getSafeHologramText(threat?.vector, "Unknown vector"),
       concepts: conceptLabels.length ? conceptLabels.slice(0, 4).join(" / ") : "Unknown concept",
       objective: this.getSafeHologramText(threat?.learningObjective || threat?.beginnerSummary, "Assess behavior before committing."),
       response: this.getThreatSuggestedResponse(threat, conceptLabels),
-      reward: this.getThreatRewardHint(threat, conceptLabels)
+      partyReadiness: partyReadiness.label,
+      partyReadinessShort: partyReadiness.shortLabel,
+      reward,
+      rewardShort: reward.replace(/\s+module\s+possible\.?$/i, "").replace(/\s+fragment\s+possible\.?$/i, "")
     };
   }
 
@@ -774,6 +944,20 @@ class ThreatGlobe {
         <span>RISK INDEX</span>
         <strong>${this.escapeHologramText(profile.score)} / ${this.escapeHologramText(profile.severity.toUpperCase())}</strong>
       </div>
+      <div class="globe-threat-hologram-decision-strip" aria-label="Route decision preview">
+        <div>
+          <span>ROUTE</span>
+          <strong>${this.escapeHologramText(profile.routeDecision)}</strong>
+        </div>
+        <div>
+          <span>PARTY</span>
+          <strong>${this.escapeHologramText(profile.partyReadinessShort)}</strong>
+        </div>
+        <div>
+          <span>RECOVERY</span>
+          <strong>${this.escapeHologramText(profile.rewardShort)}</strong>
+        </div>
+      </div>
       <div class="globe-threat-hologram-grid">
         <span>CLASS</span>
         <strong>${this.escapeHologramText(profile.typeLabel)} / LVL ${this.escapeHologramText(profile.level)}</strong>
@@ -781,6 +965,8 @@ class ThreatGlobe {
         <strong>${this.escapeHologramText(profile.vector)}</strong>
         <span>TEACHES</span>
         <strong>${this.escapeHologramText(profile.concepts)}</strong>
+        <span>PARTY</span>
+        <strong>${this.escapeHologramText(profile.partyReadiness)}</strong>
         <span>OBJECTIVE</span>
         <strong>${this.escapeHologramText(profile.objective)}</strong>
         <span>RESPONSE</span>
