@@ -126,7 +126,7 @@ canvas {
   left: var(--hologram-x, 24px);
   top: var(--hologram-y, 24px);
   z-index: 14;
-  width: min(340px, calc(100vw - 36px));
+  width: min(390px, calc(100vw - 68px));
   pointer-events: none;
   opacity: 0;
   transform: translate3d(0, 8px, 0) scale(0.985);
@@ -189,7 +189,7 @@ canvas {
     0 20px 46px rgba(0, 0, 0, 0.38),
     0 0 32px color-mix(in srgb, var(--hologram-accent) 18%, transparent);
   clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
-  padding: 13px 14px 14px 16px;
+  padding: 15px 16px 16px 18px;
 }
 
 .globe-threat-hologram.is-low {
@@ -244,7 +244,7 @@ canvas {
 .globe-threat-hologram-title {
   margin-top: 6px;
   color: rgba(244, 239, 227, 0.94);
-  font-size: 0.86rem;
+  font-size: 0.9rem;
   font-weight: 700;
   letter-spacing: 0.12em;
   line-height: 1.18;
@@ -257,7 +257,7 @@ canvas {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin: 11px 0 10px;
+  margin: 12px 0 11px;
   border: 1px solid color-mix(in srgb, var(--hologram-accent) 24%, transparent);
   background: color-mix(in srgb, var(--hologram-accent-soft) 80%, rgba(5, 7, 12, 0.72));
   padding: 8px 9px;
@@ -272,42 +272,43 @@ canvas {
 
 .globe-threat-hologram-decision-strip {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 6px;
-  margin: 0 0 10px;
+  grid-template-columns: 4.9rem minmax(0, 1fr);
+  gap: 6px 11px;
+  margin: 0 0 12px;
+  border: 1px solid color-mix(in srgb, var(--hologram-accent) 22%, rgba(244, 239, 227, 0.07));
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--hologram-accent) 36%, transparent) 0 2px, transparent 2px),
+    linear-gradient(145deg, color-mix(in srgb, var(--hologram-accent-soft) 105%, transparent), rgba(4, 7, 12, 0.5));
+  padding: 9px 10px;
 }
 
 .globe-threat-hologram-decision-strip div {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: 4.9rem minmax(0, 1fr);
   min-width: 0;
-  border: 1px solid color-mix(in srgb, var(--hologram-accent) 22%, rgba(244, 239, 227, 0.07));
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--hologram-accent-soft) 92%, transparent), rgba(4, 7, 12, 0.48));
-  padding: 7px 7px 6px;
 }
 
 .globe-threat-hologram-decision-strip span,
 .globe-threat-hologram-decision-strip strong {
   display: block;
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .globe-threat-hologram-decision-strip strong {
-  margin-top: 3px;
   color: rgba(244, 239, 227, 0.88);
-  font-size: 0.56rem;
+  font-size: 0.6rem;
   font-weight: 700;
   letter-spacing: 0.08em;
-  line-height: 1.25;
+  line-height: 1.32;
   text-transform: uppercase;
 }
 
 .globe-threat-hologram-grid {
   display: grid;
-  grid-template-columns: 5.5rem minmax(0, 1fr);
-  gap: 6px 10px;
+  grid-template-columns: 5rem minmax(0, 1fr);
+  gap: 7px 11px;
   align-items: start;
 }
 
@@ -316,8 +317,9 @@ canvas {
   font-size: 0.58rem;
   font-weight: 600;
   letter-spacing: 0.08em;
-  line-height: 1.38;
+  line-height: 1.42;
   text-transform: uppercase;
+  white-space: normal;
 }
 
 @keyframes globe-hologram-scan {

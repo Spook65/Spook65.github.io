@@ -982,14 +982,20 @@ class ThreatGlobe {
       return;
     }
 
-    const margin = 18;
+    // Keep the blurred hologram frame inside the viewport, not just the element box.
+    const margin = 34;
+    const minTop = Math.min(margin, Math.max(24, window.innerHeight - 24));
     const offset = 22;
     const rect = this.hologram.getBoundingClientRect();
     const width = rect.width || 320;
     const height = rect.height || 260;
+    const maxLeft = Math.max(margin, window.innerWidth - width - margin);
+    const maxTop = Math.max(minTop, window.innerHeight - height - margin);
+    const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+
     if (options.fixed === true) {
-      const fixedLeft = Math.max(margin, window.innerWidth - width - 34);
-      const fixedTop = Math.max(88, Math.round((window.innerHeight - height) / 2));
+      const fixedLeft = clamp(window.innerWidth - width - margin, margin, maxLeft);
+      const fixedTop = clamp(Math.round((window.innerHeight - height) / 2), minTop, maxTop);
       this.hologram.style.setProperty("--hologram-x", `${Math.round(fixedLeft)}px`);
       this.hologram.style.setProperty("--hologram-y", `${Math.round(fixedTop)}px`);
       return;
@@ -1001,15 +1007,8 @@ class ThreatGlobe {
     if (left + width + margin > window.innerWidth) {
       left = x - width - offset;
     }
-    if (top + height + margin > window.innerHeight) {
-      top = window.innerHeight - height - margin;
-    }
-    if (top < margin) {
-      top = margin;
-    }
-    if (left < margin) {
-      left = margin;
-    }
+    left = clamp(left, margin, maxLeft);
+    top = clamp(top, minTop, maxTop);
 
     this.hologram.style.setProperty("--hologram-x", `${Math.round(left)}px`);
     this.hologram.style.setProperty("--hologram-y", `${Math.round(top)}px`);
@@ -1051,7 +1050,10 @@ class ThreatGlobe {
     }
 
     this.hologram.setAttribute("aria-hidden", "false");
-    this.positionThreatHologram(event?.clientX || window.innerWidth - 380, event?.clientY || 180, options);
+    this.positionThreatHologram(event?.clientX || window.innerWidth - 380, event?.clientY || 180, {
+      ...options,
+      fixed: options.fixed !== false
+    });
     this.logHologramDomState();
   }
 
