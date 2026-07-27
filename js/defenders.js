@@ -751,6 +751,9 @@ let expeditionSelectedModuleInstanceId = null;
 let expeditionLoadoutActionMessage = "";
 let expeditionLoadoutActionTone = "";
 let expeditionModuleInventoryFilter = "all";
+let forgeSelectedModuleInstanceId = null;
+let forgeActionMessage = "";
+let forgeActionTone = "";
 let defenderLoadoutDelegationBound = false;
 
 function shouldLogLoadoutModuleDebug() {
@@ -924,6 +927,7 @@ function createDefaultSave() {
       damageReductionRunPercent: 0,
       recoveredModules: [],
       equippedModulesByDefenderId: {},
+      forgeShards: 3,
       lastPantheonChoiceId: null,
       lastPantheonDialogue: "",
       lastDefeatLine: "",
@@ -1025,6 +1029,7 @@ function normalizeDefenderSave(saveData) {
         typeof normalizeCurrentRunModule === "function" ? normalizeCurrentRunModule(module) : cloneDefenderBlueprint(module)
       )).filter(Boolean) : fallback.currentRun.recoveredModules.slice(),
       equippedModulesByDefenderId: currentRunSource.equippedModulesByDefenderId && typeof currentRunSource.equippedModulesByDefenderId === "object" ? { ...currentRunSource.equippedModulesByDefenderId } : { ...fallback.currentRun.equippedModulesByDefenderId },
+      forgeShards: Number.isFinite(currentRunSource.forgeShards) ? Math.max(0, Math.floor(currentRunSource.forgeShards)) : fallback.currentRun.forgeShards,
       lastPantheonChoiceId: typeof currentRunSource.lastPantheonChoiceId === "string" ? currentRunSource.lastPantheonChoiceId : fallback.currentRun.lastPantheonChoiceId,
       lastPantheonDialogue: typeof currentRunSource.lastPantheonDialogue === "string" ? currentRunSource.lastPantheonDialogue : fallback.currentRun.lastPantheonDialogue,
       lastDefeatLine: typeof currentRunSource.lastDefeatLine === "string" ? currentRunSource.lastDefeatLine : fallback.currentRun.lastDefeatLine,
@@ -1055,6 +1060,9 @@ function loadSave() {
   defenderSaveState = normalizeDefenderSave(parsedSave);
   if (typeof ensureCurrentRunModuleInventory === "function") {
     ensureCurrentRunModuleInventory(defenderSaveState.currentRun);
+  }
+  if (typeof ensureForgeState === "function") {
+    ensureForgeState(defenderSaveState.currentRun);
   }
   return defenderSaveState;
 }
@@ -1240,6 +1248,9 @@ function markDefenderRunStarted() {
   const preservedEquippedModules = preserveExistingRun && existingRun.equippedModulesByDefenderId && typeof existingRun.equippedModulesByDefenderId === "object"
     ? JSON.parse(JSON.stringify(existingRun.equippedModulesByDefenderId))
     : {};
+  const preservedForgeShards = preserveExistingRun && Number.isFinite(existingRun.forgeShards)
+    ? Math.max(0, Math.floor(existingRun.forgeShards))
+    : 3;
   const now = Date.now();
 
   defenderSaveState.story = normalizeStoryState(defenderSaveState.story);
@@ -1287,6 +1298,7 @@ function markDefenderRunStarted() {
     damageReductionRunPercent: preserveExistingRun && Number.isFinite(existingRun.damageReductionRunPercent) ? existingRun.damageReductionRunPercent : 0,
     recoveredModules: preservedRecoveredModules,
     equippedModulesByDefenderId: preservedEquippedModules,
+    forgeShards: preservedForgeShards,
     lastPantheonChoiceId: preserveExistingRun ? existingRun.lastPantheonChoiceId || null : null,
     lastPantheonDialogue: preserveExistingRun && typeof existingRun.lastPantheonDialogue === "string" ? existingRun.lastPantheonDialogue : "",
     lastDefeatLine: preserveExistingRun && typeof existingRun.lastDefeatLine === "string" ? existingRun.lastDefeatLine : "",
@@ -1295,6 +1307,9 @@ function markDefenderRunStarted() {
   };
   if (typeof ensureCurrentRunModuleInventory === "function") {
     ensureCurrentRunModuleInventory(defenderSaveState.currentRun);
+  }
+  if (typeof ensureForgeState === "function") {
+    ensureForgeState(defenderSaveState.currentRun);
   }
   saveGame();
 }
@@ -1733,6 +1748,310 @@ function getLoadoutModulePrimaryStat(module) {
   };
 }
 
+function getForgeRunState() {
+  if (!defenderSaveState) {
+    loadSave();
+  }
+  const runState = defenderSaveState?.currentRun || null;
+  if (typeof ensureForgeState === "function") {
+    return ensureForgeState(runState);
+  }
+  if (typeof ensureCurrentRunModuleInventory === "function") {
+    ensureCurrentRunModuleInventory(runState);
+  }
+  return runState;
+}
+
+function getForgeModules() {
+  const runState = getForgeRunState();
+  return typeof getCurrentRunModules === "function" ? getCurrentRunModules(runState) : [];
+}
+
+function getForgeSelectedModule() {
+  return getForgeModules().find((module) => module?.instanceId === forgeSelectedModuleInstanceId) || null;
+}
+
+function getForgeDefenderName(defenderId) {
+  if (!defenderId) {
+    return "";
+  }
+
+  const partyDefender = getExpeditionLoadoutDefenders().find((defender) => defender?.id === defenderId);
+  const template = partyDefender || getDefenderTemplate(defenderId);
+  return getDefenderLoadoutText(template?.name, defenderId);
+}
+
+function selectForgeModule(moduleInstanceId) {
+  if (screenState !== "forge" || !moduleInstanceId) {
+    return false;
+  }
+
+  const selectedModule = getForgeModules().find((module) => module?.instanceId === moduleInstanceId);
+  if (!selectedModule) {
+    forgeSelectedModuleInstanceId = null;
+    forgeActionMessage = "SELECTED MODULE WAS NOT FOUND IN THE CURRENT-RUN INVENTORY.";
+    forgeActionTone = "warning";
+    renderForgeScreen();
+    return false;
+  }
+
+  forgeSelectedModuleInstanceId = selectedModule.instanceId;
+  forgeActionMessage = `${getDefenderLoadoutText(selectedModule.name, "Module")} locked into the calibration cradle.`;
+  forgeActionTone = "selected";
+  renderForgeScreen();
+  return true;
+}
+
+function confirmForgeModuleUpgrade(moduleInstanceId) {
+  if (screenState !== "forge" || !moduleInstanceId || typeof upgradeModuleBaseStat !== "function") {
+    return false;
+  }
+
+  const runState = getForgeRunState();
+  const result = upgradeModuleBaseStat(moduleInstanceId, runState);
+  if (!result?.ok) {
+    forgeActionMessage = result?.reason || "Forge calibration failed.";
+    forgeActionTone = "warning";
+    renderForgeScreen();
+    return false;
+  }
+
+  forgeSelectedModuleInstanceId = result.module?.instanceId || moduleInstanceId;
+  forgeActionMessage = `${getDefenderLoadoutText(result.module?.name, "Module")} calibrated: ${result.previousLabel} → ${result.nextLabel}.`;
+  forgeActionTone = "success";
+  if (typeof ensureCurrentRunModuleInventory === "function") {
+    ensureCurrentRunModuleInventory(runState);
+  }
+  if (typeof saveGame === "function") {
+    saveGame();
+  }
+  renderForgeScreen();
+  return true;
+}
+
+function buildForgeModuleInventoryMarkup(modules, selectedModule) {
+  if (!modules.length) {
+    return `
+      <div class="forge-empty-state">
+        No recovered modules available. Clear an incident and store or install a module first.
+      </div>
+    `;
+  }
+
+  return `
+    <div class="forge-module-list" aria-label="Recovered modules available for Forge calibration">
+      ${modules.map((module) => {
+        const primaryStat = getLoadoutModulePrimaryStat(module);
+        const rarity = getDefenderLoadoutText(module?.rarity, "common").toUpperCase();
+        const itemClass = getDefenderLoadoutText(module?.itemClass, "Recovered Module");
+        const sourceName = getDefenderLoadoutText(module?.sourceName, "Unknown Source");
+        const equippedName = module?.equippedToDefenderId ? getForgeDefenderName(module.equippedToDefenderId) : "";
+        const isSelected = selectedModule?.instanceId === module?.instanceId;
+        return `
+          <button
+            class="module-loot-card forge-module-card ${getLoadoutModuleRarityClass(module)} ${getLoadoutModuleSourceClass(module)} ${getLoadoutModuleRelicClass(module)} ${module?.equippedToDefenderId ? "is-equipped" : "is-unequipped"} ${isSelected ? "is-selected" : ""}"
+            type="button"
+            data-forge-module-instance-id="${getDefenderLoadoutText(module?.instanceId, "")}"
+            aria-pressed="${isSelected ? "true" : "false"}"
+          >
+            <span class="module-loot-sigil" aria-hidden="true" data-relic-label="${getLoadoutModuleRelicLabel(module)}"></span>
+            <div class="module-loot-body">
+              <div class="module-loot-topline">
+                <span class="module-loot-name">${getDefenderLoadoutText(module?.name, "Recovered Module")}</span>
+                <span class="module-loot-rarity">${rarity}</span>
+              </div>
+              <span class="module-loot-class">${itemClass}</span>
+              <div class="module-loot-stat">${primaryStat.text}</div>
+              <div class="module-loot-source">SOURCE: ${sourceName}</div>
+              <span class="module-loot-badges">
+                ${isSelected ? '<span class="defender-loadout-selected-badge">SELECTED</span>' : ""}
+                <span class="defender-loadout-status-badge">${equippedName ? `EQUIPPED: ${equippedName}` : "UNEQUIPPED"}</span>
+              </span>
+            </div>
+          </button>
+        `;
+      }).join("")}
+    </div>
+  `;
+}
+
+function buildForgeSelectedModuleMarkup(module) {
+  if (!module) {
+    return `
+      <div class="forge-module-pedestal is-empty">
+        <div class="forge-pedestal-ring" aria-hidden="true"></div>
+        <div class="forge-pedestal-core" aria-hidden="true">TG</div>
+        <div class="forge-pedestal-copy">
+          <span class="forge-kicker">CALIBRATION CRADLE</span>
+          <strong>Select a recovered module</strong>
+          <span>The bench will preview a safe base-stat calibration before any changes are saved.</span>
+        </div>
+      </div>
+    `;
+  }
+
+  const primaryStat = getLoadoutModulePrimaryStat(module);
+  const rarity = getDefenderLoadoutText(module.rarity, "common").toUpperCase();
+  const sourceName = getDefenderLoadoutText(module.sourceName, "Unknown Source");
+  const itemClass = getDefenderLoadoutText(module.itemClass, "Recovered Module");
+  const equippedName = module.equippedToDefenderId ? getForgeDefenderName(module.equippedToDefenderId) : "";
+  const upgradeLevel = typeof getModuleUpgradeLevel === "function" ? getModuleUpgradeLevel(module) : 0;
+
+  return `
+    <div class="forge-module-pedestal ${getLoadoutModuleRarityClass(module)} ${getLoadoutModuleSourceClass(module)} ${getLoadoutModuleRelicClass(module)}">
+      <div class="forge-pedestal-ring" aria-hidden="true"></div>
+      <div class="forge-pedestal-clamp" aria-hidden="true"></div>
+      <div class="forge-pedestal-core" aria-hidden="true">
+        <span class="module-loot-sigil" data-relic-label="${getLoadoutModuleRelicLabel(module)}"></span>
+      </div>
+      <div class="forge-pedestal-copy">
+        <span class="forge-kicker">MODULE ON BENCH</span>
+        <strong>${getDefenderLoadoutText(module.name, "Recovered Module")}</strong>
+        <span>${rarity} ${itemClass}</span>
+        <span>Source: ${sourceName}</span>
+        <span>${primaryStat.text}</span>
+        <span>${equippedName ? `Equipped to ${equippedName}` : "Unequipped"}</span>
+        <span>Calibration Level ${upgradeLevel} / 3</span>
+      </div>
+    </div>
+  `;
+}
+
+function buildForgeUpgradePreviewMarkup(module, runState) {
+  if (!module) {
+    return `
+      <div class="forge-action-panel">
+        <div class="forge-panel-label">UPGRADE PREVIEW</div>
+        <div class="forge-empty-state">Select a module from the rail to preview its base stat upgrade.</div>
+      </div>
+    `;
+  }
+
+  const primaryStat = getLoadoutModulePrimaryStat(module);
+  const status = typeof canUpgradeModuleBaseStat === "function"
+    ? canUpgradeModuleBaseStat(module, runState)
+    : { ok: false, reason: "Forge helper unavailable.", preview: null, shards: 0 };
+  const preview = status.preview;
+  const upgradeLevel = typeof getModuleUpgradeLevel === "function" ? getModuleUpgradeLevel(module) : 0;
+  const equippedName = module.equippedToDefenderId ? getForgeDefenderName(module.equippedToDefenderId) : "";
+  const shardCount = typeof getForgeShards === "function" ? getForgeShards(runState) : 0;
+  const nextLabel = preview?.nextLabel || primaryStat.text;
+  const currentLabel = preview?.currentLabel || primaryStat.text;
+  const cost = Number.isFinite(preview?.cost) ? preview.cost : 0;
+
+  return `
+    <div class="forge-action-panel">
+      <div class="forge-panel-label">UPGRADE PREVIEW</div>
+      <div class="forge-stat-compare" aria-label="Base stat upgrade preview">
+        <div class="forge-stat-node">
+          <span>Current Base Stat</span>
+          <strong>${currentLabel}</strong>
+        </div>
+        <div class="forge-stat-arrow" aria-hidden="true">→</div>
+        <div class="forge-stat-node is-next">
+          <span>After Calibration</span>
+          <strong>${nextLabel}</strong>
+        </div>
+      </div>
+      <div class="forge-cost-grid">
+        <div>
+          <span>Upgrade Level</span>
+          <strong>${upgradeLevel} / 3</strong>
+        </div>
+        <div>
+          <span>Cost</span>
+          <strong>${cost} Forge Shard${cost === 1 ? "" : "s"}</strong>
+        </div>
+        <div>
+          <span>Available</span>
+          <strong>${shardCount} Forge Shard${shardCount === 1 ? "" : "s"}</strong>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>${equippedName ? `Equipped to ${equippedName}` : "Unequipped"}</strong>
+        </div>
+      </div>
+      <div class="forge-rule-message ${status.ok ? "is-ready" : "is-blocked"}">${status.reason}</div>
+      <button
+        class="forge-confirm-button"
+        type="button"
+        data-forge-upgrade-module="${getDefenderLoadoutText(module.instanceId, "")}"
+        ${status.ok ? "" : "disabled"}
+      >CALIBRATE BASE STAT</button>
+    </div>
+  `;
+}
+
+function buildForgeScreenMarkup() {
+  const runState = getForgeRunState();
+  const modules = getForgeModules();
+  const selectedModule = getForgeSelectedModule() || modules[0] || null;
+  if (selectedModule && forgeSelectedModuleInstanceId !== selectedModule.instanceId) {
+    forgeSelectedModuleInstanceId = selectedModule.instanceId;
+  }
+  const shards = typeof getForgeShards === "function" ? getForgeShards(runState) : 0;
+
+  return `
+    <div class="forge-screen" data-screen-state="forge" data-loadout-context="forge">
+      <header class="forge-header">
+        <div>
+          <div class="forge-kicker">HEPHAESTUS FORGE / CURRENT EXPEDITION</div>
+          <h2 class="briefing-title">MODULE FORGE</h2>
+          <p class="briefing-copy defender-copy">Calibrate one recovered module's base stat. Affixes, rarity, and source identity remain untouched in this MVP.</p>
+        </div>
+        <div class="forge-header-status">
+          <span>FORGE SHARDS</span>
+          <strong>${shards}</strong>
+        </div>
+        <button class="back-button" type="button" data-forge-return="loadout">← RETURN TO LOADOUT / MODULES</button>
+      </header>
+
+      ${forgeActionMessage ? `<div class="forge-success-banner is-${getDefenderLoadoutText(forgeActionTone, "notice")}">${forgeActionMessage}</div>` : ""}
+
+      <div class="forge-shell">
+        <aside class="forge-inventory-rail">
+          <div class="forge-panel-label">CURRENT-RUN MODULES</div>
+          <p class="forge-rail-help">Select one recovered module. Upgrades are allowed while equipped or unequipped.</p>
+          ${buildForgeModuleInventoryMarkup(modules, selectedModule)}
+        </aside>
+
+        <main class="forge-workbench" aria-live="polite">
+          <div class="forge-panel-label">CYBER-BLACKSMITH STATION</div>
+          ${buildForgeSelectedModuleMarkup(selectedModule)}
+          <div class="forge-workbench-note">
+            Base stat calibration mutates the existing module instance, so equipped Defender stats update through the normal module lookup.
+          </div>
+        </main>
+
+        <aside class="forge-preview-panel">
+          ${buildForgeUpgradePreviewMarkup(selectedModule, runState)}
+        </aside>
+      </div>
+    </div>
+  `;
+}
+
+function renderForgeScreen() {
+  if (!defenderScreenContent) {
+    return;
+  }
+
+  if (!defenderSaveState) {
+    loadSave();
+  }
+
+  const modules = getForgeModules();
+  if (forgeSelectedModuleInstanceId && !modules.some((module) => module?.instanceId === forgeSelectedModuleInstanceId)) {
+    forgeSelectedModuleInstanceId = null;
+  }
+  if (!forgeSelectedModuleInstanceId && modules[0]?.instanceId) {
+    forgeSelectedModuleInstanceId = modules[0].instanceId;
+  }
+
+  defenderScreenContent.innerHTML = buildForgeScreenMarkup();
+  bindDefenderLoadoutDelegation();
+}
+
 function getLoadoutModuleAffixes(module) {
   const getList = (type, legacyKey) => {
     if (typeof getModuleAffixList === "function") {
@@ -1991,7 +2310,10 @@ function buildCurrentRunModuleInventoryMarkup(selectedDefenders = []) {
   if (!runModules.length) {
     return `
       <div class="defender-loadout-inventory">
-        <div class="defender-loadout-panel-label">CURRENT RUN MODULES</div>
+        <div class="defender-loadout-inventory-head">
+          <div class="defender-loadout-panel-label">CURRENT RUN MODULES</div>
+          ${isExpeditionInventory ? '<button class="defender-loadout-forge-button" type="button" data-open-forge="true">OPEN FORGE</button>' : ""}
+        </div>
         <div class="defender-loadout-inventory-help">Select a recovered module to install it into one active Defender.</div>
         <div class="defender-loadout-empty">No recovered modules stored yet. Win incidents to recover run-only modules.</div>
       </div>
@@ -2040,7 +2362,10 @@ function buildCurrentRunModuleInventoryMarkup(selectedDefenders = []) {
 
   return `
     <div class="defender-loadout-inventory ${isExpeditionInventory ? "is-loot-card-inventory" : ""}" data-inventory-version="${isExpeditionInventory ? "loot-cards-v2" : "compact-list"}">
-      <div class="defender-loadout-panel-label">CURRENT RUN MODULES</div>
+      <div class="defender-loadout-inventory-head">
+        <div class="defender-loadout-panel-label">CURRENT RUN MODULES</div>
+        ${isExpeditionInventory ? '<button class="defender-loadout-forge-button" type="button" data-open-forge="true">OPEN FORGE</button>' : ""}
+      </div>
       <div class="defender-loadout-inventory-help">${selectedModule ? "Click a Defender to preview. Use the confirm button to equip." : "Select a module to preview install options."}</div>
       ${filterMarkup}
       ${hiddenSelectionMarkup}
@@ -2228,7 +2553,52 @@ function buildDefenderPartySlotMarkup(defender, slotIndex) {
 }
 
 function handleDefenderLoadoutDelegatedClick(event) {
-  if (screenState !== "expedition-loadout" || !defenderScreenContent) {
+  if (!defenderScreenContent || (screenState !== "expedition-loadout" && screenState !== "forge")) {
+    return;
+  }
+
+  if (screenState === "forge") {
+    const returnButton = event.target.closest?.("[data-forge-return]");
+    if (returnButton && defenderScreenContent.contains(returnButton)) {
+      event.preventDefault();
+      event.stopPropagation();
+      if (typeof closeForgeScreen === "function") {
+        closeForgeScreen();
+      }
+      return;
+    }
+
+    const forgeUpgradeButton = event.target.closest?.("[data-forge-upgrade-module]");
+    if (forgeUpgradeButton && defenderScreenContent.contains(forgeUpgradeButton)) {
+      event.preventDefault();
+      event.stopPropagation();
+      const moduleInstanceId = forgeUpgradeButton.getAttribute("data-forge-upgrade-module");
+      if (moduleInstanceId) {
+        confirmForgeModuleUpgrade(moduleInstanceId);
+      }
+      return;
+    }
+
+    const forgeModuleButton = event.target.closest?.("[data-forge-module-instance-id]");
+    if (forgeModuleButton && defenderScreenContent.contains(forgeModuleButton)) {
+      event.preventDefault();
+      event.stopPropagation();
+      selectForgeModule(forgeModuleButton.getAttribute("data-forge-module-instance-id"));
+      return;
+    }
+
+    return;
+  }
+
+  const forgeButton = event.target.closest?.("[data-open-forge]");
+  if (forgeButton && defenderScreenContent.contains(forgeButton)) {
+    event.preventDefault();
+    event.stopPropagation();
+    forgeActionMessage = "";
+    forgeActionTone = "";
+    if (typeof showForgeScreen === "function") {
+      showForgeScreen();
+    }
     return;
   }
 

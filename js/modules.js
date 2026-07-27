@@ -751,6 +751,9 @@ function normalizeCurrentRunModule(module, equippedToDefenderId = null) {
   normalized.name = String(normalized.name || "Recovered Module");
   normalized.rarity = String(normalized.rarity || "common");
   normalized.itemClass = String(normalized.itemClass || "Recovered Module");
+  normalized.upgradeLevel = Number.isFinite(normalized.upgradeLevel)
+    ? Math.max(0, Math.min(3, Math.floor(normalized.upgradeLevel)))
+    : 0;
   normalized.equippedToDefenderId = equippedToDefenderId || normalized.equippedToDefenderId || null;
   normalized.acquiredAt = Number.isFinite(normalized.acquiredAt)
     ? normalized.acquiredAt
@@ -845,6 +848,123 @@ function ensureCurrentRunModuleInventory(runState) {
 
 function getCurrentRunModules(runState) {
   return ensureCurrentRunModuleInventory(runState);
+}
+
+function ensureForgeState(runState) {
+  const sourceRun = runState?.currentRun || runState;
+  if (!sourceRun || typeof sourceRun !== "object") {
+    return null;
+  }
+
+  ensureCurrentRunModuleInventory(sourceRun);
+  if (!Number.isFinite(sourceRun.forgeShards)) {
+    sourceRun.forgeShards = 3;
+  }
+  sourceRun.forgeShards = Math.max(0, Math.floor(sourceRun.forgeShards));
+  sourceRun.recoveredModules.forEach((module) => {
+    module.upgradeLevel = getModuleUpgradeLevel(module);
+  });
+  return sourceRun;
+}
+
+function getForgeShards(runState) {
+  const sourceRun = ensureForgeState(runState);
+  return Number.isFinite(sourceRun?.forgeShards) ? sourceRun.forgeShards : 0;
+}
+
+function getModuleUpgradeLevel(module) {
+  return Number.isFinite(module?.upgradeLevel)
+    ? Math.max(0, Math.min(3, Math.floor(module.upgradeLevel)))
+    : 0;
+}
+
+function getModuleBaseStatUpgradePreview(module) {
+  const baseStat = getModuleBaseStat(module);
+  if (!baseStat?.statKey || !Number.isFinite(baseStat.value)) {
+    return null;
+  }
+
+  const currentLevel = getModuleUpgradeLevel(module);
+  const increment = 1;
+  const isMaxed = currentLevel >= 3;
+  const nextValue = isMaxed ? baseStat.value : baseStat.value + increment;
+  return {
+    statKey: baseStat.statKey,
+    currentValue: baseStat.value,
+    nextValue,
+    currentLabel: formatModuleStatText(baseStat.statKey, baseStat.value),
+    nextLabel: formatModuleStatText(baseStat.statKey, nextValue),
+    increment,
+    currentLevel,
+    nextLevel: Math.min(3, currentLevel + 1),
+    maxLevel: 3,
+    cost: isMaxed ? 0 : currentLevel + 1
+  };
+}
+
+function canUpgradeModuleBaseStat(module, runState) {
+  const sourceRun = ensureForgeState(runState);
+  const preview = getModuleBaseStatUpgradePreview(module);
+  const shards = getForgeShards(sourceRun);
+  if (!module || !preview) {
+    return { ok: false, reason: "No base stat available for calibration.", preview, shards };
+  }
+  if (preview.currentLevel >= preview.maxLevel) {
+    return { ok: false, reason: "Base stat calibration maxed for this prototype.", preview, shards };
+  }
+  if (shards < preview.cost) {
+    return { ok: false, reason: "Not enough Forge Shards.", preview, shards };
+  }
+  return { ok: true, reason: "Forge ready.", preview, shards };
+}
+
+function upgradeModuleBaseStat(moduleInstanceId, runState) {
+  const sourceRun = ensureForgeState(runState);
+  if (!sourceRun || !moduleInstanceId) {
+    return { ok: false, reason: "Forge state unavailable." };
+  }
+
+  const module = sourceRun.recoveredModules.find((candidate) => candidate?.instanceId === moduleInstanceId);
+  const status = canUpgradeModuleBaseStat(module, sourceRun);
+  if (!status.ok) {
+    return { ok: false, reason: status.reason, preview: status.preview, module };
+  }
+
+  const preview = status.preview;
+  const previousLabel = preview.currentLabel;
+  const nextLabel = preview.nextLabel;
+  if (!module.baseStat || typeof module.baseStat !== "object") {
+    module.baseStat = {
+      statKey: preview.statKey,
+      value: preview.currentValue,
+      label: previousLabel
+    };
+  }
+
+  module.baseStat.statKey = preview.statKey;
+  module.baseStat.value = preview.nextValue;
+  module.baseStat.label = nextLabel;
+  module.upgradeLevel = preview.nextLevel;
+  module.upgradedAt = Date.now();
+  sourceRun.forgeShards = Math.max(0, getForgeShards(sourceRun) - preview.cost);
+
+  Object.entries(sourceRun.equippedModulesByDefenderId || {}).forEach(([defenderId, equippedModule]) => {
+    const equippedInstanceId = typeof equippedModule === "string" ? equippedModule : equippedModule?.instanceId;
+    if (equippedInstanceId === module.instanceId) {
+      sourceRun.equippedModulesByDefenderId[defenderId] = module;
+      module.equippedToDefenderId = module.equippedToDefenderId || defenderId;
+    }
+  });
+
+  return {
+    ok: true,
+    module,
+    previousLabel,
+    nextLabel,
+    cost: preview.cost,
+    upgradeLevel: module.upgradeLevel,
+    forgeShards: sourceRun.forgeShards
+  };
 }
 
 function getEquippedModuleForDefenderId(runState, defenderId) {
@@ -959,6 +1079,12 @@ if (typeof window !== "undefined") {
   window.normalizeCurrentRunModule = normalizeCurrentRunModule;
   window.ensureCurrentRunModuleInventory = ensureCurrentRunModuleInventory;
   window.getCurrentRunModules = getCurrentRunModules;
+  window.ensureForgeState = ensureForgeState;
+  window.getForgeShards = getForgeShards;
+  window.getModuleUpgradeLevel = getModuleUpgradeLevel;
+  window.getModuleBaseStatUpgradePreview = getModuleBaseStatUpgradePreview;
+  window.canUpgradeModuleBaseStat = canUpgradeModuleBaseStat;
+  window.upgradeModuleBaseStat = upgradeModuleBaseStat;
   window.getEquippedModuleForDefenderId = getEquippedModuleForDefenderId;
   window.equipRecoveredModule = equipRecoveredModule;
   window.getDefenderModuleStat = getDefenderModuleStat;

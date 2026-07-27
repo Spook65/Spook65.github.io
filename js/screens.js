@@ -1,6 +1,6 @@
 /* Screen-state and mode-selection behavior for THREATGRID's menu, briefing, and gameplay transitions. */
 // screenState controls which overlay is visible: menu, briefing, defender setup, gameplay, combat, or the end-state branch.
-let screenState = "menu"; // 'menu' | 'howtoplay' | 'defenders' | 'expedition-loadout' | 'game' | 'combat' | 'game-over'
+let screenState = "menu"; // 'menu' | 'howtoplay' | 'defenders' | 'expedition-loadout' | 'forge' | 'game' | 'combat' | 'game-over'
 let globeStarted = false;
 
 // gameMode is chosen before the game starts so later UI logic knows whether to show passive or typed actions.
@@ -63,7 +63,7 @@ function setScreen(nextScreen) {
   menuScreen.classList.toggle("is-active", nextScreen === "menu");
   howtoScreen.classList.toggle("is-active", nextScreen === "howtoplay");
   if (defenderScreen) {
-    defenderScreen.classList.toggle("is-active", nextScreen === "defenders" || nextScreen === "expedition-loadout");
+    defenderScreen.classList.toggle("is-active", nextScreen === "defenders" || nextScreen === "expedition-loadout" || nextScreen === "forge");
   }
 }
 
@@ -125,6 +125,30 @@ function closeExpeditionLoadout() {
       bootOverlay.style.display = "none";
     }
   }, 150);
+}
+
+function showForgeScreen() {
+  if (typeof combatState !== "undefined" && combatState) {
+    return;
+  }
+
+  bootOverlay.style.display = "block";
+  bootOverlay.classList.remove("is-hiding");
+  setScreen("forge");
+  if (typeof renderForgeScreen === "function") {
+    renderForgeScreen();
+  }
+}
+
+function closeForgeScreen() {
+  if (screenState !== "forge") {
+    return;
+  }
+
+  setScreen("expedition-loadout");
+  if (typeof renderExpeditionLoadoutScreen === "function") {
+    renderExpeditionLoadoutScreen();
+  }
 }
 
 function restoreExpeditionPartyFromHud() {
@@ -239,4 +263,6 @@ updateModeDescription(gameMode);
 window.showMenu = showMenu;
 window.showExpeditionLoadout = showExpeditionLoadout;
 window.closeExpeditionLoadout = closeExpeditionLoadout;
+window.showForgeScreen = showForgeScreen;
+window.closeForgeScreen = closeForgeScreen;
 window.devRestoreParty = restoreExpeditionPartyFromHud;
