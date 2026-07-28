@@ -132,11 +132,20 @@ function showForgeScreen() {
     return;
   }
 
+  if (typeof window !== "undefined" && window.THREATGRID_FORGE_DEBUG === true) {
+    console.info("[FORGE DEBUG] showForgeScreen called");
+    console.info("[FORGE DEBUG] screenState before", screenState);
+  }
   bootOverlay.style.display = "block";
   bootOverlay.classList.remove("is-hiding");
   setScreen("forge");
   if (typeof renderForgeScreen === "function") {
     renderForgeScreen();
+  } else if (typeof window !== "undefined" && typeof window.renderForgeScreen === "function") {
+    window.renderForgeScreen();
+  }
+  if (typeof window !== "undefined" && window.THREATGRID_FORGE_DEBUG === true) {
+    console.info("[FORGE DEBUG] screenState after", screenState);
   }
 }
 

@@ -773,6 +773,23 @@ function logLoadoutModuleDebug(message, payload = null) {
   console.info(message, payload);
 }
 
+function shouldLogForgeDebug() {
+  return typeof window !== "undefined" && window.THREATGRID_FORGE_DEBUG === true;
+}
+
+function logForgeDebug(message, payload = null) {
+  if (!shouldLogForgeDebug()) {
+    return;
+  }
+
+  if (payload === null) {
+    console.info(message);
+    return;
+  }
+
+  console.info(message, payload);
+}
+
 function shouldLogLoadoutLayoutDebug() {
   return typeof window !== "undefined" && window.THREATGRID_LOADOUT_LAYOUT_DEBUG === true;
 }
@@ -2049,7 +2066,64 @@ function renderForgeScreen() {
   }
 
   defenderScreenContent.innerHTML = buildForgeScreenMarkup();
+  logForgeDebug("[FORGE DEBUG] forge rendered", {
+    moduleCount: modules.length,
+    selectedModuleInstanceId: forgeSelectedModuleInstanceId || null
+  });
   bindDefenderLoadoutDelegation();
+}
+
+function openForgeFromExpeditionLoadout() {
+  logForgeDebug("[FORGE DEBUG] open button clicked");
+  logForgeDebug("[FORGE DEBUG] screenState before", screenState);
+
+  if (screenState !== "expedition-loadout" || !defenderScreenContent) {
+    logForgeDebug("[FORGE DEBUG] open skipped", {
+      screenState,
+      hasContainer: Boolean(defenderScreenContent)
+    });
+    return false;
+  }
+
+  forgeActionMessage = "";
+  forgeActionTone = "";
+  if (typeof showForgeScreen === "function") {
+    logForgeDebug("[FORGE DEBUG] showForgeScreen called", { source: "global" });
+    showForgeScreen();
+  } else if (typeof window !== "undefined" && typeof window.showForgeScreen === "function") {
+    logForgeDebug("[FORGE DEBUG] showForgeScreen called", { source: "window" });
+    window.showForgeScreen();
+  } else {
+    logForgeDebug("[FORGE DEBUG] showForgeScreen missing; using local fallback");
+    screenState = "forge";
+    if (typeof bootOverlay !== "undefined" && bootOverlay) {
+      bootOverlay.style.display = "block";
+      bootOverlay.classList.remove("is-hiding");
+    }
+    if (defenderSelectionScreenRoot) {
+      defenderSelectionScreenRoot.classList.add("is-active");
+    }
+    renderForgeScreen();
+  }
+
+  logForgeDebug("[FORGE DEBUG] screenState after", screenState);
+  return screenState === "forge";
+}
+
+function returnFromForgeToExpeditionLoadout() {
+  if (screenState !== "forge") {
+    return false;
+  }
+
+  if (typeof closeForgeScreen === "function") {
+    closeForgeScreen();
+  } else if (typeof window !== "undefined" && typeof window.closeForgeScreen === "function") {
+    window.closeForgeScreen();
+  } else {
+    screenState = "expedition-loadout";
+    renderExpeditionLoadoutScreen();
+  }
+  return screenState === "expedition-loadout";
 }
 
 function getLoadoutModuleAffixes(module) {
@@ -2298,6 +2372,10 @@ function buildCurrentRunModuleInventoryMarkup(selectedDefenders = []) {
   const isExpeditionInventory = screenState === "expedition-loadout";
   if (screenState === "expedition-loadout") {
     logLoadoutModuleDebug("[LOADOUT MODULE DEBUG] rendering modules", runModules.length);
+    logForgeDebug("[FORGE DEBUG] open button rendered", {
+      moduleCount: runModules.length,
+      context: screenState
+    });
   }
   const selectedModule = getExpeditionSelectedModule();
   const defenderNameById = selectedDefenders.reduce((lookup, defender) => {
@@ -2557,14 +2635,20 @@ function handleDefenderLoadoutDelegatedClick(event) {
     return;
   }
 
+  const delegatedForgeOpenButton = event.target.closest?.("[data-open-forge]");
+  if (delegatedForgeOpenButton && defenderScreenContent.contains(delegatedForgeOpenButton)) {
+    logForgeDebug("[FORGE DEBUG] delegated click received", {
+      screenState,
+      target: "open-forge"
+    });
+  }
+
   if (screenState === "forge") {
     const returnButton = event.target.closest?.("[data-forge-return]");
     if (returnButton && defenderScreenContent.contains(returnButton)) {
       event.preventDefault();
       event.stopPropagation();
-      if (typeof closeForgeScreen === "function") {
-        closeForgeScreen();
-      }
+      returnFromForgeToExpeditionLoadout();
       return;
     }
 
@@ -2594,11 +2678,7 @@ function handleDefenderLoadoutDelegatedClick(event) {
   if (forgeButton && defenderScreenContent.contains(forgeButton)) {
     event.preventDefault();
     event.stopPropagation();
-    forgeActionMessage = "";
-    forgeActionTone = "";
-    if (typeof showForgeScreen === "function") {
-      showForgeScreen();
-    }
+    openForgeFromExpeditionLoadout();
     return;
   }
 
@@ -2852,6 +2932,15 @@ function bindDefenderSelectionControls() {
   const defenderScreenConfirm = document.getElementById("defender-screen-confirm");
   const defenderScreenReset = document.getElementById("defender-screen-reset");
   const defenderScreenBack = document.getElementById("defender-screen-back");
+  const forgeOpenButtons = defenderScreenContent.querySelectorAll("[data-open-forge]");
+
+  forgeOpenButtons.forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      openForgeFromExpeditionLoadout();
+    });
+  });
 
   const rosterTiles = defenderScreenContent.querySelectorAll("[data-defender-id]");
   rosterTiles.forEach((tile) => {
@@ -3038,6 +3127,11 @@ function showDefenderSelectionScreen() {
 function initDefenderSystem() {
   loadSave();
   applySelectedDefenderRoster();
+}
+
+if (typeof window !== "undefined") {
+  window.renderForgeScreen = renderForgeScreen;
+  window.openForgeFromExpeditionLoadout = openForgeFromExpeditionLoadout;
 }
 
 initDefenderSystem();
