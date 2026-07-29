@@ -856,10 +856,10 @@ function formatForgeStatPreviewText(statKey, value) {
   return `+${value}${suffix} ${label}`;
 }
 
-function getForgeBaseStatUpgradePreview(module) {
+function getForgeBaseStatUpgradePreview(module, options = {}) {
   const previewHelper = getForgeGlobalHelper("getModuleBaseStatUpgradePreview");
   if (previewHelper) {
-    return previewHelper(module);
+    return previewHelper(module, options);
   }
 
   const baseStatHelper = getForgeGlobalHelper("getModuleBaseStat");
@@ -869,15 +869,17 @@ function getForgeBaseStatUpgradePreview(module) {
   }
 
   const currentLevel = getForgeModuleUpgradeLevel(module);
+  const requestedIncrement = Number.isFinite(options?.increment) ? Math.floor(options.increment) : 1;
+  const increment = Math.max(1, requestedIncrement);
   const isMaxed = currentLevel >= 3;
-  const nextValue = isMaxed ? baseStat.value : baseStat.value + 1;
+  const nextValue = isMaxed ? baseStat.value : baseStat.value + increment;
   return {
     statKey: baseStat.statKey,
     currentValue: baseStat.value,
     nextValue,
     currentLabel: formatForgeStatPreviewText(baseStat.statKey, baseStat.value),
     nextLabel: formatForgeStatPreviewText(baseStat.statKey, nextValue),
-    increment: 1,
+    increment,
     currentLevel,
     nextLevel: Math.min(3, currentLevel + 1),
     maxLevel: 3,
@@ -920,14 +922,14 @@ function devGrantActiveForgeShards(amount = DEV_FORGE_SHARD_GRANT_AMOUNT) {
   return defenderSaveState.currentRun.forgeShards;
 }
 
-function canUpgradeForgeModuleBaseStat(module, runState) {
+function canUpgradeForgeModuleBaseStat(module, runState, options = {}) {
   const canUpgradeHelper = getForgeGlobalHelper("canUpgradeModuleBaseStat");
   if (canUpgradeHelper) {
-    return canUpgradeHelper(module, runState);
+    return canUpgradeHelper(module, runState, options);
   }
 
   const sourceRun = ensureForgeRunStateFallback(runState);
-  const preview = getForgeBaseStatUpgradePreview(module);
+  const preview = getForgeBaseStatUpgradePreview(module, options);
   const shards = getForgeShardCount(sourceRun);
   if (!module || !preview) {
     return { ok: false, reason: "This module cannot be calibrated.", preview, shards };
@@ -941,10 +943,10 @@ function canUpgradeForgeModuleBaseStat(module, runState) {
   return { ok: true, reason: "Forge ready.", preview, shards };
 }
 
-function upgradeForgeModuleBaseStat(moduleInstanceId, runState) {
+function upgradeForgeModuleBaseStat(moduleInstanceId, runState, options = {}) {
   const upgradeHelper = getForgeGlobalHelper("upgradeModuleBaseStat");
   if (upgradeHelper) {
-    return upgradeHelper(moduleInstanceId, runState);
+    return upgradeHelper(moduleInstanceId, runState, options);
   }
 
   const sourceRun = ensureForgeRunStateFallback(runState);
@@ -953,7 +955,7 @@ function upgradeForgeModuleBaseStat(moduleInstanceId, runState) {
   }
 
   const module = sourceRun.recoveredModules.find((candidate) => candidate?.instanceId === moduleInstanceId);
-  const status = canUpgradeForgeModuleBaseStat(module, sourceRun);
+  const status = canUpgradeForgeModuleBaseStat(module, sourceRun, options);
   if (!status.ok) {
     return { ok: false, reason: status.reason, preview: status.preview, module };
   }
@@ -1964,7 +1966,7 @@ function getLoadoutModulePrimaryStat(module) {
     statKey,
     value,
     label,
-    text: getDefenderLoadoutText(baseStat?.label, value ? `+${value}${suffix} ${label}` : "BASE SIGNAL STABLE")
+    text: statKey && Number.isFinite(value) ? `+${value}${suffix} ${label}` : "BASE SIGNAL STABLE"
   };
 }
 
@@ -2056,6 +2058,7 @@ function getForgeCalibrationResult(position) {
       id: "perfect",
       label: "PERFECT SYNC",
       tone: "perfect",
+      increment: 2,
       line: "Hephaestus: Clean signal. The circuit accepts the burn."
     };
   }
@@ -2064,6 +2067,7 @@ function getForgeCalibrationResult(position) {
       id: "stable",
       label: "STABLE SYNC",
       tone: "success",
+      increment: 1,
       line: "Hephaestus: Good enough. The module holds calibration."
     };
   }
@@ -2071,6 +2075,7 @@ function getForgeCalibrationResult(position) {
     id: "noisy",
     label: "NOISY SYNC",
     tone: "warning",
+    increment: 1,
     line: "Hephaestus: Messy signal. Still usable. Try cleaner timing next time."
   };
 }
@@ -2119,14 +2124,14 @@ function cancelForgeSignalCalibration() {
   return true;
 }
 
-function confirmForgeModuleUpgrade(moduleInstanceId) {
+function confirmForgeModuleUpgrade(moduleInstanceId, options = {}) {
   logForgeDebug("[FORGE DEBUG] confirm upgrade clicked", { moduleInstanceId });
   if (screenState !== "forge" || !moduleInstanceId) {
     return false;
   }
 
   const runState = getForgeRunState();
-  const result = upgradeForgeModuleBaseStat(moduleInstanceId, runState);
+  const result = upgradeForgeModuleBaseStat(moduleInstanceId, runState, options);
   logForgeDebug("[FORGE DEBUG] upgrade result", result);
   if (!result?.ok) {
     forgeActionMessage = result?.reason || "Forge calibration failed.";
@@ -2136,7 +2141,7 @@ function confirmForgeModuleUpgrade(moduleInstanceId) {
   }
 
   forgeSelectedModuleInstanceId = result.module?.instanceId || moduleInstanceId;
-  forgeActionMessage = `${getDefenderLoadoutText(result.module?.name, "Module")} calibrated: ${result.previousLabel} → ${result.nextLabel}.`;
+  forgeActionMessage = `${getDefenderLoadoutText(result.module?.name, "Module")} calibrated ${result.previousLabel} → ${result.nextLabel}.`;
   forgeActionTone = "success";
   const ensureInventory = getForgeGlobalHelper("ensureCurrentRunModuleInventory");
   if (ensureInventory) {
@@ -2167,9 +2172,9 @@ function resolveForgeSignalCalibration() {
   });
 
   resetForgeCalibrationState();
-  const upgraded = confirmForgeModuleUpgrade(moduleInstanceId);
+  const upgraded = confirmForgeModuleUpgrade(moduleInstanceId, { increment: calibrationResult.increment });
   if (upgraded) {
-    forgeActionMessage = `${calibrationResult.label}. ${forgeActionMessage} ${calibrationResult.line}`;
+    forgeActionMessage = `${calibrationResult.label}. ${calibrationResult.line} ${forgeActionMessage}`;
     forgeActionTone = calibrationResult.tone;
     renderForgeScreen();
   }
@@ -2292,7 +2297,7 @@ function buildForgeCalibrationPanelMarkup(module, preview, status) {
   return `
     <div class="forge-calibration-zone" aria-label="Signal Calibration active">
       <div class="forge-panel-label">SIGNAL CALIBRATION</div>
-      <p class="forge-calibration-copy">Click the calibration track or press Space when the pulse crosses the clean zone. Cancel spends no shards.</p>
+      <p class="forge-calibration-copy">Click anywhere in the Forge station or press Space to lock signal. Cancel spends no shards.</p>
       <button class="forge-calibration-track" type="button" data-forge-lock-calibration="true">
         <span class="forge-calibration-clean-zone" aria-hidden="true"></span>
         <span class="forge-calibration-perfect-zone" aria-hidden="true"></span>
@@ -3071,10 +3076,21 @@ function handleDefenderLoadoutDelegatedClick(event) {
       return;
     }
 
+    const forgeCalibrationClickZone = event.target.closest?.(".forge-workbench, .forge-preview-panel, .forge-calibration-zone");
+    if (forgeCalibrationActive && forgeCalibrationClickZone && defenderScreenContent.contains(forgeCalibrationClickZone)) {
+      event.preventDefault();
+      event.stopPropagation();
+      resolveForgeSignalCalibration();
+      return;
+    }
+
     const forgeModuleButton = event.target.closest?.("[data-forge-module-instance-id]");
     if (forgeModuleButton && defenderScreenContent.contains(forgeModuleButton)) {
       event.preventDefault();
       event.stopPropagation();
+      if (forgeCalibrationActive) {
+        return;
+      }
       selectForgeModule(forgeModuleButton.getAttribute("data-forge-module-instance-id"));
       return;
     }

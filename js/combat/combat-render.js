@@ -1343,7 +1343,7 @@ function buildDefenderModuleContributionMarkup(module) {
       <div class="combat-defender-section-label">MODULE CONTRIBUTION</div>
       <div class="combat-defender-module-line is-base">
         <span>BASE</span>
-        <strong>${baseStat?.label || baseStat?.text || "Module Power"}</strong>
+        <strong>${formatRecoveredModuleStatText(baseStat)}</strong>
         ${baseStatSupport.active === false ? '<em>PLANNED</em>' : ""}
       </div>
       ${contributionRows.join("")}
@@ -1922,8 +1922,18 @@ function getRecoveredModulePrimaryStat(module) {
     value,
     label,
     statKey,
-    text: baseStat?.label || `+${value}${suffix} ${label}`
+    text: `+${value}${suffix} ${label}`
   };
+}
+
+function formatRecoveredModuleStatText(stat) {
+  if (!stat?.statKey || !Number.isFinite(stat?.value)) {
+    return stat?.text || stat?.label || "Module Power";
+  }
+
+  const label = typeof getModuleStatLabel === "function" ? getModuleStatLabel(stat.statKey) : stat.label || "Module Power";
+  const suffix = stat.statKey === "startGauge" ? "" : "%";
+  return `+${stat.value}${suffix} ${label}`;
 }
 
 function getRecoveredModuleAffixGroups(module) {

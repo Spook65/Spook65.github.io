@@ -386,7 +386,7 @@ function getModuleBaseStat(module) {
     return {
       statKey: module.baseStat.statKey,
       value: module.baseStat.value,
-      label: module.baseStat.label || formatModuleStatText(module.baseStat.statKey, module.baseStat.value)
+      label: formatModuleStatText(module.baseStat.statKey, module.baseStat.value)
     };
   }
 
@@ -894,14 +894,15 @@ function getModuleUpgradeLevel(module) {
     : 0;
 }
 
-function getModuleBaseStatUpgradePreview(module) {
+function getModuleBaseStatUpgradePreview(module, options = {}) {
   const baseStat = getModuleBaseStat(module);
   if (!baseStat?.statKey || !Number.isFinite(baseStat.value)) {
     return null;
   }
 
   const currentLevel = getModuleUpgradeLevel(module);
-  const increment = 1;
+  const requestedIncrement = Number.isFinite(options?.increment) ? Math.floor(options.increment) : 1;
+  const increment = Math.max(1, requestedIncrement);
   const isMaxed = currentLevel >= 3;
   const nextValue = isMaxed ? baseStat.value : baseStat.value + increment;
   return {
@@ -918,9 +919,9 @@ function getModuleBaseStatUpgradePreview(module) {
   };
 }
 
-function canUpgradeModuleBaseStat(module, runState) {
+function canUpgradeModuleBaseStat(module, runState, options = {}) {
   const sourceRun = ensureForgeState(runState);
-  const preview = getModuleBaseStatUpgradePreview(module);
+  const preview = getModuleBaseStatUpgradePreview(module, options);
   const shards = getForgeShards(sourceRun);
   if (!module || !preview) {
     return { ok: false, reason: "No base stat available for calibration.", preview, shards };
@@ -934,14 +935,14 @@ function canUpgradeModuleBaseStat(module, runState) {
   return { ok: true, reason: "Forge ready.", preview, shards };
 }
 
-function upgradeModuleBaseStat(moduleInstanceId, runState) {
+function upgradeModuleBaseStat(moduleInstanceId, runState, options = {}) {
   const sourceRun = ensureForgeState(runState);
   if (!sourceRun || !moduleInstanceId) {
     return { ok: false, reason: "Forge state unavailable." };
   }
 
   const module = sourceRun.recoveredModules.find((candidate) => candidate?.instanceId === moduleInstanceId);
-  const status = canUpgradeModuleBaseStat(module, sourceRun);
+  const status = canUpgradeModuleBaseStat(module, sourceRun, options);
   if (!status.ok) {
     return { ok: false, reason: status.reason, preview: status.preview, module };
   }
