@@ -850,6 +850,8 @@ function getCurrentRunModules(runState) {
   return ensureCurrentRunModuleInventory(runState);
 }
 
+const DEV_FORGE_SHARD_GRANT = 1000000;
+
 function ensureForgeState(runState) {
   const sourceRun = runState?.currentRun || runState;
   if (!sourceRun || typeof sourceRun !== "object") {
@@ -857,14 +859,28 @@ function ensureForgeState(runState) {
   }
 
   ensureCurrentRunModuleInventory(sourceRun);
-  if (!Number.isFinite(sourceRun.forgeShards)) {
-    sourceRun.forgeShards = 3;
+  // DEV ONLY:
+  // Temporary Forge Shard grant for rapid prototype testing.
+  // Remove or replace with reward/drop economy before public release.
+  if (!Number.isFinite(sourceRun.forgeShards) || sourceRun.forgeShards <= 0) {
+    sourceRun.forgeShards = DEV_FORGE_SHARD_GRANT;
   }
   sourceRun.forgeShards = Math.max(0, Math.floor(sourceRun.forgeShards));
   sourceRun.recoveredModules.forEach((module) => {
     module.upgradeLevel = getModuleUpgradeLevel(module);
   });
   return sourceRun;
+}
+
+function devGrantForgeShards(runState, amount = DEV_FORGE_SHARD_GRANT) {
+  const sourceRun = runState?.currentRun || runState;
+  if (!sourceRun || typeof sourceRun !== "object") {
+    return null;
+  }
+
+  ensureCurrentRunModuleInventory(sourceRun);
+  sourceRun.forgeShards = Math.max(0, Math.floor(Number.isFinite(amount) ? amount : DEV_FORGE_SHARD_GRANT));
+  return sourceRun.forgeShards;
 }
 
 function getForgeShards(runState) {
@@ -1082,8 +1098,10 @@ if (typeof window !== "undefined") {
   window.normalizeCurrentRunModule = normalizeCurrentRunModule;
   window.ensureCurrentRunModuleInventory = ensureCurrentRunModuleInventory;
   window.getCurrentRunModules = getCurrentRunModules;
+  window.DEV_FORGE_SHARD_GRANT = DEV_FORGE_SHARD_GRANT;
   window.ensureForgeState = ensureForgeState;
   window.getForgeShards = getForgeShards;
+  window.devGrantForgeShards = devGrantForgeShards;
   window.getModuleUpgradeLevel = getModuleUpgradeLevel;
   window.getModuleBaseStatUpgradePreview = getModuleBaseStatUpgradePreview;
   window.canUpgradeModuleBaseStat = canUpgradeModuleBaseStat;

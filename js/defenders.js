@@ -760,6 +760,7 @@ let forgeCalibrationModuleInstanceId = null;
 let forgeCalibrationResult = null;
 let defenderLoadoutDelegationBound = false;
 let forgeCalibrationKeydownBound = false;
+const DEV_FORGE_SHARD_GRANT_AMOUNT = 1000000;
 
 function shouldLogLoadoutModuleDebug() {
   return typeof window !== "undefined" && window.THREATGRID_LOADOUT_MODULE_DEBUG === true;
@@ -816,8 +817,11 @@ function ensureForgeRunStateFallback(runState) {
       : {};
   }
 
-  if (!Number.isFinite(runState.forgeShards)) {
-    runState.forgeShards = 3;
+  // DEV ONLY:
+  // Temporary Forge Shard grant for rapid prototype testing.
+  // Remove or replace with reward/drop economy before public release.
+  if (!Number.isFinite(runState.forgeShards) || runState.forgeShards <= 0) {
+    runState.forgeShards = DEV_FORGE_SHARD_GRANT_AMOUNT;
   }
   runState.forgeShards = Math.max(0, Math.floor(runState.forgeShards));
   runState.recoveredModules.forEach((module) => {
@@ -889,6 +893,31 @@ function getForgeShardCount(runState) {
 
   const sourceRun = ensureForgeRunStateFallback(runState);
   return Number.isFinite(sourceRun?.forgeShards) ? sourceRun.forgeShards : 0;
+}
+
+function devGrantActiveForgeShards(amount = DEV_FORGE_SHARD_GRANT_AMOUNT) {
+  if (!defenderSaveState) {
+    loadSave();
+  }
+  if (!defenderSaveState.currentRun || typeof defenderSaveState.currentRun !== "object") {
+    defenderSaveState.currentRun = createDefaultSave().currentRun;
+  }
+
+  const nextAmount = Math.max(0, Math.floor(Number.isFinite(amount) ? amount : DEV_FORGE_SHARD_GRANT_AMOUNT));
+  const grantHelper = getForgeGlobalHelper("devGrantForgeShards");
+  if (grantHelper) {
+    grantHelper(defenderSaveState.currentRun, nextAmount);
+  } else {
+    ensureForgeRunStateFallback(defenderSaveState.currentRun);
+    defenderSaveState.currentRun.forgeShards = nextAmount;
+  }
+  if (typeof saveGame === "function") {
+    saveGame();
+  }
+  if (screenState === "forge" && typeof renderForgeScreen === "function") {
+    renderForgeScreen();
+  }
+  return defenderSaveState.currentRun.forgeShards;
 }
 
 function canUpgradeForgeModuleBaseStat(module, runState) {
@@ -1115,7 +1144,10 @@ function createDefaultSave() {
       damageReductionRunPercent: 0,
       recoveredModules: [],
       equippedModulesByDefenderId: {},
-      forgeShards: 3,
+      // DEV ONLY:
+      // Temporary Forge Shard grant for rapid prototype testing.
+      // Remove or replace with reward/drop economy before public release.
+      forgeShards: DEV_FORGE_SHARD_GRANT_AMOUNT,
       lastPantheonChoiceId: null,
       lastPantheonDialogue: "",
       lastDefeatLine: "",
@@ -1217,7 +1249,7 @@ function normalizeDefenderSave(saveData) {
         typeof normalizeCurrentRunModule === "function" ? normalizeCurrentRunModule(module) : cloneDefenderBlueprint(module)
       )).filter(Boolean) : fallback.currentRun.recoveredModules.slice(),
       equippedModulesByDefenderId: currentRunSource.equippedModulesByDefenderId && typeof currentRunSource.equippedModulesByDefenderId === "object" ? { ...currentRunSource.equippedModulesByDefenderId } : { ...fallback.currentRun.equippedModulesByDefenderId },
-      forgeShards: Number.isFinite(currentRunSource.forgeShards) ? Math.max(0, Math.floor(currentRunSource.forgeShards)) : fallback.currentRun.forgeShards,
+      forgeShards: Number.isFinite(currentRunSource.forgeShards) && currentRunSource.forgeShards > 0 ? Math.max(0, Math.floor(currentRunSource.forgeShards)) : fallback.currentRun.forgeShards,
       lastPantheonChoiceId: typeof currentRunSource.lastPantheonChoiceId === "string" ? currentRunSource.lastPantheonChoiceId : fallback.currentRun.lastPantheonChoiceId,
       lastPantheonDialogue: typeof currentRunSource.lastPantheonDialogue === "string" ? currentRunSource.lastPantheonDialogue : fallback.currentRun.lastPantheonDialogue,
       lastDefeatLine: typeof currentRunSource.lastDefeatLine === "string" ? currentRunSource.lastDefeatLine : fallback.currentRun.lastDefeatLine,
@@ -1436,9 +1468,9 @@ function markDefenderRunStarted() {
   const preservedEquippedModules = preserveExistingRun && existingRun.equippedModulesByDefenderId && typeof existingRun.equippedModulesByDefenderId === "object"
     ? JSON.parse(JSON.stringify(existingRun.equippedModulesByDefenderId))
     : {};
-  const preservedForgeShards = preserveExistingRun && Number.isFinite(existingRun.forgeShards)
+  const preservedForgeShards = preserveExistingRun && Number.isFinite(existingRun.forgeShards) && existingRun.forgeShards > 0
     ? Math.max(0, Math.floor(existingRun.forgeShards))
-    : 3;
+    : DEV_FORGE_SHARD_GRANT_AMOUNT;
   const now = Date.now();
 
   defenderSaveState.story = normalizeStoryState(defenderSaveState.story);
@@ -3533,6 +3565,7 @@ function initDefenderSystem() {
 if (typeof window !== "undefined") {
   window.renderForgeScreen = renderForgeScreen;
   window.openForgeFromExpeditionLoadout = openForgeFromExpeditionLoadout;
+  window.devGrantForgeShards = devGrantActiveForgeShards;
 }
 
 initDefenderSystem();
