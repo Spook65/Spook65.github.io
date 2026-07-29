@@ -2229,11 +2229,38 @@ function buildForgeModuleInventoryMarkup(modules, selectedModule) {
   `;
 }
 
+function buildForgeMachineCalibrationOverlayMarkup(module) {
+  if (!forgeCalibrationActive || forgeCalibrationModuleInstanceId !== module?.instanceId) {
+    return "";
+  }
+
+  return `
+    <div class="forge-machine-calibration-overlay">
+      <div class="forge-machine-calibration-copy">
+        <span>SIGNAL CALIBRATION</span>
+        <strong>Lock the pulse inside the clean burn zone.</strong>
+      </div>
+      <button class="forge-machine-calibration-track" type="button" data-forge-lock-calibration="true" aria-label="Lock Forge signal calibration">
+        <span class="forge-calibration-clean-zone" aria-hidden="true"></span>
+        <span class="forge-calibration-perfect-zone" aria-hidden="true"></span>
+        <span class="forge-calibration-pulse" aria-hidden="true"></span>
+        <span class="forge-calibration-track-label">LOCK SIGNAL</span>
+      </button>
+      <button class="forge-machine-calibration-cancel" type="button" data-forge-cancel-calibration="true">CANCEL</button>
+    </div>
+  `;
+}
+
 function buildForgeSelectedModuleMarkup(module) {
   const calibrationClass = forgeCalibrationActive ? "is-calibrating" : "";
   if (!module) {
     return `
       <div class="forge-module-pedestal is-empty ${calibrationClass}">
+        <div class="forge-room-backdrop" aria-hidden="true">
+          <span class="forge-room-truss forge-room-truss--left"></span>
+          <span class="forge-room-truss forge-room-truss--right"></span>
+          <span class="forge-floor-plane"></span>
+        </div>
         <div class="forge-scene-stage">
           <div class="forge-bay-wall" aria-hidden="true">
             <span class="forge-bay-panel forge-bay-panel--left"></span>
@@ -2280,6 +2307,11 @@ function buildForgeSelectedModuleMarkup(module) {
 
   return `
     <div class="forge-module-pedestal ${calibrationClass} ${getLoadoutModuleRarityClass(module)} ${getLoadoutModuleSourceClass(module)} ${getLoadoutModuleRelicClass(module)}">
+      <div class="forge-room-backdrop" aria-hidden="true">
+        <span class="forge-room-truss forge-room-truss--left"></span>
+        <span class="forge-room-truss forge-room-truss--right"></span>
+        <span class="forge-floor-plane"></span>
+      </div>
       <div class="forge-scene-stage">
         <div class="forge-bay-wall" aria-hidden="true">
           <span class="forge-bay-panel forge-bay-panel--left"></span>
@@ -2312,6 +2344,7 @@ function buildForgeSelectedModuleMarkup(module) {
           <span class="forge-spark forge-spark--three" aria-hidden="true"></span>
         </div>
       </div>
+      ${buildForgeMachineCalibrationOverlayMarkup(module)}
       <div class="forge-pedestal-copy">
         <span class="forge-kicker">MODULE ON BENCH</span>
         <strong>${getDefenderLoadoutText(module.name, "Recovered Module")}</strong>
@@ -2439,8 +2472,14 @@ function buildForgeScreenMarkup() {
   const resultClass = forgeActionMessage && forgeActionTone ? `is-result-${getDefenderLoadoutText(forgeActionTone, "notice")}` : "";
 
   return `
-    <div class="forge-screen ${forgeCalibrationActive ? "is-calibrating" : ""} ${resultClass}" data-screen-state="forge" data-loadout-context="forge">
-      <header class="forge-header">
+    <div class="forge-screen ${forgeCalibrationActive ? "is-calibrating" : ""} ${resultClass}" data-screen-state="forge" data-loadout-context="forge" data-forge-version="art-v2" data-forge-layout="scene-first">
+      <div class="forge-room" aria-label="Forge calibration room">
+        <span class="forge-room-ambient forge-room-ambient--ember" aria-hidden="true"></span>
+        <span class="forge-room-ambient forge-room-ambient--teal" aria-hidden="true"></span>
+        <span class="forge-room-rib forge-room-rib--left" aria-hidden="true"></span>
+        <span class="forge-room-rib forge-room-rib--right" aria-hidden="true"></span>
+
+      <header class="forge-header forge-room-header">
         <div>
           <div class="forge-kicker">HEPHAESTUS FORGE / CURRENT EXPEDITION</div>
           <h2 class="briefing-title">MODULE FORGE</h2>
@@ -2455,14 +2494,14 @@ function buildForgeScreenMarkup() {
 
       ${forgeActionMessage ? `<div class="forge-success-banner is-${getDefenderLoadoutText(forgeActionTone, "notice")}">${forgeActionMessage}</div>` : ""}
 
-      <div class="forge-shell">
-        <aside class="forge-inventory-rail">
+      <div class="forge-shell forge-room-stage">
+        <aside class="forge-inventory-rail forge-storage-rack">
           <div class="forge-panel-label">CURRENT-RUN MODULES</div>
           <p class="forge-rail-help">Select one recovered module. Upgrades are allowed while equipped or unequipped.</p>
           ${buildForgeModuleInventoryMarkup(modules, selectedModule)}
         </aside>
 
-        <main class="forge-workbench" aria-live="polite">
+        <main class="forge-workbench forge-station-core" aria-live="polite">
           <div class="forge-panel-label">CYBER-BLACKSMITH STATION</div>
           ${buildForgeSelectedModuleMarkup(selectedModule)}
           <div class="forge-workbench-note">
@@ -2470,9 +2509,10 @@ function buildForgeScreenMarkup() {
           </div>
         </main>
 
-        <aside class="forge-preview-panel">
+        <aside class="forge-preview-panel forge-diagnostic-console">
           ${buildForgeUpgradePreviewMarkup(selectedModule, runState)}
         </aside>
+      </div>
       </div>
     </div>
   `;
