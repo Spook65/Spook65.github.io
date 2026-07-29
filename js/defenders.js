@@ -790,6 +790,172 @@ function logForgeDebug(message, payload = null) {
   console.info(message, payload);
 }
 
+function getForgeGlobalHelper(helperName) {
+  return typeof window !== "undefined" && typeof window[helperName] === "function"
+    ? window[helperName]
+    : null;
+}
+
+function ensureForgeRunStateFallback(runState) {
+  if (!runState || typeof runState !== "object") {
+    return null;
+  }
+
+  const ensureInventory = getForgeGlobalHelper("ensureCurrentRunModuleInventory");
+  if (ensureInventory) {
+    ensureInventory(runState);
+  } else {
+    runState.recoveredModules = Array.isArray(runState.recoveredModules) ? runState.recoveredModules : [];
+    runState.equippedModulesByDefenderId = runState.equippedModulesByDefenderId && typeof runState.equippedModulesByDefenderId === "object"
+      ? runState.equippedModulesByDefenderId
+      : {};
+  }
+
+  if (!Number.isFinite(runState.forgeShards)) {
+    runState.forgeShards = 3;
+  }
+  runState.forgeShards = Math.max(0, Math.floor(runState.forgeShards));
+  runState.recoveredModules.forEach((module) => {
+    if (module && typeof module === "object") {
+      module.upgradeLevel = Number.isFinite(module.upgradeLevel)
+        ? Math.max(0, Math.min(3, Math.floor(module.upgradeLevel)))
+        : 0;
+    }
+  });
+  return runState;
+}
+
+function getForgeModuleUpgradeLevel(module) {
+  const levelHelper = getForgeGlobalHelper("getModuleUpgradeLevel");
+  if (levelHelper) {
+    return levelHelper(module);
+  }
+
+  return Number.isFinite(module?.upgradeLevel)
+    ? Math.max(0, Math.min(3, Math.floor(module.upgradeLevel)))
+    : 0;
+}
+
+function formatForgeStatPreviewText(statKey, value) {
+  if (!statKey || !Number.isFinite(value)) {
+    return "Base stat unavailable";
+  }
+
+  const statLabelHelper = getForgeGlobalHelper("getModuleStatLabel");
+  const label = statLabelHelper ? statLabelHelper(statKey) : statKey;
+  const suffix = statKey === "startGauge" ? "" : "%";
+  return `+${value}${suffix} ${label}`;
+}
+
+function getForgeBaseStatUpgradePreview(module) {
+  const previewHelper = getForgeGlobalHelper("getModuleBaseStatUpgradePreview");
+  if (previewHelper) {
+    return previewHelper(module);
+  }
+
+  const baseStatHelper = getForgeGlobalHelper("getModuleBaseStat");
+  const baseStat = baseStatHelper ? baseStatHelper(module) : module?.baseStat;
+  if (!baseStat?.statKey || !Number.isFinite(baseStat.value)) {
+    return null;
+  }
+
+  const currentLevel = getForgeModuleUpgradeLevel(module);
+  const isMaxed = currentLevel >= 3;
+  const nextValue = isMaxed ? baseStat.value : baseStat.value + 1;
+  return {
+    statKey: baseStat.statKey,
+    currentValue: baseStat.value,
+    nextValue,
+    currentLabel: formatForgeStatPreviewText(baseStat.statKey, baseStat.value),
+    nextLabel: formatForgeStatPreviewText(baseStat.statKey, nextValue),
+    increment: 1,
+    currentLevel,
+    nextLevel: Math.min(3, currentLevel + 1),
+    maxLevel: 3,
+    cost: isMaxed ? 0 : currentLevel + 1
+  };
+}
+
+function getForgeShardCount(runState) {
+  const shardHelper = getForgeGlobalHelper("getForgeShards");
+  if (shardHelper) {
+    return shardHelper(runState);
+  }
+
+  const sourceRun = ensureForgeRunStateFallback(runState);
+  return Number.isFinite(sourceRun?.forgeShards) ? sourceRun.forgeShards : 0;
+}
+
+function canUpgradeForgeModuleBaseStat(module, runState) {
+  const canUpgradeHelper = getForgeGlobalHelper("canUpgradeModuleBaseStat");
+  if (canUpgradeHelper) {
+    return canUpgradeHelper(module, runState);
+  }
+
+  const sourceRun = ensureForgeRunStateFallback(runState);
+  const preview = getForgeBaseStatUpgradePreview(module);
+  const shards = getForgeShardCount(sourceRun);
+  if (!module || !preview) {
+    return { ok: false, reason: "This module cannot be calibrated.", preview, shards };
+  }
+  if (preview.currentLevel >= preview.maxLevel) {
+    return { ok: false, reason: "Base stat calibration maxed for this prototype.", preview, shards };
+  }
+  if (shards < preview.cost) {
+    return { ok: false, reason: "Not enough Forge Shards.", preview, shards };
+  }
+  return { ok: true, reason: "Forge ready.", preview, shards };
+}
+
+function upgradeForgeModuleBaseStat(moduleInstanceId, runState) {
+  const upgradeHelper = getForgeGlobalHelper("upgradeModuleBaseStat");
+  if (upgradeHelper) {
+    return upgradeHelper(moduleInstanceId, runState);
+  }
+
+  const sourceRun = ensureForgeRunStateFallback(runState);
+  if (!sourceRun || !moduleInstanceId) {
+    return { ok: false, reason: "Forge state unavailable." };
+  }
+
+  const module = sourceRun.recoveredModules.find((candidate) => candidate?.instanceId === moduleInstanceId);
+  const status = canUpgradeForgeModuleBaseStat(module, sourceRun);
+  if (!status.ok) {
+    return { ok: false, reason: status.reason, preview: status.preview, module };
+  }
+
+  const preview = status.preview;
+  const liveModule = sourceRun.recoveredModules.find((candidate) => candidate?.instanceId === moduleInstanceId) || module;
+  if (!liveModule.baseStat || typeof liveModule.baseStat !== "object") {
+    liveModule.baseStat = {};
+  }
+  liveModule.baseStat.statKey = preview.statKey;
+  liveModule.baseStat.value = preview.nextValue;
+  liveModule.baseStat.label = preview.nextLabel;
+  liveModule.upgradeLevel = preview.nextLevel;
+  liveModule.upgradedAt = Date.now();
+  const currentShards = Number.isFinite(sourceRun.forgeShards) ? sourceRun.forgeShards : 0;
+  sourceRun.forgeShards = Math.max(0, currentShards - preview.cost);
+
+  Object.entries(sourceRun.equippedModulesByDefenderId || {}).forEach(([defenderId, equippedModule]) => {
+    const equippedInstanceId = typeof equippedModule === "string" ? equippedModule : equippedModule?.instanceId;
+    if (equippedInstanceId === liveModule.instanceId) {
+      sourceRun.equippedModulesByDefenderId[defenderId] = liveModule;
+      liveModule.equippedToDefenderId = liveModule.equippedToDefenderId || defenderId;
+    }
+  });
+
+  return {
+    ok: true,
+    module: liveModule,
+    previousLabel: preview.currentLabel,
+    nextLabel: preview.nextLabel,
+    cost: preview.cost,
+    upgradeLevel: liveModule.upgradeLevel,
+    forgeShards: sourceRun.forgeShards
+  };
+}
+
 function shouldLogLoadoutLayoutDebug() {
   return typeof window !== "undefined" && window.THREATGRID_LOADOUT_LAYOUT_DEBUG === true;
 }
@@ -1769,19 +1935,28 @@ function getForgeRunState() {
   if (!defenderSaveState) {
     loadSave();
   }
-  const runState = defenderSaveState?.currentRun || null;
-  if (typeof ensureForgeState === "function") {
-    return ensureForgeState(runState);
+
+  if (!defenderSaveState.currentRun || typeof defenderSaveState.currentRun !== "object") {
+    defenderSaveState.currentRun = createDefaultSave().currentRun;
   }
-  if (typeof ensureCurrentRunModuleInventory === "function") {
-    ensureCurrentRunModuleInventory(runState);
-  }
-  return runState;
+
+  const runState = defenderSaveState.currentRun;
+  const ensureForge = getForgeGlobalHelper("ensureForgeState");
+  const ensuredRunState = ensureForge ? ensureForge(runState) : ensureForgeRunStateFallback(runState);
+  logForgeDebug("[FORGE DEBUG] forge shards", {
+    forgeShards: Number.isFinite(ensuredRunState?.forgeShards) ? ensuredRunState.forgeShards : null,
+    helper: ensureForge ? "window.ensureForgeState" : "fallback"
+  });
+  return ensuredRunState;
 }
 
 function getForgeModules() {
   const runState = getForgeRunState();
-  return typeof getCurrentRunModules === "function" ? getCurrentRunModules(runState) : [];
+  const getModules = getForgeGlobalHelper("getCurrentRunModules");
+  if (getModules) {
+    return getModules(runState);
+  }
+  return ensureForgeRunStateFallback(runState)?.recoveredModules || [];
 }
 
 function getForgeSelectedModule() {
@@ -1820,12 +1995,14 @@ function selectForgeModule(moduleInstanceId) {
 }
 
 function confirmForgeModuleUpgrade(moduleInstanceId) {
-  if (screenState !== "forge" || !moduleInstanceId || typeof upgradeModuleBaseStat !== "function") {
+  logForgeDebug("[FORGE DEBUG] confirm upgrade clicked", { moduleInstanceId });
+  if (screenState !== "forge" || !moduleInstanceId) {
     return false;
   }
 
   const runState = getForgeRunState();
-  const result = upgradeModuleBaseStat(moduleInstanceId, runState);
+  const result = upgradeForgeModuleBaseStat(moduleInstanceId, runState);
+  logForgeDebug("[FORGE DEBUG] upgrade result", result);
   if (!result?.ok) {
     forgeActionMessage = result?.reason || "Forge calibration failed.";
     forgeActionTone = "warning";
@@ -1836,8 +2013,11 @@ function confirmForgeModuleUpgrade(moduleInstanceId) {
   forgeSelectedModuleInstanceId = result.module?.instanceId || moduleInstanceId;
   forgeActionMessage = `${getDefenderLoadoutText(result.module?.name, "Module")} calibrated: ${result.previousLabel} → ${result.nextLabel}.`;
   forgeActionTone = "success";
-  if (typeof ensureCurrentRunModuleInventory === "function") {
-    ensureCurrentRunModuleInventory(runState);
+  const ensureInventory = getForgeGlobalHelper("ensureCurrentRunModuleInventory");
+  if (ensureInventory) {
+    ensureInventory(runState);
+  } else {
+    ensureForgeRunStateFallback(runState);
   }
   if (typeof saveGame === "function") {
     saveGame();
@@ -1897,12 +2077,19 @@ function buildForgeSelectedModuleMarkup(module) {
     return `
       <div class="forge-module-pedestal is-empty">
         <div class="forge-pedestal-ring" aria-hidden="true"></div>
-        <div class="forge-pedestal-core" aria-hidden="true">TG</div>
+        <div class="forge-cradle" aria-hidden="true">
+          <span class="forge-clamp forge-clamp--left"></span>
+          <span class="forge-clamp forge-clamp--right"></span>
+          <span class="forge-shard-socket"></span>
+          <span class="forge-energy-rail"></span>
+          <div class="forge-pedestal-core">TG</div>
+        </div>
         <div class="forge-pedestal-copy">
           <span class="forge-kicker">CALIBRATION CRADLE</span>
           <strong>Select a recovered module</strong>
           <span>The bench will preview a safe base-stat calibration before any changes are saved.</span>
         </div>
+        <div class="forge-helper-line">HEPHAESTUS: "Good module. Crooked signal. I can fix that."</div>
       </div>
     `;
   }
@@ -1912,14 +2099,19 @@ function buildForgeSelectedModuleMarkup(module) {
   const sourceName = getDefenderLoadoutText(module.sourceName, "Unknown Source");
   const itemClass = getDefenderLoadoutText(module.itemClass, "Recovered Module");
   const equippedName = module.equippedToDefenderId ? getForgeDefenderName(module.equippedToDefenderId) : "";
-  const upgradeLevel = typeof getModuleUpgradeLevel === "function" ? getModuleUpgradeLevel(module) : 0;
+  const upgradeLevel = getForgeModuleUpgradeLevel(module);
 
   return `
     <div class="forge-module-pedestal ${getLoadoutModuleRarityClass(module)} ${getLoadoutModuleSourceClass(module)} ${getLoadoutModuleRelicClass(module)}">
       <div class="forge-pedestal-ring" aria-hidden="true"></div>
-      <div class="forge-pedestal-clamp" aria-hidden="true"></div>
-      <div class="forge-pedestal-core" aria-hidden="true">
-        <span class="module-loot-sigil" data-relic-label="${getLoadoutModuleRelicLabel(module)}"></span>
+      <div class="forge-cradle" aria-hidden="true">
+        <span class="forge-clamp forge-clamp--left"></span>
+        <span class="forge-clamp forge-clamp--right"></span>
+        <span class="forge-shard-socket"></span>
+        <span class="forge-energy-rail"></span>
+        <div class="forge-pedestal-core">
+          <span class="module-loot-sigil" data-relic-label="${getLoadoutModuleRelicLabel(module)}"></span>
+        </div>
       </div>
       <div class="forge-pedestal-copy">
         <span class="forge-kicker">MODULE ON BENCH</span>
@@ -1930,6 +2122,7 @@ function buildForgeSelectedModuleMarkup(module) {
         <span>${equippedName ? `Equipped to ${equippedName}` : "Unequipped"}</span>
         <span>Calibration Level ${upgradeLevel} / 3</span>
       </div>
+      <div class="forge-helper-line">HEPHAESTUS: "Calibration is not magic. It is violence, measured precisely."</div>
     </div>
   `;
 }
@@ -1945,16 +2138,26 @@ function buildForgeUpgradePreviewMarkup(module, runState) {
   }
 
   const primaryStat = getLoadoutModulePrimaryStat(module);
-  const status = typeof canUpgradeModuleBaseStat === "function"
-    ? canUpgradeModuleBaseStat(module, runState)
-    : { ok: false, reason: "Forge helper unavailable.", preview: null, shards: 0 };
+  const status = canUpgradeForgeModuleBaseStat(module, runState);
   const preview = status.preview;
-  const upgradeLevel = typeof getModuleUpgradeLevel === "function" ? getModuleUpgradeLevel(module) : 0;
+  const upgradeLevel = getForgeModuleUpgradeLevel(module);
   const equippedName = module.equippedToDefenderId ? getForgeDefenderName(module.equippedToDefenderId) : "";
-  const shardCount = typeof getForgeShards === "function" ? getForgeShards(runState) : 0;
+  const shardCount = Number.isFinite(status.shards) ? status.shards : getForgeShardCount(runState);
   const nextLabel = preview?.nextLabel || primaryStat.text;
   const currentLabel = preview?.currentLabel || primaryStat.text;
   const cost = Number.isFinite(preview?.cost) ? preview.cost : 0;
+  logForgeDebug("[FORGE DEBUG] selected module", {
+    instanceId: module?.instanceId || null,
+    moduleName: module?.name || "Recovered Module",
+    upgradeLevel
+  });
+  logForgeDebug("[FORGE DEBUG] preview", preview);
+  logForgeDebug("[FORGE DEBUG] can upgrade result", {
+    ok: Boolean(status.ok),
+    reason: status.reason,
+    shards: shardCount,
+    cost
+  });
 
   return `
     <div class="forge-action-panel">
@@ -1964,7 +2167,9 @@ function buildForgeUpgradePreviewMarkup(module, runState) {
           <span>Current Base Stat</span>
           <strong>${currentLabel}</strong>
         </div>
-        <div class="forge-stat-arrow" aria-hidden="true">→</div>
+        <div class="forge-upgrade-bridge" aria-hidden="true">
+          <span class="forge-stat-arrow">→</span>
+        </div>
         <div class="forge-stat-node is-next">
           <span>After Calibration</span>
           <strong>${nextLabel}</strong>
@@ -2006,7 +2211,7 @@ function buildForgeScreenMarkup() {
   if (selectedModule && forgeSelectedModuleInstanceId !== selectedModule.instanceId) {
     forgeSelectedModuleInstanceId = selectedModule.instanceId;
   }
-  const shards = typeof getForgeShards === "function" ? getForgeShards(runState) : 0;
+  const shards = getForgeShardCount(runState);
 
   return `
     <div class="forge-screen" data-screen-state="forge" data-loadout-context="forge">
@@ -2052,6 +2257,8 @@ function renderForgeScreen() {
   if (!defenderScreenContent) {
     return;
   }
+
+  logForgeDebug("[FORGE DEBUG] render forge");
 
   if (!defenderSaveState) {
     loadSave();

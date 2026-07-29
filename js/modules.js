@@ -930,39 +930,42 @@ function upgradeModuleBaseStat(moduleInstanceId, runState) {
     return { ok: false, reason: status.reason, preview: status.preview, module };
   }
 
+  // canUpgradeModuleBaseStat normalizes the inventory; reacquire the live instance before mutating it.
+  const liveModule = sourceRun.recoveredModules.find((candidate) => candidate?.instanceId === moduleInstanceId) || module;
   const preview = status.preview;
   const previousLabel = preview.currentLabel;
   const nextLabel = preview.nextLabel;
-  if (!module.baseStat || typeof module.baseStat !== "object") {
-    module.baseStat = {
+  if (!liveModule.baseStat || typeof liveModule.baseStat !== "object") {
+    liveModule.baseStat = {
       statKey: preview.statKey,
       value: preview.currentValue,
       label: previousLabel
     };
   }
 
-  module.baseStat.statKey = preview.statKey;
-  module.baseStat.value = preview.nextValue;
-  module.baseStat.label = nextLabel;
-  module.upgradeLevel = preview.nextLevel;
-  module.upgradedAt = Date.now();
-  sourceRun.forgeShards = Math.max(0, getForgeShards(sourceRun) - preview.cost);
+  liveModule.baseStat.statKey = preview.statKey;
+  liveModule.baseStat.value = preview.nextValue;
+  liveModule.baseStat.label = nextLabel;
+  liveModule.upgradeLevel = preview.nextLevel;
+  liveModule.upgradedAt = Date.now();
+  const currentShards = Number.isFinite(sourceRun.forgeShards) ? sourceRun.forgeShards : 0;
+  sourceRun.forgeShards = Math.max(0, currentShards - preview.cost);
 
   Object.entries(sourceRun.equippedModulesByDefenderId || {}).forEach(([defenderId, equippedModule]) => {
     const equippedInstanceId = typeof equippedModule === "string" ? equippedModule : equippedModule?.instanceId;
-    if (equippedInstanceId === module.instanceId) {
-      sourceRun.equippedModulesByDefenderId[defenderId] = module;
-      module.equippedToDefenderId = module.equippedToDefenderId || defenderId;
+    if (equippedInstanceId === liveModule.instanceId) {
+      sourceRun.equippedModulesByDefenderId[defenderId] = liveModule;
+      liveModule.equippedToDefenderId = liveModule.equippedToDefenderId || defenderId;
     }
   });
 
   return {
     ok: true,
-    module,
+    module: liveModule,
     previousLabel,
     nextLabel,
     cost: preview.cost,
-    upgradeLevel: module.upgradeLevel,
+    upgradeLevel: liveModule.upgradeLevel,
     forgeShards: sourceRun.forgeShards
   };
 }
