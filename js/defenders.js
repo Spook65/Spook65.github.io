@@ -2230,16 +2230,36 @@ function buildForgeModuleInventoryMarkup(modules, selectedModule) {
 }
 
 function buildForgeSelectedModuleMarkup(module) {
+  const calibrationClass = forgeCalibrationActive ? "is-calibrating" : "";
   if (!module) {
     return `
-      <div class="forge-module-pedestal is-empty">
-        <div class="forge-pedestal-ring" aria-hidden="true"></div>
-        <div class="forge-cradle" aria-hidden="true">
-          <span class="forge-clamp forge-clamp--left"></span>
-          <span class="forge-clamp forge-clamp--right"></span>
-          <span class="forge-shard-socket"></span>
-          <span class="forge-energy-rail"></span>
-          <div class="forge-pedestal-core">TG</div>
+      <div class="forge-module-pedestal is-empty ${calibrationClass}">
+        <div class="forge-scene-stage">
+          <div class="forge-bay-wall" aria-hidden="true">
+            <span class="forge-bay-panel forge-bay-panel--left"></span>
+            <span class="forge-bay-panel forge-bay-panel--right"></span>
+            <span class="forge-cable-bundle forge-cable-bundle--left"></span>
+            <span class="forge-cable-bundle forge-cable-bundle--right"></span>
+          </div>
+          <div class="forge-machine">
+            <div class="forge-monitor-stack" aria-hidden="true">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+            <div class="forge-furnace-core" aria-hidden="true"></div>
+            <div class="forge-pedestal-ring" aria-hidden="true"></div>
+            <div class="forge-module-cradle forge-cradle" aria-hidden="true">
+              <span class="forge-clamp-left forge-clamp forge-clamp--left"></span>
+              <span class="forge-clamp-right forge-clamp forge-clamp--right"></span>
+              <span class="forge-shard-socket"></span>
+              <span class="forge-signal-lane forge-energy-rail"></span>
+              <div class="forge-pedestal-core">TG</div>
+            </div>
+            <div class="forge-foreground-frame" aria-hidden="true"></div>
+            <span class="forge-smoke-wisp forge-smoke-wisp--one" aria-hidden="true"></span>
+            <span class="forge-smoke-wisp forge-smoke-wisp--two" aria-hidden="true"></span>
+          </div>
         </div>
         <div class="forge-pedestal-copy">
           <span class="forge-kicker">CALIBRATION CRADLE</span>
@@ -2259,9 +2279,20 @@ function buildForgeSelectedModuleMarkup(module) {
   const upgradeLevel = getForgeModuleUpgradeLevel(module);
 
   return `
-    <div class="forge-module-pedestal ${getLoadoutModuleRarityClass(module)} ${getLoadoutModuleSourceClass(module)} ${getLoadoutModuleRelicClass(module)}">
+    <div class="forge-module-pedestal ${calibrationClass} ${getLoadoutModuleRarityClass(module)} ${getLoadoutModuleSourceClass(module)} ${getLoadoutModuleRelicClass(module)}">
       <div class="forge-scene-stage">
+        <div class="forge-bay-wall" aria-hidden="true">
+          <span class="forge-bay-panel forge-bay-panel--left"></span>
+          <span class="forge-bay-panel forge-bay-panel--right"></span>
+          <span class="forge-cable-bundle forge-cable-bundle--left"></span>
+          <span class="forge-cable-bundle forge-cable-bundle--right"></span>
+        </div>
         <div class="forge-machine">
+          <div class="forge-monitor-stack" aria-hidden="true">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
           <div class="forge-furnace-core" aria-hidden="true"></div>
           <div class="forge-pedestal-ring" aria-hidden="true"></div>
           <div class="forge-module-cradle forge-cradle" aria-hidden="true">
@@ -2273,6 +2304,12 @@ function buildForgeSelectedModuleMarkup(module) {
               <span class="module-loot-sigil" data-relic-label="${getLoadoutModuleRelicLabel(module)}"></span>
             </div>
           </div>
+          <div class="forge-foreground-frame" aria-hidden="true"></div>
+          <span class="forge-smoke-wisp forge-smoke-wisp--one" aria-hidden="true"></span>
+          <span class="forge-smoke-wisp forge-smoke-wisp--two" aria-hidden="true"></span>
+          <span class="forge-spark forge-spark--one" aria-hidden="true"></span>
+          <span class="forge-spark forge-spark--two" aria-hidden="true"></span>
+          <span class="forge-spark forge-spark--three" aria-hidden="true"></span>
         </div>
       </div>
       <div class="forge-pedestal-copy">
@@ -2399,9 +2436,10 @@ function buildForgeScreenMarkup() {
     forgeSelectedModuleInstanceId = selectedModule.instanceId;
   }
   const shards = getForgeShardCount(runState);
+  const resultClass = forgeActionMessage && forgeActionTone ? `is-result-${getDefenderLoadoutText(forgeActionTone, "notice")}` : "";
 
   return `
-    <div class="forge-screen" data-screen-state="forge" data-loadout-context="forge">
+    <div class="forge-screen ${forgeCalibrationActive ? "is-calibrating" : ""} ${resultClass}" data-screen-state="forge" data-loadout-context="forge">
       <header class="forge-header">
         <div>
           <div class="forge-kicker">HEPHAESTUS FORGE / CURRENT EXPEDITION</div>
