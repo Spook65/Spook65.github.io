@@ -754,7 +754,12 @@ let expeditionModuleInventoryFilter = "all";
 let forgeSelectedModuleInstanceId = null;
 let forgeActionMessage = "";
 let forgeActionTone = "";
+let forgeCalibrationActive = false;
+let forgeCalibrationStartedAt = 0;
+let forgeCalibrationModuleInstanceId = null;
+let forgeCalibrationResult = null;
 let defenderLoadoutDelegationBound = false;
+let forgeCalibrationKeydownBound = false;
 
 function shouldLogLoadoutModuleDebug() {
   return typeof window !== "undefined" && window.THREATGRID_LOADOUT_MODULE_DEBUG === true;
@@ -1988,7 +1993,95 @@ function selectForgeModule(moduleInstanceId) {
   }
 
   forgeSelectedModuleInstanceId = selectedModule.instanceId;
+  resetForgeCalibrationState();
   forgeActionMessage = `${getDefenderLoadoutText(selectedModule.name, "Module")} locked into the calibration cradle.`;
+  forgeActionTone = "selected";
+  renderForgeScreen();
+  return true;
+}
+
+function resetForgeCalibrationState() {
+  forgeCalibrationActive = false;
+  forgeCalibrationStartedAt = 0;
+  forgeCalibrationModuleInstanceId = null;
+  forgeCalibrationResult = null;
+}
+
+function getForgeCalibrationCyclePosition() {
+  if (!forgeCalibrationActive || !forgeCalibrationStartedAt) {
+    return 0;
+  }
+
+  const duration = 3000;
+  const elapsed = Math.max(0, Date.now() - forgeCalibrationStartedAt);
+  return (elapsed % duration) / duration;
+}
+
+function getForgeCalibrationResult(position) {
+  const distanceFromCenter = Math.abs(position - 0.5);
+  if (distanceFromCenter <= 0.055) {
+    return {
+      id: "perfect",
+      label: "PERFECT SYNC",
+      tone: "perfect",
+      line: "Hephaestus: Clean signal. The circuit accepts the burn."
+    };
+  }
+  if (distanceFromCenter <= 0.17) {
+    return {
+      id: "stable",
+      label: "STABLE SYNC",
+      tone: "success",
+      line: "Hephaestus: Good enough. The module holds calibration."
+    };
+  }
+  return {
+    id: "noisy",
+    label: "NOISY SYNC",
+    tone: "warning",
+    line: "Hephaestus: Messy signal. Still usable. Try cleaner timing next time."
+  };
+}
+
+function startForgeSignalCalibration(moduleInstanceId) {
+  if (screenState !== "forge" || !moduleInstanceId) {
+    return false;
+  }
+
+  const runState = getForgeRunState();
+  const module = getForgeModules().find((candidate) => candidate?.instanceId === moduleInstanceId) || null;
+  const status = canUpgradeForgeModuleBaseStat(module, runState);
+  if (!status.ok) {
+    resetForgeCalibrationState();
+    forgeActionMessage = status.reason || "Forge calibration cannot start.";
+    forgeActionTone = "warning";
+    renderForgeScreen();
+    return false;
+  }
+
+  forgeSelectedModuleInstanceId = moduleInstanceId;
+  forgeCalibrationActive = true;
+  forgeCalibrationStartedAt = Date.now();
+  forgeCalibrationModuleInstanceId = moduleInstanceId;
+  forgeCalibrationResult = null;
+  forgeActionMessage = "Signal calibration started. Lock the pulse inside the clean zone.";
+  forgeActionTone = "selected";
+  logForgeDebug("[FORGE DEBUG] calibration started", {
+    moduleInstanceId,
+    shardsBefore: getForgeShardCount(runState),
+    cost: status.preview?.cost || 0
+  });
+  renderForgeScreen();
+  return true;
+}
+
+function cancelForgeSignalCalibration() {
+  if (screenState !== "forge" || !forgeCalibrationActive) {
+    return false;
+  }
+
+  resetForgeCalibrationState();
+  forgeActionMessage = "Signal calibration cancelled. No shards spent.";
   forgeActionTone = "selected";
   renderForgeScreen();
   return true;
@@ -2026,6 +2119,31 @@ function confirmForgeModuleUpgrade(moduleInstanceId) {
   return true;
 }
 
+function resolveForgeSignalCalibration() {
+  if (screenState !== "forge" || !forgeCalibrationActive || !forgeCalibrationModuleInstanceId) {
+    return false;
+  }
+
+  const moduleInstanceId = forgeCalibrationModuleInstanceId;
+  const position = getForgeCalibrationCyclePosition();
+  const calibrationResult = getForgeCalibrationResult(position);
+  forgeCalibrationResult = calibrationResult;
+  logForgeDebug("[FORGE DEBUG] calibration resolved", {
+    moduleInstanceId,
+    position,
+    result: calibrationResult.id
+  });
+
+  resetForgeCalibrationState();
+  const upgraded = confirmForgeModuleUpgrade(moduleInstanceId);
+  if (upgraded) {
+    forgeActionMessage = `${calibrationResult.label}. ${forgeActionMessage} ${calibrationResult.line}`;
+    forgeActionTone = calibrationResult.tone;
+    renderForgeScreen();
+  }
+  return upgraded;
+}
+
 function buildForgeModuleInventoryMarkup(modules, selectedModule) {
   if (!modules.length) {
     return `
@@ -2043,6 +2161,7 @@ function buildForgeModuleInventoryMarkup(modules, selectedModule) {
         const itemClass = getDefenderLoadoutText(module?.itemClass, "Recovered Module");
         const sourceName = getDefenderLoadoutText(module?.sourceName, "Unknown Source");
         const equippedName = module?.equippedToDefenderId ? getForgeDefenderName(module.equippedToDefenderId) : "";
+        const upgradeLevel = getForgeModuleUpgradeLevel(module);
         const isSelected = selectedModule?.instanceId === module?.instanceId;
         return `
           <button
@@ -2063,6 +2182,7 @@ function buildForgeModuleInventoryMarkup(modules, selectedModule) {
               <span class="module-loot-badges">
                 ${isSelected ? '<span class="defender-loadout-selected-badge">SELECTED</span>' : ""}
                 <span class="defender-loadout-status-badge">${equippedName ? `EQUIPPED: ${equippedName}` : "UNEQUIPPED"}</span>
+                <span class="forge-module-upgrade-level">CAL ${upgradeLevel}/3</span>
               </span>
             </div>
           </button>
@@ -2103,14 +2223,19 @@ function buildForgeSelectedModuleMarkup(module) {
 
   return `
     <div class="forge-module-pedestal ${getLoadoutModuleRarityClass(module)} ${getLoadoutModuleSourceClass(module)} ${getLoadoutModuleRelicClass(module)}">
-      <div class="forge-pedestal-ring" aria-hidden="true"></div>
-      <div class="forge-cradle" aria-hidden="true">
-        <span class="forge-clamp forge-clamp--left"></span>
-        <span class="forge-clamp forge-clamp--right"></span>
-        <span class="forge-shard-socket"></span>
-        <span class="forge-energy-rail"></span>
-        <div class="forge-pedestal-core">
-          <span class="module-loot-sigil" data-relic-label="${getLoadoutModuleRelicLabel(module)}"></span>
+      <div class="forge-scene-stage">
+        <div class="forge-machine">
+          <div class="forge-furnace-core" aria-hidden="true"></div>
+          <div class="forge-pedestal-ring" aria-hidden="true"></div>
+          <div class="forge-module-cradle forge-cradle" aria-hidden="true">
+            <span class="forge-clamp-left forge-clamp forge-clamp--left"></span>
+            <span class="forge-clamp-right forge-clamp forge-clamp--right"></span>
+            <span class="forge-shard-socket"></span>
+            <span class="forge-signal-lane forge-energy-rail"></span>
+            <div class="forge-pedestal-core">
+              <span class="module-loot-sigil" data-relic-label="${getLoadoutModuleRelicLabel(module)}"></span>
+            </div>
+          </div>
         </div>
       </div>
       <div class="forge-pedestal-copy">
@@ -2123,6 +2248,30 @@ function buildForgeSelectedModuleMarkup(module) {
         <span>Calibration Level ${upgradeLevel} / 3</span>
       </div>
       <div class="forge-helper-line">HEPHAESTUS: "Calibration is not magic. It is violence, measured precisely."</div>
+    </div>
+  `;
+}
+
+function buildForgeCalibrationPanelMarkup(module, preview, status) {
+  if (!forgeCalibrationActive || forgeCalibrationModuleInstanceId !== module?.instanceId) {
+    return "";
+  }
+
+  return `
+    <div class="forge-calibration-zone" aria-label="Signal Calibration active">
+      <div class="forge-panel-label">SIGNAL CALIBRATION</div>
+      <p class="forge-calibration-copy">Click the calibration track or press Space when the pulse crosses the clean zone. Cancel spends no shards.</p>
+      <button class="forge-calibration-track" type="button" data-forge-lock-calibration="true">
+        <span class="forge-calibration-clean-zone" aria-hidden="true"></span>
+        <span class="forge-calibration-perfect-zone" aria-hidden="true"></span>
+        <span class="forge-calibration-pulse" aria-hidden="true"></span>
+        <span class="forge-calibration-track-label">LOCK SIGNAL</span>
+      </button>
+      <div class="forge-calibration-readout">
+        <span>COST ARMED: ${preview?.cost || 0} SHARD${preview?.cost === 1 ? "" : "S"}</span>
+        <span>${status?.reason || "Forge ready."}</span>
+      </div>
+      <button class="forge-cancel-button" type="button" data-forge-cancel-calibration="true">CANCEL CALIBRATION</button>
     </div>
   `;
 }
@@ -2194,12 +2343,13 @@ function buildForgeUpgradePreviewMarkup(module, runState) {
         </div>
       </div>
       <div class="forge-rule-message ${status.ok ? "is-ready" : "is-blocked"}">${status.reason}</div>
+      ${buildForgeCalibrationPanelMarkup(module, preview, status)}
       <button
         class="forge-confirm-button"
         type="button"
-        data-forge-upgrade-module="${getDefenderLoadoutText(module.instanceId, "")}"
-        ${status.ok ? "" : "disabled"}
-      >CALIBRATE BASE STAT</button>
+        data-forge-start-calibration="${getDefenderLoadoutText(module.instanceId, "")}"
+        ${status.ok && !forgeCalibrationActive ? "" : "disabled"}
+      >${forgeCalibrationActive && forgeCalibrationModuleInstanceId === module.instanceId ? "CALIBRATION ACTIVE" : "CALIBRATE BASE STAT"}</button>
     </div>
   `;
 }
@@ -2267,6 +2417,7 @@ function renderForgeScreen() {
   const modules = getForgeModules();
   if (forgeSelectedModuleInstanceId && !modules.some((module) => module?.instanceId === forgeSelectedModuleInstanceId)) {
     forgeSelectedModuleInstanceId = null;
+    resetForgeCalibrationState();
   }
   if (!forgeSelectedModuleInstanceId && modules[0]?.instanceId) {
     forgeSelectedModuleInstanceId = modules[0].instanceId;
@@ -2294,6 +2445,7 @@ function openForgeFromExpeditionLoadout() {
 
   forgeActionMessage = "";
   forgeActionTone = "";
+  resetForgeCalibrationState();
   if (typeof showForgeScreen === "function") {
     logForgeDebug("[FORGE DEBUG] showForgeScreen called", { source: "global" });
     showForgeScreen();
@@ -2855,18 +3007,35 @@ function handleDefenderLoadoutDelegatedClick(event) {
     if (returnButton && defenderScreenContent.contains(returnButton)) {
       event.preventDefault();
       event.stopPropagation();
+      resetForgeCalibrationState();
       returnFromForgeToExpeditionLoadout();
       return;
     }
 
-    const forgeUpgradeButton = event.target.closest?.("[data-forge-upgrade-module]");
-    if (forgeUpgradeButton && defenderScreenContent.contains(forgeUpgradeButton)) {
+    const forgeStartButton = event.target.closest?.("[data-forge-start-calibration]");
+    if (forgeStartButton && defenderScreenContent.contains(forgeStartButton)) {
       event.preventDefault();
       event.stopPropagation();
-      const moduleInstanceId = forgeUpgradeButton.getAttribute("data-forge-upgrade-module");
+      const moduleInstanceId = forgeStartButton.getAttribute("data-forge-start-calibration");
       if (moduleInstanceId) {
-        confirmForgeModuleUpgrade(moduleInstanceId);
+        startForgeSignalCalibration(moduleInstanceId);
       }
+      return;
+    }
+
+    const forgeLockButton = event.target.closest?.("[data-forge-lock-calibration]");
+    if (forgeLockButton && defenderScreenContent.contains(forgeLockButton)) {
+      event.preventDefault();
+      event.stopPropagation();
+      resolveForgeSignalCalibration();
+      return;
+    }
+
+    const forgeCancelButton = event.target.closest?.("[data-forge-cancel-calibration]");
+    if (forgeCancelButton && defenderScreenContent.contains(forgeCancelButton)) {
+      event.preventDefault();
+      event.stopPropagation();
+      cancelForgeSignalCalibration();
       return;
     }
 
@@ -2953,13 +3122,38 @@ function handleDefenderLoadoutDelegatedClick(event) {
   }
 }
 
+function handleForgeCalibrationKeydown(event) {
+  if (screenState !== "forge" || !forgeCalibrationActive) {
+    return;
+  }
+
+  if (event.code === "Space" || event.key === " ") {
+    event.preventDefault();
+    resolveForgeSignalCalibration();
+    return;
+  }
+
+  if (event.key === "Escape") {
+    event.preventDefault();
+    cancelForgeSignalCalibration();
+  }
+}
+
 function bindDefenderLoadoutDelegation() {
   if (!defenderScreenContent || defenderLoadoutDelegationBound) {
+    if (!forgeCalibrationKeydownBound && typeof document !== "undefined") {
+      document.addEventListener("keydown", handleForgeCalibrationKeydown);
+      forgeCalibrationKeydownBound = true;
+    }
     return;
   }
 
   defenderScreenContent.addEventListener("click", handleDefenderLoadoutDelegatedClick);
   defenderLoadoutDelegationBound = true;
+  if (!forgeCalibrationKeydownBound && typeof document !== "undefined") {
+    document.addEventListener("keydown", handleForgeCalibrationKeydown);
+    forgeCalibrationKeydownBound = true;
+  }
 }
 
 // updateDefenderSelectionFocusDom() swaps just the preview panel and focus highlight without rebuilding the whole screen.
