@@ -2387,7 +2387,10 @@ function buildForgeUpgradePreviewMarkup(module, runState) {
   if (!module) {
     return `
       <div class="forge-action-panel">
-        <div class="forge-panel-label">UPGRADE PREVIEW</div>
+        <div class="forge-console-topline">
+          <div class="forge-panel-label">UPGRADE PREVIEW</div>
+          <span class="forge-console-chip">AWAITING MODULE</span>
+        </div>
         <div class="forge-empty-state">Select a module from the rail to preview its base stat upgrade.</div>
       </div>
     `;
@@ -2417,46 +2420,83 @@ function buildForgeUpgradePreviewMarkup(module, runState) {
 
   return `
     <div class="forge-action-panel">
-      <div class="forge-panel-label">UPGRADE PREVIEW</div>
-      <div class="forge-stat-compare" aria-label="Base stat upgrade preview">
-        <div class="forge-stat-node">
-          <span>Current Base Stat</span>
-          <strong>${currentLabel}</strong>
-        </div>
-        <div class="forge-upgrade-bridge" aria-hidden="true">
-          <span class="forge-stat-arrow">→</span>
-        </div>
-        <div class="forge-stat-node is-next">
-          <span>After Calibration</span>
-          <strong>${nextLabel}</strong>
+      <div class="forge-console-topline">
+        <div class="forge-panel-label">UPGRADE PREVIEW</div>
+        <span class="forge-console-chip">${forgeCalibrationActive && forgeCalibrationModuleInstanceId === module.instanceId ? "SIGNAL ARMED" : status.ok ? "FORGE READY" : "LOCKED"}</span>
+      </div>
+      <div class="forge-console-screen">
+        <div class="forge-stat-compare" aria-label="Base stat upgrade preview">
+          <div class="forge-stat-node">
+            <span>Current Base Stat</span>
+            <strong>${currentLabel}</strong>
+          </div>
+          <div class="forge-upgrade-bridge" aria-hidden="true">
+            <span class="forge-stat-arrow">→</span>
+          </div>
+          <div class="forge-stat-node is-next">
+            <span>After Calibration</span>
+            <strong>${nextLabel}</strong>
+          </div>
         </div>
       </div>
-      <div class="forge-cost-grid">
-        <div>
-          <span>Upgrade Level</span>
-          <strong>${upgradeLevel} / 3</strong>
-        </div>
-        <div>
-          <span>Cost</span>
-          <strong>${cost} Forge Shard${cost === 1 ? "" : "s"}</strong>
-        </div>
-        <div>
-          <span>Available</span>
-          <strong>${shardCount} Forge Shard${shardCount === 1 ? "" : "s"}</strong>
-        </div>
-        <div>
-          <span>Status</span>
-          <strong>${equippedName ? `Equipped to ${equippedName}` : "Unequipped"}</strong>
+      <div class="forge-console-section forge-console-section--resources">
+        <div class="forge-cost-grid">
+          <div>
+            <span>Upgrade Level</span>
+            <strong>${upgradeLevel} / 3</strong>
+          </div>
+          <div>
+            <span>Cost</span>
+            <strong>${cost} Forge Shard${cost === 1 ? "" : "s"}</strong>
+          </div>
+          <div>
+            <span>Available</span>
+            <strong>${shardCount} Forge Shard${shardCount === 1 ? "" : "s"}</strong>
+          </div>
+          <div>
+            <span>Status</span>
+            <strong>${equippedName ? `Equipped to ${equippedName}` : "Unequipped"}</strong>
+          </div>
         </div>
       </div>
-      <div class="forge-rule-message ${status.ok ? "is-ready" : "is-blocked"}">${status.reason}</div>
-      ${buildForgeCalibrationPanelMarkup(module, preview, status)}
-      <button
-        class="forge-confirm-button"
-        type="button"
-        data-forge-start-calibration="${getDefenderLoadoutText(module.instanceId, "")}"
-        ${status.ok && !forgeCalibrationActive ? "" : "disabled"}
-      >${forgeCalibrationActive && forgeCalibrationModuleInstanceId === module.instanceId ? "CALIBRATION ACTIVE" : "CALIBRATE BASE STAT"}</button>
+      <div class="forge-console-status-cluster">
+        <div class="forge-rule-message ${status.ok ? "is-ready" : "is-blocked"}">${status.reason}</div>
+        ${buildForgeCalibrationPanelMarkup(module, preview, status)}
+        <button
+          class="forge-confirm-button"
+          type="button"
+          data-forge-start-calibration="${getDefenderLoadoutText(module.instanceId, "")}"
+          ${status.ok && !forgeCalibrationActive ? "" : "disabled"}
+        >${forgeCalibrationActive && forgeCalibrationModuleInstanceId === module.instanceId ? "CALIBRATION ACTIVE" : "CALIBRATE BASE STAT"}</button>
+      </div>
+    </div>
+  `;
+}
+
+function buildForgeActionMessageMarkup(message, tone = "notice") {
+  if (!message) {
+    return "";
+  }
+
+  const normalizedTone = getDefenderLoadoutText(tone, "notice");
+  const titleByTone = {
+    perfect: "PERFECT SYNC",
+    success: "CALIBRATION COMPLETE",
+    warning: "NOISY SIGNAL",
+    selected: "MODULE ON BENCH",
+    notice: "FORGE STATUS"
+  };
+  const title = titleByTone[normalizedTone] || "FORGE STATUS";
+  const firstBreak = message.indexOf(". ");
+  const shouldSplit = firstBreak > 0 && message.length > 92;
+  const summary = shouldSplit ? message.slice(0, firstBreak + 1) : message;
+  const detail = shouldSplit ? message.slice(firstBreak + 2) : "";
+
+  return `
+    <div class="forge-success-banner is-${normalizedTone}" role="status">
+      <span class="forge-success-title">${title}</span>
+      <span class="forge-success-summary">${summary}</span>
+      ${detail ? `<span class="forge-success-detail">${detail}</span>` : ""}
     </div>
   `;
 }
@@ -2472,7 +2512,7 @@ function buildForgeScreenMarkup() {
   const resultClass = forgeActionMessage && forgeActionTone ? `is-result-${getDefenderLoadoutText(forgeActionTone, "notice")}` : "";
 
   return `
-    <div class="forge-screen ${forgeCalibrationActive ? "is-calibrating" : ""} ${resultClass}" data-screen-state="forge" data-loadout-context="forge" data-forge-version="art-v2" data-forge-layout="scene-first">
+    <div class="forge-screen ${forgeCalibrationActive ? "is-calibrating" : ""} ${resultClass}" data-screen-state="forge" data-loadout-context="forge" data-forge-version="art-v2.1" data-forge-layout="scene-first">
       <div class="forge-room" aria-label="Forge calibration room">
         <span class="forge-room-ambient forge-room-ambient--ember" aria-hidden="true"></span>
         <span class="forge-room-ambient forge-room-ambient--teal" aria-hidden="true"></span>
@@ -2492,7 +2532,7 @@ function buildForgeScreenMarkup() {
         <button class="back-button" type="button" data-forge-return="loadout">← RETURN TO LOADOUT / MODULES</button>
       </header>
 
-      ${forgeActionMessage ? `<div class="forge-success-banner is-${getDefenderLoadoutText(forgeActionTone, "notice")}">${forgeActionMessage}</div>` : ""}
+      ${buildForgeActionMessageMarkup(forgeActionMessage, forgeActionTone)}
 
       <div class="forge-shell forge-room-stage">
         <aside class="forge-inventory-rail forge-storage-rack">
