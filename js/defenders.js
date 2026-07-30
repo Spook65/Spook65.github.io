@@ -758,6 +758,7 @@ let forgeCalibrationActive = false;
 let forgeCalibrationStartedAt = 0;
 let forgeCalibrationModuleInstanceId = null;
 let forgeCalibrationResult = null;
+let forgeHoveredModuleInstanceId = null;
 let defenderLoadoutDelegationBound = false;
 let forgeCalibrationKeydownBound = false;
 const DEV_FORGE_SHARD_GRANT_AMOUNT = 1000000;
@@ -1970,6 +1971,14 @@ function getLoadoutModulePrimaryStat(module) {
   };
 }
 
+function getForgeRackShortText(value, fallback = "UNKNOWN", maxLength = 22) {
+  const text = getDefenderLoadoutText(value, fallback);
+  if (text.length <= maxLength) {
+    return text;
+  }
+  return `${text.slice(0, Math.max(4, maxLength - 1)).trim()}…`;
+}
+
 function getForgeRunState() {
   if (!defenderSaveState) {
     loadSave();
@@ -2012,6 +2021,66 @@ function getForgeDefenderName(defenderId) {
   return getDefenderLoadoutText(template?.name, defenderId);
 }
 
+function buildForgeModuleInspectorMarkup(module, mode = "selected") {
+  if (!module) {
+    return `
+      <div class="forge-module-inspector-empty">
+        <span>FORGE DIAGNOSTIC</span>
+        <strong>No module selected.</strong>
+        <p>Hover a rack card for a readout, or select one to lock it into the calibration cradle.</p>
+      </div>
+    `;
+  }
+
+  const runState = getForgeRunState();
+  const primaryStat = getLoadoutModulePrimaryStat(module);
+  const rarity = getDefenderLoadoutText(module?.rarity, "common").toUpperCase();
+  const itemClass = getDefenderLoadoutText(module?.itemClass, "Recovered Module");
+  const sourceName = getDefenderLoadoutText(module?.sourceName, "Unknown Source");
+  const equippedName = module?.equippedToDefenderId ? getForgeDefenderName(module.equippedToDefenderId) : "";
+  const upgradeLevel = getForgeModuleUpgradeLevel(module);
+  const status = canUpgradeForgeModuleBaseStat(module, runState);
+  const modeLabel = mode === "hover" ? "HOVER READOUT" : "LOCKED READOUT";
+
+  return `
+    <div class="forge-module-inspector-topline">
+      <span>${modeLabel}</span>
+      <strong>${rarity}</strong>
+    </div>
+    <div class="forge-module-inspector-title">
+      <span class="module-loot-sigil" aria-hidden="true" data-relic-label="${getLoadoutModuleRelicLabel(module)}"></span>
+      <div>
+        <strong>${getDefenderLoadoutText(module?.name, "Recovered Module")}</strong>
+        <span>${itemClass}</span>
+      </div>
+    </div>
+    <div class="forge-module-inspector-grid">
+      <div>
+        <span>Primary Stat</span>
+        <strong>${primaryStat.text}</strong>
+      </div>
+      <div>
+        <span>Source</span>
+        <strong>${sourceName}</strong>
+      </div>
+      <div>
+        <span>Status</span>
+        <strong>${equippedName ? `Equipped to ${equippedName}` : "Unequipped"}</strong>
+      </div>
+      <div>
+        <span>Calibration</span>
+        <strong>${upgradeLevel} / 3</strong>
+      </div>
+    </div>
+    <div class="forge-module-inspector-affixes">
+      ${buildLoadoutModuleAffixLines(module)}
+    </div>
+    <div class="forge-module-inspector-status ${status.ok ? "is-ready" : "is-blocked"}">
+      ${upgradeLevel >= 3 ? "Max calibration reached." : status.ok ? "Ready for calibration." : status.reason}
+    </div>
+  `;
+}
+
 function selectForgeModule(moduleInstanceId) {
   if (screenState !== "forge" || !moduleInstanceId) {
     return false;
@@ -2027,11 +2096,73 @@ function selectForgeModule(moduleInstanceId) {
   }
 
   forgeSelectedModuleInstanceId = selectedModule.instanceId;
+  forgeHoveredModuleInstanceId = null;
   resetForgeCalibrationState();
   forgeActionMessage = `${getDefenderLoadoutText(selectedModule.name, "Module")} locked into the calibration cradle.`;
   forgeActionTone = "selected";
   renderForgeScreen();
   return true;
+}
+
+function updateForgeModuleInspectorPreview(moduleInstanceId = null, mode = "selected") {
+  if (!defenderScreenContent || screenState !== "forge" || forgeCalibrationActive) {
+    return;
+  }
+
+  const inspector = defenderScreenContent.querySelector("[data-forge-module-inspector]");
+  if (!inspector) {
+    return;
+  }
+
+  const modules = getForgeModules();
+  const selectedModule = forgeSelectedModuleInstanceId
+    ? modules.find((module) => module?.instanceId === forgeSelectedModuleInstanceId)
+    : null;
+  const previewModule = moduleInstanceId
+    ? modules.find((module) => module?.instanceId === moduleInstanceId)
+    : null;
+  const module = previewModule || selectedModule || modules[0] || null;
+  const resolvedMode = previewModule && previewModule?.instanceId !== selectedModule?.instanceId ? mode : "selected";
+
+  inspector.classList.toggle("is-hover-preview", resolvedMode === "hover");
+  inspector.innerHTML = buildForgeModuleInspectorMarkup(module, resolvedMode);
+}
+
+function handleForgeModuleRackPointerOver(event) {
+  if (!defenderScreenContent || screenState !== "forge" || forgeCalibrationActive) {
+    return;
+  }
+
+  const moduleButton = event.target.closest?.("[data-forge-module-instance-id]");
+  if (!moduleButton || !defenderScreenContent.contains(moduleButton)) {
+    return;
+  }
+
+  const moduleInstanceId = moduleButton.getAttribute("data-forge-module-instance-id");
+  if (!moduleInstanceId || forgeHoveredModuleInstanceId === moduleInstanceId) {
+    return;
+  }
+
+  forgeHoveredModuleInstanceId = moduleInstanceId;
+  updateForgeModuleInspectorPreview(moduleInstanceId, "hover");
+}
+
+function handleForgeModuleRackPointerOut(event) {
+  if (!defenderScreenContent || screenState !== "forge" || forgeCalibrationActive) {
+    return;
+  }
+
+  const moduleButton = event.target.closest?.("[data-forge-module-instance-id]");
+  if (!moduleButton || !defenderScreenContent.contains(moduleButton)) {
+    return;
+  }
+
+  if (event.relatedTarget && moduleButton.contains(event.relatedTarget)) {
+    return;
+  }
+
+  forgeHoveredModuleInstanceId = null;
+  updateForgeModuleInspectorPreview(null, "selected");
 }
 
 function resetForgeCalibrationState() {
@@ -2190,13 +2321,20 @@ function buildForgeModuleInventoryMarkup(modules, selectedModule) {
     `;
   }
 
+  const selectedInspectorModule = selectedModule || modules[0] || null;
+
   return `
+    <div class="forge-module-inspector forge-module-hologram" data-forge-module-inspector>
+      ${buildForgeModuleInspectorMarkup(selectedInspectorModule)}
+    </div>
     <div class="forge-module-list" aria-label="Recovered modules available for Forge calibration">
       ${modules.map((module) => {
         const primaryStat = getLoadoutModulePrimaryStat(module);
         const rarity = getDefenderLoadoutText(module?.rarity, "common").toUpperCase();
         const itemClass = getDefenderLoadoutText(module?.itemClass, "Recovered Module");
         const sourceName = getDefenderLoadoutText(module?.sourceName, "Unknown Source");
+        const shortItemClass = getForgeRackShortText(itemClass, "Recovered Module", 18);
+        const shortSourceName = getForgeRackShortText(sourceName, "Unknown Source", 18);
         const equippedName = module?.equippedToDefenderId ? getForgeDefenderName(module.equippedToDefenderId) : "";
         const upgradeLevel = getForgeModuleUpgradeLevel(module);
         const isSelected = selectedModule?.instanceId === module?.instanceId;
@@ -2213,9 +2351,11 @@ function buildForgeModuleInventoryMarkup(modules, selectedModule) {
                 <span class="module-loot-name">${getDefenderLoadoutText(module?.name, "Recovered Module")}</span>
                 <span class="module-loot-rarity">${rarity}</span>
               </div>
-              <span class="module-loot-class">${itemClass}</span>
-              <div class="module-loot-stat">${primaryStat.text}</div>
-              <div class="module-loot-source">SOURCE: ${sourceName}</div>
+              <div class="forge-module-card-core">
+                <span class="module-loot-class">${shortItemClass}</span>
+                <div class="module-loot-stat">${primaryStat.text}</div>
+              </div>
+              <div class="module-loot-source">SRC: ${shortSourceName}</div>
               <span class="module-loot-badges">
                 ${isSelected ? '<span class="defender-loadout-selected-badge">SELECTED</span>' : ""}
                 <span class="defender-loadout-status-badge">${equippedName ? `EQUIPPED: ${equippedName}` : "UNEQUIPPED"}</span>
@@ -2512,7 +2652,7 @@ function buildForgeScreenMarkup() {
   const resultClass = forgeActionMessage && forgeActionTone ? `is-result-${getDefenderLoadoutText(forgeActionTone, "notice")}` : "";
 
   return `
-    <div class="forge-screen ${forgeCalibrationActive ? "is-calibrating" : ""} ${resultClass}" data-screen-state="forge" data-loadout-context="forge" data-forge-version="art-v2.1" data-forge-layout="scene-first">
+    <div class="forge-screen ${forgeCalibrationActive ? "is-calibrating" : ""} ${resultClass}" data-screen-state="forge" data-loadout-context="forge" data-forge-version="art-v2.2" data-forge-layout="scene-first">
       <div class="forge-room" aria-label="Forge calibration room">
         <span class="forge-room-ambient forge-room-ambient--ember" aria-hidden="true"></span>
         <span class="forge-room-ambient forge-room-ambient--teal" aria-hidden="true"></span>
@@ -3315,6 +3455,8 @@ function bindDefenderLoadoutDelegation() {
   }
 
   defenderScreenContent.addEventListener("click", handleDefenderLoadoutDelegatedClick);
+  defenderScreenContent.addEventListener("pointerover", handleForgeModuleRackPointerOver);
+  defenderScreenContent.addEventListener("pointerout", handleForgeModuleRackPointerOut);
   defenderLoadoutDelegationBound = true;
   if (!forgeCalibrationKeydownBound && typeof document !== "undefined") {
     document.addEventListener("keydown", handleForgeCalibrationKeydown);
