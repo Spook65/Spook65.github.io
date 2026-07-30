@@ -13805,6 +13805,116 @@ body {
   }
 }
 
+/* Combat Environment v1.1: simplified static battlefield anchors. Decorative only;
+   combat controls, targeting, turn order, and module readouts remain untouched. */
+.threat-panel.is-combat .combat-shell[data-combat-art="environment-v1-1"] .combat-stage {
+  background:
+    radial-gradient(circle at 80% 28%, rgba(255, 84, 112, 0.045), transparent 23%),
+    radial-gradient(circle at 19% 72%, rgba(93, 231, 217, 0.045), transparent 24%),
+    linear-gradient(180deg, rgba(4, 7, 11, 0.9) 0%, rgba(6, 8, 12, 0.96) 58%, rgba(3, 4, 7, 0.98) 100%);
+}
+
+.threat-panel.is-combat .combat-shell[data-combat-art="environment-v1-1"] .combat-environment-v1 {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.threat-panel.is-combat .combat-shell[data-combat-art="environment-v1-1"] .combat-environment-v1 > div {
+  position: absolute;
+  pointer-events: none;
+}
+
+.threat-panel.is-combat .combat-shell[data-combat-art="environment-v1-1"] .combat-env-backwall,
+.threat-panel.is-combat .combat-shell[data-combat-art="environment-v1-1"] .combat-env-server-racks,
+.threat-panel.is-combat .combat-shell[data-combat-art="environment-v1-1"] .combat-env-packet-scar {
+  display: none;
+}
+
+.threat-panel.is-combat .combat-shell[data-combat-art="environment-v1-1"] .combat-env-floor-plane {
+  left: 7%;
+  right: 7%;
+  bottom: -3%;
+  height: 48%;
+  background:
+    linear-gradient(112deg, transparent 0 37%, rgba(93, 231, 217, 0.085) 37.4% 37.8%, transparent 38.2% 100%),
+    linear-gradient(68deg, transparent 0 61%, rgba(215, 184, 106, 0.07) 61.3% 61.7%, transparent 62.1% 100%),
+    linear-gradient(180deg, rgba(14, 21, 25, 0.13), rgba(10, 9, 10, 0.36));
+  border-top: 1px solid rgba(135, 228, 255, 0.09);
+  clip-path: polygon(18% 0, 82% 0, 100% 100%, 0 100%);
+  transform: perspective(660px) rotateX(58deg);
+  transform-origin: bottom center;
+  opacity: 0.72;
+}
+
+.threat-panel.is-combat .combat-shell[data-combat-art="environment-v1-1"] .combat-env-defender-platform {
+  left: clamp(1rem, 4vw, 4.4rem);
+  bottom: clamp(5.2rem, 10vh, 7.2rem);
+  width: clamp(18rem, 35vw, 34rem);
+  height: clamp(5.6rem, 12vh, 9rem);
+  background:
+    linear-gradient(180deg, rgba(7, 24, 26, 0.32), rgba(3, 9, 10, 0.52));
+  border-top: 1px solid rgba(93, 231, 217, 0.22);
+  border-bottom: 1px solid rgba(93, 231, 217, 0.08);
+  clip-path: polygon(7% 0, 93% 0, 100% 76%, 88% 100%, 0 100%, 0 24%);
+  box-shadow: inset 0 0 18px rgba(93, 231, 217, 0.035);
+  opacity: 0.58;
+}
+
+.threat-panel.is-combat .combat-shell[data-combat-art="environment-v1-1"] .combat-env-threat-rift {
+  right: clamp(2rem, 7vw, 7.4rem);
+  top: clamp(7.6rem, 15vh, 12rem);
+  width: clamp(12rem, 23vw, 23rem);
+  height: clamp(12rem, 23vw, 23rem);
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 88, 116, 0.16), transparent 18%),
+    radial-gradient(circle at 50% 50%, transparent 0 38%, rgba(255, 88, 116, 0.12) 39% 40%, transparent 41% 100%);
+  border-radius: 50%;
+  opacity: 0.56;
+}
+
+.threat-panel.is-combat .combat-shell[data-combat-art="environment-v1-1"] .combat-env-cable-run {
+  left: 18%;
+  right: 23%;
+  bottom: 26%;
+  height: 12%;
+  background:
+    linear-gradient(98deg, transparent 0 22%, rgba(93, 231, 217, 0.12) 22.3% 22.7%, transparent 23.1% 58%, rgba(215, 184, 106, 0.09) 58.3% 58.7%, transparent 59.1% 100%);
+  opacity: 0.62;
+}
+
+.threat-panel.is-combat .combat-shell[data-combat-art="environment-v1-1"] .combat-floor-grid,
+.threat-panel.is-combat .combat-shell[data-combat-art="environment-v1-1"] .combat-stage-glow {
+  z-index: 1;
+}
+
+.threat-panel.is-combat .combat-shell[data-combat-art="environment-v1-1"] .combat-ally-formation,
+.threat-panel.is-combat .combat-shell[data-combat-art="environment-v1-1"] .combat-stage-enemy {
+  z-index: 2;
+}
+
+.threat-panel.is-combat .combat-shell[data-combat-art="environment-v1-1"] .combat-stage-command-cluster,
+.threat-panel.is-combat .combat-shell[data-combat-art="environment-v1-1"] .combat-stage-command-submenu,
+.threat-panel.is-combat .combat-shell[data-combat-art="environment-v1-1"] .combat-stage-feedback-toast,
+.threat-panel.is-combat .combat-shell[data-combat-art="environment-v1-1"] .combat-feed {
+  z-index: 4;
+}
+
+@media (max-width: 920px) {
+  .threat-panel.is-combat .combat-shell[data-combat-art="environment-v1-1"] .combat-env-defender-platform {
+    left: 0.6rem;
+    width: min(25rem, 45vw);
+  }
+
+  .threat-panel.is-combat .combat-shell[data-combat-art="environment-v1-1"] .combat-env-threat-rift {
+    right: 0.8rem;
+    width: min(18rem, 34vw);
+    height: min(18rem, 34vw);
+  }
+}
+
 @media (max-width: 700px) {
   .combat-response-panel {
     width: min(16rem, 78vw);
