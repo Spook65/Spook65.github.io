@@ -2602,13 +2602,13 @@ function buildForgeUpgradePreviewMarkup(module, runState) {
       </div>
       <div class="forge-console-status-cluster">
         <div class="forge-rule-message ${status.ok ? "is-ready" : "is-blocked"}">${status.reason}</div>
-        ${buildForgeCalibrationPanelMarkup(module, preview, status)}
         <button
           class="forge-confirm-button"
           type="button"
           data-forge-start-calibration="${getDefenderLoadoutText(module.instanceId, "")}"
           ${status.ok && !forgeCalibrationActive ? "" : "disabled"}
         >${forgeCalibrationActive && forgeCalibrationModuleInstanceId === module.instanceId ? "CALIBRATION ACTIVE" : "CALIBRATE BASE STAT"}</button>
+        ${buildForgeCalibrationPanelMarkup(module, preview, status)}
       </div>
     </div>
   `;
@@ -2653,7 +2653,7 @@ function buildForgeScreenMarkup() {
   const resultClass = forgeActionMessage && forgeActionTone ? `is-result-${getDefenderLoadoutText(forgeActionTone, "notice")}` : "";
 
   return `
-    <div class="forge-screen ${forgeCalibrationActive ? "is-calibrating" : ""} ${resultClass}" data-screen-state="forge" data-loadout-context="forge" data-forge-version="art-v2.3" data-forge-layout="scene-first">
+    <div class="forge-screen ${forgeCalibrationActive ? "is-calibrating" : ""} ${resultClass}" data-screen-state="forge" data-loadout-context="forge" data-forge-version="art-v2.3.1" data-forge-layout="scene-first">
       <div class="forge-room" aria-label="Forge calibration room">
         <span class="forge-room-ambient forge-room-ambient--ember" aria-hidden="true"></span>
         <span class="forge-room-ambient forge-room-ambient--teal" aria-hidden="true"></span>
