@@ -2021,13 +2021,13 @@ function getForgeDefenderName(defenderId) {
   return getDefenderLoadoutText(template?.name, defenderId);
 }
 
-function buildForgeModuleInspectorMarkup(module, mode = "selected") {
+function buildForgeModuleDiagnosticMarkup(module, mode = "selected") {
   if (!module) {
     return `
-      <div class="forge-module-inspector-empty">
+      <div class="forge-module-diagnostic-empty">
         <span>FORGE DIAGNOSTIC</span>
         <strong>No module selected.</strong>
-        <p>Hover a rack card for a readout, or select one to lock it into the calibration cradle.</p>
+        <p>Select a rack card to lock it into the calibration cradle.</p>
       </div>
     `;
   }
@@ -2043,18 +2043,18 @@ function buildForgeModuleInspectorMarkup(module, mode = "selected") {
   const modeLabel = mode === "hover" ? "HOVER READOUT" : "LOCKED READOUT";
 
   return `
-    <div class="forge-module-inspector-topline">
+    <div class="forge-module-diagnostic-topline">
       <span>${modeLabel}</span>
       <strong>${rarity}</strong>
     </div>
-    <div class="forge-module-inspector-title">
+    <div class="forge-module-diagnostic-title">
       <span class="module-loot-sigil" aria-hidden="true" data-relic-label="${getLoadoutModuleRelicLabel(module)}"></span>
       <div>
         <strong>${getDefenderLoadoutText(module?.name, "Recovered Module")}</strong>
         <span>${itemClass}</span>
       </div>
     </div>
-    <div class="forge-module-inspector-grid">
+    <div class="forge-module-diagnostic-grid">
       <div>
         <span>Primary Stat</span>
         <strong>${primaryStat.text}</strong>
@@ -2072,10 +2072,10 @@ function buildForgeModuleInspectorMarkup(module, mode = "selected") {
         <strong>${upgradeLevel} / 3</strong>
       </div>
     </div>
-    <div class="forge-module-inspector-affixes">
+    <div class="forge-module-diagnostic-affixes">
       ${buildLoadoutModuleAffixLines(module)}
     </div>
-    <div class="forge-module-inspector-status ${status.ok ? "is-ready" : "is-blocked"}">
+    <div class="forge-module-diagnostic-status ${status.ok ? "is-ready" : "is-blocked"}">
       ${upgradeLevel >= 3 ? "Max calibration reached." : status.ok ? "Ready for calibration." : status.reason}
     </div>
   `;
@@ -2109,8 +2109,8 @@ function updateForgeModuleInspectorPreview(moduleInstanceId = null, mode = "sele
     return;
   }
 
-  const inspector = defenderScreenContent.querySelector("[data-forge-module-inspector]");
-  if (!inspector) {
+  const diagnostic = defenderScreenContent.querySelector("[data-forge-module-diagnostic]");
+  if (!diagnostic) {
     return;
   }
 
@@ -2124,8 +2124,8 @@ function updateForgeModuleInspectorPreview(moduleInstanceId = null, mode = "sele
   const module = previewModule || selectedModule || modules[0] || null;
   const resolvedMode = previewModule && previewModule?.instanceId !== selectedModule?.instanceId ? mode : "selected";
 
-  inspector.classList.toggle("is-hover-preview", resolvedMode === "hover");
-  inspector.innerHTML = buildForgeModuleInspectorMarkup(module, resolvedMode);
+  diagnostic.classList.toggle("is-hover-preview", resolvedMode === "hover");
+  diagnostic.innerHTML = buildForgeModuleDiagnosticMarkup(module, resolvedMode);
 }
 
 function handleForgeModuleRackPointerOver(event) {
@@ -2321,12 +2321,7 @@ function buildForgeModuleInventoryMarkup(modules, selectedModule) {
     `;
   }
 
-  const selectedInspectorModule = selectedModule || modules[0] || null;
-
   return `
-    <div class="forge-module-inspector forge-module-hologram" data-forge-module-inspector>
-      ${buildForgeModuleInspectorMarkup(selectedInspectorModule)}
-    </div>
     <div class="forge-module-list" aria-label="Recovered modules available for Forge calibration">
       ${modules.map((module) => {
         const primaryStat = getLoadoutModulePrimaryStat(module);
@@ -2528,8 +2523,11 @@ function buildForgeUpgradePreviewMarkup(module, runState) {
     return `
       <div class="forge-action-panel">
         <div class="forge-console-topline">
-          <div class="forge-panel-label">UPGRADE PREVIEW</div>
+          <div class="forge-panel-label">DIAGNOSTIC CONSOLE</div>
           <span class="forge-console-chip">AWAITING MODULE</span>
+        </div>
+        <div class="forge-module-diagnostic" data-forge-module-diagnostic>
+          ${buildForgeModuleDiagnosticMarkup(null)}
         </div>
         <div class="forge-empty-state">Select a module from the rail to preview its base stat upgrade.</div>
       </div>
@@ -2561,8 +2559,11 @@ function buildForgeUpgradePreviewMarkup(module, runState) {
   return `
     <div class="forge-action-panel">
       <div class="forge-console-topline">
-        <div class="forge-panel-label">UPGRADE PREVIEW</div>
+        <div class="forge-panel-label">DIAGNOSTIC CONSOLE</div>
         <span class="forge-console-chip">${forgeCalibrationActive && forgeCalibrationModuleInstanceId === module.instanceId ? "SIGNAL ARMED" : status.ok ? "FORGE READY" : "LOCKED"}</span>
+      </div>
+      <div class="forge-module-diagnostic" data-forge-module-diagnostic>
+        ${buildForgeModuleDiagnosticMarkup(module)}
       </div>
       <div class="forge-console-screen">
         <div class="forge-stat-compare" aria-label="Base stat upgrade preview">
@@ -2652,7 +2653,7 @@ function buildForgeScreenMarkup() {
   const resultClass = forgeActionMessage && forgeActionTone ? `is-result-${getDefenderLoadoutText(forgeActionTone, "notice")}` : "";
 
   return `
-    <div class="forge-screen ${forgeCalibrationActive ? "is-calibrating" : ""} ${resultClass}" data-screen-state="forge" data-loadout-context="forge" data-forge-version="art-v2.2" data-forge-layout="scene-first">
+    <div class="forge-screen ${forgeCalibrationActive ? "is-calibrating" : ""} ${resultClass}" data-screen-state="forge" data-loadout-context="forge" data-forge-version="art-v2.3" data-forge-layout="scene-first">
       <div class="forge-room" aria-label="Forge calibration room">
         <span class="forge-room-ambient forge-room-ambient--ember" aria-hidden="true"></span>
         <span class="forge-room-ambient forge-room-ambient--teal" aria-hidden="true"></span>
