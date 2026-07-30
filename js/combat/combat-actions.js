@@ -10,6 +10,34 @@ const PLAYER_ACTION_WINDUP_MS = 280;
 const PLAYER_ACTION_RESULT_HOLD_MS = 920;
 const PLAYER_HIT_MARKER_DURATION_MS = 620;
 
+function routeCombatAudioScreen(nextScreen) {
+  if (typeof window !== "undefined" && window.THREATGRID_AUDIO && typeof window.THREATGRID_AUDIO.setScreen === "function") {
+    window.THREATGRID_AUDIO.setScreen(nextScreen);
+  }
+}
+
+function getCombatPartyLowestHpRatio(state) {
+  const party = Array.isArray(state?.playerParty) ? state.playerParty : [];
+  const livingParty = party.filter((program) => program && Number.isFinite(program.hp) && Number.isFinite(program.maxHp) && program.maxHp > 0 && program.hp > 0);
+  if (!livingParty.length) {
+    return 1;
+  }
+
+  return Math.min(...livingParty.map((program) => program.hp / program.maxHp));
+}
+
+function updateCombatAudioPressure(state) {
+  if (typeof window === "undefined" || !window.THREATGRID_AUDIO) {
+    return;
+  }
+
+  const severity = String(state?.sourceThreat?.severity || state?.threat?.severity || "").toLowerCase();
+  const difficultyTier = Number.isFinite(state?.sourceThreat?.difficultyTier) ? state.sourceThreat.difficultyTier : state?.threat?.level;
+  const isHighRisk = severity === "critical" || severity === "high" || (Number.isFinite(difficultyTier) && difficultyTier >= 3);
+  window.THREATGRID_AUDIO.setCombatIntensity(isHighRisk ? "high" : "normal");
+  window.THREATGRID_AUDIO.setLowHpActive(getCombatPartyLowestHpRatio(state) <= 0.35);
+}
+
 function buildCombatFeedEvent(event, variant = "") {
   const safeEvent = event && typeof event === "object" ? event : { body: String(event || "") };
   const rawBody = String(safeEvent.body || safeEvent.message || "").trim();
@@ -85,6 +113,7 @@ function returnToGlobeFromCombat() {
   hideEncounterTransition();
   closeCombatOverlay(true);
   screenState = "game";
+  routeCombatAudioScreen("game");
   if (typeof globe !== "undefined") {
     globe.autoRotateSpeed = 0.0012;
   }
@@ -428,6 +457,10 @@ function showCombatReward(rewardLines) {
   combatState.cyberCodexOpen = false;
   combatState.phase = "reward";
   renderCombatReward(rewardLines);
+  routeCombatAudioScreen("reward");
+  if (typeof window !== "undefined" && window.THREATGRID_AUDIO && typeof window.THREATGRID_AUDIO.playStinger === "function") {
+    window.THREATGRID_AUDIO.playStinger("victory");
+  }
 }
 
 function continueVictorySummary() {
@@ -611,6 +644,10 @@ function showCombatDefeatScreen(outcome) {
   }
 
   renderBattleLostScreen();
+  routeCombatAudioScreen("game-over");
+  if (typeof window !== "undefined" && window.THREATGRID_AUDIO && typeof window.THREATGRID_AUDIO.playStinger === "function") {
+    window.THREATGRID_AUDIO.playStinger("defeat");
+  }
 }
 
 // hideEncounterTransition() clears the short cinematic overlay so a battle can take over cleanly.
@@ -887,6 +924,8 @@ class ThreatCombat {
     this.state.cyberCodexOpen = false;
     this.state.actionLocked = true;
     screenState = "combat";
+    routeCombatAudioScreen("combat");
+    updateCombatAudioPressure(this.state);
     addBattleLog(`ENGAGING ${this.state.threat.title.toUpperCase()} AT LEVEL ${this.state.threat.level}.`);
     if (this.state.learningObjective) {
       addCombatFeedEvent({

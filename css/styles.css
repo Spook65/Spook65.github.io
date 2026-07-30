@@ -1811,6 +1811,10 @@ canvas {
   --menu-button-accent: var(--menu-violet);
 }
 
+#menu-screen #audio-settings-button {
+  --menu-button-accent: var(--menu-teal);
+}
+
 #menu-screen .menu-button:hover,
 #menu-screen .menu-button:focus-visible {
   color: var(--menu-text);
@@ -1834,6 +1838,161 @@ canvas {
 
 #menu-screen .menu-button:active {
   transform: translate3d(0, 0, 0) scale(0.995);
+}
+
+#menu-screen .audio-settings-panel {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  z-index: 8;
+  width: min(420px, calc(100vw - 42px));
+  padding: 18px;
+  border: 1px solid rgba(72, 214, 198, 0.3);
+  background:
+    linear-gradient(135deg, rgba(7, 11, 18, 0.98), rgba(16, 13, 24, 0.96) 48%, rgba(31, 16, 20, 0.94)),
+    radial-gradient(circle at 18% 0%, rgba(72, 214, 198, 0.16), transparent 42%);
+  color: var(--menu-text);
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(242, 239, 227, 0.04) inset;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate3d(0, -45%, 0) scale(0.98);
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease;
+  clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 18px 100%, 0 calc(100% - 18px));
+}
+
+#menu-screen .audio-settings-panel.is-open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate3d(0, -45%, 0) scale(1);
+}
+
+#menu-screen .audio-settings-panel::before {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  pointer-events: none;
+  border: 1px solid rgba(242, 184, 75, 0.16);
+  opacity: 0.74;
+}
+
+#menu-screen .audio-settings-header {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+#menu-screen .audio-settings-kicker,
+#menu-screen .audio-settings-copy,
+#menu-screen .audio-settings-control span,
+#menu-screen .audio-settings-toggle span {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  text-transform: uppercase;
+}
+
+#menu-screen .audio-settings-kicker {
+  margin: 0 0 6px;
+  color: var(--menu-gold);
+  font-size: 0.62rem;
+  letter-spacing: 0.24em;
+}
+
+#menu-screen .audio-settings-header h2 {
+  margin: 0;
+  color: rgba(244, 239, 227, 0.96);
+  font-size: 1.18rem;
+  letter-spacing: 0.18em;
+}
+
+#menu-screen .audio-settings-close {
+  appearance: none;
+  border: 1px solid rgba(242, 239, 227, 0.16);
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.035);
+  color: rgba(244, 239, 227, 0.78);
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.64rem;
+  letter-spacing: 0.16em;
+  cursor: pointer;
+}
+
+#menu-screen .audio-settings-close:hover,
+#menu-screen .audio-settings-close:focus-visible {
+  border-color: rgba(72, 214, 198, 0.62);
+  color: rgba(244, 239, 227, 0.98);
+  outline: none;
+}
+
+#menu-screen .audio-settings-copy {
+  position: relative;
+  z-index: 1;
+  margin: 0 0 16px;
+  color: rgba(244, 239, 227, 0.6);
+  font-size: 0.64rem;
+  line-height: 1.65;
+  letter-spacing: 0.12em;
+}
+
+#menu-screen .audio-settings-controls {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 12px;
+}
+
+#menu-screen .audio-settings-control,
+#menu-screen .audio-settings-toggle {
+  display: grid;
+  grid-template-columns: 78px minmax(0, 1fr) 54px;
+  align-items: center;
+  gap: 12px;
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid rgba(242, 239, 227, 0.1);
+  background:
+    linear-gradient(90deg, rgba(72, 214, 198, 0.06), rgba(255, 255, 255, 0.018)),
+    rgba(5, 6, 13, 0.58);
+}
+
+#menu-screen .audio-settings-toggle {
+  grid-template-columns: auto minmax(0, 1fr) 54px;
+  border-color: rgba(242, 184, 75, 0.22);
+}
+
+#menu-screen .audio-settings-control span,
+#menu-screen .audio-settings-toggle span {
+  color: rgba(244, 239, 227, 0.68);
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+}
+
+#menu-screen .audio-settings-control strong,
+#menu-screen .audio-settings-toggle strong {
+  color: var(--menu-gold);
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
+  text-align: right;
+}
+
+#menu-screen .audio-settings-control input[type="range"] {
+  width: 100%;
+  accent-color: var(--menu-teal);
+  cursor: pointer;
+}
+
+#menu-screen .audio-settings-toggle input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--menu-coral);
+  cursor: pointer;
 }
 
 /* The bottom footnote becomes a label strip so the menu feels anchored like a poster instead of centered like a launcher. */
@@ -2390,6 +2549,26 @@ canvas {
     letter-spacing: 0.12em;
     white-space: normal;
     clip-path: polygon(7% 0, 100% 0, 95% 100%, 0 100%);
+  }
+
+  #menu-screen .audio-settings-panel {
+    right: 50%;
+    top: 54%;
+    max-height: min(76vh, 560px);
+    overflow-y: auto;
+    transform: translate3d(50%, -42%, 0) scale(0.98);
+  }
+
+  #menu-screen .audio-settings-panel.is-open {
+    transform: translate3d(50%, -42%, 0) scale(1);
+  }
+
+  #menu-screen .audio-settings-control {
+    grid-template-columns: 1fr 54px;
+  }
+
+  #menu-screen .audio-settings-control span {
+    grid-column: 1 / -1;
   }
 }
 

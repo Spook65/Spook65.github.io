@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>THREATGRID — Layer 4</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <link rel="stylesheet" href="css/styles.css?v=combat-env-v1-1">
+  <link rel="stylesheet" href="css/styles.css?v=audio-settings-v1">
 </head>
 <body>
   <div id="app">
@@ -55,9 +55,42 @@
               <button id="operator-mode-button" class="menu-button" type="button"><span class="menu-button-label">OPERATOR MODE</span></button>
             </div>
             <div class="menu-actions menu-actions-secondary">
+              <button id="audio-settings-button" class="menu-button" type="button"><span class="menu-button-label">AUDIO SETTINGS</span></button>
               <button id="howto-button" class="menu-button" type="button"><span class="menu-button-label">HOW TO PLAY</span></button>
             </div>
           </div>
+          <section id="audio-settings-panel" class="audio-settings-panel" aria-label="Audio Settings" aria-hidden="true">
+            <div class="audio-settings-header">
+              <div>
+                <p class="audio-settings-kicker">SIGNAL MIX</p>
+                <h2>AUDIO SETTINGS</h2>
+              </div>
+              <button id="audio-settings-close-button" class="audio-settings-close" type="button">[ CLOSE ]</button>
+            </div>
+            <p class="audio-settings-copy">Browser audio unlocks after your first command. These controls update the live mix and persist locally.</p>
+            <div class="audio-settings-controls">
+              <label class="audio-settings-toggle" for="audio-muted-toggle">
+                <input id="audio-muted-toggle" type="checkbox">
+                <span>MUTE ALL</span>
+                <strong id="audio-muted-value">OFF</strong>
+              </label>
+              <label class="audio-settings-control" for="audio-master-volume">
+                <span>MASTER</span>
+                <input id="audio-master-volume" type="range" min="0" max="100" step="1">
+                <strong id="audio-master-value">78%</strong>
+              </label>
+              <label class="audio-settings-control" for="audio-music-volume">
+                <span>MUSIC</span>
+                <input id="audio-music-volume" type="range" min="0" max="100" step="1">
+                <strong id="audio-music-value">68%</strong>
+              </label>
+              <label class="audio-settings-control" for="audio-sfx-volume">
+                <span>SFX</span>
+                <input id="audio-sfx-volume" type="range" min="0" max="100" step="1">
+                <strong id="audio-sfx-value">82%</strong>
+              </label>
+            </div>
+          </section>
         </div>
         <p class="menu-footnote">v0.4.0 — CYBER-FANTASY COMBAT</p>
       </section>
@@ -136,13 +169,14 @@
   <script src="js/threats.js"></script>
   <script src="js/globe.js?v=hologram-hover-v2"></script>
   <script src="js/combat/combat-state.js"></script>
+  <script src="js/audio-manager.js?v=audio-settings-v1"></script>
   <script src="js/defenders.js?v=forge-art-v2-3-1"></script>
   <script src="js/narrative.js"></script>
-  <script src="js/screens.js?v=forge-art-v1"></script>
+  <script src="js/screens.js?v=audio-settings-v1"></script>
   <script src="js/reward-relic-scene.js"></script>
   <script src="js/combat/combat-animations.js"></script>
   <script src="js/combat/combat-render.js?v=combat-env-v1-1"></script>
-  <script src="js/combat/combat-actions.js"></script>
+  <script src="js/combat/combat-actions.js?v=audio-mvp-v1"></script>
   <script src="js/main.js?v=hologram-hover-v2"></script>
 </body>
 </html>

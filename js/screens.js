@@ -15,6 +15,17 @@ const analystModeButton = document.getElementById("analyst-mode-button");
 const operatorModeButton = document.getElementById("operator-mode-button");
 const defenderSetupButton = document.getElementById("defender-setup-button");
 const howtoButton = document.getElementById("howto-button");
+const audioSettingsButton = document.getElementById("audio-settings-button");
+const audioSettingsPanel = document.getElementById("audio-settings-panel");
+const audioSettingsCloseButton = document.getElementById("audio-settings-close-button");
+const audioMutedToggle = document.getElementById("audio-muted-toggle");
+const audioMutedValue = document.getElementById("audio-muted-value");
+const audioMasterVolume = document.getElementById("audio-master-volume");
+const audioMasterValue = document.getElementById("audio-master-value");
+const audioMusicVolume = document.getElementById("audio-music-volume");
+const audioMusicValue = document.getElementById("audio-music-value");
+const audioSfxVolume = document.getElementById("audio-sfx-volume");
+const audioSfxValue = document.getElementById("audio-sfx-value");
 const backButton = document.getElementById("back-button");
 const returnButton = document.getElementById("return-button");
 const hudMenuButton = document.getElementById("hud-menu-button");
@@ -25,6 +36,13 @@ const menuModeDescription = document.getElementById("menu-mode-description");
 const modeDescriptionLookup = {
   analyst: "OBSERVE AND DIRECT — NO TYPING REQUIRED",
   operator: "TYPE COMMANDS YOURSELF — HINTS AVAILABLE"
+};
+
+const audioSettingsFallback = {
+  master: 0.78,
+  music: 0.68,
+  sfx: 0.82,
+  muted: false
 };
 
 // The menu button uses a two-step confirm pattern so players do not exit the mission by accident.
@@ -57,6 +75,110 @@ function clearMenuExitConfirm() {
   updateHudMenuButton();
 }
 
+function routeAudioScreen(nextScreen) {
+  if (typeof window !== "undefined" && window.THREATGRID_AUDIO && typeof window.THREATGRID_AUDIO.setScreen === "function") {
+    window.THREATGRID_AUDIO.setScreen(nextScreen);
+  }
+}
+
+function getAudioManagerSettings() {
+  const audioManager = typeof window !== "undefined" ? window.THREATGRID_AUDIO : null;
+  if (audioManager && typeof audioManager.getSettings === "function") {
+    return { ...audioSettingsFallback, ...audioManager.getSettings() };
+  }
+
+  const debugState = audioManager && typeof audioManager.getDebugState === "function" ? audioManager.getDebugState() : null;
+  return {
+    ...audioSettingsFallback,
+    ...(debugState?.volumes || {}),
+    muted: Boolean(debugState?.muted)
+  };
+}
+
+function formatAudioPercent(value) {
+  return `${Math.round(Math.max(0, Math.min(1, Number(value) || 0)) * 100)}%`;
+}
+
+function setAudioSliderState(input, output, value) {
+  if (!input || !output) {
+    return;
+  }
+
+  const normalizedValue = Math.max(0, Math.min(1, Number(value) || 0));
+  input.value = String(Math.round(normalizedValue * 100));
+  output.textContent = formatAudioPercent(normalizedValue);
+}
+
+function renderAudioSettingsControls() {
+  const settings = getAudioManagerSettings();
+  if (audioMutedToggle) {
+    audioMutedToggle.checked = Boolean(settings.muted);
+  }
+  if (audioMutedValue) {
+    audioMutedValue.textContent = settings.muted ? "ON" : "OFF";
+  }
+
+  setAudioSliderState(audioMasterVolume, audioMasterValue, settings.master);
+  setAudioSliderState(audioMusicVolume, audioMusicValue, settings.music);
+  setAudioSliderState(audioSfxVolume, audioSfxValue, settings.sfx);
+}
+
+function openAudioSettingsPanel() {
+  if (!audioSettingsPanel) {
+    return;
+  }
+
+  renderAudioSettingsControls();
+  audioSettingsPanel.classList.add("is-open");
+  audioSettingsPanel.setAttribute("aria-hidden", "false");
+  audioSettingsCloseButton?.focus();
+}
+
+function closeAudioSettingsPanel() {
+  if (!audioSettingsPanel) {
+    return;
+  }
+
+  const wasOpen = audioSettingsPanel.classList.contains("is-open");
+  audioSettingsPanel.classList.remove("is-open");
+  audioSettingsPanel.setAttribute("aria-hidden", "true");
+  if (wasOpen) {
+    audioSettingsButton?.focus();
+  }
+}
+
+function setAudioVolumeFromInput(group, input, output) {
+  if (!input || !output) {
+    return;
+  }
+
+  const normalizedValue = Math.max(0, Math.min(1, Number(input.value) / 100));
+  output.textContent = formatAudioPercent(normalizedValue);
+  if (typeof window === "undefined" || !window.THREATGRID_AUDIO) {
+    return;
+  }
+
+  window.THREATGRID_AUDIO.setVolume(group, normalizedValue);
+  if (group === "music") {
+    window.THREATGRID_AUDIO.setVolume("ambience", normalizedValue);
+  }
+}
+
+function setAudioMutedFromInput() {
+  if (!audioMutedToggle) {
+    return;
+  }
+
+  if (audioMutedValue) {
+    audioMutedValue.textContent = audioMutedToggle.checked ? "ON" : "OFF";
+  }
+  if (typeof window === "undefined" || !window.THREATGRID_AUDIO) {
+    return;
+  }
+
+  window.THREATGRID_AUDIO.setMuted(audioMutedToggle.checked);
+}
+
 // setScreen() toggles which overlay panel is active inside the shared boot screen.
 function setScreen(nextScreen) {
   screenState = nextScreen;
@@ -65,6 +187,7 @@ function setScreen(nextScreen) {
   if (defenderScreen) {
     defenderScreen.classList.toggle("is-active", nextScreen === "defenders" || nextScreen === "expedition-loadout" || nextScreen === "forge");
   }
+  routeAudioScreen(nextScreen);
 }
 
 // showMenu() restores the main menu and keeps the overlay visible.
@@ -72,6 +195,7 @@ function showMenu() {
   bootOverlay.style.display = "block";
   bootOverlay.classList.remove("is-hiding");
   setScreen("menu");
+  closeAudioSettingsPanel();
   if (typeof closeThreatPanel === "function") {
     closeThreatPanel(true);
   }
@@ -185,6 +309,7 @@ function startGame() {
   }
 
   screenState = "game";
+  routeAudioScreen("game");
   // The globe rotates again as the game begins, so the background motion resumes before the fade ends.
   globe.autoRotateSpeed = 0.0012;
   clearMenuExitConfirm();
@@ -238,6 +363,8 @@ operatorModeButton.addEventListener("mouseleave", () => updateModeDescription(ga
 
 // The remaining buttons switch between the informational screens, and the HUD exit button returns to the menu.
 howtoButton.addEventListener("click", showHowToPlay);
+audioSettingsButton?.addEventListener("click", openAudioSettingsPanel);
+audioSettingsCloseButton?.addEventListener("click", closeAudioSettingsPanel);
 defenderSetupButton.addEventListener("click", showDefenderSelection);
 backButton.addEventListener("click", showMenu);
 returnButton.addEventListener("click", showMenu);
@@ -264,9 +391,21 @@ operatorModeButton.addEventListener("click", () => {
   showDefenderSelection();
 });
 
+audioMutedToggle?.addEventListener("change", setAudioMutedFromInput);
+audioMasterVolume?.addEventListener("input", () => setAudioVolumeFromInput("master", audioMasterVolume, audioMasterValue));
+audioMusicVolume?.addEventListener("input", () => setAudioVolumeFromInput("music", audioMusicVolume, audioMusicValue));
+audioSfxVolume?.addEventListener("input", () => setAudioVolumeFromInput("sfx", audioSfxVolume, audioSfxValue));
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && audioSettingsPanel?.classList.contains("is-open")) {
+    closeAudioSettingsPanel();
+  }
+});
+
 // Initialize the HUD exit button label and menu mode description so the boot screen starts fully populated.
 updateHudMenuButton();
 updateModeDescription(gameMode);
+renderAudioSettingsControls();
 
 // Exposes showMenu for older non-module game flow code that calls it from main.js.
 window.showMenu = showMenu;

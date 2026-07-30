@@ -2,6 +2,31 @@
 
 Apply this rule to future Codex work in this repository.
 
+## Project Workflow Rules
+
+Before editing:
+
+- Read `docs/ART_DIRECTION.md` before visual work.
+- Read `docs/AUDIO_DIRECTION.md` before audio work.
+- Read `docs/WORLD_MAP_ROADMAP.md` before map, location, route, region, state, city, or progression work.
+- Investigate and report the active render path before changing UI, audio, map, combat, Forge, loadout, reward, or globe code.
+- Prefer audit-only prompts before risky implementation, especially for broad visual/audio/map architecture.
+- Do not make broad visual rewrites.
+- Do not add decorative overlays without a clear scene purpose.
+- Preserve `screenState` boundaries. Hidden screens must not keep processing hover, click, keyboard, animation, or audio events.
+- Preserve existing `data-*` click contracts unless the task explicitly asks to change them.
+- Preserve mechanics unless explicitly requested.
+- Avoid touching unrelated systems.
+- Use cache-busting when JS or CSS changes.
+- Run relevant `node --check` commands and `git diff --check`.
+- Browser-verify when UI changes.
+
+For multi-agent work:
+
+- Side agents should audit only unless explicitly assigned implementation.
+- Only one implementation agent should edit files.
+- Implementation agents must not apply side-agent recommendations blindly; they must inspect the active render path themselves first.
+
 ## Scope
 
 - UI direction only.
@@ -115,4 +140,3 @@ Future UI passes should gradually move toward:
 - Elden Ring-style restraint and atmosphere for lore/world screens
 
 Do not apply all references at once. Each screen should have one clear purpose and one clear inspiration direction.
-
