@@ -1712,7 +1712,7 @@ function buildCombatMarkup(state) {
   }
 
   return `
-    <div class="combat-shell ${state.battleIntroPlaying ? "is-intro-playing" : ""} ${attackStageFanActive ? "is-attack-stage-active" : ""} ${stageCommandClusterActive ? "is-stage-command-active" : ""} ${stageCommandSubmenuActive ? "is-stage-submenu-active" : ""} ${stageFeedbackActive ? "is-stage-feedback-active" : ""} ${activeAllyCameraStateClasses}" data-combat-art="hospital-lockout-v2-1">
+    <div class="combat-shell ${state.battleIntroPlaying ? "is-intro-playing" : ""} ${attackStageFanActive ? "is-attack-stage-active" : ""} ${stageCommandClusterActive ? "is-stage-command-active" : ""} ${stageCommandSubmenuActive ? "is-stage-submenu-active" : ""} ${stageFeedbackActive ? "is-stage-feedback-active" : ""} ${activeAllyCameraStateClasses}" data-combat-art="diorama-mvp">
       <header class="combat-header">
         <div class="combat-title-block">
           <div class="combat-panel-title">THREATGRID ARENA</div>
@@ -1727,26 +1727,7 @@ function buildCombatMarkup(state) {
       </header>
 
       <section class="combat-stage ${activeAllyCameraStateClasses}">
-        <div class="combat-environment-v2 hospital-lockout-scene" aria-hidden="true">
-          <div class="hospital-backwall"></div>
-          <div class="hospital-observation-glass">
-            <span class="hospital-observation-frame"></span>
-            <span class="hospital-staff-silhouette is-left"></span>
-            <span class="hospital-staff-silhouette is-right"></span>
-          </div>
-          <div class="hospital-network-core">
-            <span class="hospital-core-header"></span>
-            <span class="hospital-core-screen is-critical"></span>
-            <span class="hospital-core-screen is-flatline"></span>
-            <span class="hospital-core-screen is-locked"></span>
-            <span class="hospital-core-warning"></span>
-          </div>
-          <div class="hospital-floor-plane"></div>
-          <div class="hospital-defender-deployment"></div>
-          <div class="hospital-threat-breach"></div>
-          <div class="hospital-cable-lines"></div>
-          <div class="hospital-alert-light"></div>
-        </div>
+        <div class="combat-diorama-mount" data-combat-diorama-stage aria-hidden="true"></div>
         <div class="combat-floor-grid" aria-hidden="true"></div>
         <div class="combat-stage-glow" aria-hidden="true"></div>
         ${state.battleIntroPlaying ? `
@@ -1822,6 +1803,22 @@ function buildCombatMarkup(state) {
       </footer>
     </div>
   `;
+}
+
+function syncCombatDioramaScene(state) {
+  if (typeof mountCombatDioramaScene !== "function") {
+    return;
+  }
+
+  const mount = threatPanelContent?.querySelector("[data-combat-diorama-stage]");
+  if (!mount) {
+    if (typeof destroyCombatDioramaScene === "function") {
+      destroyCombatDioramaScene();
+    }
+    return;
+  }
+
+  mountCombatDioramaScene(mount, state);
 }
 
 // buildRewardMarkup() keeps the player on the victory screen until they decide whether to continue or quit.
@@ -2274,6 +2271,8 @@ function renderCombatScreen() {
     battleLog.scrollTop = battleLog.scrollHeight;
   }
 
+  syncCombatDioramaScene(combatState);
+
   if (combatState.commandMode === "attack" && !combatState.forceFooterAttackList) {
     const allowFooterFallback = shouldAllowFooterAttackFallback();
     const attackStageOverlay = threatPanelContent.querySelector(".combat-attack-overlay");
@@ -2348,6 +2347,9 @@ function renderCombatScreen() {
 
 // renderCombatReward() replaces the battle grid with a victory summary and the next-step buttons.
 function renderCombatReward(rewardLines) {
+  if (typeof destroyCombatDioramaScene === "function") {
+    destroyCombatDioramaScene();
+  }
   threatPanelContent.innerHTML = buildRewardMarkup(combatState, rewardLines);
   threatPanelContent.scrollTop = 0;
   threatPanel.classList.add("is-open", "is-combat");
@@ -2356,6 +2358,9 @@ function renderCombatReward(rewardLines) {
 }
 
 function renderRecoveredModuleReward() {
+  if (typeof destroyCombatDioramaScene === "function") {
+    destroyCombatDioramaScene();
+  }
   if (typeof destroyRewardRelicScene === "function") {
     destroyRewardRelicScene();
   }
@@ -2417,6 +2422,9 @@ function updateRecoveredModuleFocusPreview(choiceIndex) {
 
 // renderBattleLostScreen() shows the failure branch without tearing down the overlay instantly.
 function renderBattleLostScreen() {
+  if (typeof destroyCombatDioramaScene === "function") {
+    destroyCombatDioramaScene();
+  }
   threatPanelContent.innerHTML = buildBattleLostMarkup();
   threatPanelContent.scrollTop = 0;
   threatPanel.classList.add("is-open", "is-combat");
