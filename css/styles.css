@@ -13984,16 +13984,16 @@ body {
   }
 }
 
-/* Combat Environment v1.1: simplified static battlefield anchors. Decorative only;
+/* Combat Environment v2.1: Hospital Network Lockout scene. Decorative only;
    combat controls, targeting, turn order, and module readouts remain untouched. */
-.threat-panel.is-combat .combat-shell[data-combat-art="environment-v1-1"] .combat-stage {
+.threat-panel.is-combat .combat-shell[data-combat-art="hospital-lockout-v2-1"] .combat-stage {
   background:
-    radial-gradient(circle at 80% 28%, rgba(255, 84, 112, 0.045), transparent 23%),
-    radial-gradient(circle at 19% 72%, rgba(93, 231, 217, 0.045), transparent 24%),
-    linear-gradient(180deg, rgba(4, 7, 11, 0.9) 0%, rgba(6, 8, 12, 0.96) 58%, rgba(3, 4, 7, 0.98) 100%);
+    radial-gradient(circle at 76% 38%, rgba(255, 79, 104, 0.15), transparent 26%),
+    radial-gradient(circle at 18% 70%, rgba(111, 239, 224, 0.08), transparent 24%),
+    linear-gradient(180deg, rgba(6, 10, 13, 0.88) 0%, rgba(8, 11, 13, 0.94) 54%, rgba(3, 4, 6, 0.98) 100%);
 }
 
-.threat-panel.is-combat .combat-shell[data-combat-art="environment-v1-1"] .combat-environment-v1 {
+.threat-panel.is-combat .combat-shell[data-combat-art="hospital-lockout-v2-1"] .hospital-lockout-scene {
   position: absolute;
   inset: 0;
   z-index: 0;
@@ -14001,93 +14001,243 @@ body {
   pointer-events: none;
 }
 
-.threat-panel.is-combat .combat-shell[data-combat-art="environment-v1-1"] .combat-environment-v1 > div {
+.threat-panel.is-combat .combat-shell[data-combat-art="hospital-lockout-v2-1"] .hospital-lockout-scene > div {
   position: absolute;
   pointer-events: none;
 }
 
-.threat-panel.is-combat .combat-shell[data-combat-art="environment-v1-1"] .combat-env-backwall,
-.threat-panel.is-combat .combat-shell[data-combat-art="environment-v1-1"] .combat-env-server-racks,
-.threat-panel.is-combat .combat-shell[data-combat-art="environment-v1-1"] .combat-env-packet-scar {
-  display: none;
-}
-
-.threat-panel.is-combat .combat-shell[data-combat-art="environment-v1-1"] .combat-env-floor-plane {
-  left: 7%;
-  right: 7%;
-  bottom: -3%;
+.threat-panel.is-combat .combat-shell[data-combat-art="hospital-lockout-v2-1"] .hospital-backwall {
+  left: 4%;
+  right: 4%;
+  top: 2%;
   height: 48%;
   background:
-    linear-gradient(112deg, transparent 0 37%, rgba(93, 231, 217, 0.085) 37.4% 37.8%, transparent 38.2% 100%),
-    linear-gradient(68deg, transparent 0 61%, rgba(215, 184, 106, 0.07) 61.3% 61.7%, transparent 62.1% 100%),
-    linear-gradient(180deg, rgba(14, 21, 25, 0.13), rgba(10, 9, 10, 0.36));
-  border-top: 1px solid rgba(135, 228, 255, 0.09);
-  clip-path: polygon(18% 0, 82% 0, 100% 100%, 0 100%);
-  transform: perspective(660px) rotateX(58deg);
-  transform-origin: bottom center;
-  opacity: 0.72;
+    linear-gradient(90deg, transparent 0 11%, rgba(159, 226, 219, 0.07) 11.4% 11.8%, transparent 12.2% 77%, rgba(255, 99, 116, 0.06) 77.3% 77.8%, transparent 78.2%),
+    linear-gradient(180deg, rgba(20, 31, 33, 0.68), rgba(8, 11, 13, 0.18));
+  border-top: 1px solid rgba(184, 224, 218, 0.12);
+  border-bottom: 1px solid rgba(111, 239, 224, 0.15);
+  clip-path: polygon(3% 0, 97% 0, 92% 100%, 8% 100%);
+  opacity: 0.88;
 }
 
-.threat-panel.is-combat .combat-shell[data-combat-art="environment-v1-1"] .combat-env-defender-platform {
-  left: clamp(1rem, 4vw, 4.4rem);
-  bottom: clamp(5.2rem, 10vh, 7.2rem);
-  width: clamp(18rem, 35vw, 34rem);
-  height: clamp(5.6rem, 12vh, 9rem);
+.threat-panel.is-combat .combat-shell[data-combat-art="hospital-lockout-v2-1"] .hospital-observation-glass {
+  left: 7%;
+  top: 7%;
+  width: min(25rem, 34vw);
+  height: 31%;
   background:
-    linear-gradient(180deg, rgba(7, 24, 26, 0.32), rgba(3, 9, 10, 0.52));
-  border-top: 1px solid rgba(93, 231, 217, 0.22);
-  border-bottom: 1px solid rgba(93, 231, 217, 0.08);
-  clip-path: polygon(7% 0, 93% 0, 100% 76%, 88% 100%, 0 100%, 0 24%);
-  box-shadow: inset 0 0 18px rgba(93, 231, 217, 0.035);
+    linear-gradient(90deg, rgba(185, 227, 218, 0.08), transparent 8% 92%, rgba(185, 227, 218, 0.07)),
+    linear-gradient(180deg, rgba(128, 224, 216, 0.14), rgba(6, 11, 13, 0.34));
+  border: 1px solid rgba(151, 220, 211, 0.24);
+  border-bottom-color: rgba(111, 239, 224, 0.16);
+  box-shadow: inset 0 0 24px rgba(111, 239, 224, 0.06);
+  opacity: 0.9;
+}
+
+.threat-panel.is-combat .combat-shell[data-combat-art="hospital-lockout-v2-1"] .hospital-observation-frame {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, transparent 0 48%, rgba(214, 233, 225, 0.14) 48.6% 49.1%, transparent 49.8%),
+    linear-gradient(180deg, transparent 0 70%, rgba(214, 233, 225, 0.11) 70.5% 71%, transparent 71.5%);
+}
+
+.threat-panel.is-combat .combat-shell[data-combat-art="hospital-lockout-v2-1"] .hospital-staff-silhouette {
+  position: absolute;
+  bottom: 10%;
+  width: 3rem;
+  height: 6.2rem;
+  border-radius: 50% 50% 16% 16%;
+  background:
+    radial-gradient(circle at 50% 12%, rgba(227, 238, 231, 0.52) 0 13%, transparent 14%),
+    linear-gradient(90deg, transparent 0 18%, rgba(198, 220, 212, 0.28) 19% 25%, transparent 26% 74%, rgba(198, 220, 212, 0.2) 75% 81%, transparent 82%),
+    linear-gradient(180deg, transparent 0 24%, rgba(184, 210, 204, 0.32) 25% 100%);
   opacity: 0.58;
 }
 
-.threat-panel.is-combat .combat-shell[data-combat-art="environment-v1-1"] .combat-env-threat-rift {
-  right: clamp(2rem, 7vw, 7.4rem);
-  top: clamp(7.6rem, 15vh, 12rem);
-  width: clamp(12rem, 23vw, 23rem);
-  height: clamp(12rem, 23vw, 23rem);
-  background:
-    radial-gradient(circle at 50% 50%, rgba(255, 88, 116, 0.16), transparent 18%),
-    radial-gradient(circle at 50% 50%, transparent 0 38%, rgba(255, 88, 116, 0.12) 39% 40%, transparent 41% 100%);
-  border-radius: 50%;
-  opacity: 0.56;
+.threat-panel.is-combat .combat-shell[data-combat-art="hospital-lockout-v2-1"] .hospital-staff-silhouette.is-left {
+  left: 21%;
+  transform: scale(0.92);
 }
 
-.threat-panel.is-combat .combat-shell[data-combat-art="environment-v1-1"] .combat-env-cable-run {
+.threat-panel.is-combat .combat-shell[data-combat-art="hospital-lockout-v2-1"] .hospital-staff-silhouette.is-right {
+  right: 24%;
+  transform: scale(0.8);
+}
+
+.threat-panel.is-combat .combat-shell[data-combat-art="hospital-lockout-v2-1"] .hospital-network-core {
+  right: clamp(2.8rem, 7vw, 8rem);
+  top: clamp(4.7rem, 9vh, 7rem);
+  width: clamp(16rem, 28vw, 31rem);
+  height: clamp(15rem, 30vh, 23rem);
+  background:
+    linear-gradient(90deg, rgba(255, 94, 116, 0.16) 0 0.38rem, transparent 0.38rem),
+    linear-gradient(180deg, rgba(30, 17, 20, 0.82), rgba(8, 7, 9, 0.72));
+  border: 1px solid rgba(255, 94, 116, 0.26);
+  box-shadow: inset 0 0 0 1px rgba(255, 184, 120, 0.05), inset 0 0 30px rgba(255, 94, 116, 0.055);
+  clip-path: polygon(7% 0, 100% 0, 94% 100%, 0 100%);
+  opacity: 0.9;
+}
+
+.threat-panel.is-combat .combat-shell[data-combat-art="hospital-lockout-v2-1"] .hospital-network-core > span {
+  position: absolute;
+}
+
+.threat-panel.is-combat .combat-shell[data-combat-art="hospital-lockout-v2-1"] .hospital-core-header {
+  left: 9%;
+  right: 8%;
+  top: 8%;
+  height: 14%;
+  background:
+    linear-gradient(90deg, rgba(255, 94, 116, 0.56) 0 18%, rgba(215, 184, 106, 0.32) 18.5% 26%, rgba(255, 94, 116, 0.15) 26.5% 100%);
+  border: 1px solid rgba(255, 184, 120, 0.16);
+}
+
+.threat-panel.is-combat .combat-shell[data-combat-art="hospital-lockout-v2-1"] .hospital-core-screen {
+  left: 11%;
+  right: 12%;
+  height: 14%;
+  border: 1px solid rgba(255, 94, 116, 0.18);
+  background:
+    linear-gradient(90deg, transparent 0 18%, currentColor 18.5% 19%, transparent 19.5% 42%, currentColor 42.5% 43%, transparent 43.5%),
+    linear-gradient(180deg, rgba(8, 11, 13, 0.68), rgba(3, 5, 6, 0.88));
+  opacity: 0.82;
+}
+
+.threat-panel.is-combat .combat-shell[data-combat-art="hospital-lockout-v2-1"] .hospital-core-screen.is-critical {
+  top: 29%;
+  color: rgba(255, 94, 116, 0.48);
+}
+
+.threat-panel.is-combat .combat-shell[data-combat-art="hospital-lockout-v2-1"] .hospital-core-screen.is-flatline {
+  top: 49%;
+  color: rgba(215, 184, 106, 0.42);
+}
+
+.threat-panel.is-combat .combat-shell[data-combat-art="hospital-lockout-v2-1"] .hospital-core-screen.is-locked {
+  top: 69%;
+  color: rgba(111, 239, 224, 0.28);
+}
+
+.threat-panel.is-combat .combat-shell[data-combat-art="hospital-lockout-v2-1"] .hospital-core-warning {
+  right: 8%;
+  top: -0.75rem;
+  width: min(12rem, 14vw);
+  height: 1.6rem;
+  background:
+    linear-gradient(90deg, rgba(215, 184, 106, 0.6), rgba(255, 94, 116, 0.42));
+  clip-path: polygon(0 0, 100% 0, 92% 100%, 0 100%);
+  opacity: 0.82;
+}
+
+.threat-panel.is-combat .combat-shell[data-combat-art="hospital-lockout-v2-1"] .hospital-floor-plane {
+  left: 4%;
+  right: 4%;
+  bottom: -5%;
+  height: 58%;
+  background:
+    linear-gradient(90deg, transparent 0 21%, rgba(111, 239, 224, 0.11) 21.4% 21.8%, transparent 22.2% 76%, rgba(255, 94, 116, 0.095) 76.4% 76.8%, transparent 77.2%),
+    linear-gradient(106deg, transparent 0 35%, rgba(111, 239, 224, 0.09) 35.4% 35.8%, transparent 36.2% 100%),
+    linear-gradient(74deg, transparent 0 63%, rgba(215, 184, 106, 0.07) 63.3% 63.8%, transparent 64.2% 100%),
+    linear-gradient(180deg, rgba(18, 27, 28, 0.25), rgba(10, 9, 10, 0.45));
+  border-top: 1px solid rgba(135, 228, 255, 0.14);
+  clip-path: polygon(20% 0, 80% 0, 100% 100%, 0 100%);
+  transform: perspective(720px) rotateX(58deg);
+  transform-origin: bottom center;
+  opacity: 0.9;
+}
+
+.threat-panel.is-combat .combat-shell[data-combat-art="hospital-lockout-v2-1"] .hospital-defender-deployment {
+  left: clamp(0.8rem, 3vw, 3.6rem);
+  bottom: clamp(4.8rem, 8vh, 6.8rem);
+  width: clamp(22rem, 42vw, 42rem);
+  height: clamp(7rem, 14vh, 10.5rem);
+  background:
+    radial-gradient(ellipse at 28% 28%, rgba(111, 239, 224, 0.14), transparent 28%),
+    linear-gradient(90deg, rgba(111, 239, 224, 0.12) 0 1px, transparent 1px 24%),
+    linear-gradient(180deg, rgba(7, 32, 32, 0.48), rgba(3, 9, 10, 0.68));
+  border-top: 1px solid rgba(111, 239, 224, 0.38);
+  border-bottom: 1px solid rgba(111, 239, 224, 0.14);
+  clip-path: polygon(7% 0, 93% 0, 100% 76%, 88% 100%, 0 100%, 0 24%);
+  box-shadow: inset 0 0 24px rgba(111, 239, 224, 0.08), 0 0 22px rgba(111, 239, 224, 0.035);
+  opacity: 0.82;
+}
+
+.threat-panel.is-combat .combat-shell[data-combat-art="hospital-lockout-v2-1"] .hospital-threat-breach {
+  right: clamp(2.4rem, 8vw, 8.2rem);
+  top: clamp(8rem, 16vh, 12.5rem);
+  width: clamp(13rem, 24vw, 24rem);
+  height: clamp(13rem, 24vw, 24rem);
+  background:
+    linear-gradient(38deg, transparent 0 44%, rgba(255, 94, 116, 0.19) 44.5% 45.2%, transparent 45.8% 100%),
+    radial-gradient(circle at 50% 50%, rgba(255, 84, 104, 0.26), transparent 18%),
+    radial-gradient(circle at 50% 50%, transparent 0 38%, rgba(255, 84, 104, 0.18) 39% 41%, transparent 42% 100%);
+  border-radius: 44% 56% 48% 52%;
+  opacity: 0.84;
+}
+
+.threat-panel.is-combat .combat-shell[data-combat-art="hospital-lockout-v2-1"] .hospital-cable-lines {
   left: 18%;
-  right: 23%;
+  right: 18%;
   bottom: 26%;
-  height: 12%;
+  height: 15%;
   background:
-    linear-gradient(98deg, transparent 0 22%, rgba(93, 231, 217, 0.12) 22.3% 22.7%, transparent 23.1% 58%, rgba(215, 184, 106, 0.09) 58.3% 58.7%, transparent 59.1% 100%);
-  opacity: 0.62;
+    linear-gradient(98deg, transparent 0 20%, rgba(111, 239, 224, 0.15) 20.3% 20.8%, transparent 21.2% 57%, rgba(215, 184, 106, 0.11) 57.3% 57.8%, transparent 58.2% 100%),
+    linear-gradient(86deg, transparent 0 39%, rgba(255, 94, 116, 0.13) 39.3% 39.8%, transparent 40.2% 100%);
+  opacity: 0.74;
 }
 
-.threat-panel.is-combat .combat-shell[data-combat-art="environment-v1-1"] .combat-floor-grid,
-.threat-panel.is-combat .combat-shell[data-combat-art="environment-v1-1"] .combat-stage-glow {
+.threat-panel.is-combat .combat-shell[data-combat-art="hospital-lockout-v2-1"] .hospital-alert-light {
+  right: 11%;
+  top: 7.5%;
+  width: 0.9rem;
+  height: 0.9rem;
+  border-radius: 50%;
+  background: rgba(255, 94, 116, 0.62);
+  animation: hospital-alert-pulse 2.8s ease-in-out infinite;
+}
+
+@keyframes hospital-alert-pulse {
+  0%, 100% {
+    opacity: 0.28;
+  }
+  45% {
+    opacity: 0.72;
+  }
+}
+
+.threat-panel.is-combat .combat-shell[data-combat-art="hospital-lockout-v2-1"] .combat-floor-grid,
+.threat-panel.is-combat .combat-shell[data-combat-art="hospital-lockout-v2-1"] .combat-stage-glow {
   z-index: 1;
 }
 
-.threat-panel.is-combat .combat-shell[data-combat-art="environment-v1-1"] .combat-ally-formation,
-.threat-panel.is-combat .combat-shell[data-combat-art="environment-v1-1"] .combat-stage-enemy {
+.threat-panel.is-combat .combat-shell[data-combat-art="hospital-lockout-v2-1"] .combat-ally-formation,
+.threat-panel.is-combat .combat-shell[data-combat-art="hospital-lockout-v2-1"] .combat-stage-enemy {
   z-index: 2;
 }
 
-.threat-panel.is-combat .combat-shell[data-combat-art="environment-v1-1"] .combat-stage-command-cluster,
-.threat-panel.is-combat .combat-shell[data-combat-art="environment-v1-1"] .combat-stage-command-submenu,
-.threat-panel.is-combat .combat-shell[data-combat-art="environment-v1-1"] .combat-stage-feedback-toast,
-.threat-panel.is-combat .combat-shell[data-combat-art="environment-v1-1"] .combat-feed {
+.threat-panel.is-combat .combat-shell[data-combat-art="hospital-lockout-v2-1"] .combat-stage-command-cluster,
+.threat-panel.is-combat .combat-shell[data-combat-art="hospital-lockout-v2-1"] .combat-stage-command-submenu,
+.threat-panel.is-combat .combat-shell[data-combat-art="hospital-lockout-v2-1"] .combat-stage-feedback-toast,
+.threat-panel.is-combat .combat-shell[data-combat-art="hospital-lockout-v2-1"] .combat-feed {
   z-index: 4;
 }
 
 @media (max-width: 920px) {
-  .threat-panel.is-combat .combat-shell[data-combat-art="environment-v1-1"] .combat-env-defender-platform {
-    left: 0.6rem;
-    width: min(25rem, 45vw);
+  .threat-panel.is-combat .combat-shell[data-combat-art="hospital-lockout-v2-1"] .hospital-observation-glass {
+    width: min(18rem, 30vw);
   }
 
-  .threat-panel.is-combat .combat-shell[data-combat-art="environment-v1-1"] .combat-env-threat-rift {
+  .threat-panel.is-combat .combat-shell[data-combat-art="hospital-lockout-v2-1"] .hospital-network-core {
+    width: min(20rem, 34vw);
+  }
+
+  .threat-panel.is-combat .combat-shell[data-combat-art="hospital-lockout-v2-1"] .hospital-defender-deployment {
+    left: 0.6rem;
+    width: min(27rem, 47vw);
+  }
+
+  .threat-panel.is-combat .combat-shell[data-combat-art="hospital-lockout-v2-1"] .hospital-threat-breach {
     right: 0.8rem;
     width: min(18rem, 34vw);
     height: min(18rem, 34vw);

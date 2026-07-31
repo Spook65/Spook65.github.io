@@ -114,9 +114,9 @@
         gain: 0.32
       },
       globe: {
-        src: "assets/audio/ambience/globe/busy_cyberworld.ogg",
-        group: "ambience",
-        gain: 0.5
+        src: "assets/audio/music/globe/observing_the_star.ogg",
+        group: "music",
+        gain: 0.24
       },
       loadout: {
         src: "assets/audio/music/loadout/friendly_talk_robotic_battlefield.ogg",

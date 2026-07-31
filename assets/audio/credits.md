@@ -28,7 +28,20 @@ Imported date: 2026-07-30
 
 | Imported file path | Original filename | Intended use |
 | --- | --- | --- |
-| `assets/audio/ambience/globe/busy_cyberworld.ogg` | `busy_cyberworld.ogg` | Globe scanning ambience |
+| `assets/audio/ambience/globe/busy_cyberworld.ogg` | `busy_cyberworld.ogg` | Former globe ambience, retained for history but no longer active in AudioManager |
+
+### Another space background track
+
+- Source URL: https://opengameart.org/content/another-space-background-track
+- Author: yd
+- License: CC0
+- Attribution required: no
+- Commercial use: yes
+- Notes: Calm space/strategy background loop used as the active globe screen music for Globe Audio v1.1.
+
+| Imported file path | Original filename | Intended use |
+| --- | --- | --- |
+| `assets/audio/music/globe/observing_the_star.ogg` | `ObservingTheStar.ogg` | Active globe / world-threat map loop |
 
 ### Friendly Talk On a Robotic Battlefield (Looped)
 
