@@ -1712,7 +1712,10 @@ function buildCombatMarkup(state) {
   }
 
   return `
-    <div class="combat-shell ${state.battleIntroPlaying ? "is-intro-playing" : ""} ${attackStageFanActive ? "is-attack-stage-active" : ""} ${stageCommandClusterActive ? "is-stage-command-active" : ""} ${stageCommandSubmenuActive ? "is-stage-submenu-active" : ""} ${stageFeedbackActive ? "is-stage-feedback-active" : ""} ${activeAllyCameraStateClasses}" data-combat-art="diorama-mvp-v1-1">
+    <div class="combat-shell ${state.battleIntroPlaying ? "is-intro-playing" : ""} ${attackStageFanActive ? "is-attack-stage-active" : ""} ${stageCommandClusterActive ? "is-stage-command-active" : ""} ${stageCommandSubmenuActive ? "is-stage-submenu-active" : ""} ${stageFeedbackActive ? "is-stage-feedback-active" : ""} ${activeAllyCameraStateClasses}" data-combat-art="diorama-authority-v1">
+      <div class="combat-world-layer" aria-hidden="true">
+        <div class="combat-diorama-mount" data-combat-diorama-stage></div>
+      </div>
       <header class="combat-header">
         <div class="combat-title-block">
           <div class="combat-panel-title">THREATGRID ARENA</div>
@@ -1727,7 +1730,6 @@ function buildCombatMarkup(state) {
       </header>
 
       <section class="combat-stage ${activeAllyCameraStateClasses}">
-        <div class="combat-diorama-mount" data-combat-diorama-stage aria-hidden="true"></div>
         <div class="combat-floor-grid" aria-hidden="true"></div>
         <div class="combat-stage-glow" aria-hidden="true"></div>
         ${state.battleIntroPlaying ? `

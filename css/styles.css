@@ -14245,71 +14245,110 @@ body {
 }
 
 /* Combat 3D Diorama MVP: one non-interactive Three.js canvas behind the existing HTML battle UI. */
-.threat-panel.is-combat .combat-shell[data-combat-art="diorama-mvp-v1-1"] .combat-stage {
-  background:
-    radial-gradient(circle at 75% 42%, rgba(255, 78, 101, 0.12), transparent 28%),
-    radial-gradient(circle at 20% 74%, rgba(111, 239, 224, 0.07), transparent 24%),
-    linear-gradient(180deg, rgba(4, 7, 10, 0.94), rgba(3, 4, 6, 0.98));
+.threat-panel.is-combat .combat-shell[data-combat-art="diorama-authority-v1"] {
   isolation: isolate;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 74% 36%, rgba(255, 71, 97, 0.12), transparent 30%),
+    radial-gradient(circle at 21% 72%, rgba(111, 239, 224, 0.09), transparent 32%),
+    linear-gradient(180deg, rgba(4, 7, 10, 0.98), rgba(2, 3, 6, 0.99));
 }
 
-.threat-panel.is-combat .combat-shell[data-combat-art="diorama-mvp-v1-1"] .combat-diorama-mount {
+.threat-panel.is-combat .combat-shell[data-combat-art="diorama-authority-v1"] .combat-world-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.threat-panel.is-combat .combat-shell[data-combat-art="diorama-authority-v1"] .combat-world-layer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(2, 4, 7, 0.1), transparent 42%, rgba(1, 2, 4, 0.42)),
+    radial-gradient(circle at 50% 84%, rgba(0, 0, 0, 0.32), transparent 42%);
+}
+
+.threat-panel.is-combat .combat-shell[data-combat-art="diorama-authority-v1"] .combat-diorama-mount {
   position: absolute;
   inset: 0;
   z-index: 0;
   overflow: hidden;
   pointer-events: none;
   background:
-    radial-gradient(circle at 68% 34%, rgba(255, 93, 104, 0.08), transparent 24%),
-    linear-gradient(180deg, rgba(5, 8, 11, 0.22), rgba(2, 3, 5, 0.42));
+    radial-gradient(circle at 70% 38%, rgba(255, 78, 101, 0.08), transparent 26%),
+    radial-gradient(circle at 28% 70%, rgba(111, 239, 224, 0.06), transparent 26%);
 }
 
-.threat-panel.is-combat .combat-shell[data-combat-art="diorama-mvp-v1-1"] .combat-diorama-mount.is-unavailable {
+.threat-panel.is-combat .combat-shell[data-combat-art="diorama-authority-v1"] .combat-diorama-mount.is-unavailable {
   display: none;
 }
 
-.threat-panel.is-combat .combat-shell[data-combat-art="diorama-mvp-v1-1"] .combat-diorama-canvas,
-.threat-panel.is-combat .combat-shell[data-combat-art="diorama-mvp-v1-1"] .combat-diorama-mount canvas {
+.threat-panel.is-combat .combat-shell[data-combat-art="diorama-authority-v1"] .combat-diorama-canvas,
+.threat-panel.is-combat .combat-shell[data-combat-art="diorama-authority-v1"] .combat-diorama-mount canvas {
   display: block;
   width: 100%;
   height: 100%;
   pointer-events: none;
 }
 
-.threat-panel.is-combat .combat-shell[data-combat-art="diorama-mvp-v1-1"] .combat-floor-grid {
-  z-index: 1;
-  opacity: 0.16;
-  mix-blend-mode: screen;
+.threat-panel.is-combat .combat-shell[data-combat-art="diorama-authority-v1"] .combat-header,
+.threat-panel.is-combat .combat-shell[data-combat-art="diorama-authority-v1"] .combat-stage,
+.threat-panel.is-combat .combat-shell[data-combat-art="diorama-authority-v1"] .combat-footer {
+  position: relative;
+  z-index: 2;
 }
 
-.threat-panel.is-combat .combat-shell[data-combat-art="diorama-mvp-v1-1"] .combat-stage-glow {
-  z-index: 1;
-  opacity: 0.18;
+.threat-panel.is-combat .combat-shell[data-combat-art="diorama-authority-v1"] .combat-stage {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  isolation: isolate;
 }
 
-.threat-panel.is-combat .combat-shell[data-combat-art="diorama-mvp-v1-1"] .combat-summon-overlay,
-.threat-panel.is-combat .combat-shell[data-combat-art="diorama-mvp-v1-1"] .combat-beam,
-.threat-panel.is-combat .combat-shell[data-combat-art="diorama-mvp-v1-1"] .combat-aura {
+.threat-panel.is-combat .combat-shell[data-combat-art="diorama-authority-v1"] .combat-stage::before,
+.threat-panel.is-combat .combat-shell[data-combat-art="diorama-authority-v1"] .combat-stage::after,
+.threat-panel.is-combat .combat-shell[data-combat-art="diorama-authority-v1"] .combat-floor-grid,
+.threat-panel.is-combat .combat-shell[data-combat-art="diorama-authority-v1"] .combat-stage-glow {
+  display: none;
+}
+
+.threat-panel.is-combat .combat-shell[data-combat-art="diorama-authority-v1"] .combat-stage-enemy::before,
+.threat-panel.is-combat .combat-shell[data-combat-art="diorama-authority-v1"] .combat-stage-enemy::after,
+.threat-panel.is-combat .combat-shell[data-combat-art="diorama-authority-v1"] .combat-stage-enemy .combat-battler-sprite-wrap {
+  display: none;
+}
+
+.threat-panel.is-combat .combat-shell[data-combat-art="diorama-authority-v1"] .combat-stage-enemy .combat-battler-enemy {
+  min-height: 0;
+}
+
+.threat-panel.is-combat .combat-shell[data-combat-art="diorama-authority-v1"] .combat-summon-overlay,
+.threat-panel.is-combat .combat-shell[data-combat-art="diorama-authority-v1"] .combat-beam,
+.threat-panel.is-combat .combat-shell[data-combat-art="diorama-authority-v1"] .combat-aura {
   z-index: 3;
 }
 
-.threat-panel.is-combat .combat-shell[data-combat-art="diorama-mvp-v1-1"] .combat-ally-formation,
-.threat-panel.is-combat .combat-shell[data-combat-art="diorama-mvp-v1-1"] .combat-stage-enemy {
+.threat-panel.is-combat .combat-shell[data-combat-art="diorama-authority-v1"] .combat-ally-formation,
+.threat-panel.is-combat .combat-shell[data-combat-art="diorama-authority-v1"] .combat-stage-enemy {
   z-index: 4;
 }
 
-.threat-panel.is-combat .combat-shell[data-combat-art="diorama-mvp-v1-1"] .combat-stage-command-cluster,
-.threat-panel.is-combat .combat-shell[data-combat-art="diorama-mvp-v1-1"] .combat-stage-command-submenu,
-.threat-panel.is-combat .combat-shell[data-combat-art="diorama-mvp-v1-1"] .combat-response-panel,
-.threat-panel.is-combat .combat-shell[data-combat-art="diorama-mvp-v1-1"] .combat-stage-feedback-toast,
-.threat-panel.is-combat .combat-shell[data-combat-art="diorama-mvp-v1-1"] .combat-feed,
-.threat-panel.is-combat .combat-shell[data-combat-art="diorama-mvp-v1-1"] .combat-reserve-strip {
+.threat-panel.is-combat .combat-shell[data-combat-art="diorama-authority-v1"] .combat-stage-command-cluster,
+.threat-panel.is-combat .combat-shell[data-combat-art="diorama-authority-v1"] .combat-stage-command-submenu,
+.threat-panel.is-combat .combat-shell[data-combat-art="diorama-authority-v1"] .combat-response-panel,
+.threat-panel.is-combat .combat-shell[data-combat-art="diorama-authority-v1"] .combat-stage-feedback-toast,
+.threat-panel.is-combat .combat-shell[data-combat-art="diorama-authority-v1"] .combat-feed,
+.threat-panel.is-combat .combat-shell[data-combat-art="diorama-authority-v1"] .combat-reserve-strip {
   z-index: 6;
 }
 
-.threat-panel.is-combat .combat-shell[data-combat-art="diorama-mvp-v1-1"] .combat-history-drawer,
-.threat-panel.is-combat .combat-shell[data-combat-art="diorama-mvp-v1-1"] .combat-defender-inspect-overlay,
-.threat-panel.is-combat .combat-shell[data-combat-art="diorama-mvp-v1-1"] .cyber-codex-overlay {
+.threat-panel.is-combat .combat-shell[data-combat-art="diorama-authority-v1"] .combat-history-drawer,
+.threat-panel.is-combat .combat-shell[data-combat-art="diorama-authority-v1"] .combat-defender-inspect-overlay,
+.threat-panel.is-combat .combat-shell[data-combat-art="diorama-authority-v1"] .cyber-codex-overlay {
   z-index: 8;
 }
 

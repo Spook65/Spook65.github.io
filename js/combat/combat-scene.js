@@ -68,6 +68,11 @@ class CombatDioramaScene {
     this.enemyGroup = null;
     this.breachGroup = null;
     this.floorGroup = null;
+    this.enemyCore = null;
+    this.enemyCoreMaterial = null;
+    this.enemyShellMaterial = null;
+    this.enemyHaloMaterial = null;
+    this.enemyOwnership = "environment";
     this.characterPlaceholderMode = "disabled";
     this.enemyPlaceholderMode = "disabled";
     this.lastStateKey = "";
@@ -309,11 +314,99 @@ class CombatDioramaScene {
   }
 
   buildActors() {
-    // v1.1 keeps Three.js as the world/stage layer. HTML remains the visible combatant layer.
+    // HTML defenders stay visible for now; Three.js owns the enemy-side battlefield anchor.
     this.defenderSlots = [];
-    this.enemyGroup = null;
+    this.buildEnemyBreachAnchor();
     this.characterPlaceholderMode = "disabled";
-    this.enemyPlaceholderMode = "disabled";
+    this.enemyPlaceholderMode = "threejs-breach";
+    this.enemyOwnership = "threejs-breach";
+  }
+
+  buildEnemyBreachAnchor() {
+    this.enemyGroup = new THREE.Group();
+    this.enemyGroup.position.set(3.18, 1.05, -3.62);
+    this.enemyGroup.rotation.y = -0.22;
+    this.scene.add(this.enemyGroup);
+
+    this.enemyShellMaterial = this.createMaterial({
+      color: 0x321018,
+      emissive: 0xff2448,
+      emissiveIntensity: 0.3,
+      metalness: 0.24,
+      roughness: 0.48,
+      opacity: 0.9
+    });
+    this.enemyCoreMaterial = this.createMaterial({
+      color: 0xff4b63,
+      emissive: 0xff223c,
+      emissiveIntensity: 0.74,
+      metalness: 0.12,
+      roughness: 0.38,
+      opacity: 0.86
+    });
+    this.enemyHaloMaterial = this.createBasicMaterial({ color: 0xff536b, opacity: 0.2, side: THREE.DoubleSide });
+
+    const socketMaterial = this.createMaterial({
+      color: 0x1a0b10,
+      emissive: 0xff314b,
+      emissiveIntensity: 0.28,
+      metalness: 0.38,
+      roughness: 0.5,
+      opacity: 0.86
+    });
+    this.addMesh(
+      this.enemyGroup,
+      this.createGeometry(THREE.CylinderGeometry, 0.72, 0.88, 0.18, 6),
+      socketMaterial,
+      [0, -0.6, 0.02],
+      [Math.PI / 2, Math.PI / 6, 0],
+      [1.18, 0.78, 1]
+    );
+
+    this.enemyCore = this.addMesh(
+      this.enemyGroup,
+      this.createGeometry(THREE.IcosahedronGeometry, 0.58, 0),
+      this.enemyCoreMaterial,
+      [0, 0, 0],
+      [0.16, 0.38, 0.08],
+      [1, 1.25, 1]
+    );
+    this.enemyCore.name = "threejs-threat-breach-core";
+
+    const shell = this.addMesh(
+      this.enemyGroup,
+      this.createGeometry(THREE.OctahedronGeometry, 0.82, 0),
+      this.enemyShellMaterial,
+      [0, 0, -0.02],
+      [0.2, 0.42, 0.08],
+      [1.04, 1.24, 1.04]
+    );
+    shell.name = "threejs-threat-breach-shell";
+
+    const halo = this.addMesh(
+      this.enemyGroup,
+      this.createGeometry(THREE.TorusGeometry, 1.06, 0.018, 8, 42),
+      this.enemyHaloMaterial,
+      [0, 0.02, -0.06],
+      [0.16, -0.28, 0.14]
+    );
+    halo.name = "threejs-threat-breach-halo";
+
+    const shardMaterial = this.createBasicMaterial({ color: 0xff8c63, opacity: 0.24, side: THREE.DoubleSide });
+    [
+      [-0.86, 0.08, -0.04, 0.34],
+      [0.86, -0.04, -0.02, -0.32],
+      [-0.42, 0.78, -0.08, 0.12],
+      [0.48, -0.72, -0.05, -0.18]
+    ].forEach(([x, y, z, rotation]) => {
+      this.addMesh(
+        this.enemyGroup,
+        this.createGeometry(THREE.BoxGeometry, 0.08, 0.58, 0.035),
+        shardMaterial,
+        [x, y, z],
+        [0.08, -0.12, rotation]
+      );
+    });
   }
 
   update(state) {
@@ -358,6 +451,19 @@ class CombatDioramaScene {
       ? Math.max(0, Math.min(1, threat.hp / threat.maxHp))
       : 1;
     this.breachGroup.scale.setScalar(0.96 + (hpRatio * 0.06));
+    if (this.enemyGroup) {
+      this.enemyGroup.scale.setScalar(0.86 + (hpRatio * 0.12));
+    }
+    if (this.enemyCoreMaterial) {
+      this.enemyCoreMaterial.emissiveIntensity = 0.42 + (hpRatio * 0.46);
+      this.enemyCoreMaterial.opacity = 0.72 + (hpRatio * 0.16);
+    }
+    if (this.enemyShellMaterial) {
+      this.enemyShellMaterial.emissiveIntensity = 0.18 + (hpRatio * 0.24);
+    }
+    if (this.enemyHaloMaterial) {
+      this.enemyHaloMaterial.opacity = 0.12 + (hpRatio * 0.12);
+    }
   }
 
   resize = () => {
@@ -402,6 +508,14 @@ class CombatDioramaScene {
       this.breachGroup.rotation.z += 0.004;
       this.breachGroup.scale.setScalar(1 + (Math.sin(elapsed * 1.9) * 0.035));
     }
+    if (this.enemyGroup) {
+      this.enemyGroup.rotation.z = Math.sin(elapsed * 0.5) * 0.035;
+    }
+    if (this.enemyCore) {
+      this.enemyCore.rotation.x += 0.0035;
+      this.enemyCore.rotation.y += 0.005;
+      this.enemyCore.position.y = Math.sin(elapsed * 1.4) * 0.045;
+    }
 
     this.renderer.render(this.scene, this.camera);
     this.lastObjectCount = 0;
@@ -444,7 +558,31 @@ class CombatDioramaScene {
     this.enemyGroup = null;
     this.breachGroup = null;
     this.floorGroup = null;
+    this.enemyCore = null;
+    this.enemyCoreMaterial = null;
+    this.enemyShellMaterial = null;
+    this.enemyHaloMaterial = null;
   }
+}
+
+function getCombatDioramaMarker(mount) {
+  return mount?.closest?.(".combat-shell")?.getAttribute("data-combat-art") || "";
+}
+
+function getCombatDioramaWorldLayerPresent(mount) {
+  return Boolean(mount?.closest?.(".combat-world-layer"));
+}
+
+function isCombatDioramaEnemyHtmlSpriteHidden(mount) {
+  const root = mount?.closest?.(".combat-shell");
+  const sprite = root?.querySelector?.(".combat-stage-enemy .combat-battler-sprite-wrap");
+  if (!sprite) {
+    return false;
+  }
+  if (typeof getComputedStyle !== "function") {
+    return sprite.hidden || sprite.getAttribute("aria-hidden") === "true";
+  }
+  return getComputedStyle(sprite).display === "none" || getComputedStyle(sprite).visibility === "hidden";
 }
 
 function destroyCombatDioramaScene() {
@@ -494,10 +632,14 @@ function getCombatDioramaDebugState() {
     animationRunning: Boolean(scene?.animationRunning),
     canvasCount: mount ? mount.querySelectorAll("canvas").length : 0,
     objectCount: scene?.lastObjectCount || 0,
+    marker: getCombatDioramaMarker(mount),
+    worldLayerPresent: getCombatDioramaWorldLayerPresent(mount),
+    enemyHtmlSpriteHidden: isCombatDioramaEnemyHtmlSpriteHidden(mount),
     lastStateTitle: scene?.lastStateTitle || "",
     lastStateKey: scene?.lastStateKey || "",
     characterPlaceholders: scene?.characterPlaceholderMode || "disabled",
     enemyPlaceholder: scene?.enemyPlaceholderMode || "disabled",
+    enemyOwnership: scene?.enemyOwnership || "none",
     screenState: getCombatDioramaScreenState(),
     lastError: combatDioramaLastError
   };
