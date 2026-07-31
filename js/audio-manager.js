@@ -108,6 +108,21 @@
   };
   const LOCAL_AUDIO_ASSETS = {
     layers: {
+      menu: {
+        src: "assets/audio/music/menu/menu.ogg",
+        group: "music",
+        gain: 0.32
+      },
+      globe: {
+        src: "assets/audio/ambience/globe/busy_cyberworld.ogg",
+        group: "ambience",
+        gain: 0.5
+      },
+      loadout: {
+        src: "assets/audio/music/loadout/friendly_talk_robotic_battlefield.ogg",
+        group: "music",
+        gain: 0.26
+      },
       combat: {
         src: "assets/audio/music/combat/ai_fight_120bpm.ogg",
         group: "music",
@@ -122,6 +137,18 @@
         src: "assets/audio/music/forge/new_factory_129bpm.ogg",
         group: "ambience",
         gain: 0.22
+      },
+      reward: {
+        src: "assets/audio/music/reward/winfretless.ogg",
+        group: "music",
+        gain: 0.44,
+        loop: false
+      },
+      "game-over": {
+        src: "assets/audio/music/defeat/game_over_jingle.ogg",
+        group: "music",
+        gain: 0.4,
+        loop: false
       }
     },
     sfx: {
@@ -430,10 +457,24 @@
     const source = context.createBufferSource();
     const layerGain = context.createGain();
     source.buffer = buffer;
-    source.loop = true;
+    source.loop = localConfig.loop !== false;
     layerGain.gain.value = 0.0001;
     source.connect(layerGain);
     layerGain.connect(getLayerOutputGroup(localConfig));
+    if (!source.loop) {
+      source.onended = () => {
+        const currentLayer = activeLayers.get(layerId);
+        if (currentLayer?.sources?.includes(source)) {
+          activeLayers.delete(layerId);
+        }
+        try {
+          source.disconnect();
+          layerGain.disconnect();
+        } catch (error) {
+          // Best-effort cleanup only.
+        }
+      };
+    }
     source.start();
 
     const now = context.currentTime;
