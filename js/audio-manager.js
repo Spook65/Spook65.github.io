@@ -1,5 +1,5 @@
-/* DEV PLACEHOLDER AUDIO foundation for THREATGRID.
-   This file uses generated Web Audio tones only; replace with local assets before public release. */
+/* THREATGRID AudioManager.
+   Local CC0 audio is preferred where available; generated Web Audio remains as a safe fallback. */
 (function () {
   "use strict";
 
@@ -106,6 +106,43 @@
       filterFrequency: 360
     }
   };
+  const LOCAL_AUDIO_ASSETS = {
+    layers: {
+      combat: {
+        src: "assets/audio/music/combat/ai_fight_120bpm.ogg",
+        group: "music",
+        gain: 0.34
+      },
+      "combat-high": {
+        src: "assets/audio/music/combat/system_overload_154bpm.ogg",
+        group: "music",
+        gain: 0.2
+      },
+      forge: {
+        src: "assets/audio/music/forge/new_factory_129bpm.ogg",
+        group: "ambience",
+        gain: 0.22
+      }
+    },
+    sfx: {
+      click: {
+        src: "assets/audio/sfx/ui/click.ogg",
+        gain: 0.56
+      },
+      hover: {
+        src: "assets/audio/sfx/ui/hover.ogg",
+        gain: 0.38
+      },
+      confirm: {
+        src: "assets/audio/sfx/ui/confirm.ogg",
+        gain: 0.5
+      },
+      cancel: {
+        src: "assets/audio/sfx/ui/cancel.ogg",
+        gain: 0.52
+      }
+    }
+  };
 
   let initialized = false;
   let unlocked = false;
@@ -120,6 +157,9 @@
   let noiseBuffer = null;
   const settings = { ...DEFAULT_SETTINGS };
   const activeLayers = new Map();
+  const audioBuffers = new Map();
+  const failedLocalAssets = new Set();
+  const pendingAudioLoads = new Map();
 
   function debugLog(...args) {
     if (typeof window !== "undefined" && window.THREATGRID_AUDIO_DEBUG === true) {
@@ -248,6 +288,93 @@
     return groupGains[groupName] || groupGains.ambience || masterGain;
   }
 
+  function requestArrayBuffer(src) {
+    if (typeof window !== "undefined" && typeof window.fetch === "function") {
+      return window.fetch(src, { cache: "force-cache" }).then((response) => {
+        if (!response.ok) {
+          throw new Error(`Audio asset request failed: ${response.status} ${src}`);
+        }
+
+        return response.arrayBuffer();
+      });
+    }
+
+    return new Promise((resolve, reject) => {
+      if (typeof window === "undefined" || typeof window.XMLHttpRequest !== "function") {
+        reject(new Error("No browser audio asset loader available"));
+        return;
+      }
+
+      const request = new window.XMLHttpRequest();
+      request.open("GET", src, true);
+      request.responseType = "arraybuffer";
+      request.onload = () => {
+        if (request.status >= 200 && request.status < 300 && request.response) {
+          resolve(request.response);
+          return;
+        }
+
+        reject(new Error(`Audio asset request failed: ${request.status} ${src}`));
+      };
+      request.onerror = () => reject(new Error(`Audio asset request failed: ${src}`));
+      request.send();
+    });
+  }
+
+  function decodeAudioBuffer(arrayBuffer) {
+    const context = ensureContext();
+    if (!context) {
+      return Promise.resolve(null);
+    }
+
+    return new Promise((resolve, reject) => {
+      try {
+        const maybePromise = context.decodeAudioData(arrayBuffer, resolve, reject);
+        if (maybePromise && typeof maybePromise.then === "function") {
+          maybePromise.then(resolve).catch(reject);
+        }
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  function loadLocalAudioBuffer(assetKey, src) {
+    if (audioBuffers.has(assetKey)) {
+      return Promise.resolve(audioBuffers.get(assetKey));
+    }
+
+    if (failedLocalAssets.has(assetKey)) {
+      return Promise.resolve(null);
+    }
+
+    if (pendingAudioLoads.has(assetKey)) {
+      return pendingAudioLoads.get(assetKey);
+    }
+
+    const loadPromise = requestArrayBuffer(src)
+      .then((arrayBuffer) => decodeAudioBuffer(arrayBuffer))
+      .then((buffer) => {
+        pendingAudioLoads.delete(assetKey);
+        if (buffer) {
+          audioBuffers.set(assetKey, buffer);
+          debugLog("[AUDIO DEBUG] local asset loaded", assetKey, src);
+        }
+
+        return buffer;
+      })
+      .catch((error) => {
+        pendingAudioLoads.delete(assetKey);
+        failedLocalAssets.add(assetKey);
+        lastError = error?.message || String(error);
+        debugLog("[AUDIO DEBUG] local asset failed", assetKey, lastError);
+        return null;
+      });
+
+    pendingAudioLoads.set(assetKey, loadPromise);
+    return loadPromise;
+  }
+
   function stopLayer(layerId, fadeSeconds = 0.55) {
     const layer = activeLayers.get(layerId);
     if (!layer || !audioContext) {
@@ -287,7 +414,42 @@
     Array.from(activeLayers.keys()).forEach((layerId) => stopLayer(layerId, fadeSeconds));
   }
 
-  function startLayer(layerId, configName, fadeSeconds = 0.6) {
+  function startLocalLayer(layerId, configName, localConfig, buffer, fadeSeconds = 0.6) {
+    const context = ensureContext();
+    if (!context || !localConfig || !buffer) {
+      return false;
+    }
+
+    const existing = activeLayers.get(layerId);
+    if (existing?.configName === configName && existing.sourceType === "local") {
+      return true;
+    }
+
+    stopLayer(layerId, fadeSeconds * 0.75);
+
+    const source = context.createBufferSource();
+    const layerGain = context.createGain();
+    source.buffer = buffer;
+    source.loop = true;
+    layerGain.gain.value = 0.0001;
+    source.connect(layerGain);
+    layerGain.connect(getLayerOutputGroup(localConfig));
+    source.start();
+
+    const now = context.currentTime;
+    layerGain.gain.linearRampToValueAtTime(localConfig.gain ?? 0.3, now + fadeSeconds);
+    activeLayers.set(layerId, {
+      configName,
+      sourceType: "local",
+      gain: layerGain,
+      sources: [source],
+      disconnectables: [source, layerGain]
+    });
+    debugLog("[AUDIO DEBUG] local layer start", layerId, configName, localConfig.src);
+    return true;
+  }
+
+  function startGeneratedLayer(layerId, configName, fadeSeconds = 0.6) {
     const context = ensureContext();
     const config = LAYER_CONFIGS[configName];
     if (!context || !config) {
@@ -295,7 +457,7 @@
     }
 
     const existing = activeLayers.get(layerId);
-    if (existing?.configName === configName) {
+    if (existing?.configName === configName && existing.sourceType === "generated") {
       return true;
     }
 
@@ -342,12 +504,90 @@
     layerGain.gain.linearRampToValueAtTime(1, now + fadeSeconds);
     activeLayers.set(layerId, {
       configName,
+      sourceType: "generated",
       gain: layerGain,
       sources,
       disconnectables
     });
-    debugLog("[AUDIO DEBUG] layer start", layerId, configName);
+    debugLog("[AUDIO DEBUG] generated layer start", layerId, configName);
     return true;
+  }
+
+  function tryPromoteLayerToLocal(layerId, configName, localConfig, fadeSeconds) {
+    const assetKey = `layer:${configName}`;
+    loadLocalAudioBuffer(assetKey, localConfig.src).then((buffer) => {
+      const currentLayer = activeLayers.get(layerId);
+      if (!buffer || currentLayer?.configName !== configName || currentLayer.sourceType === "local") {
+        return;
+      }
+
+      startLocalLayer(layerId, configName, localConfig, buffer, fadeSeconds);
+    });
+  }
+
+  function startLayer(layerId, configName, fadeSeconds = 0.6) {
+    const localConfig = LOCAL_AUDIO_ASSETS.layers[configName];
+    if (localConfig && !failedLocalAssets.has(`layer:${configName}`)) {
+      const buffer = audioBuffers.get(`layer:${configName}`);
+      if (buffer) {
+        return startLocalLayer(layerId, configName, localConfig, buffer, fadeSeconds);
+      }
+
+      const existing = activeLayers.get(layerId);
+      if (existing?.configName !== configName) {
+        startGeneratedLayer(layerId, configName, fadeSeconds);
+      }
+      tryPromoteLayerToLocal(layerId, configName, localConfig, fadeSeconds);
+      return true;
+    }
+
+    return startGeneratedLayer(layerId, configName, fadeSeconds);
+  }
+
+  function playLocalSfx(name) {
+    const context = ensureContext();
+    const sfxName = String(name || "").toLowerCase();
+    const sfxConfig = LOCAL_AUDIO_ASSETS.sfx[sfxName];
+    if (!context || !unlocked || !sfxConfig || failedLocalAssets.has(`sfx:${sfxName}`)) {
+      return false;
+    }
+
+    const assetKey = `sfx:${sfxName}`;
+    const buffer = audioBuffers.get(assetKey);
+    if (!buffer) {
+      loadLocalAudioBuffer(assetKey, sfxConfig.src);
+      return false;
+    }
+
+    const source = context.createBufferSource();
+    const gainNode = context.createGain();
+    source.buffer = buffer;
+    gainNode.gain.value = sfxConfig.gain ?? 0.5;
+    source.connect(gainNode);
+    gainNode.connect(groupGains.sfx || masterGain);
+    source.start();
+    window.setTimeout(() => {
+      try {
+        source.disconnect();
+        gainNode.disconnect();
+      } catch (error) {
+        // Best-effort cleanup only.
+      }
+    }, Math.ceil((buffer.duration + 0.1) * 1000));
+    debugLog("[AUDIO DEBUG] local sfx", sfxName);
+    return true;
+  }
+
+  function preloadLocalSfx() {
+    if (!unlocked) {
+      return;
+    }
+
+    Object.entries(LOCAL_AUDIO_ASSETS.sfx).forEach(([name, config]) => {
+      if (!failedLocalAssets.has(`sfx:${name}`)) {
+        loadLocalAudioBuffer(`sfx:${name}`, config.src);
+      }
+    });
   }
 
   function refreshCombatOverlays() {
@@ -471,6 +711,7 @@
         }
         unlocked = context.state === "running";
         if (unlocked) {
+          preloadLocalSfx();
           refreshScreenLayer();
           debugLog("[AUDIO DEBUG] unlock success", activeScreen, activeRoute);
         } else {
@@ -506,7 +747,7 @@
     },
 
     playStinger(name) {
-      return playToneStinger(name);
+      return playLocalSfx(name) || playToneStinger(name);
     },
 
     setMuted(isMuted) {
@@ -559,7 +800,16 @@
           ambience: settings.ambience,
           sfx: settings.sfx
         },
-        activeLayers: Array.from(activeLayers.entries()).map(([id, layer]) => ({ id, configName: layer.configName })),
+        activeLayers: Array.from(activeLayers.entries()).map(([id, layer]) => ({
+          id,
+          configName: layer.configName,
+          sourceType: layer.sourceType || "generated"
+        })),
+        localAudio: {
+          loaded: Array.from(audioBuffers.keys()),
+          failed: Array.from(failedLocalAssets),
+          pending: Array.from(pendingAudioLoads.keys())
+        },
         lastError
       };
     }
