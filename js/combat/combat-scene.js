@@ -64,9 +64,12 @@ class CombatDioramaScene {
     this.materials = [];
     this.geometries = [];
     this.defenderSlots = [];
+    this.deploymentPads = [];
     this.enemyGroup = null;
     this.breachGroup = null;
     this.floorGroup = null;
+    this.characterPlaceholderMode = "disabled";
+    this.enemyPlaceholderMode = "disabled";
     this.lastStateKey = "";
     this.lastStateTitle = "";
     this.lastObjectCount = 0;
@@ -89,9 +92,10 @@ class CombatDioramaScene {
       this.container.innerHTML = "";
       this.scene = new THREE.Scene();
       this.scene.fog = new THREE.Fog(0x05070a, 7.5, 18);
+      this.clock = new THREE.Clock();
       this.camera = new THREE.PerspectiveCamera(42, 1, 0.1, 50);
-      this.camera.position.set(0.2, 4.25, 8.7);
-      this.camera.lookAt(0.15, 0.7, -1.1);
+      this.camera.position.set(0.1, 4.45, 9.2);
+      this.camera.lookAt(0.2, 0.5, -1.35);
 
       this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
       this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.45));
@@ -222,15 +226,15 @@ class CombatDioramaScene {
       );
     });
 
-    const padMaterial = this.createMaterial({
-      color: 0x103432,
-      emissive: 0x1cfff0,
-      emissiveIntensity: 0.22,
-      metalness: 0.34,
-      roughness: 0.42,
-      opacity: 0.84
-    });
     this.defenderPadPositions().forEach((position) => {
+      const padMaterial = this.createMaterial({
+        color: 0x103432,
+        emissive: 0x1cfff0,
+        emissiveIntensity: 0.18,
+        metalness: 0.34,
+        roughness: 0.42,
+        opacity: 0.82
+      });
       const pad = this.addMesh(
         this.floorGroup,
         this.createGeometry(THREE.CylinderGeometry, 0.48, 0.58, 0.08, 6),
@@ -240,6 +244,17 @@ class CombatDioramaScene {
         [1.25, 0.7, 0.82]
       );
       pad.name = "defender-deployment-pad";
+
+      const contactMaterial = this.createBasicMaterial({ color: 0x72fff2, opacity: 0.12, side: THREE.DoubleSide });
+      const contactGlow = this.addMesh(
+        this.floorGroup,
+        this.createGeometry(THREE.RingGeometry, 0.62, 0.68, 24),
+        contactMaterial,
+        [position[0], 0.078, position[2]],
+        [-Math.PI / 2, 0, 0]
+      );
+      contactGlow.name = "defender-contact-glow";
+      this.deploymentPads.push({ pad, contactGlow, padMaterial, contactMaterial, basePosition: position });
     });
 
     const wallGroup = new THREE.Group();
@@ -273,6 +288,15 @@ class CombatDioramaScene {
     const breachMaterial = this.createBasicMaterial({ color: 0xff3458, opacity: 0.22, side: THREE.DoubleSide });
     this.addMesh(this.breachGroup, this.createGeometry(THREE.RingGeometry, 0.72, 1.55, 40), breachMaterial, [0, 0, 0], [0.08, -0.28, 0]);
     this.addMesh(this.breachGroup, this.createGeometry(THREE.RingGeometry, 1.85, 1.9, 48), breachMaterial, [0, 0, -0.02], [0.08, -0.28, Math.PI / 8]);
+    const breachCoreMaterial = this.createBasicMaterial({ color: 0xff5a72, opacity: 0.34, side: THREE.DoubleSide });
+    const breachSocket = this.addMesh(
+      this.breachGroup,
+      this.createGeometry(THREE.CircleGeometry, 0.32, 28),
+      breachCoreMaterial,
+      [0, 0, -0.04],
+      [0.08, -0.28, 0]
+    );
+    breachSocket.name = "environmental-breach-socket";
   }
 
   defenderPadPositions() {
@@ -285,69 +309,25 @@ class CombatDioramaScene {
   }
 
   buildActors() {
-    this.defenderSlots = this.defenderPadPositions().map((position, index) => {
-      const group = new THREE.Group();
-      group.position.set(position[0], 0.2, position[2]);
-      this.scene.add(group);
-
-      const bodyMaterial = this.createMaterial({
-        color: 0x7deee5,
-        emissive: 0x45fff0,
-        emissiveIntensity: 0.34,
-        metalness: 0.18,
-        roughness: 0.44,
-        opacity: 0.9
-      });
-      const coreMaterial = this.createBasicMaterial({ color: 0xdffdf8, opacity: 0.62 });
-      this.addMesh(group, this.createGeometry(THREE.CylinderGeometry, 0.16, 0.22, 0.78, 12), bodyMaterial, [0, 0.36, 0]);
-      this.addMesh(group, this.createGeometry(THREE.SphereGeometry, 0.18, 12, 8), bodyMaterial, [0, 0.86, 0]);
-      this.addMesh(group, this.createGeometry(THREE.RingGeometry, 0.34, 0.38, 20), coreMaterial, [0, 0.42, 0], [Math.PI / 2, 0, 0]);
-
-      return {
-        group,
-        bodyMaterial,
-        coreMaterial,
-        basePosition: position,
-        index
-      };
-    });
-
-    this.enemyGroup = new THREE.Group();
-    this.enemyGroup.position.set(3.2, 0.75, -3.6);
-    this.scene.add(this.enemyGroup);
-
-    const enemyMaterial = this.createMaterial({
-      color: 0x2a0710,
-      emissive: 0xff355c,
-      emissiveIntensity: 0.58,
-      metalness: 0.18,
-      roughness: 0.5
-    });
-    const enemyCore = this.addMesh(
-      this.enemyGroup,
-      this.createGeometry(THREE.IcosahedronGeometry, 0.62, 1),
-      enemyMaterial,
-      [0, 0.32, 0],
-      [0.3, 0.15, 0]
-    );
-    enemyCore.name = "enemy-corruption-core";
-
-    const enemyRingMaterial = this.createBasicMaterial({ color: 0xff5a72, opacity: 0.34, side: THREE.DoubleSide });
-    this.addMesh(this.enemyGroup, this.createGeometry(THREE.RingGeometry, 0.88, 0.94, 36), enemyRingMaterial, [0, 0.36, 0], [0.2, -0.15, 0]);
+    // v1.1 keeps Three.js as the world/stage layer. HTML remains the visible combatant layer.
+    this.defenderSlots = [];
+    this.enemyGroup = null;
+    this.characterPlaceholderMode = "disabled";
+    this.enemyPlaceholderMode = "disabled";
   }
 
   update(state) {
     this.state = state || this.state;
     this.lastStateKey = getCombatDioramaStateKey(this.state);
     this.lastStateTitle = this.state?.threat?.title || "";
-    this.updateDefenders();
-    this.updateEnemy();
+    this.updateDeploymentPads();
+    this.updateBreach();
   }
 
-  updateDefenders() {
+  updateDeploymentPads() {
     const party = Array.isArray(this.state?.playerParty) ? this.state.playerParty : [];
     const activeId = getCombatDioramaActiveProgramId(this.state);
-    this.defenderSlots.forEach((slot, index) => {
+    this.deploymentPads.forEach((slot, index) => {
       const program = party[index] || null;
       const alive = program && program.hp > 0;
       const isActive = alive && (program.id || program.name) === activeId;
@@ -355,27 +335,29 @@ class CombatDioramaScene {
         ? Math.max(0, Math.min(1, program.hp / program.maxHp))
         : 0;
       const color = new THREE.Color(getCombatDioramaColor(program?.color, "#6fefe0"));
-      slot.group.visible = Boolean(program);
-      slot.group.position.y = isActive ? 0.34 : 0.2;
-      slot.group.scale.setScalar(isActive ? 1.18 : 0.92);
-      slot.bodyMaterial.color.copy(color);
-      slot.bodyMaterial.emissive.copy(color);
-      slot.bodyMaterial.emissiveIntensity = isActive ? 0.58 : 0.22 + (hpRatio * 0.16);
-      slot.bodyMaterial.opacity = alive ? 0.88 : 0.24;
-      slot.coreMaterial.opacity = isActive ? 0.86 : 0.38;
+      slot.pad.visible = Boolean(program);
+      slot.contactGlow.visible = Boolean(program);
+      slot.pad.scale.set(isActive ? 1.38 : 1.18, 0.7, isActive ? 0.92 : 0.78);
+      slot.contactGlow.scale.setScalar(isActive ? 1.24 : 0.95);
+      slot.padMaterial.color.copy(color);
+      slot.padMaterial.emissive.copy(color);
+      slot.padMaterial.emissiveIntensity = isActive ? 0.34 : 0.12 + (hpRatio * 0.08);
+      slot.padMaterial.opacity = alive ? 0.76 : 0.24;
+      slot.contactMaterial.color.copy(color);
+      slot.contactMaterial.opacity = isActive ? 0.34 : alive ? 0.12 : 0.04;
+      slot.contactBaseOpacity = slot.contactMaterial.opacity;
     });
   }
 
-  updateEnemy() {
-    if (!this.enemyGroup) {
+  updateBreach() {
+    if (!this.breachGroup) {
       return;
     }
     const threat = this.state?.threat || {};
     const hpRatio = Number.isFinite(threat.maxHp) && threat.maxHp > 0
       ? Math.max(0, Math.min(1, threat.hp / threat.maxHp))
       : 1;
-    const scale = 0.9 + (hpRatio * 0.22);
-    this.enemyGroup.scale.setScalar(scale);
+    this.breachGroup.scale.setScalar(0.96 + (hpRatio * 0.06));
   }
 
   resize = () => {
@@ -409,17 +391,12 @@ class CombatDioramaScene {
     this.animationFrame = window.requestAnimationFrame(() => this.animate());
     const elapsed = this.clock ? this.clock.getElapsedTime() : 0;
 
-    this.defenderSlots.forEach((slot, index) => {
-      if (slot.group.visible) {
-        slot.group.rotation.y = Math.sin(elapsed * 0.55 + index) * 0.08;
-        slot.group.position.x = slot.basePosition[0] + (Math.sin(elapsed * 0.75 + index) * 0.025);
+    this.deploymentPads.forEach((slot, index) => {
+      if (slot.contactGlow.visible) {
+        slot.contactGlow.rotation.z = Math.sin(elapsed * 0.45 + index) * 0.08;
+        slot.contactMaterial.opacity = Math.max(0.04, (slot.contactBaseOpacity || 0.08) + (Math.sin(elapsed * 1.4 + index) * 0.018));
       }
     });
-
-    if (this.enemyGroup) {
-      this.enemyGroup.rotation.y += 0.006;
-      this.enemyGroup.position.y = 0.75 + (Math.sin(elapsed * 1.35) * 0.06);
-    }
 
     if (this.breachGroup) {
       this.breachGroup.rotation.z += 0.004;
@@ -463,6 +440,7 @@ class CombatDioramaScene {
     this.materials = [];
     this.geometries = [];
     this.defenderSlots = [];
+    this.deploymentPads = [];
     this.enemyGroup = null;
     this.breachGroup = null;
     this.floorGroup = null;
@@ -518,15 +496,17 @@ function getCombatDioramaDebugState() {
     objectCount: scene?.lastObjectCount || 0,
     lastStateTitle: scene?.lastStateTitle || "",
     lastStateKey: scene?.lastStateKey || "",
+    characterPlaceholders: scene?.characterPlaceholderMode || "disabled",
+    enemyPlaceholder: scene?.enemyPlaceholderMode || "disabled",
     screenState: getCombatDioramaScreenState(),
     lastError: combatDioramaLastError
   };
 }
 
-if (typeof window !== "undefined") {
-  window.mountCombatDioramaScene = mountCombatDioramaScene;
-  window.updateCombatDioramaScene = updateCombatDioramaScene;
-  window.destroyCombatDioramaScene = destroyCombatDioramaScene;
-  window.getCombatDioramaDebugState = getCombatDioramaDebugState;
-  window.devCombatDioramaState = getCombatDioramaDebugState;
+if (typeof globalThis !== "undefined") {
+  globalThis.mountCombatDioramaScene = mountCombatDioramaScene;
+  globalThis.updateCombatDioramaScene = updateCombatDioramaScene;
+  globalThis.destroyCombatDioramaScene = destroyCombatDioramaScene;
+  globalThis.getCombatDioramaDebugState = getCombatDioramaDebugState;
+  globalThis.devCombatDioramaState = getCombatDioramaDebugState;
 }
