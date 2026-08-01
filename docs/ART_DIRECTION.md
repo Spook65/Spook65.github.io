@@ -77,6 +77,7 @@ Future passes should follow the same process:
 
 Rules:
 - Keep visual work screen-scoped.
+- Read `docs/COMBAT_PRESENTATION_SPEC.md` before combat presentation, combat camera, combat diorama, battlefield composition, or combat UI/world ownership work.
 - Avoid global CSS unless absolutely necessary.
 - Preserve existing `data-*` click contracts.
 - Preserve mechanics unless the task explicitly says otherwise.

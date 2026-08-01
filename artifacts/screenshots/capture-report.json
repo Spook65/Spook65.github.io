@@ -1,0 +1,6 @@
+{
+  "ok": false,
+  "blocker": "Playwright is not installed. Install it locally before running this harness.",
+  "details": "Cannot find package 'playwright' imported from /Users/bhann/Documents/cyber-globe/Spook65.github.io/scripts/capture-screenshots.mjs",
+  "screenshots": []
+}

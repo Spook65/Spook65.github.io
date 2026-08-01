@@ -8,6 +8,7 @@ Before editing:
 
 - Read `docs/ART_DIRECTION.md` before visual work.
 - Read `docs/AUDIO_DIRECTION.md` before audio work.
+- Read `docs/COMBAT_PRESENTATION_SPEC.md` before combat presentation, combat camera, combat diorama, battlefield composition, or combat UI/world ownership work.
 - Read `docs/WORLD_MAP_ROADMAP.md` before map, location, route, region, state, city, or progression work.
 - Investigate and report the active render path before changing UI, audio, map, combat, Forge, loadout, reward, or globe code.
 - Prefer audit-only prompts before risky implementation, especially for broad visual/audio/map architecture.
@@ -20,6 +21,10 @@ Before editing:
 - Use cache-busting when JS or CSS changes.
 - Run relevant `node --check` commands and `git diff --check`.
 - Browser-verify when UI changes.
+- Do not claim visual success without screenshot harness output or an explicit verification limitation.
+- Visual implementation should provide before/after screenshot paths when possible.
+- If browser automation is unavailable, report that clearly and do not claim visual verification.
+- Prefer an audit -> implementation -> screenshot/critic loop for visual changes.
 
 For multi-agent work:
 
