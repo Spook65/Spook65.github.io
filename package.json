@@ -1,0 +1,13 @@
+{
+  "name": "threatgrid-arena",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "screenshots": "node scripts/capture-screenshots.mjs",
+    "critic": "node scripts/critic-combat-screenshot.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.54.2"
+  }
+}

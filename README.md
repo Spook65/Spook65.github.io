@@ -17,3 +17,20 @@ This is acceptable for a single-player prototype, but not for production multipl
 ## Art Direction / Visual Implementation Rules
 
 See [docs/ART_DIRECTION.md](docs/ART_DIRECTION.md) for visual implementation rules.
+
+## Visual Screenshot Harness
+
+Use the dev harness to capture menu, globe, and deterministic hospital combat screenshots:
+
+```sh
+npm install
+npx playwright install chromium
+npm run screenshots
+```
+
+Screenshots, the capture report, and the deterministic visual critic reports are written to `artifacts/screenshots/`.
+To rerun the critic against the latest capture report without launching the browser:
+
+```sh
+npm run critic
+```

@@ -96,20 +96,47 @@ Every combat visual pass must report:
 - Use the screenshot harness before claiming visual success when possible.
 - Run it with `node scripts/capture-screenshots.mjs`.
 - Save screenshots under `artifacts/screenshots/`.
+- The harness must also write `artifacts/screenshots/visual-critic-report.json` and `artifacts/screenshots/visual-critic-report.md`.
+- The critic may reject deterministic technical failures, but it must not fake computer-vision judgment.
+- Subjective composition items must be labeled as manual review when image understanding is not available.
 - Capture before/after frames when practical.
-- If deterministic combat entry is unavailable, capture menu/globe and report the missing combat-entry hook honestly.
+- Use `window.devStartHospitalCombat()` or `window.devStartCombatByThreatId("tg-001")` for deterministic combat capture.
+- If deterministic combat entry is unavailable in a future branch, capture menu/globe and report the missing combat-entry hook honestly.
 - Do not fake screenshots.
 
-## Future Deterministic Combat Entry
+Deterministic critic gates:
+- Combat screenshot exists.
+- Combat marker exists.
+- Combat diorama canvas count equals one.
+- Viewport size is recorded.
+- No page errors are recorded.
+- Combat shell is approximately viewport-sized.
+- Diorama mount approximately fills the combat shell.
+- Party HUD is visible.
+- Command menu is visible.
 
-Future automation should add a dev-only helper such as:
+Manual-review prompts:
+- Does combat read as a full-screen 3D battlefield?
+- Does the 3D world avoid box-inside-box framing?
+- Are defenders grounded or still pasted on?
+- Is the enemy anchored to the breach?
+- Does command UI block the battlefield center?
+- Does party HUD sit bottom-right?
+- Are there duplicate enemy/defender representations?
+- What still looks fake?
+
+## Deterministic Combat Entry
+
+Automation may use these dev-only helpers:
 
 ```js
-window.devStartCombatByThreatId("hospital-network-lockout");
+window.devStartHospitalCombat();
+window.devStartCombatByThreatId("tg-001");
 ```
 
-Guardrails for that future helper:
-- It must be dev-only.
-- It must not change normal gameplay flow.
+Guardrails for deterministic helpers:
+- They must be dev-only.
+- They must not appear in production UI.
+- They must not change normal gameplay flow.
 - It must not alter combat math, rewards, save state, threat data, or run progression.
-- It should exist only to make screenshot verification deterministic.
+- They should exist only to make screenshot verification deterministic.

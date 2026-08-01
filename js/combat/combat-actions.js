@@ -700,6 +700,56 @@ function showEncounterTransition(threat) {
   }, 1000);
 }
 
+function findDevCombatThreat(threatId = "tg-001") {
+  if (!Array.isArray(threats)) {
+    return null;
+  }
+
+  const requestedId = String(threatId || "").trim().toLowerCase();
+  const activeThreats = threats.filter((threat) => threat?.status === "active");
+  return activeThreats.find((threat) => String(threat?.id || "").toLowerCase() === requestedId)
+    || activeThreats.find((threat) => String(threat?.title || "").toLowerCase().includes("hospital"))
+    || activeThreats[0]
+    || null;
+}
+
+// DEV ONLY:
+// Deterministic combat entry for screenshot automation. This is intentionally
+// console-only and must not be surfaced in production UI or used for gameplay.
+function devStartCombatByThreatId(threatId = "tg-001", options = {}) {
+  const threat = findDevCombatThreat(threatId);
+  if (!threat) {
+    console.warn("[DEV COMBAT] No active threat found for deterministic combat entry.", { threatId });
+    return false;
+  }
+
+  closeCombatOverlay(true);
+  hideEncounterTransition();
+  screenState = "game";
+
+  if (typeof window !== "undefined" && window.THREATGRID_AUDIO && typeof window.THREATGRID_AUDIO.setScreen === "function") {
+    window.THREATGRID_AUDIO.setScreen("game");
+  }
+
+  const useTransition = Boolean(options && options.transition);
+  if (useTransition) {
+    showEncounterTransition(threat);
+  } else {
+    showCombatScreen(buildCombatState(threat));
+  }
+
+  return true;
+}
+
+function devStartHospitalCombat(options = {}) {
+  return devStartCombatByThreatId("tg-001", options);
+}
+
+if (typeof window !== "undefined") {
+  window.devStartCombatByThreatId = devStartCombatByThreatId;
+  window.devStartHospitalCombat = devStartHospitalCombat;
+}
+
 // closeCombatOverlay() clears the overlay state when a battle ends or the player returns to the menu.
 function closeCombatOverlay(forceClose = false) {
   if (combatEngine && !forceClose && combatState && combatState.phase === "battle") {

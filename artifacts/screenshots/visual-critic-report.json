@@ -1,0 +1,159 @@
+{
+  "generatedAt": "2026-08-01T21:43:36.739Z",
+  "accepted": true,
+  "acceptance_scope": "deterministic technical gates only",
+  "manual_review_required": true,
+  "performance_risk": "low",
+  "scores": {
+    "technical_correctness": 10,
+    "visual_composition": 6,
+    "game_feel": 6,
+    "ui_readability": 8
+  },
+  "deterministic_checks": [
+    {
+      "id": "capture_report_exists",
+      "label": "capture-report.json exists and is parseable",
+      "pass": true,
+      "required": true
+    },
+    {
+      "id": "combat_screenshot_exists",
+      "label": "combat screenshot exists",
+      "pass": true,
+      "required": true,
+      "detail": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-hospital.png"
+    },
+    {
+      "id": "combat_marker_exists",
+      "label": "combat marker exists",
+      "pass": true,
+      "required": true,
+      "detail": "marker: composition-alignment-v1"
+    },
+    {
+      "id": "canvas_count_one",
+      "label": "combat diorama canvas count equals 1",
+      "pass": true,
+      "required": true,
+      "detail": "canvasCount: 1"
+    },
+    {
+      "id": "viewport_recorded",
+      "label": "viewport size recorded",
+      "pass": true,
+      "required": true,
+      "detail": "1440x900"
+    },
+    {
+      "id": "no_page_errors",
+      "label": "no page errors recorded",
+      "pass": true,
+      "required": true,
+      "detail": "No console error/pageerror entries."
+    },
+    {
+      "id": "shell_viewport_sized",
+      "label": "combat shell is approximately viewport-sized",
+      "pass": true,
+      "required": true,
+      "detail": "shell: 1440x900"
+    },
+    {
+      "id": "mount_fills_shell",
+      "label": "diorama mount approximately fills combat shell",
+      "pass": true,
+      "required": true,
+      "detail": "mount: 1440x900"
+    },
+    {
+      "id": "party_hud_visible",
+      "label": "party HUD is visible",
+      "pass": true,
+      "required": true
+    },
+    {
+      "id": "command_menu_visible",
+      "label": "command menu is visible",
+      "pass": true,
+      "required": true,
+      "detail": "visible command buttons: 7"
+    },
+    {
+      "id": "enemy_readout_visible",
+      "label": "enemy readout/status is visible",
+      "pass": true,
+      "required": false
+    },
+    {
+      "id": "old_enemy_sprite_hidden",
+      "label": "old HTML enemy sprite is hidden if detectable",
+      "pass": true,
+      "required": false,
+      "detail": "hidden: true"
+    }
+  ],
+  "failures": [],
+  "manual_review_items": [
+    {
+      "id": "full_screen_battlefield",
+      "label": "Does combat read as a full-screen 3D battlefield?",
+      "manual_review_required": true,
+      "prompt": "Inspect combat-hospital.png for full-viewport world ownership rather than a framed inner stage."
+    },
+    {
+      "id": "box_inside_box",
+      "label": "Does the 3D world avoid box-inside-box framing?",
+      "manual_review_required": true,
+      "prompt": "Look for black margins, visible old panel frames, or a diorama that appears trapped inside another container."
+    },
+    {
+      "id": "defender_grounding",
+      "label": "Are defenders grounded or still pasted on?",
+      "manual_review_required": true,
+      "prompt": "Check whether HTML defenders align with stage pads/floor perspective."
+    },
+    {
+      "id": "enemy_anchor",
+      "label": "Is the enemy anchored to the breach?",
+      "manual_review_required": true,
+      "prompt": "Confirm the visible enemy-side 3D breach/core owns the threat body presence without duplicate enemy sprites."
+    },
+    {
+      "id": "ui_center_blockage",
+      "label": "Does command UI block the battlefield center?",
+      "manual_review_required": true,
+      "prompt": "Check whether tactical controls obscure the main action silhouette or preserve readable combat space."
+    },
+    {
+      "id": "party_hud_anchor",
+      "label": "Does party HUD sit bottom-right?",
+      "manual_review_required": true,
+      "prompt": "Use the screenshot and DOM rects to verify the reserve strip feels anchored to the combat viewport."
+    },
+    {
+      "id": "duplicate_representations",
+      "label": "Are there duplicate enemy/defender representations?",
+      "manual_review_required": true,
+      "prompt": "Look for repeated combatants caused by HTML sprites plus 3D placeholders competing for ownership."
+    }
+  ],
+  "what_still_looks_fake": [
+    "Automated tooling cannot judge whether the battlefield feels cinematic or grounded without human review.",
+    "Defender grounding and enemy anchoring still require screenshot inspection against the combat presentation spec.",
+    "This critic detects layout/runtime failures, not subjective art quality."
+  ],
+  "what_should_not_be_touched_next": [
+    "Combat math, targeting, turn order, modules, rewards, Forge, globe, AudioManager, and save data.",
+    "Additional decorative CSS overlays that do not solve a specific composition problem.",
+    "Multiple combat canvases or independent render loops."
+  ],
+  "artifacts": {
+    "capture_report": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/capture-report.json",
+    "menu": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/menu.png",
+    "globe": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/globe.png",
+    "combat": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-hospital.png",
+    "visual_critic_json": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/visual-critic-report.json",
+    "visual_critic_md": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/visual-critic-report.md"
+  }
+}

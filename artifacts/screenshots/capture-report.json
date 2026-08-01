@@ -1,6 +1,455 @@
 {
-  "ok": false,
-  "blocker": "Playwright is not installed. Install it locally before running this harness.",
-  "details": "Cannot find package 'playwright' imported from /Users/bhann/Documents/cyber-globe/Spook65.github.io/scripts/capture-screenshots.mjs",
-  "screenshots": []
+  "ok": true,
+  "url": "http://127.0.0.1:8876/index.html?v=dev-harness-v1",
+  "screenshots": [
+    {
+      "screen": "menu",
+      "path": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/menu.png",
+      "exists": true
+    },
+    {
+      "screen": "globe",
+      "path": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/globe.png",
+      "exists": true
+    },
+    {
+      "screen": "combat-hospital",
+      "path": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-hospital.png",
+      "exists": true
+    }
+  ],
+  "blockers": [],
+  "notes": [],
+  "viewport": {
+    "width": 1440,
+    "height": 900
+  },
+  "activeUrl": "http://127.0.0.1:8876/index.html?v=dev-harness-v1",
+  "combat": {
+    "helperAvailable": true,
+    "helperResult": true,
+    "marker": "composition-alignment-v1",
+    "canvasCount": 1,
+    "screenshotExists": true,
+    "screenText": "THREATGRID\n\nCYBER-FANTASY ROGUELIKE ARENA\n\n08\n\nACTIVE THREATS\n\nSCORE: 00000\n\nACC: 100%\n\n[ MENU ]\n[ LOADOUT / MODULES ]\nTHREAT MANIFESTS\nENTERING BATTLE FORMATION...\nTHREATGRID ARENA\nHOSPITAL NETWORK LOCKOUT / LVL 1\nTURN ORDER\nIDS\n→\nHONEYPOT\n→\nANTIVIRUS\nHOSPITAL NETWORK LOCKOUT\n55/55\nLVL\n1\nWEAK\nUNKNO",
+    "dom": {
+      "shell": {
+        "selector": ".combat-shell",
+        "exists": true,
+        "visible": true,
+        "hidden": false,
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 900,
+          "top": 0,
+          "right": 1440,
+          "bottom": 900,
+          "left": 0
+        },
+        "computed": {
+          "display": "block",
+          "visibility": "visible",
+          "opacity": "1",
+          "position": "relative",
+          "zIndex": "auto",
+          "pointerEvents": "auto",
+          "overflow": "hidden",
+          "transform": "none"
+        }
+      },
+      "dioramaMount": {
+        "selector": "[data-combat-diorama-stage]",
+        "exists": true,
+        "visible": true,
+        "hidden": false,
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 900,
+          "top": 0,
+          "right": 1440,
+          "bottom": 900,
+          "left": 0
+        },
+        "computed": {
+          "display": "block",
+          "visibility": "visible",
+          "opacity": "1",
+          "position": "absolute",
+          "zIndex": "0",
+          "pointerEvents": "none",
+          "overflow": "hidden",
+          "transform": "none"
+        }
+      },
+      "canvas": {
+        "selector": "[data-combat-diorama-stage] canvas",
+        "exists": true,
+        "visible": true,
+        "hidden": false,
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 900,
+          "top": 0,
+          "right": 1440,
+          "bottom": 900,
+          "left": 0
+        },
+        "computed": {
+          "display": "block",
+          "visibility": "visible",
+          "opacity": "1",
+          "position": "static",
+          "zIndex": "auto",
+          "pointerEvents": "none",
+          "overflow": "clip",
+          "transform": "none"
+        }
+      },
+      "commandMenu": {
+        "selector": ".combat-stage-command-cluster",
+        "exists": true,
+        "visible": true,
+        "hidden": false,
+        "rect": {
+          "x": 50.390625,
+          "y": 425.984375,
+          "width": 236.796875,
+          "height": 321.015625,
+          "top": 425.984375,
+          "right": 287.1875,
+          "bottom": 747,
+          "left": 50.390625
+        },
+        "computed": {
+          "display": "grid",
+          "visibility": "visible",
+          "opacity": "1",
+          "position": "absolute",
+          "zIndex": "6",
+          "pointerEvents": "none",
+          "overflow": "visible",
+          "transform": "none"
+        }
+      },
+      "partyHud": {
+        "selector": ".combat-reserve-strip",
+        "exists": true,
+        "visible": true,
+        "hidden": false,
+        "rect": {
+          "x": 909.3125,
+          "y": 835.21875,
+          "width": 502.6875,
+          "height": 46.78125,
+          "top": 835.21875,
+          "right": 1412,
+          "bottom": 882,
+          "left": 909.3125
+        },
+        "computed": {
+          "display": "grid",
+          "visibility": "visible",
+          "opacity": "1",
+          "position": "absolute",
+          "zIndex": "6",
+          "pointerEvents": "none",
+          "overflow": "visible",
+          "transform": "none"
+        }
+      },
+      "combatFeed": {
+        "selector": ".combat-feed",
+        "exists": true,
+        "visible": true,
+        "hidden": false,
+        "rect": {
+          "x": 50.390625,
+          "y": 216,
+          "width": 288,
+          "height": 92.875,
+          "top": 216,
+          "right": 338.390625,
+          "bottom": 308.875,
+          "left": 50.390625
+        },
+        "computed": {
+          "display": "grid",
+          "visibility": "visible",
+          "opacity": "1",
+          "position": "absolute",
+          "zIndex": "6",
+          "pointerEvents": "none",
+          "overflow": "visible",
+          "transform": "none"
+        }
+      },
+      "enemyReadout": {
+        "selector": ".combat-stage-enemy .combat-enemy-target-readout",
+        "exists": true,
+        "visible": true,
+        "hidden": false,
+        "rect": {
+          "x": 1148.0048828125,
+          "y": 143.9568328857422,
+          "width": 204.796875,
+          "height": 81.765625,
+          "top": 143.9568328857422,
+          "right": 1352.8017578125,
+          "bottom": 225.7224578857422,
+          "left": 1148.0048828125
+        },
+        "computed": {
+          "display": "grid",
+          "visibility": "visible",
+          "opacity": "1",
+          "position": "absolute",
+          "zIndex": "3",
+          "pointerEvents": "none",
+          "overflow": "visible",
+          "transform": "none"
+        }
+      },
+      "enemySpriteWrapper": {
+        "selector": ".combat-stage-enemy .combat-battler-sprite-wrap",
+        "exists": true,
+        "visible": false,
+        "hidden": true,
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        },
+        "computed": {
+          "display": "none",
+          "visibility": "visible",
+          "opacity": "1",
+          "position": "relative",
+          "zIndex": "auto",
+          "pointerEvents": "none",
+          "overflow": "visible",
+          "transform": "none"
+        }
+      },
+      "commandButtons": [
+        {
+          "label": "A\n          \n            ATTACK\n            OPEN MOVES",
+          "command": "attack",
+          "visible": true,
+          "rect": {
+            "x": 50.390625,
+            "y": 425.984375,
+            "width": 236.796875,
+            "height": 66,
+            "top": 425.984375,
+            "right": 287.1875,
+            "bottom": 491.984375,
+            "left": 50.390625
+          }
+        },
+        {
+          "label": "Y\n          \n            PROGRAMS\n            PARTY / STATUS",
+          "command": "programs",
+          "visible": true,
+          "rect": {
+            "x": 50.390625,
+            "y": 497.421875,
+            "width": 236.796875,
+            "height": 52.796875,
+            "top": 497.421875,
+            "right": 287.1875,
+            "bottom": 550.21875,
+            "left": 50.390625
+          }
+        },
+        {
+          "label": "X\n          \n            ITEMS\n            RECOVERY / CACHE",
+          "command": "items",
+          "visible": true,
+          "rect": {
+            "x": 50.390625,
+            "y": 555.65625,
+            "width": 236.796875,
+            "height": 52.796875,
+            "top": 555.65625,
+            "right": 287.1875,
+            "bottom": 608.453125,
+            "left": 50.390625
+          }
+        },
+        {
+          "label": "B\n          \n            RUN\n            RETREAT / ABORT",
+          "command": "run",
+          "visible": true,
+          "rect": {
+            "x": 50.390625,
+            "y": 613.890625,
+            "width": 236.796875,
+            "height": 52.796875,
+            "top": 613.890625,
+            "right": 287.1875,
+            "bottom": 666.6875,
+            "left": 50.390625
+          }
+        },
+        {
+          "label": "FOCUS\n          RECOVER GAUGE / END TURN",
+          "command": "focus",
+          "visible": true,
+          "rect": {
+            "x": 50.390625,
+            "y": 675.640625,
+            "width": 121.109375,
+            "height": 32.703125,
+            "top": 675.640625,
+            "right": 171.5,
+            "bottom": 708.34375,
+            "left": 50.390625
+          }
+        },
+        {
+          "label": "VIEW HISTORY",
+          "command": "toggle-history",
+          "visible": true,
+          "rect": {
+            "x": 62.296875,
+            "y": 234.859375,
+            "width": 52.78125,
+            "height": 5.765625,
+            "top": 234.859375,
+            "right": 115.078125,
+            "bottom": 240.625,
+            "left": 62.296875
+          }
+        },
+        {
+          "label": "THREAT INTEL",
+          "command": "toggle-codex",
+          "visible": true,
+          "rect": {
+            "x": 122.75,
+            "y": 234.859375,
+            "width": 51.5,
+            "height": 5.765625,
+            "top": 234.859375,
+            "right": 174.25,
+            "bottom": 240.625,
+            "left": 122.75
+          }
+        }
+      ]
+    }
+  },
+  "consoleMessages": [
+    {
+      "type": "log",
+      "text": "[Attack Prototype] fan enabled: false"
+    },
+    {
+      "type": "log",
+      "text": "[Attack Prototype] fallback reason: commandMode is not attack"
+    },
+    {
+      "type": "log",
+      "text": "[Attack Prototype] overlay markup inserted: false"
+    },
+    {
+      "type": "log",
+      "text": "[Attack Prototype] active actor: IDS"
+    },
+    {
+      "type": "log",
+      "text": "[Attack Prototype] forceFooterAttackList: false"
+    },
+    {
+      "type": "log",
+      "text": "[Attack Prototype] footer fallback allowed: false"
+    },
+    {
+      "type": "log",
+      "text": "[Attack Prototype] commandMode: main"
+    },
+    {
+      "type": "log",
+      "text": "[Attack Prototype] overlay helper called: true"
+    },
+    {
+      "type": "log",
+      "text": "[Attack Prototype] actionLocked: false"
+    },
+    {
+      "type": "log",
+      "text": "[Attack Prototype] forceFooterAttackList: false"
+    },
+    {
+      "type": "log",
+      "text": "[Attack Prototype] footer fallback allowed: false"
+    },
+    {
+      "type": "log",
+      "text": "[Attack Prototype] fan enabled: false"
+    },
+    {
+      "type": "log",
+      "text": "[Attack Prototype] fallback reason: commandMode is not attack"
+    },
+    {
+      "type": "log",
+      "text": "[Attack Prototype] overlay markup inserted: false"
+    },
+    {
+      "type": "log",
+      "text": "[Attack Prototype] active actor: IDS"
+    },
+    {
+      "type": "log",
+      "text": "[Attack Prototype] forceFooterAttackList: false"
+    },
+    {
+      "type": "log",
+      "text": "[Attack Prototype] footer fallback allowed: false"
+    },
+    {
+      "type": "log",
+      "text": "[Attack Prototype] commandMode: main"
+    },
+    {
+      "type": "log",
+      "text": "[Attack Prototype] overlay helper called: true"
+    },
+    {
+      "type": "log",
+      "text": "[Attack Prototype] actionLocked: false"
+    },
+    {
+      "type": "log",
+      "text": "[Attack Prototype] forceFooterAttackList: false"
+    },
+    {
+      "type": "log",
+      "text": "[Attack Prototype] footer fallback allowed: false"
+    },
+    {
+      "type": "log",
+      "text": "[Attack Prototype] fan enabled: false"
+    },
+    {
+      "type": "log",
+      "text": "[Attack Prototype] fallback reason: commandMode is not attack"
+    },
+    {
+      "type": "log",
+      "text": "[Attack Prototype] overlay markup inserted: false"
+    }
+  ]
 }
