@@ -1712,7 +1712,7 @@ function buildCombatMarkup(state) {
   }
 
   return `
-    <div class="combat-shell ${state.battleIntroPlaying ? "is-intro-playing" : ""} ${attackStageFanActive ? "is-attack-stage-active" : ""} ${stageCommandClusterActive ? "is-stage-command-active" : ""} ${stageCommandSubmenuActive ? "is-stage-submenu-active" : ""} ${stageFeedbackActive ? "is-stage-feedback-active" : ""} ${activeAllyCameraStateClasses}" data-combat-art="diorama-authority-v1">
+    <div class="combat-shell ${state.battleIntroPlaying ? "is-intro-playing" : ""} ${attackStageFanActive ? "is-attack-stage-active" : ""} ${stageCommandClusterActive ? "is-stage-command-active" : ""} ${stageCommandSubmenuActive ? "is-stage-submenu-active" : ""} ${stageFeedbackActive ? "is-stage-feedback-active" : ""} ${activeAllyCameraStateClasses}" data-combat-art="composition-alignment-v1">
       <div class="combat-world-layer" aria-hidden="true">
         <div class="combat-diorama-mount" data-combat-diorama-stage></div>
       </div>
@@ -1766,12 +1766,13 @@ function buildCombatMarkup(state) {
         ${battleHistoryDrawerMarkup}
         ${cyberCodexOverlayMarkup}
         ${defenderInspectOverlayMarkup}
-        <div class="combat-reserve-strip">
-          <div class="combat-reserve-row">
-            ${buildReserveStripMarkup(state, currentProgram.id)}
-          </div>
-        </div>
       </section>
+
+      <div class="combat-reserve-strip">
+        <div class="combat-reserve-row">
+          ${buildReserveStripMarkup(state, currentProgram.id)}
+        </div>
+      </div>
 
       <footer class="combat-footer ${attackStageFanActive ? "is-attack-stage-active" : ""} ${stageCommandClusterActive ? "is-stage-command-active" : ""} ${stageCommandSubmenuActive ? "is-stage-submenu-active" : ""}">
         <div class="combat-footer-left ${attackStageFanActive ? "is-attack-stage-active" : ""} ${stageCommandClusterActive ? "is-stage-command-active" : ""} ${stageCommandSubmenuActive ? "is-stage-submenu-active" : ""}">
