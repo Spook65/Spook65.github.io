@@ -22,6 +22,9 @@ function getCombatDioramaColor(value, fallback = "#6fefe0") {
 }
 
 function getCombatDioramaActiveProgramId(state) {
+  if (state?.activeDefenderId) {
+    return state.activeDefenderId;
+  }
   const actor = state?.turnOrder?.[state.currentTurnIndex];
   if (actor?.kind === "program" && actor.ref) {
     return actor.ref.id || actor.ref.name || "";
@@ -29,16 +32,85 @@ function getCombatDioramaActiveProgramId(state) {
   return state?.activeProgramId || "";
 }
 
+function getCombatDioramaDefenders(state) {
+  if (Array.isArray(state?.defenders)) {
+    return state.defenders;
+  }
+  if (Array.isArray(state?.playerParty)) {
+    const activeId = getCombatDioramaActiveProgramId(state);
+    const recentlyHitIds = Array.isArray(state?.recentlyHitProgramIds) ? state.recentlyHitProgramIds : [];
+    return state.playerParty.slice(0, 4).map((program, index) => {
+      const hp = Number.isFinite(program?.hp) ? program.hp : 0;
+      const maxHp = Number.isFinite(program?.maxHp) ? program.maxHp : 0;
+      const id = program?.id || program?.name || `defender-${index + 1}`;
+      return {
+        id,
+        name: program?.name || `Defender ${index + 1}`,
+        slotIndex: index + 1,
+        hp,
+        maxHp,
+        hpRatio: maxHp > 0 ? Math.max(0, Math.min(1, hp / maxHp)) : 0,
+        fainted: hp <= 0,
+        active: id === activeId,
+        recentlyHit: state?.recentlyHitProgramId === id || recentlyHitIds.includes(id),
+        role: program?.role || "",
+        domain: program?.domain || "",
+        affinity: program?.affinity || "",
+        color: program?.color || "#6fefe0",
+        spriteKey: getCombatDioramaSpriteKey(program),
+        statusFlags: Array.isArray(program?.statusEffects) ? program.statusEffects : []
+      };
+    });
+  }
+  return [];
+}
+
+function getCombatDioramaEnemy(state) {
+  if (state?.enemy) {
+    return state.enemy;
+  }
+  const threat = state?.threat || {};
+  const hp = Number.isFinite(threat.hp) ? threat.hp : 0;
+  const maxHp = Number.isFinite(threat.maxHp) ? threat.maxHp : 0;
+  return {
+    id: threat.id || threat.title || "threat",
+    title: threat.title || "Unknown Threat",
+    hp,
+    maxHp,
+    hpRatio: maxHp > 0 ? Math.max(0, Math.min(1, hp / maxHp)) : 1,
+    level: threat.level || 1,
+    type: threat.type || getCombatDioramaSpriteKey(threat)
+  };
+}
+
+function getCombatDioramaSpriteKey(entity) {
+  const raw = String(entity?.spriteKey || entity?.id || entity?.name || "").toLowerCase();
+  if (raw.includes("firewall")) {
+    return "firewall";
+  }
+  if (raw.includes("ids") || raw.includes("intrusion")) {
+    return "ids";
+  }
+  if (raw.includes("honeypot")) {
+    return "honeypot";
+  }
+  if (raw.includes("antivirus") || raw.includes("purifier")) {
+    return "antivirus";
+  }
+  return "standard";
+}
+
 function getCombatDioramaStateKey(state) {
   const activeProgramId = getCombatDioramaActiveProgramId(state);
-  const partyKey = Array.isArray(state?.playerParty)
-    ? state.playerParty.map((program) => [
-        program?.id || program?.name || "defender",
-        program?.hp ?? 0,
-        program?.maxHp ?? 0
+  const defenderKey = getCombatDioramaDefenders(state)
+    .map((defender) => [
+        defender?.id || defender?.name || "defender",
+        defender?.hp ?? 0,
+        defender?.maxHp ?? 0,
+        defender?.active ? "active" : "",
+        defender?.recentlyHit ? "hit" : ""
       ].join(":")).join("|")
-    : "";
-  const threat = state?.threat || {};
+  const threat = getCombatDioramaEnemy(state);
   return [
     threat.id || threat.title || "threat",
     threat.hp ?? 0,
@@ -48,7 +120,7 @@ function getCombatDioramaStateKey(state) {
     state?.visualEffect?.phase || "",
     state?.visualEffect?.targetKind || "",
     state?.visualEffect?.targetId || ""
-  ].join("::") + `::${partyKey}`;
+  ].join("::") + `::${defenderKey}`;
 }
 
 class CombatDioramaScene {
@@ -64,6 +136,11 @@ class CombatDioramaScene {
     this.materials = [];
     this.geometries = [];
     this.defenderSlots = [];
+    this.defenderAvatarGroup = null;
+    this.defenderAvatarCount = 0;
+    this.activeDefenderId = "";
+    this.defenderIds = [];
+    this.adapterUsed = false;
     this.deploymentPads = [];
     this.enemyGroup = null;
     this.breachGroup = null;
@@ -314,12 +391,168 @@ class CombatDioramaScene {
   }
 
   buildActors() {
-    // HTML defenders stay visible for now; Three.js owns the enemy-side battlefield anchor.
     this.defenderSlots = [];
+    this.buildDefenderAvatars();
     this.buildEnemyBreachAnchor();
-    this.characterPlaceholderMode = "disabled";
+    this.characterPlaceholderMode = "threejs-defenders";
     this.enemyPlaceholderMode = "threejs-breach";
     this.enemyOwnership = "threejs-breach";
+  }
+
+  buildDefenderAvatars() {
+    this.defenderAvatarGroup = new THREE.Group();
+    this.defenderAvatarGroup.name = "threejs-defender-avatar-group";
+    this.scene.add(this.defenderAvatarGroup);
+
+    this.defenderPadPositions().forEach((position, index) => {
+      const avatarRoot = new THREE.Group();
+      avatarRoot.name = `threejs-defender-avatar-slot-${index + 1}`;
+      avatarRoot.position.set(position[0], 0.24, position[2]);
+      avatarRoot.rotation.y = -0.12;
+      this.defenderAvatarGroup.add(avatarRoot);
+
+      const baseMaterial = this.createMaterial({
+        color: 0x071212,
+        emissive: 0x1bfff0,
+        emissiveIntensity: 0.14,
+        metalness: 0.34,
+        roughness: 0.46,
+        opacity: 0.78
+      });
+      const bodyMaterial = this.createMaterial({
+        color: 0x163331,
+        emissive: 0x35f4e6,
+        emissiveIntensity: 0.18,
+        metalness: 0.28,
+        roughness: 0.54,
+        opacity: 0.88
+      });
+      const coreMaterial = this.createMaterial({
+        color: 0x8ffff4,
+        emissive: 0x5ffff1,
+        emissiveIntensity: 0.72,
+        metalness: 0.08,
+        roughness: 0.34,
+        opacity: 0.92
+      });
+      const plateMaterial = this.createMaterial({
+        color: 0x25413f,
+        emissive: 0x32dacf,
+        emissiveIntensity: 0.2,
+        metalness: 0.38,
+        roughness: 0.5,
+        opacity: 0.84
+      });
+      const haloMaterial = this.createBasicMaterial({ color: 0x6fefe0, opacity: 0.18, side: THREE.DoubleSide });
+      const shadowMaterial = this.createBasicMaterial({ color: 0x7cffef, opacity: 0.13, side: THREE.DoubleSide });
+
+      const shadow = this.addMesh(
+        avatarRoot,
+        this.createGeometry(THREE.RingGeometry, 0.48, 0.64, 28),
+        shadowMaterial,
+        [0, -0.17, 0],
+        [-Math.PI / 2, 0, 0],
+        [1.25, 0.82, 0.72]
+      );
+      shadow.name = "threejs-defender-contact-shadow";
+
+      const base = this.addMesh(
+        avatarRoot,
+        this.createGeometry(THREE.CylinderGeometry, 0.24, 0.34, 0.16, 6),
+        baseMaterial,
+        [0, -0.08, 0],
+        [0, Math.PI / 6, 0],
+        [1.1, 0.78, 0.9]
+      );
+      base.name = "threejs-defender-avatar-base";
+
+      const torso = this.addMesh(
+        avatarRoot,
+        this.createGeometry(THREE.CylinderGeometry, 0.2, 0.28, 0.7, 6),
+        bodyMaterial,
+        [0, 0.3, 0],
+        [0.04, Math.PI / 6, 0],
+        [0.82, 1, 0.7]
+      );
+      torso.name = "threejs-defender-avatar-torso";
+
+      const core = this.addMesh(
+        avatarRoot,
+        this.createGeometry(THREE.OctahedronGeometry, 0.15, 0),
+        coreMaterial,
+        [0, 0.34, 0.18],
+        [0.2, 0.4, 0],
+        [0.9, 1.12, 0.9]
+      );
+      core.name = "threejs-defender-avatar-core";
+
+      const head = this.addMesh(
+        avatarRoot,
+        this.createGeometry(THREE.DodecahedronGeometry, 0.18, 0),
+        plateMaterial,
+        [0, 0.78, 0.02],
+        [0.08, 0.28, 0],
+        [0.86, 0.74, 0.86]
+      );
+      head.name = "threejs-defender-avatar-head";
+
+      const leftShoulder = this.addMesh(
+        avatarRoot,
+        this.createGeometry(THREE.BoxGeometry, 0.24, 0.12, 0.14),
+        plateMaterial,
+        [-0.28, 0.54, 0.02],
+        [0.04, 0.18, -0.2],
+        [1, 0.8, 1]
+      );
+      leftShoulder.name = "threejs-defender-avatar-shoulder-left";
+
+      const rightShoulder = this.addMesh(
+        avatarRoot,
+        this.createGeometry(THREE.BoxGeometry, 0.24, 0.12, 0.14),
+        plateMaterial,
+        [0.28, 0.54, 0.02],
+        [0.04, -0.18, 0.2],
+        [1, 0.8, 1]
+      );
+      rightShoulder.name = "threejs-defender-avatar-shoulder-right";
+
+      const halo = this.addMesh(
+        avatarRoot,
+        this.createGeometry(THREE.TorusGeometry, 0.44, 0.012, 8, 36),
+        haloMaterial,
+        [0, 0.42, 0.04],
+        [Math.PI / 2.18, 0, 0],
+        [0.88, 0.88, 0.88]
+      );
+      halo.name = "threejs-defender-avatar-halo";
+
+      this.defenderSlots.push({
+        root: avatarRoot,
+        base,
+        torso,
+        core,
+        head,
+        leftShoulder,
+        rightShoulder,
+        halo,
+        shadow,
+        baseMaterial,
+        bodyMaterial,
+        coreMaterial,
+        plateMaterial,
+        haloMaterial,
+        shadowMaterial,
+        basePosition: position,
+        defender: null,
+        active: false,
+        fainted: false,
+        recentlyHit: false,
+        roleKey: "standard",
+        bobOffset: index * 0.72
+      });
+    });
+
+    this.defenderAvatarCount = this.defenderSlots.length;
   }
 
   buildEnemyBreachAnchor() {
@@ -411,25 +644,26 @@ class CombatDioramaScene {
 
   update(state) {
     this.state = state || this.state;
+    this.adapterUsed = Array.isArray(this.state?.defenders);
     this.lastStateKey = getCombatDioramaStateKey(this.state);
-    this.lastStateTitle = this.state?.threat?.title || "";
+    this.lastStateTitle = this.state?.threatTitle || this.state?.threat?.title || this.state?.enemy?.title || "";
+    this.activeDefenderId = getCombatDioramaActiveProgramId(this.state);
     this.updateDeploymentPads();
+    this.updateDefenderAvatars();
     this.updateBreach();
   }
 
   updateDeploymentPads() {
-    const party = Array.isArray(this.state?.playerParty) ? this.state.playerParty : [];
-    const activeId = getCombatDioramaActiveProgramId(this.state);
+    const defenders = getCombatDioramaDefenders(this.state);
     this.deploymentPads.forEach((slot, index) => {
-      const program = party[index] || null;
-      const alive = program && program.hp > 0;
-      const isActive = alive && (program.id || program.name) === activeId;
-      const hpRatio = alive && Number.isFinite(program.maxHp) && program.maxHp > 0
-        ? Math.max(0, Math.min(1, program.hp / program.maxHp))
-        : 0;
-      const color = new THREE.Color(getCombatDioramaColor(program?.color, "#6fefe0"));
-      slot.pad.visible = Boolean(program);
-      slot.contactGlow.visible = Boolean(program);
+      const defender = defenders[index] || null;
+      const visible = Boolean(defender);
+      const alive = visible && !defender.fainted;
+      const isActive = alive && Boolean(defender.active);
+      const hpRatio = Number.isFinite(defender?.hpRatio) ? defender.hpRatio : 0;
+      const color = new THREE.Color(getCombatDioramaColor(defender?.color, "#6fefe0"));
+      slot.pad.visible = visible;
+      slot.contactGlow.visible = visible;
       slot.pad.scale.set(isActive ? 1.38 : 1.18, 0.7, isActive ? 0.92 : 0.78);
       slot.contactGlow.scale.setScalar(isActive ? 1.24 : 0.95);
       slot.padMaterial.color.copy(color);
@@ -442,14 +676,81 @@ class CombatDioramaScene {
     });
   }
 
+  updateDefenderAvatars() {
+    const defenders = getCombatDioramaDefenders(this.state);
+    this.defenderIds = defenders.map((defender) => defender?.id).filter(Boolean);
+    this.defenderSlots.forEach((slot, index) => {
+      const defender = defenders[index] || null;
+      const visible = Boolean(defender);
+      const active = visible && Boolean(defender.active);
+      const fainted = visible && Boolean(defender.fainted);
+      const recentlyHit = visible && Boolean(defender.recentlyHit);
+      const hpRatio = Number.isFinite(defender?.hpRatio) ? defender.hpRatio : 0;
+      const color = new THREE.Color(getCombatDioramaColor(defender?.color, "#6fefe0"));
+      const hitColor = new THREE.Color(0xff5d70);
+      const displayColor = recentlyHit ? hitColor : color;
+      const roleKey = defender?.spriteKey || "standard";
+
+      slot.root.visible = visible;
+      slot.defender = defender;
+      slot.active = active;
+      slot.fainted = fainted;
+      slot.recentlyHit = recentlyHit;
+      slot.roleKey = roleKey;
+
+      if (!visible) {
+        return;
+      }
+
+      const lift = fainted ? -0.12 : active ? 0.1 : 0;
+      slot.root.position.set(slot.basePosition[0], 0.24 + lift, slot.basePosition[2]);
+      slot.root.scale.setScalar(fainted ? 0.78 : active ? 1.12 : 0.96);
+      slot.root.rotation.y = active ? -0.24 : -0.12;
+
+      slot.baseMaterial.color.copy(displayColor).multiplyScalar(fainted ? 0.28 : 0.34);
+      slot.baseMaterial.emissive.copy(displayColor);
+      slot.baseMaterial.emissiveIntensity = fainted ? 0.04 : active ? 0.28 : 0.12 + (hpRatio * 0.1);
+      slot.baseMaterial.opacity = fainted ? 0.28 : 0.76;
+
+      slot.bodyMaterial.color.copy(displayColor).multiplyScalar(fainted ? 0.22 : 0.42);
+      slot.bodyMaterial.emissive.copy(displayColor);
+      slot.bodyMaterial.emissiveIntensity = fainted ? 0.04 : active ? 0.34 : 0.16 + (hpRatio * 0.08);
+      slot.bodyMaterial.opacity = fainted ? 0.34 : 0.86;
+
+      slot.coreMaterial.color.copy(displayColor);
+      slot.coreMaterial.emissive.copy(displayColor);
+      slot.coreMaterial.emissiveIntensity = fainted ? 0.08 : active ? 1.08 : recentlyHit ? 0.98 : 0.56 + (hpRatio * 0.22);
+      slot.coreMaterial.opacity = fainted ? 0.3 : 0.92;
+
+      slot.plateMaterial.color.copy(displayColor).multiplyScalar(fainted ? 0.24 : 0.5);
+      slot.plateMaterial.emissive.copy(displayColor);
+      slot.plateMaterial.emissiveIntensity = fainted ? 0.04 : active ? 0.32 : 0.14;
+      slot.plateMaterial.opacity = fainted ? 0.28 : 0.82;
+
+      slot.haloMaterial.color.copy(displayColor);
+      slot.haloMaterial.opacity = fainted ? 0.03 : active ? 0.34 : 0.16;
+      slot.shadowMaterial.color.copy(displayColor);
+      slot.shadowMaterial.opacity = fainted ? 0.04 : active ? 0.22 : 0.12;
+
+      const isFirewall = roleKey === "firewall";
+      const isIds = roleKey === "ids";
+      const isHoneypot = roleKey === "honeypot";
+      const isAntivirus = roleKey === "antivirus";
+      slot.torso.scale.set(isFirewall ? 1.04 : isIds ? 0.74 : 0.86, isFirewall ? 1.06 : isHoneypot ? 0.9 : 1, isIds ? 0.62 : 0.72);
+      slot.head.scale.set(isHoneypot ? 0.78 : 0.86, isAntivirus ? 0.9 : 0.74, isHoneypot ? 1.08 : 0.86);
+      slot.leftShoulder.scale.set(isFirewall ? 1.28 : isAntivirus ? 0.7 : 1, isFirewall ? 1.1 : 0.8, 1);
+      slot.rightShoulder.scale.copy(slot.leftShoulder.scale);
+      slot.halo.visible = !fainted && (active || isIds || isAntivirus);
+      slot.halo.scale.setScalar(active ? 1.08 : isIds ? 1 : 0.84);
+    });
+  }
+
   updateBreach() {
     if (!this.breachGroup) {
       return;
     }
-    const threat = this.state?.threat || {};
-    const hpRatio = Number.isFinite(threat.maxHp) && threat.maxHp > 0
-      ? Math.max(0, Math.min(1, threat.hp / threat.maxHp))
-      : 1;
+    const threat = getCombatDioramaEnemy(this.state);
+    const hpRatio = Number.isFinite(threat.hpRatio) ? threat.hpRatio : 1;
     this.breachGroup.scale.setScalar(0.96 + (hpRatio * 0.06));
     if (this.enemyGroup) {
       this.enemyGroup.scale.setScalar(0.86 + (hpRatio * 0.12));
@@ -504,6 +805,18 @@ class CombatDioramaScene {
       }
     });
 
+    this.defenderSlots.forEach((slot) => {
+      if (!slot.root.visible || slot.fainted) {
+        return;
+      }
+      const pulse = Math.sin(elapsed * (slot.active ? 1.7 : 1.05) + slot.bobOffset);
+      slot.root.position.y = 0.24 + (slot.active ? 0.1 : 0) + (pulse * (slot.active ? 0.045 : 0.024));
+      slot.core.rotation.x += slot.active ? 0.014 : 0.008;
+      slot.core.rotation.y += slot.active ? 0.018 : 0.01;
+      slot.halo.rotation.z += slot.active ? 0.012 : 0.006;
+      slot.shadowMaterial.opacity = Math.max(0.04, (slot.active ? 0.2 : 0.1) + (pulse * 0.018));
+    });
+
     if (this.breachGroup) {
       this.breachGroup.rotation.z += 0.004;
       this.breachGroup.scale.setScalar(1 + (Math.sin(elapsed * 1.9) * 0.035));
@@ -554,6 +867,11 @@ class CombatDioramaScene {
     this.materials = [];
     this.geometries = [];
     this.defenderSlots = [];
+    this.defenderAvatarGroup = null;
+    this.defenderAvatarCount = 0;
+    this.activeDefenderId = "";
+    this.defenderIds = [];
+    this.adapterUsed = false;
     this.deploymentPads = [];
     this.enemyGroup = null;
     this.breachGroup = null;
@@ -638,6 +956,10 @@ function getCombatDioramaDebugState() {
     lastStateTitle: scene?.lastStateTitle || "",
     lastStateKey: scene?.lastStateKey || "",
     characterPlaceholders: scene?.characterPlaceholderMode || "disabled",
+    defenderAvatarCount: scene?.defenderAvatarCount || 0,
+    activeDefenderId: scene?.activeDefenderId || "",
+    defenderIds: scene?.defenderIds || [],
+    adapterUsed: Boolean(scene?.adapterUsed),
     enemyPlaceholder: scene?.enemyPlaceholderMode || "disabled",
     enemyOwnership: scene?.enemyOwnership || "none",
     screenState: getCombatDioramaScreenState(),

@@ -14339,6 +14339,12 @@ body {
   display: none;
 }
 
+.threat-panel.is-combat .combat-shell[data-combat-art="composition-alignment-v1"] .combat-ally-formation .battle-sprite,
+.threat-panel.is-combat .combat-shell[data-combat-art="composition-alignment-v1"] .combat-ally-formation .combatant-sprite,
+.threat-panel.is-combat .combat-shell[data-combat-art="composition-alignment-v1"] .combat-ally-battler .combat-battler-sprite-wrap::after {
+  display: none;
+}
+
 .threat-panel.is-combat .combat-shell[data-combat-art="composition-alignment-v1"] .combat-stage-enemy .combat-battler-enemy {
   min-height: 0;
 }

@@ -1821,7 +1821,11 @@ function syncCombatDioramaScene(state) {
     return;
   }
 
-  mountCombatDioramaScene(mount, state);
+  const presentationState = typeof window !== "undefined" && typeof window.getCombatPresentationState === "function"
+    ? window.getCombatPresentationState(state)
+    : state;
+
+  mountCombatDioramaScene(mount, presentationState);
 }
 
 // buildRewardMarkup() keeps the player on the victory screen until they decide whether to continue or quit.

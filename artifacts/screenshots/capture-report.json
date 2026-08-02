@@ -31,7 +31,7 @@
     "marker": "composition-alignment-v1",
     "canvasCount": 1,
     "screenshotExists": true,
-    "screenText": "THREATGRID\n\nCYBER-FANTASY ROGUELIKE ARENA\n\n08\n\nACTIVE THREATS\n\nSCORE: 00000\n\nACC: 100%\n\n[ MENU ]\n[ LOADOUT / MODULES ]\nTHREAT MANIFESTS\nENTERING BATTLE FORMATION...\nTHREATGRID ARENA\nHOSPITAL NETWORK LOCKOUT / LVL 3\nTURN ORDER\nIDS\n→\nHONEYPOT\n→\nANTIVIRUS\nHOSPITAL NETWORK LOCKOUT\n77/77\nLVL\n3\nWEAK\nUNKNO",
+    "screenText": "THREATGRID\n\nCYBER-FANTASY ROGUELIKE ARENA\n\n08\n\nACTIVE THREATS\n\nSCORE: 00000\n\nACC: 100%\n\n[ MENU ]\n[ LOADOUT / MODULES ]\nTHREAT MANIFESTS\nENTERING BATTLE FORMATION...\nTHREATGRID ARENA\nHOSPITAL NETWORK LOCKOUT / LVL 2\nTURN ORDER\nIDS\n→\nHONEYPOT\n→\nANTIVIRUS\nHOSPITAL NETWORK LOCKOUT\n66/66\nLVL\n2\nWEAK\nUNKNO",
     "dom": {
       "shell": {
         "selector": ".combat-shell",
@@ -195,14 +195,14 @@
         "visible": true,
         "hidden": false,
         "rect": {
-          "x": 1133.59765625,
-          "y": 134.89059448242188,
+          "x": 1133.19873046875,
+          "y": 133.2947235107422,
           "width": 204.796875,
-          "height": 81.765625,
-          "top": 134.89059448242188,
-          "right": 1338.39453125,
-          "bottom": 216.65621948242188,
-          "left": 1133.59765625
+          "height": 81.76560974121094,
+          "top": 133.2947235107422,
+          "right": 1337.99560546875,
+          "bottom": 215.06033325195312,
+          "left": 1133.19873046875
         },
         "computed": {
           "display": "grid",
