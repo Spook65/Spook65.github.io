@@ -17484,11 +17484,11 @@ body {
 }
 
 .threat-panel.is-combat .combat-shell[data-combat-art="composition-alignment-v1"] .combat-ally-formation {
-  left: clamp(1rem, 4vw, 4.2rem);
-  bottom: clamp(7.2rem, 14vh, 10.6rem);
-  width: min(36rem, 42vw);
-  height: min(24rem, 48vh);
-  transform: perspective(900px) rotateX(0deg) rotateZ(-1.5deg);
+  left: clamp(3rem, 6vw, 6.2rem);
+  bottom: clamp(5.8rem, 10vh, 8rem);
+  width: min(35rem, 41vw);
+  height: min(23rem, 45vh);
+  transform: perspective(900px) rotateX(0deg) rotateZ(-3deg);
 }
 
 .threat-panel.is-combat .combat-shell[data-combat-art="composition-alignment-v1"] .combat-ally-battler {
@@ -17506,56 +17506,98 @@ body {
   content: "";
   position: absolute;
   left: 50%;
-  bottom: 0.25rem;
-  width: clamp(4rem, 7vw, 6.8rem);
-  height: clamp(0.9rem, 1.7vw, 1.45rem);
+  bottom: 0.02rem;
+  width: clamp(4.8rem, 8vw, 7.6rem);
+  height: clamp(1.05rem, 1.9vw, 1.6rem);
   border-radius: 999px;
   background:
-    radial-gradient(ellipse at center, rgba(111, 239, 224, 0.2), rgba(111, 239, 224, 0.05) 48%, transparent 72%);
-  transform: translateX(-50%) skewX(-14deg);
-  opacity: 0.9;
+    radial-gradient(ellipse at center, rgba(111, 239, 224, 0.34), rgba(111, 239, 224, 0.12) 44%, transparent 74%);
+  transform: translateX(-50%) skewX(-18deg);
+  opacity: 1;
   pointer-events: none;
   z-index: -1;
 }
 
 .threat-panel.is-combat .combat-shell[data-combat-art="composition-alignment-v1"] .combat-ally-battler.is-active .combat-battler-sprite-wrap::after {
   background:
-    radial-gradient(ellipse at center, rgba(215, 184, 106, 0.32), rgba(111, 239, 224, 0.12) 48%, transparent 74%);
-  box-shadow: 0 0 26px rgba(215, 184, 106, 0.18);
+    radial-gradient(ellipse at center, rgba(215, 184, 106, 0.46), rgba(111, 239, 224, 0.18) 48%, transparent 76%);
+  box-shadow:
+    0 0 24px rgba(215, 184, 106, 0.2),
+    0 10px 22px rgba(0, 0, 0, 0.22);
 }
 
 .threat-panel.is-combat .combat-shell[data-combat-art="composition-alignment-v1"] .combat-ally-battler.is-slot-1 {
-  left: 0.2rem;
-  bottom: 9.5rem;
+  left: 0.1rem;
+  bottom: 9.2rem;
 }
 
 .threat-panel.is-combat .combat-shell[data-combat-art="composition-alignment-v1"] .combat-ally-battler.is-slot-2 {
-  left: 9.2rem;
-  bottom: 3.2rem;
+  left: 8.6rem;
+  bottom: 2.45rem;
 }
 
 .threat-panel.is-combat .combat-shell[data-combat-art="composition-alignment-v1"] .combat-ally-battler.is-slot-3 {
-  left: 17.6rem;
-  bottom: 8.2rem;
+  left: 16.8rem;
+  bottom: 7.55rem;
 }
 
 .threat-panel.is-combat .combat-shell[data-combat-art="composition-alignment-v1"] .combat-ally-battler.is-slot-4 {
-  left: 25rem;
-  bottom: 2.7rem;
+  left: 23.5rem;
+  bottom: 1.95rem;
 }
 
 .threat-panel.is-combat .combat-shell[data-combat-art="composition-alignment-v1"] .combat-stage-command-cluster,
 .threat-panel.is-combat .combat-shell[data-combat-art="composition-alignment-v1"] .combat-stage-command-submenu {
-  left: clamp(1rem, 3.5vw, 3.4rem);
+  left: clamp(1rem, 2vw, 1.8rem);
   top: auto;
-  bottom: clamp(8.2rem, 17vh, 12rem);
-  width: min(14.8rem, 22vw);
+  bottom: clamp(0.85rem, 2vh, 1.35rem);
+  width: min(27rem, 39vw);
 }
 
 .threat-panel.is-combat .combat-shell[data-combat-art="composition-alignment-v1"] .combat-stage-command-submenu.is-programs,
 .threat-panel.is-combat .combat-shell[data-combat-art="composition-alignment-v1"] .combat-stage-command-submenu.is-items {
   top: auto;
-  bottom: clamp(8.2rem, 17vh, 12rem);
+  bottom: clamp(0.85rem, 2vh, 1.35rem);
+}
+
+.threat-panel.is-combat .combat-shell[data-combat-art="composition-alignment-v1"] .combat-stage-command-stack {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.28rem;
+}
+
+.threat-panel.is-combat .combat-shell[data-combat-art="composition-alignment-v1"] .combat-stage-command-slip {
+  min-height: 2.62rem;
+  padding: 0.42rem 0.52rem;
+  border-radius: 0.82rem 0.66rem 0.82rem 0.58rem;
+}
+
+.threat-panel.is-combat .combat-shell[data-combat-art="composition-alignment-v1"] .combat-stage-command-glyph {
+  width: 1.28rem;
+  height: 1.28rem;
+  font-size: 0.56rem;
+}
+
+.threat-panel.is-combat .combat-shell[data-combat-art="composition-alignment-v1"] .combat-stage-command-name {
+  font-size: 0.72rem;
+}
+
+.threat-panel.is-combat .combat-shell[data-combat-art="composition-alignment-v1"] .combat-stage-command-meta {
+  font-size: 0.34rem;
+}
+
+.threat-panel.is-combat .combat-shell[data-combat-art="composition-alignment-v1"] .combat-stage-command-support {
+  grid-template-columns: auto minmax(10rem, 1fr);
+  align-items: center;
+  gap: 0.42rem;
+  width: 100%;
+}
+
+.threat-panel.is-combat .combat-shell[data-combat-art="composition-alignment-v1"] .combat-stage-command-focus {
+  min-width: 7.8rem;
+}
+
+.threat-panel.is-combat .combat-shell[data-combat-art="composition-alignment-v1"] .combat-stage-command-gauge {
+  min-width: 0;
 }
 
 .threat-panel.is-combat .combat-shell[data-combat-art="composition-alignment-v1"] .combat-attack-cluster.command-anchor {
@@ -17574,8 +17616,8 @@ body {
 }
 
 .threat-panel.is-combat .combat-shell[data-combat-art="composition-alignment-v1"] .combat-stage-enemy {
-  top: clamp(5.2rem, 14vh, 9.5rem);
-  right: clamp(2rem, 5vw, 5.6rem);
+  top: clamp(4.8rem, 13vh, 8.8rem);
+  right: clamp(2.8rem, 6vw, 6.6rem);
   width: min(28rem, 30vw);
 }
 
@@ -17591,16 +17633,16 @@ body {
 
 @media (max-width: 1160px) {
   .threat-panel.is-combat .combat-shell[data-combat-art="composition-alignment-v1"] .combat-ally-formation {
-    left: clamp(0.5rem, 2.2vw, 2rem);
-    bottom: clamp(7rem, 13vh, 9rem);
+    left: clamp(1rem, 3.5vw, 2.8rem);
+    bottom: clamp(5.8rem, 10vh, 7rem);
     width: min(30rem, 46vw);
   }
 
   .threat-panel.is-combat .combat-shell[data-combat-art="composition-alignment-v1"] .combat-stage-command-cluster,
   .threat-panel.is-combat .combat-shell[data-combat-art="composition-alignment-v1"] .combat-stage-command-submenu {
     left: clamp(0.8rem, 2.5vw, 2.4rem);
-    bottom: clamp(7.8rem, 15vh, 10.2rem);
-    width: min(13.4rem, 24vw);
+    bottom: clamp(0.7rem, 1.8vh, 1.1rem);
+    width: min(24rem, 44vw);
   }
 
   .threat-panel.is-combat .combat-shell[data-combat-art="composition-alignment-v1"] .combat-feed {
@@ -17611,16 +17653,16 @@ body {
 
 @media (max-width: 920px) {
   .threat-panel.is-combat .combat-shell[data-combat-art="composition-alignment-v1"] .combat-ally-formation {
-    left: clamp(0.35rem, 1.8vw, 1rem);
-    bottom: clamp(6.6rem, 12vh, 8rem);
+    left: clamp(0.6rem, 2vw, 1.3rem);
+    bottom: clamp(5.3rem, 9vh, 6.4rem);
     width: min(25rem, 48vw);
   }
 
   .threat-panel.is-combat .combat-shell[data-combat-art="composition-alignment-v1"] .combat-stage-command-cluster,
   .threat-panel.is-combat .combat-shell[data-combat-art="composition-alignment-v1"] .combat-stage-command-submenu {
     left: clamp(0.65rem, 2vw, 1.6rem);
-    bottom: clamp(7.1rem, 13vh, 9rem);
-    width: min(12.5rem, 32vw);
+    bottom: clamp(0.65rem, 1.6vh, 1rem);
+    width: min(21rem, 52vw);
   }
 
   .threat-panel.is-combat .combat-shell[data-combat-art="composition-alignment-v1"] .combat-stage-enemy {
