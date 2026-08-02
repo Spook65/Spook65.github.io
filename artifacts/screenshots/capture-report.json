@@ -31,7 +31,7 @@
     "marker": "composition-alignment-v1",
     "canvasCount": 1,
     "screenshotExists": true,
-    "screenText": "THREATGRID\n\nCYBER-FANTASY ROGUELIKE ARENA\n\n08\n\nACTIVE THREATS\n\nSCORE: 00000\n\nACC: 100%\n\n[ MENU ]\n[ LOADOUT / MODULES ]\nTHREAT MANIFESTS\nENTERING BATTLE FORMATION...\nTHREATGRID ARENA\nHOSPITAL NETWORK LOCKOUT / LVL 2\nTURN ORDER\nIDS\n→\nHONEYPOT\n→\nANTIVIRUS\nHOSPITAL NETWORK LOCKOUT\n66/66\nLVL\n2\nWEAK\nUNKNO",
+    "screenText": "THREATGRID\n\nCYBER-FANTASY ROGUELIKE ARENA\n\n08\n\nACTIVE THREATS\n\nSCORE: 00000\n\nACC: 100%\n\n[ MENU ]\n[ LOADOUT / MODULES ]\nTHREAT MANIFESTS\nENTERING BATTLE FORMATION...\nTHREATGRID ARENA\nHOSPITAL NETWORK LOCKOUT / LVL 1\nTURN ORDER\nIDS\n→\nHONEYPOT\n→\nANTIVIRUS\nHOSPITAL NETWORK LOCKOUT\n55/55\nLVL\n1\nWEAK\nUNKNO",
     "dom": {
       "shell": {
         "selector": ".combat-shell",
@@ -119,10 +119,10 @@
         "rect": {
           "x": 28.796875,
           "y": 728.203125,
-          "width": 432,
+          "width": 416,
           "height": 153.796875,
           "top": 728.203125,
-          "right": 460.796875,
+          "right": 444.796875,
           "bottom": 882,
           "left": 28.796875
         },
@@ -195,14 +195,14 @@
         "visible": true,
         "hidden": false,
         "rect": {
-          "x": 1133.19873046875,
-          "y": 133.2947235107422,
+          "x": 1133.6044921875,
+          "y": 134.91787719726562,
           "width": 204.796875,
-          "height": 81.76560974121094,
-          "top": 133.2947235107422,
-          "right": 1337.99560546875,
-          "bottom": 215.06033325195312,
-          "left": 1133.19873046875
+          "height": 81.765625,
+          "top": 134.91787719726562,
+          "right": 1338.4013671875,
+          "bottom": 216.68350219726562,
+          "left": 1133.6044921875
         },
         "computed": {
           "display": "grid",
@@ -249,10 +249,10 @@
           "rect": {
             "x": 28.796875,
             "y": 728.203125,
-            "width": 213.765625,
+            "width": 205.765625,
             "height": 41.90625,
             "top": 728.203125,
-            "right": 242.5625,
+            "right": 234.5625,
             "bottom": 770.109375,
             "left": 28.796875
           }
@@ -262,14 +262,14 @@
           "command": "programs",
           "visible": true,
           "rect": {
-            "x": 247.03125,
+            "x": 239.03125,
             "y": 728.203125,
-            "width": 213.765625,
+            "width": 205.765625,
             "height": 41.90625,
             "top": 728.203125,
-            "right": 460.796875,
+            "right": 444.796875,
             "bottom": 770.109375,
-            "left": 247.03125
+            "left": 239.03125
           }
         },
         {
@@ -279,10 +279,10 @@
           "rect": {
             "x": 28.796875,
             "y": 774.578125,
-            "width": 213.765625,
+            "width": 205.765625,
             "height": 41.90625,
             "top": 774.578125,
-            "right": 242.5625,
+            "right": 234.5625,
             "bottom": 816.484375,
             "left": 28.796875
           }
@@ -292,14 +292,14 @@
           "command": "run",
           "visible": true,
           "rect": {
-            "x": 247.03125,
+            "x": 239.03125,
             "y": 774.578125,
-            "width": 213.765625,
+            "width": 205.765625,
             "height": 41.90625,
             "top": 774.578125,
-            "right": 460.796875,
+            "right": 444.796875,
             "bottom": 816.484375,
-            "left": 247.03125
+            "left": 239.03125
           }
         },
         {

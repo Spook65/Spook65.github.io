@@ -17557,13 +17557,16 @@ body {
   left: clamp(1rem, 2vw, 1.8rem);
   top: auto;
   bottom: clamp(0.85rem, 2vh, 1.35rem);
-  width: min(27rem, 39vw);
+  width: min(26rem, 36vw);
 }
 
 .threat-panel.is-combat .combat-shell[data-combat-art="composition-alignment-v1"] .combat-stage-command-submenu.is-programs,
 .threat-panel.is-combat .combat-shell[data-combat-art="composition-alignment-v1"] .combat-stage-command-submenu.is-items {
   top: auto;
-  bottom: clamp(0.85rem, 2vh, 1.35rem);
+  bottom: clamp(9.2rem, 18vh, 12rem);
+  max-height: min(21rem, 42vh);
+  overflow: auto;
+  transform: none;
 }
 
 .threat-panel.is-combat .combat-shell[data-combat-art="composition-alignment-v1"] .combat-stage-command-stack {
@@ -17607,8 +17610,11 @@ body {
 }
 
 .threat-panel.is-combat .combat-shell[data-combat-art="composition-alignment-v1"] .combat-attack-cluster.command-anchor {
-  left: clamp(18rem, 28vw, 29rem);
-  top: clamp(10rem, 22vh, 15rem);
+  left: clamp(1rem, 2vw, 1.8rem);
+  top: auto;
+  bottom: clamp(9.2rem, 18vh, 12rem);
+  width: min(26rem, 36vw);
+  transform: none;
 }
 
 .threat-panel.is-combat .combat-shell[data-combat-art="composition-alignment-v1"] .combat-stage-feedback-toast {
