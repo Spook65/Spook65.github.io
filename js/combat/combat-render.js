@@ -622,6 +622,10 @@ function buildFocusCommandMarkup(state) {
 
 // getAbilityPresentation() maps a move to a small animation family without changing the move's combat rules.
 function getAbilityPresentation(ability) {
+  if (typeof getCombatAbilityVfxProfile === "function" && typeof getCombatAbilityLegacyStyle === "function") {
+    return getCombatAbilityLegacyStyle(getCombatAbilityVfxProfile(ability));
+  }
+
   const effect = String(ability && ability.effect ? ability.effect : "");
 
   if (

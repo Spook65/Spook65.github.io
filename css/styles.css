@@ -14355,6 +14355,10 @@ body {
   z-index: 3;
 }
 
+.threat-panel.is-combat .combat-shell[data-combat-art="composition-alignment-v1"] .combat-beam {
+  display: none;
+}
+
 .threat-panel.is-combat .combat-shell[data-combat-art="composition-alignment-v1"] .combat-ally-formation,
 .threat-panel.is-combat .combat-shell[data-combat-art="composition-alignment-v1"] .combat-stage-enemy {
   z-index: 4;

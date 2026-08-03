@@ -13,6 +13,16 @@ function getCombatPresentationRatio(value, maxValue) {
   return Math.max(0, Math.min(1, getCombatPresentationNumber(value, 0) / safeMax));
 }
 
+function getCombatPresentationVisualEffect(effect) {
+  if (!effect || typeof effect !== "object") {
+    return null;
+  }
+  return {
+    ...effect,
+    vfxProfile: effect.vfxProfile && typeof effect.vfxProfile === "object" ? { ...effect.vfxProfile } : null
+  };
+}
+
 function getCombatPresentationSpriteKey(entity) {
   const raw = String(entity?.id || entity?.spriteKey || entity?.name || "").toLowerCase();
   if (raw.includes("firewall")) {
@@ -100,7 +110,7 @@ function getCombatPresentationState(combatState) {
     currentTurnIndex: getCombatPresentationNumber(combatState?.currentTurnIndex, 0),
     battleIntroPlaying: Boolean(combatState?.battleIntroPlaying),
     battleIntroStage: combatState?.battleIntroStage || "",
-    visualEffect: combatState?.visualEffect || null,
+    visualEffect: getCombatPresentationVisualEffect(combatState?.visualEffect),
     defenders,
     enemy: {
       id: threat.id || threat.title || "threat",

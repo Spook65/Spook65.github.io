@@ -2,6 +2,8 @@
    It does not own targeting, damage, turn order, or input. */
 let activeCombatDioramaScene = null;
 let combatDioramaLastError = null;
+let combatDioramaLastPlayedVfxSequenceId = "";
+let combatDioramaLastPlayedVfxFamily = "";
 
 function getCombatDioramaScreenState() {
   if (typeof screenState !== "undefined") {
@@ -152,6 +154,10 @@ class CombatDioramaScene {
     this.enemyOwnership = "environment";
     this.characterPlaceholderMode = "disabled";
     this.enemyPlaceholderMode = "disabled";
+    this.vfxGroup = null;
+    this.activeVfx = [];
+    this.lastVfxSequenceId = combatDioramaLastPlayedVfxSequenceId;
+    this.lastVfxFamily = combatDioramaLastPlayedVfxFamily;
     this.lastStateKey = "";
     this.lastStateTitle = "";
     this.lastObjectCount = 0;
@@ -189,6 +195,7 @@ class CombatDioramaScene {
       this.buildLighting();
       this.buildEnvironment();
       this.buildActors();
+      this.buildVfxLayer();
       this.resize();
 
       if (typeof ResizeObserver !== "undefined") {
@@ -642,6 +649,287 @@ class CombatDioramaScene {
     });
   }
 
+  buildVfxLayer() {
+    this.vfxGroup = new THREE.Group();
+    this.vfxGroup.name = "threejs-combat-ability-vfx-group";
+    this.scene.add(this.vfxGroup);
+  }
+
+  getVfxDefenderPosition(defenderId) {
+    const matchingSlot = this.defenderSlots.find((slot) => slot.defender?.id === defenderId);
+    const position = matchingSlot?.root?.position || this.defenderSlots.find((slot) => slot.root?.visible)?.root?.position;
+    if (position) {
+      return new THREE.Vector3(position.x, Math.max(0.55, position.y + 0.34), position.z + 0.12);
+    }
+    return new THREE.Vector3(-3.2, 0.7, -0.45);
+  }
+
+  getVfxEnemyPosition() {
+    if (this.enemyGroup) {
+      return new THREE.Vector3(
+        this.enemyGroup.position.x,
+        this.enemyGroup.position.y + 0.12,
+        this.enemyGroup.position.z + 0.08
+      );
+    }
+    return new THREE.Vector3(3.18, 1.12, -3.55);
+  }
+
+  createVfxMaterial(color, opacity = 0.72) {
+    return this.createBasicMaterial({
+      color,
+      opacity,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    });
+  }
+
+  addVfxMesh(group, geometry, material, position = new THREE.Vector3(), rotation = [0, 0, 0], scale = [1, 1, 1]) {
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.position.copy(position);
+    mesh.rotation.set(...rotation);
+    mesh.scale.set(...scale);
+    group.add(mesh);
+    return mesh;
+  }
+
+  addVfxCylinderBetween(group, start, end, radius, color, opacity = 0.68) {
+    const direction = new THREE.Vector3().subVectors(end, start);
+    const length = Math.max(0.01, direction.length());
+    const midpoint = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
+    const geometry = this.createGeometry(THREE.CylinderGeometry, radius, radius, length, 8, 1, true);
+    const material = this.createVfxMaterial(color, opacity);
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.position.copy(midpoint);
+    mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.normalize());
+    group.add(mesh);
+    return mesh;
+  }
+
+  queueCombatVfx(effect) {
+    if (!this.vfxGroup || !effect) {
+      return;
+    }
+    const sequenceId = String(effect.sequenceId || effect.effectId || effect.createdAt || "");
+    if (!sequenceId || sequenceId === this.lastVfxSequenceId || sequenceId === combatDioramaLastPlayedVfxSequenceId) {
+      return;
+    }
+
+    const profile = effect.vfxProfile || {};
+    const family = effect.vfxFamily || profile.family || "generic_strike";
+    const color = getCombatDioramaColor(profile.color, family === "purge" ? "#ff6f4d" : "#f5d07a");
+    const secondaryColor = getCombatDioramaColor(profile.secondaryColor, "#6fefe0");
+    const durationMs = Number.isFinite(profile.durationMs) ? profile.durationMs : 820;
+    const origin = effect.attackerKind === "program"
+      ? this.getVfxDefenderPosition(effect.attackerId)
+      : this.getVfxEnemyPosition();
+    const target = effect.targetKind === "program"
+      ? this.getVfxDefenderPosition(effect.targetId)
+      : this.getVfxEnemyPosition();
+    const root = new THREE.Group();
+    root.name = `threejs-combat-vfx-${family}`;
+    root.userData.family = family;
+    root.userData.createdAt = this.clock ? this.clock.getElapsedTime() : 0;
+    root.userData.duration = durationMs / 1000;
+    root.userData.baseScale = 1;
+    root.userData.origin = origin.clone();
+    root.userData.target = target.clone();
+    this.vfxGroup.add(root);
+
+    if (family === "scan") {
+      this.buildScanVfx(root, origin, target, color, secondaryColor);
+    } else if (family === "purge") {
+      this.buildPurgeVfx(root, origin, target, color, secondaryColor);
+    } else if (family === "containment") {
+      this.buildContainmentVfx(root, target, color, secondaryColor);
+    } else if (family === "firewall" || family === "recovery") {
+      this.buildDefensiveVfx(root, origin, color, secondaryColor, family);
+    } else if (family === "enemy_payload") {
+      this.buildEnemyPayloadVfx(root, origin, target, color, secondaryColor);
+    } else {
+      this.buildGenericStrikeVfx(root, origin, target, color, secondaryColor);
+    }
+
+    this.activeVfx.push({ root, sequenceId, family });
+    this.lastVfxSequenceId = sequenceId;
+    this.lastVfxFamily = family;
+    combatDioramaLastPlayedVfxSequenceId = sequenceId;
+    combatDioramaLastPlayedVfxFamily = family;
+  }
+
+  buildScanVfx(root, origin, target, color, secondaryColor) {
+    this.addVfxCylinderBetween(root, origin, target, 0.018, color, 0.38);
+    [-0.18, 0.18].forEach((offset, index) => {
+      const ring = this.addVfxMesh(
+        root,
+        this.createGeometry(THREE.RingGeometry, 0.42 + index * 0.16, 0.45 + index * 0.16, 36),
+        this.createVfxMaterial(index ? secondaryColor : color, index ? 0.34 : 0.48),
+        new THREE.Vector3(target.x, target.y + offset, target.z),
+        [0.18, -0.32, 0]
+      );
+      ring.userData.scalePulse = 0.7 + index * 0.28;
+    });
+    [0.3, 0.54, 0.76].forEach((mix, index) => {
+      const packetPosition = origin.clone().lerp(target, mix);
+      const packet = this.addVfxMesh(
+        root,
+        this.createGeometry(THREE.OctahedronGeometry, 0.055, 0),
+        this.createVfxMaterial(color, 0.72),
+        packetPosition,
+        [0.2, index * 0.7, 0.1]
+      );
+      packet.userData.travelPulse = index * 0.18;
+    });
+  }
+
+  buildPurgeVfx(root, origin, target, color, secondaryColor) {
+    this.addVfxCylinderBetween(root, origin, target, 0.032, color, 0.74);
+    this.addVfxCylinderBetween(root, origin.clone().add(new THREE.Vector3(0, 0.08, 0.05)), target, 0.012, secondaryColor, 0.48);
+    const burst = this.addVfxMesh(
+      root,
+      this.createGeometry(THREE.OctahedronGeometry, 0.34, 0),
+      this.createVfxMaterial(color, 0.62),
+      target,
+      [0.2, 0.4, 0.1]
+    );
+    burst.userData.scalePulse = 1.2;
+  }
+
+  buildContainmentVfx(root, target, color, secondaryColor) {
+    [0.58, 0.86, 1.12].forEach((radius, index) => {
+      const ring = this.addVfxMesh(
+        root,
+        this.createGeometry(THREE.TorusGeometry, radius, 0.018, 8, 44),
+        this.createVfxMaterial(index === 1 ? secondaryColor : color, index === 1 ? 0.32 : 0.48),
+        target.clone().add(new THREE.Vector3(0, index * 0.18 - 0.12, 0)),
+        [Math.PI / 2.8, -0.2, index * 0.4]
+      );
+      ring.userData.scalePulse = 0.34 + index * 0.12;
+    });
+    [-0.6, -0.2, 0.2, 0.6].forEach((xOffset) => {
+      this.addVfxMesh(
+        root,
+        this.createGeometry(THREE.BoxGeometry, 0.035, 1.22, 0.035),
+        this.createVfxMaterial(color, 0.38),
+        target.clone().add(new THREE.Vector3(xOffset, 0, 0.05)),
+        [0.08, -0.28, 0]
+      );
+    });
+  }
+
+  buildDefensiveVfx(root, origin, color, secondaryColor, family) {
+    const baseOpacity = family === "recovery" ? 0.42 : 0.5;
+    const ring = this.addVfxMesh(
+      root,
+      this.createGeometry(THREE.RingGeometry, 0.62, 0.7, 34),
+      this.createVfxMaterial(color, baseOpacity),
+      origin.clone().add(new THREE.Vector3(0, -0.28, 0)),
+      [-Math.PI / 2, 0, 0]
+    );
+    ring.userData.scalePulse = 0.85;
+    [-0.34, 0, 0.34].forEach((xOffset, index) => {
+      const plate = this.addVfxMesh(
+        root,
+        this.createGeometry(THREE.BoxGeometry, 0.28, 0.58, 0.05),
+        this.createVfxMaterial(index === 1 ? secondaryColor : color, 0.42),
+        origin.clone().add(new THREE.Vector3(xOffset, 0.18 + index * 0.05, 0.2)),
+        [0.08, -0.15 + xOffset * 0.22, 0.04]
+      );
+      plate.userData.scalePulse = 0.28 + index * 0.08;
+    });
+  }
+
+  buildEnemyPayloadVfx(root, origin, target, color, secondaryColor) {
+    this.addVfxCylinderBetween(root, origin, target, 0.026, color, 0.58);
+    const corruption = this.addVfxMesh(
+      root,
+      this.createGeometry(THREE.TorusGeometry, 0.42, 0.02, 8, 30),
+      this.createVfxMaterial(secondaryColor, 0.38),
+      target,
+      [Math.PI / 2.4, 0.25, 0.2]
+    );
+    corruption.userData.scalePulse = 0.65;
+  }
+
+  buildGenericStrikeVfx(root, origin, target, color, secondaryColor) {
+    this.addVfxCylinderBetween(root, origin, target, 0.024, color, 0.58);
+    const impact = this.addVfxMesh(
+      root,
+      this.createGeometry(THREE.IcosahedronGeometry, 0.22, 0),
+      this.createVfxMaterial(secondaryColor, 0.5),
+      target,
+      [0.1, 0.4, 0.2]
+    );
+    impact.userData.scalePulse = 0.95;
+  }
+
+  updateCombatVfxFromPresentationState(presentationState) {
+    const effect = presentationState?.visualEffect;
+    if (!effect || effect.phase === "recover") {
+      return;
+    }
+    this.queueCombatVfx(effect);
+  }
+
+  updateActiveVfx(elapsed) {
+    this.activeVfx = this.activeVfx.filter((entry) => {
+      const root = entry.root;
+      if (!root?.parent) {
+        return false;
+      }
+      const duration = root.userData.duration || 0.8;
+      const age = elapsed - (root.userData.createdAt ?? elapsed);
+      const progress = Math.max(0, Math.min(1, age / duration));
+      const fade = Math.max(0, 1 - progress);
+      root.children.forEach((child, index) => {
+        if (child.material) {
+          child.material.opacity = Math.max(0, (child.material.opacity || 0) * 0.86 + fade * 0.14);
+        }
+        if (child.userData.scalePulse) {
+          const pulse = 1 + (Math.sin(progress * Math.PI) * child.userData.scalePulse);
+          child.scale.setScalar(pulse);
+        }
+        if (child.userData.travelPulse !== undefined) {
+          const origin = root.userData.origin;
+          const target = root.userData.target;
+          const travel = Math.max(0, Math.min(1, progress + child.userData.travelPulse));
+          child.position.copy(origin.clone().lerp(target, travel));
+          child.rotation.x += 0.06;
+          child.rotation.y += 0.08 + index * 0.01;
+        } else {
+          child.rotation.z += 0.012 + index * 0.002;
+        }
+      });
+      if (progress >= 1) {
+        this.disposeVfxRoot(root);
+        return false;
+      }
+      return true;
+    });
+  }
+
+  disposeVfxRoot(root) {
+    root?.traverse?.((object) => {
+      object.geometry?.dispose?.();
+      if (Array.isArray(object.material)) {
+        object.material.forEach((material) => material.dispose?.());
+      } else {
+        object.material?.dispose?.();
+      }
+    });
+    root?.parent?.remove?.(root);
+  }
+
+  clearCombatVfx() {
+    this.activeVfx.forEach((entry) => this.disposeVfxRoot(entry.root));
+    this.activeVfx = [];
+    if (this.vfxGroup) {
+      while (this.vfxGroup.children.length) {
+        this.disposeVfxRoot(this.vfxGroup.children[0]);
+      }
+    }
+  }
+
   update(state) {
     this.state = state || this.state;
     this.adapterUsed = Array.isArray(this.state?.defenders);
@@ -651,6 +939,7 @@ class CombatDioramaScene {
     this.updateDeploymentPads();
     this.updateDefenderAvatars();
     this.updateBreach();
+    this.updateCombatVfxFromPresentationState(this.state);
   }
 
   updateDeploymentPads() {
@@ -830,6 +1119,8 @@ class CombatDioramaScene {
       this.enemyCore.position.y = Math.sin(elapsed * 1.4) * 0.045;
     }
 
+    this.updateActiveVfx(elapsed);
+
     this.renderer.render(this.scene, this.camera);
     this.lastObjectCount = 0;
     this.scene.traverse(() => {
@@ -850,6 +1141,7 @@ class CombatDioramaScene {
     this.resizeObserver?.disconnect();
     this.resizeObserver = null;
     window.removeEventListener("resize", this.resize);
+    this.clearCombatVfx();
     this.scene?.traverse((object) => this.disposeObject(object));
     this.geometries.forEach((geometry) => geometry.dispose?.());
     this.materials.forEach((material) => material.dispose?.());
@@ -880,6 +1172,10 @@ class CombatDioramaScene {
     this.enemyCoreMaterial = null;
     this.enemyShellMaterial = null;
     this.enemyHaloMaterial = null;
+    this.vfxGroup = null;
+    this.activeVfx = [];
+    this.lastVfxSequenceId = combatDioramaLastPlayedVfxSequenceId;
+    this.lastVfxFamily = combatDioramaLastPlayedVfxFamily;
   }
 }
 
@@ -901,6 +1197,19 @@ function isCombatDioramaEnemyHtmlSpriteHidden(mount) {
     return sprite.hidden || sprite.getAttribute("aria-hidden") === "true";
   }
   return getComputedStyle(sprite).display === "none" || getComputedStyle(sprite).visibility === "hidden";
+}
+
+function isCombatDioramaOldBeamHidden(mount) {
+  const root = mount?.closest?.(".combat-shell");
+  const beam = root?.querySelector?.(".combat-beam");
+  if (!beam) {
+    return true;
+  }
+  if (typeof getComputedStyle !== "function") {
+    return beam.hidden || beam.getAttribute("aria-hidden") === "true";
+  }
+  const style = getComputedStyle(beam);
+  return style.display === "none" || style.visibility === "hidden" || Number(style.opacity) === 0;
 }
 
 function destroyCombatDioramaScene() {
@@ -962,6 +1271,11 @@ function getCombatDioramaDebugState() {
     adapterUsed: Boolean(scene?.adapterUsed),
     enemyPlaceholder: scene?.enemyPlaceholderMode || "disabled",
     enemyOwnership: scene?.enemyOwnership || "none",
+    activeVfxCount: scene?.activeVfx?.length || 0,
+    lastVfxSequenceId: scene?.lastVfxSequenceId || combatDioramaLastPlayedVfxSequenceId || "",
+    lastVfxFamily: scene?.lastVfxFamily || combatDioramaLastPlayedVfxFamily || "",
+    vfxGroupExists: Boolean(scene?.vfxGroup),
+    oldBeamHidden: isCombatDioramaOldBeamHidden(mount),
     screenState: getCombatDioramaScreenState(),
     lastError: combatDioramaLastError
   };
