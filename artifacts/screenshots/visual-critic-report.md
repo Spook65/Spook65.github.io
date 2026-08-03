@@ -36,7 +36,11 @@
 - PASS: old HTML enemy sprite is hidden if detectable (informational)
   hidden: true
 - PASS: scan VFX screenshot exists (required)
-  /Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan.png
+  /Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan-000ms.png
+- PASS: scan VFX burst screenshots exist (required)
+  burst frame count: 6
+- PASS: best scan VFX frame was identified (required)
+  /Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan-000ms.png
 - PASS: scan VFX active frame was observed (required)
   activeVfxCountAtCapture: 1
 - PASS: old combat beam hidden during scan VFX capture (required)
@@ -68,6 +72,8 @@
 ## Ability VFX Capture
 
 - Scan screenshot exists: true
+- Burst frame count: 6
+- Best VFX frame: /Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan-000ms.png
 - Active VFX observed: true
 - VFX family captured: scan
 - Active VFX count at capture: 1
@@ -94,6 +100,6 @@
 - globe: /Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/globe.png
 - combat: /Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-hospital.png
 - combat_resting: /Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-resting.png
-- combat_vfx_scan: /Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan.png
+- combat_vfx_scan: /Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan-000ms.png
 - visual_critic_json: /Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/visual-critic-report.json
 - visual_critic_md: /Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/visual-critic-report.md

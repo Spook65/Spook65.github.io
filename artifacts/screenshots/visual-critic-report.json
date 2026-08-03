@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-03T04:17:51.341Z",
+  "generatedAt": "2026-08-03T19:33:06.599Z",
   "accepted": true,
   "acceptance_scope": "deterministic technical gates only",
   "manual_review_required": true,
@@ -97,7 +97,21 @@
       "label": "scan VFX screenshot exists",
       "pass": true,
       "required": true,
-      "detail": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan.png"
+      "detail": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan-000ms.png"
+    },
+    {
+      "id": "scan_vfx_burst_frames_exist",
+      "label": "scan VFX burst screenshots exist",
+      "pass": true,
+      "required": true,
+      "detail": "burst frame count: 6"
+    },
+    {
+      "id": "scan_vfx_best_frame_named",
+      "label": "best scan VFX frame was identified",
+      "pass": true,
+      "required": true,
+      "detail": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan-000ms.png"
     },
     {
       "id": "scan_vfx_active_observed",
@@ -169,14 +183,78 @@
   "vfx": {
     "manual_review_required": true,
     "scan_screenshot_exists": true,
+    "burst_frame_count": 6,
+    "best_vfx_frame": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan-000ms.png",
     "active_vfx_observed": true,
     "family_captured": "scan",
     "active_vfx_count_at_capture": 1,
-    "last_vfx_sequence_id": "2",
+    "last_vfx_sequence_id": "1",
     "old_beam_hidden": true,
     "canvas_count": 1,
     "ability_label": "DEEP PACKET SCAN\n      DETECTION / SPECIAL / STATUS_DETECTED\n      \n        COST 0\n        READY",
-    "screenshot": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan.png",
+    "screenshot": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan-000ms.png",
+    "frames": [
+      {
+        "filename": "combat-vfx-scan-000ms.png",
+        "path": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan-000ms.png",
+        "offset_ms": 0,
+        "active_vfx_count": 1,
+        "last_vfx_family": "scan",
+        "last_vfx_sequence_id": "1",
+        "old_beam_hidden": true,
+        "canvas_count": 1
+      },
+      {
+        "filename": "combat-vfx-scan-100ms.png",
+        "path": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan-100ms.png",
+        "offset_ms": 100,
+        "active_vfx_count": 0,
+        "last_vfx_family": "scan",
+        "last_vfx_sequence_id": "2",
+        "old_beam_hidden": true,
+        "canvas_count": 1
+      },
+      {
+        "filename": "combat-vfx-scan-200ms.png",
+        "path": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan-200ms.png",
+        "offset_ms": 200,
+        "active_vfx_count": 0,
+        "last_vfx_family": "scan",
+        "last_vfx_sequence_id": "2",
+        "old_beam_hidden": true,
+        "canvas_count": 1
+      },
+      {
+        "filename": "combat-vfx-scan-300ms.png",
+        "path": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan-300ms.png",
+        "offset_ms": 300,
+        "active_vfx_count": 0,
+        "last_vfx_family": "scan",
+        "last_vfx_sequence_id": "2",
+        "old_beam_hidden": true,
+        "canvas_count": 1
+      },
+      {
+        "filename": "combat-vfx-scan-450ms.png",
+        "path": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan-450ms.png",
+        "offset_ms": 450,
+        "active_vfx_count": 0,
+        "last_vfx_family": "scan",
+        "last_vfx_sequence_id": "2",
+        "old_beam_hidden": true,
+        "canvas_count": 1
+      },
+      {
+        "filename": "combat-vfx-scan-600ms.png",
+        "path": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan-600ms.png",
+        "offset_ms": 600,
+        "active_vfx_count": 0,
+        "last_vfx_family": "scan",
+        "last_vfx_sequence_id": "2",
+        "old_beam_hidden": true,
+        "canvas_count": 1
+      }
+    ],
     "error": ""
   },
   "what_still_looks_fake": [
@@ -195,7 +273,7 @@
     "globe": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/globe.png",
     "combat": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-hospital.png",
     "combat_resting": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-resting.png",
-    "combat_vfx_scan": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan.png",
+    "combat_vfx_scan": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan-000ms.png",
     "visual_critic_json": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/visual-critic-report.json",
     "visual_critic_md": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/visual-critic-report.md"
   }

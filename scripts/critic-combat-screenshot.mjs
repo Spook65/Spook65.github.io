@@ -101,6 +101,8 @@ function buildMarkdownReport(result) {
   lines.push("", "## Ability VFX Capture", "");
   if (result.vfx) {
     lines.push(`- Scan screenshot exists: ${result.vfx.scan_screenshot_exists ? "true" : "false"}`);
+    lines.push(`- Burst frame count: ${result.vfx.burst_frame_count}`);
+    lines.push(`- Best VFX frame: ${result.vfx.best_vfx_frame || "missing"}`);
     lines.push(`- Active VFX observed: ${result.vfx.active_vfx_observed ? "true" : "false"}`);
     lines.push(`- VFX family captured: ${result.vfx.family_captured || "missing"}`);
     lines.push(`- Active VFX count at capture: ${result.vfx.active_vfx_count_at_capture}`);
@@ -150,10 +152,14 @@ export async function runVisualCritic({
 
   const combatShot = getCombatScreenshot(report);
   const scanVfxShot = getScreenshot(report, "combat-vfx-scan");
+  const burstFrameShots = asArray(report?.screenshots).filter((shot) => /^combat-vfx-scan-\d+ms$/.test(String(shot?.screen || "")));
   const combatScreenshotExists = Boolean(combatShot?.path && await fileExists(combatShot.path));
   const scanVfxScreenshotExists = Boolean(scanVfxShot?.path && await fileExists(scanVfxShot.path));
+  const existingBurstFrameCount = (await Promise.all(burstFrameShots.map((shot) => fileExists(shot.path)))).filter(Boolean).length;
   const combat = report?.combat || {};
   const scanVfx = combat?.vfx?.scan || {};
+  const scanVfxFrames = asArray(scanVfx.frames);
+  const bestVfxFrame = scanVfx.bestVfxFrame || scanVfxFrames.find((frame) => frame?.activeVfxCount > 0 && frame?.lastVfxFamily === "scan") || null;
   const dom = combat?.dom || {};
   const viewport = report?.viewport || {};
   const pageErrors = asArray(report?.consoleMessages).filter(isPageError);
@@ -251,9 +257,23 @@ export async function runVisualCritic({
       detail: scanVfxShot?.path || "No scan VFX screenshot path recorded."
     },
     {
+      id: "scan_vfx_burst_frames_exist",
+      label: "scan VFX burst screenshots exist",
+      pass: existingBurstFrameCount >= 6,
+      required: true,
+      detail: `burst frame count: ${existingBurstFrameCount}`
+    },
+    {
+      id: "scan_vfx_best_frame_named",
+      label: "best scan VFX frame was identified",
+      pass: Boolean(bestVfxFrame?.path || bestVfxFrame?.filename),
+      required: true,
+      detail: bestVfxFrame?.path || bestVfxFrame?.filename || "No best VFX frame recorded."
+    },
+    {
       id: "scan_vfx_active_observed",
       label: "scan VFX active frame was observed",
-      pass: Number(scanVfx.activeVfxCountAtCapture || 0) > 0,
+      pass: Number(scanVfx.activeVfxCountAtCapture || 0) > 0 || scanVfxFrames.some((frame) => Number(frame?.activeVfxCount || 0) > 0),
       required: true,
       detail: `activeVfxCountAtCapture: ${scanVfx.activeVfxCountAtCapture ?? "missing"}`
     },
@@ -345,7 +365,9 @@ export async function runVisualCritic({
     vfx: {
       manual_review_required: true,
       scan_screenshot_exists: scanVfxScreenshotExists,
-      active_vfx_observed: Number(scanVfx.activeVfxCountAtCapture || 0) > 0,
+      burst_frame_count: existingBurstFrameCount,
+      best_vfx_frame: bestVfxFrame?.path || "",
+      active_vfx_observed: Number(scanVfx.activeVfxCountAtCapture || 0) > 0 || scanVfxFrames.some((frame) => Number(frame?.activeVfxCount || 0) > 0),
       family_captured: scanVfx.vfxFamilyCaptured || "",
       active_vfx_count_at_capture: scanVfx.activeVfxCountAtCapture || 0,
       last_vfx_sequence_id: scanVfx.lastVfxSequenceId || "",
@@ -353,6 +375,16 @@ export async function runVisualCritic({
       canvas_count: scanVfx.canvasCount ?? null,
       ability_label: scanVfx.abilityLabel || "",
       screenshot: scanVfxShot?.path || "",
+      frames: scanVfxFrames.map((frame) => ({
+        filename: frame.filename || "",
+        path: frame.path || "",
+        offset_ms: frame.offsetMs ?? null,
+        active_vfx_count: frame.activeVfxCount || 0,
+        last_vfx_family: frame.lastVfxFamily || "",
+        last_vfx_sequence_id: frame.lastVfxSequenceId || "",
+        old_beam_hidden: frame.oldBeamHidden ?? null,
+        canvas_count: frame.canvasCount ?? null
+      })),
       error: scanVfx.error || ""
     },
     what_still_looks_fake: [

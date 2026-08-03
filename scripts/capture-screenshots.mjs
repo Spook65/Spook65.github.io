@@ -206,6 +206,7 @@ async function waitForCombatDioramaDebug(page, predicate, timeoutMs = 1800) {
 }
 
 async function triggerCombatScanVfx(page) {
+  const burstOffsetsMs = [0, 100, 200, 300, 450, 600];
   const result = {
     attempted: false,
     abilityFound: false,
@@ -217,6 +218,9 @@ async function triggerCombatScanVfx(page) {
     oldBeamHidden: null,
     canvasCount: 0,
     screenshotPath: "",
+    burstFrameCount: 0,
+    bestVfxFrame: null,
+    frames: [],
     error: ""
   };
 
@@ -251,15 +255,45 @@ async function triggerCombatScanVfx(page) {
       await page.waitForTimeout(220);
     }
 
-    const debugAtCapture = await page.evaluate(() => window.devCombatDioramaState?.() || {});
+    let previousOffset = 0;
+    for (const offsetMs of burstOffsetsMs) {
+      const waitMs = Math.max(0, offsetMs - previousOffset);
+      if (waitMs > 0) {
+        await page.waitForTimeout(waitMs);
+      }
+      previousOffset = offsetMs;
+
+      const frameName = `combat-vfx-scan-${String(offsetMs).padStart(3, "0")}ms`;
+      const debug = await page.evaluate(() => window.devCombatDioramaState?.() || {});
+      const framePath = await capture(page, frameName);
+      const frame = {
+        name: frameName,
+        filename: `${frameName}.png`,
+        path: framePath,
+        exists: await fileExists(framePath),
+        offsetMs,
+        activeVfxCount: debug.activeVfxCount || 0,
+        lastVfxFamily: debug.lastVfxFamily || "",
+        lastVfxSequenceId: debug.lastVfxSequenceId || "",
+        oldBeamHidden: debug.oldBeamHidden ?? null,
+        canvasCount: debug.canvasCount || await page.evaluate(() => document.querySelectorAll("[data-combat-diorama-stage] canvas").length)
+      };
+      result.frames.push(frame);
+    }
+
+    result.burstFrameCount = result.frames.filter((frame) => frame.exists).length;
+    result.bestVfxFrame = result.frames.find((frame) => frame.activeVfxCount > 0 && frame.lastVfxFamily === "scan")
+      || result.frames.find((frame) => frame.activeVfxCount > 0)
+      || null;
+
+    const debugAtCapture = result.bestVfxFrame || result.frames[0] || {};
     result.vfxFamilyCaptured = debugAtCapture.lastVfxFamily || "";
     result.activeVfxCountAtCapture = debugAtCapture.activeVfxCount || 0;
     result.lastVfxSequenceId = debugAtCapture.lastVfxSequenceId || "";
     result.oldBeamHidden = debugAtCapture.oldBeamHidden ?? null;
-    result.canvasCount = debugAtCapture.canvasCount || await page.evaluate(() => document.querySelectorAll("[data-combat-diorama-stage] canvas").length);
-
-    result.screenshotPath = await capture(page, "combat-vfx-scan");
-    result.vfxScreenshotCaptured = await fileExists(result.screenshotPath);
+    result.canvasCount = debugAtCapture.canvasCount || 0;
+    result.screenshotPath = debugAtCapture.path || "";
+    result.vfxScreenshotCaptured = Boolean(debugAtCapture.exists);
 
     await waitForCombatDioramaDebug(
       page,
@@ -392,6 +426,13 @@ async function main() {
           exists: scanVfx.vfxScreenshotCaptured
         });
       }
+      scanVfx.frames.forEach((frame) => {
+        report.screenshots.push({
+          screen: frame.name,
+          path: frame.path,
+          exists: frame.exists
+        });
+      });
     }
 
     report.consoleMessages = consoleMessages.slice(-25);

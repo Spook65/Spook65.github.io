@@ -24,7 +24,37 @@
     },
     {
       "screen": "combat-vfx-scan",
-      "path": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan.png",
+      "path": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan-000ms.png",
+      "exists": true
+    },
+    {
+      "screen": "combat-vfx-scan-000ms",
+      "path": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan-000ms.png",
+      "exists": true
+    },
+    {
+      "screen": "combat-vfx-scan-100ms",
+      "path": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan-100ms.png",
+      "exists": true
+    },
+    {
+      "screen": "combat-vfx-scan-200ms",
+      "path": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan-200ms.png",
+      "exists": true
+    },
+    {
+      "screen": "combat-vfx-scan-300ms",
+      "path": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan-300ms.png",
+      "exists": true
+    },
+    {
+      "screen": "combat-vfx-scan-450ms",
+      "path": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan-450ms.png",
+      "exists": true
+    },
+    {
+      "screen": "combat-vfx-scan-600ms",
+      "path": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan-600ms.png",
       "exists": true
     }
   ],
@@ -41,7 +71,7 @@
     "marker": "composition-alignment-v1",
     "canvasCount": 1,
     "screenshotExists": true,
-    "screenText": "THREATGRID\n\nCYBER-FANTASY ROGUELIKE ARENA\n\n08\n\nACTIVE THREATS\n\nSCORE: 00000\n\nACC: 100%\n\n[ MENU ]\n[ LOADOUT / MODULES ]\nTHREAT MANIFESTS\nENTERING BATTLE FORMATION...\nTHREATGRID ARENA\nHOSPITAL NETWORK LOCKOUT / LVL 1\nTURN ORDER\nIDS\n→\nHONEYPOT\n→\nANTIVIRUS\nHOSPITAL NETWORK LOCKOUT\n55/55\nLVL\n1\nWEAK\nUNKNO",
+    "screenText": "THREATGRID\n\nCYBER-FANTASY ROGUELIKE ARENA\n\n08\n\nACTIVE THREATS\n\nSCORE: 00000\n\nACC: 100%\n\n[ MENU ]\n[ LOADOUT / MODULES ]\nTHREAT MANIFESTS\nENTERING BATTLE FORMATION...\nTHREATGRID ARENA\nHOSPITAL NETWORK LOCKOUT / LVL 3\nTURN ORDER\nIDS\n→\nHONEYPOT\n→\nANTIVIRUS\nHOSPITAL NETWORK LOCKOUT\n77/77\nLVL\n3\nWEAK\nUNKNO",
     "dom": {
       "shell": {
         "selector": ".combat-shell",
@@ -205,14 +235,14 @@
         "visible": true,
         "hidden": false,
         "rect": {
-          "x": 1133.363525390625,
-          "y": 133.95416259765625,
+          "x": 1133.103271484375,
+          "y": 132.91323852539062,
           "width": 204.796875,
           "height": 81.765625,
-          "top": 133.95416259765625,
-          "right": 1338.160400390625,
-          "bottom": 215.71978759765625,
-          "left": 1133.363525390625
+          "top": 132.91323852539062,
+          "right": 1337.900146484375,
+          "bottom": 214.67886352539062,
+          "left": 1133.103271484375
         },
         "computed": {
           "display": "grid",
@@ -368,10 +398,97 @@
         "vfxScreenshotCaptured": true,
         "vfxFamilyCaptured": "scan",
         "activeVfxCountAtCapture": 1,
-        "lastVfxSequenceId": "2",
+        "lastVfxSequenceId": "1",
         "oldBeamHidden": true,
         "canvasCount": 1,
-        "screenshotPath": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan.png",
+        "screenshotPath": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan-000ms.png",
+        "burstFrameCount": 6,
+        "bestVfxFrame": {
+          "name": "combat-vfx-scan-000ms",
+          "filename": "combat-vfx-scan-000ms.png",
+          "path": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan-000ms.png",
+          "exists": true,
+          "offsetMs": 0,
+          "activeVfxCount": 1,
+          "lastVfxFamily": "scan",
+          "lastVfxSequenceId": "1",
+          "oldBeamHidden": true,
+          "canvasCount": 1
+        },
+        "frames": [
+          {
+            "name": "combat-vfx-scan-000ms",
+            "filename": "combat-vfx-scan-000ms.png",
+            "path": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan-000ms.png",
+            "exists": true,
+            "offsetMs": 0,
+            "activeVfxCount": 1,
+            "lastVfxFamily": "scan",
+            "lastVfxSequenceId": "1",
+            "oldBeamHidden": true,
+            "canvasCount": 1
+          },
+          {
+            "name": "combat-vfx-scan-100ms",
+            "filename": "combat-vfx-scan-100ms.png",
+            "path": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan-100ms.png",
+            "exists": true,
+            "offsetMs": 100,
+            "activeVfxCount": 0,
+            "lastVfxFamily": "scan",
+            "lastVfxSequenceId": "2",
+            "oldBeamHidden": true,
+            "canvasCount": 1
+          },
+          {
+            "name": "combat-vfx-scan-200ms",
+            "filename": "combat-vfx-scan-200ms.png",
+            "path": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan-200ms.png",
+            "exists": true,
+            "offsetMs": 200,
+            "activeVfxCount": 0,
+            "lastVfxFamily": "scan",
+            "lastVfxSequenceId": "2",
+            "oldBeamHidden": true,
+            "canvasCount": 1
+          },
+          {
+            "name": "combat-vfx-scan-300ms",
+            "filename": "combat-vfx-scan-300ms.png",
+            "path": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan-300ms.png",
+            "exists": true,
+            "offsetMs": 300,
+            "activeVfxCount": 0,
+            "lastVfxFamily": "scan",
+            "lastVfxSequenceId": "2",
+            "oldBeamHidden": true,
+            "canvasCount": 1
+          },
+          {
+            "name": "combat-vfx-scan-450ms",
+            "filename": "combat-vfx-scan-450ms.png",
+            "path": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan-450ms.png",
+            "exists": true,
+            "offsetMs": 450,
+            "activeVfxCount": 0,
+            "lastVfxFamily": "scan",
+            "lastVfxSequenceId": "2",
+            "oldBeamHidden": true,
+            "canvasCount": 1
+          },
+          {
+            "name": "combat-vfx-scan-600ms",
+            "filename": "combat-vfx-scan-600ms.png",
+            "path": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan-600ms.png",
+            "exists": true,
+            "offsetMs": 600,
+            "activeVfxCount": 0,
+            "lastVfxFamily": "scan",
+            "lastVfxSequenceId": "2",
+            "oldBeamHidden": true,
+            "canvasCount": 1
+          }
+        ],
         "error": ""
       }
     }
