@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-03T01:47:27.482Z",
+  "generatedAt": "2026-08-03T04:17:51.341Z",
   "accepted": true,
   "acceptance_scope": "deterministic technical gates only",
   "manual_review_required": true,
@@ -91,6 +91,34 @@
       "pass": true,
       "required": false,
       "detail": "hidden: true"
+    },
+    {
+      "id": "scan_vfx_screenshot_exists",
+      "label": "scan VFX screenshot exists",
+      "pass": true,
+      "required": true,
+      "detail": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan.png"
+    },
+    {
+      "id": "scan_vfx_active_observed",
+      "label": "scan VFX active frame was observed",
+      "pass": true,
+      "required": true,
+      "detail": "activeVfxCountAtCapture: 1"
+    },
+    {
+      "id": "scan_vfx_old_beam_hidden",
+      "label": "old combat beam hidden during scan VFX capture",
+      "pass": true,
+      "required": true,
+      "detail": "oldBeamHidden: true"
+    },
+    {
+      "id": "scan_vfx_canvas_count_one",
+      "label": "scan VFX capture kept one diorama canvas",
+      "pass": true,
+      "required": true,
+      "detail": "canvasCount: 1"
     }
   ],
   "failures": [],
@@ -138,6 +166,19 @@
       "prompt": "Look for repeated combatants caused by HTML sprites plus 3D placeholders competing for ownership."
     }
   ],
+  "vfx": {
+    "manual_review_required": true,
+    "scan_screenshot_exists": true,
+    "active_vfx_observed": true,
+    "family_captured": "scan",
+    "active_vfx_count_at_capture": 1,
+    "last_vfx_sequence_id": "2",
+    "old_beam_hidden": true,
+    "canvas_count": 1,
+    "ability_label": "DEEP PACKET SCAN\n      DETECTION / SPECIAL / STATUS_DETECTED\n      \n        COST 0\n        READY",
+    "screenshot": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan.png",
+    "error": ""
+  },
   "what_still_looks_fake": [
     "Automated tooling cannot judge whether the battlefield feels cinematic or grounded without human review.",
     "Defender grounding and enemy anchoring still require screenshot inspection against the combat presentation spec.",
@@ -153,6 +194,8 @@
     "menu": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/menu.png",
     "globe": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/globe.png",
     "combat": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-hospital.png",
+    "combat_resting": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-resting.png",
+    "combat_vfx_scan": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan.png",
     "visual_critic_json": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/visual-critic-report.json",
     "visual_critic_md": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/visual-critic-report.md"
   }

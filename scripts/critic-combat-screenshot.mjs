@@ -18,8 +18,12 @@ function asArray(value) {
   return Array.isArray(value) ? value : [];
 }
 
+function getScreenshot(report, screen) {
+  return asArray(report?.screenshots).find((shot) => shot?.screen === screen) || null;
+}
+
 function getCombatScreenshot(report) {
-  return asArray(report?.screenshots).find((shot) => shot?.screen === "combat-hospital") || null;
+  return getScreenshot(report, "combat-hospital");
 }
 
 function isPageError(message) {
@@ -94,6 +98,22 @@ function buildMarkdownReport(result) {
     lines.push(`  ${item.prompt}`);
   });
 
+  lines.push("", "## Ability VFX Capture", "");
+  if (result.vfx) {
+    lines.push(`- Scan screenshot exists: ${result.vfx.scan_screenshot_exists ? "true" : "false"}`);
+    lines.push(`- Active VFX observed: ${result.vfx.active_vfx_observed ? "true" : "false"}`);
+    lines.push(`- VFX family captured: ${result.vfx.family_captured || "missing"}`);
+    lines.push(`- Active VFX count at capture: ${result.vfx.active_vfx_count_at_capture}`);
+    lines.push(`- Old beam hidden: ${result.vfx.old_beam_hidden === null ? "unknown" : result.vfx.old_beam_hidden}`);
+    lines.push(`- Canvas count: ${result.vfx.canvas_count ?? "missing"}`);
+    lines.push(`- Manual review required: ${result.vfx.manual_review_required ? "true" : "false"}`);
+    if (result.vfx.error) {
+      lines.push(`- Error: ${result.vfx.error}`);
+    }
+  } else {
+    lines.push("- No VFX section recorded.");
+  }
+
   lines.push("", "## What Still Looks Fake", "");
   result.what_still_looks_fake.forEach((item) => lines.push(`- ${item}`));
 
@@ -129,8 +149,11 @@ export async function runVisualCritic({
   }
 
   const combatShot = getCombatScreenshot(report);
+  const scanVfxShot = getScreenshot(report, "combat-vfx-scan");
   const combatScreenshotExists = Boolean(combatShot?.path && await fileExists(combatShot.path));
+  const scanVfxScreenshotExists = Boolean(scanVfxShot?.path && await fileExists(scanVfxShot.path));
   const combat = report?.combat || {};
+  const scanVfx = combat?.vfx?.scan || {};
   const dom = combat?.dom || {};
   const viewport = report?.viewport || {};
   const pageErrors = asArray(report?.consoleMessages).filter(isPageError);
@@ -219,6 +242,34 @@ export async function runVisualCritic({
       pass: enemySpriteDetectable ? enemySpriteHidden === true : true,
       required: false,
       detail: enemySpriteDetectable ? `hidden: ${enemySpriteHidden}` : "Enemy sprite wrapper not detected."
+    },
+    {
+      id: "scan_vfx_screenshot_exists",
+      label: "scan VFX screenshot exists",
+      pass: scanVfxScreenshotExists,
+      required: true,
+      detail: scanVfxShot?.path || "No scan VFX screenshot path recorded."
+    },
+    {
+      id: "scan_vfx_active_observed",
+      label: "scan VFX active frame was observed",
+      pass: Number(scanVfx.activeVfxCountAtCapture || 0) > 0,
+      required: true,
+      detail: `activeVfxCountAtCapture: ${scanVfx.activeVfxCountAtCapture ?? "missing"}`
+    },
+    {
+      id: "scan_vfx_old_beam_hidden",
+      label: "old combat beam hidden during scan VFX capture",
+      pass: scanVfx.oldBeamHidden === true,
+      required: true,
+      detail: `oldBeamHidden: ${scanVfx.oldBeamHidden ?? "missing"}`
+    },
+    {
+      id: "scan_vfx_canvas_count_one",
+      label: "scan VFX capture kept one diorama canvas",
+      pass: scanVfx.canvasCount === 1,
+      required: true,
+      detail: `canvasCount: ${scanVfx.canvasCount ?? "missing"}`
     }
   ];
 
@@ -291,6 +342,19 @@ export async function runVisualCritic({
     deterministic_checks: deterministicChecks,
     failures,
     manual_review_items: manualReviewItems,
+    vfx: {
+      manual_review_required: true,
+      scan_screenshot_exists: scanVfxScreenshotExists,
+      active_vfx_observed: Number(scanVfx.activeVfxCountAtCapture || 0) > 0,
+      family_captured: scanVfx.vfxFamilyCaptured || "",
+      active_vfx_count_at_capture: scanVfx.activeVfxCountAtCapture || 0,
+      last_vfx_sequence_id: scanVfx.lastVfxSequenceId || "",
+      old_beam_hidden: scanVfx.oldBeamHidden ?? null,
+      canvas_count: scanVfx.canvasCount ?? null,
+      ability_label: scanVfx.abilityLabel || "",
+      screenshot: scanVfxShot?.path || "",
+      error: scanVfx.error || ""
+    },
     what_still_looks_fake: [
       "Automated tooling cannot judge whether the battlefield feels cinematic or grounded without human review.",
       "Defender grounding and enemy anchoring still require screenshot inspection against the combat presentation spec.",
@@ -306,6 +370,8 @@ export async function runVisualCritic({
       menu: asArray(report?.screenshots).find((shot) => shot?.screen === "menu")?.path || "",
       globe: asArray(report?.screenshots).find((shot) => shot?.screen === "globe")?.path || "",
       combat: combatShot?.path || "",
+      combat_resting: getScreenshot(report, "combat-resting")?.path || "",
+      combat_vfx_scan: scanVfxShot?.path || "",
       visual_critic_json: jsonPath,
       visual_critic_md: markdownPath
     }

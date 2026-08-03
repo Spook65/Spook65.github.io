@@ -35,6 +35,14 @@
 - PASS: enemy readout/status is visible (informational)
 - PASS: old HTML enemy sprite is hidden if detectable (informational)
   hidden: true
+- PASS: scan VFX screenshot exists (required)
+  /Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan.png
+- PASS: scan VFX active frame was observed (required)
+  activeVfxCountAtCapture: 1
+- PASS: old combat beam hidden during scan VFX capture (required)
+  oldBeamHidden: true
+- PASS: scan VFX capture kept one diorama canvas (required)
+  canvasCount: 1
 
 ## Failures
 
@@ -57,6 +65,16 @@
 - Are there duplicate enemy/defender representations?
   Look for repeated combatants caused by HTML sprites plus 3D placeholders competing for ownership.
 
+## Ability VFX Capture
+
+- Scan screenshot exists: true
+- Active VFX observed: true
+- VFX family captured: scan
+- Active VFX count at capture: 1
+- Old beam hidden: true
+- Canvas count: 1
+- Manual review required: true
+
 ## What Still Looks Fake
 
 - Automated tooling cannot judge whether the battlefield feels cinematic or grounded without human review.
@@ -75,5 +93,7 @@
 - menu: /Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/menu.png
 - globe: /Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/globe.png
 - combat: /Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-hospital.png
+- combat_resting: /Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-resting.png
+- combat_vfx_scan: /Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan.png
 - visual_critic_json: /Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/visual-critic-report.json
 - visual_critic_md: /Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/visual-critic-report.md

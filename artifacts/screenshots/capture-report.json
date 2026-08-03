@@ -16,6 +16,16 @@
       "screen": "combat-hospital",
       "path": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-hospital.png",
       "exists": true
+    },
+    {
+      "screen": "combat-resting",
+      "path": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-resting.png",
+      "exists": true
+    },
+    {
+      "screen": "combat-vfx-scan",
+      "path": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan.png",
+      "exists": true
     }
   ],
   "blockers": [],
@@ -31,7 +41,7 @@
     "marker": "composition-alignment-v1",
     "canvasCount": 1,
     "screenshotExists": true,
-    "screenText": "THREATGRID\n\nCYBER-FANTASY ROGUELIKE ARENA\n\n08\n\nACTIVE THREATS\n\nSCORE: 00000\n\nACC: 100%\n\n[ MENU ]\n[ LOADOUT / MODULES ]\nTHREAT MANIFESTS\nENTERING BATTLE FORMATION...\nTHREATGRID ARENA\nHOSPITAL NETWORK LOCKOUT / LVL 3\nTURN ORDER\nIDS\n→\nHONEYPOT\n→\nANTIVIRUS\nHOSPITAL NETWORK LOCKOUT\n77/77\nLVL\n3\nWEAK\nUNKNO",
+    "screenText": "THREATGRID\n\nCYBER-FANTASY ROGUELIKE ARENA\n\n08\n\nACTIVE THREATS\n\nSCORE: 00000\n\nACC: 100%\n\n[ MENU ]\n[ LOADOUT / MODULES ]\nTHREAT MANIFESTS\nENTERING BATTLE FORMATION...\nTHREATGRID ARENA\nHOSPITAL NETWORK LOCKOUT / LVL 1\nTURN ORDER\nIDS\n→\nHONEYPOT\n→\nANTIVIRUS\nHOSPITAL NETWORK LOCKOUT\n55/55\nLVL\n1\nWEAK\nUNKNO",
     "dom": {
       "shell": {
         "selector": ".combat-shell",
@@ -195,14 +205,14 @@
         "visible": true,
         "hidden": false,
         "rect": {
-          "x": 1132.157958984375,
-          "y": 129.1321258544922,
+          "x": 1133.363525390625,
+          "y": 133.95416259765625,
           "width": 204.796875,
-          "height": 81.76564025878906,
-          "top": 129.1321258544922,
-          "right": 1336.954833984375,
-          "bottom": 210.89776611328125,
-          "left": 1132.157958984375
+          "height": 81.765625,
+          "top": 133.95416259765625,
+          "right": 1338.160400390625,
+          "bottom": 215.71978759765625,
+          "left": 1133.363525390625
         },
         "computed": {
           "display": "grid",
@@ -348,24 +358,40 @@
           }
         }
       ]
+    },
+    "restingScreenshotExists": true,
+    "vfx": {
+      "scan": {
+        "attempted": true,
+        "abilityFound": true,
+        "abilityLabel": "DEEP PACKET SCAN\n      DETECTION / SPECIAL / STATUS_DETECTED\n      \n        COST 0\n        READY",
+        "vfxScreenshotCaptured": true,
+        "vfxFamilyCaptured": "scan",
+        "activeVfxCountAtCapture": 1,
+        "lastVfxSequenceId": "2",
+        "oldBeamHidden": true,
+        "canvasCount": 1,
+        "screenshotPath": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan.png",
+        "error": ""
+      }
     }
   },
   "consoleMessages": [
     {
       "type": "log",
-      "text": "[Attack Prototype] fan enabled: false"
+      "text": "[Intent] recent: []"
     },
     {
       "type": "log",
-      "text": "[Attack Prototype] fallback reason: commandMode is not attack"
+      "text": "[Intent] selected: shield"
     },
     {
       "type": "log",
-      "text": "[Attack Prototype] overlay markup inserted: false"
+      "text": "[Intent] prepared: shield (same)"
     },
     {
       "type": "log",
-      "text": "[Attack Prototype] active actor: IDS"
+      "text": "[Attack Prototype] active actor: Honeypot"
     },
     {
       "type": "log",
@@ -409,7 +435,7 @@
     },
     {
       "type": "log",
-      "text": "[Attack Prototype] active actor: IDS"
+      "text": "[Attack Prototype] active actor: Honeypot"
     },
     {
       "type": "log",

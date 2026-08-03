@@ -196,6 +196,83 @@ async function collectCombatDomMeasurements(page) {
   });
 }
 
+async function waitForCombatDioramaDebug(page, predicate, timeoutMs = 1800) {
+  try {
+    await page.waitForFunction(predicate, null, { timeout: timeoutMs });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function triggerCombatScanVfx(page) {
+  const result = {
+    attempted: false,
+    abilityFound: false,
+    abilityLabel: "",
+    vfxScreenshotCaptured: false,
+    vfxFamilyCaptured: "",
+    activeVfxCountAtCapture: 0,
+    lastVfxSequenceId: "",
+    oldBeamHidden: null,
+    canvasCount: 0,
+    screenshotPath: "",
+    error: ""
+  };
+
+  try {
+    result.attempted = true;
+    await page.click('[data-combat-command="attack"]', { timeout: 1600 });
+    await page.waitForSelector("[data-combat-ability]", { timeout: 2200 });
+    const abilityClickResult = await page.evaluate(() => {
+      const buttons = Array.from(document.querySelectorAll("[data-combat-ability]"));
+      const button = buttons.find((candidate) => /deep packet scan/i.test(candidate.textContent || "")) || buttons[0];
+      if (!button) {
+        return { clicked: false, label: "" };
+      }
+      const label = (button.textContent || "").trim();
+      button.click();
+      return { clicked: true, label };
+    });
+    result.abilityFound = Boolean(abilityClickResult.clicked);
+    result.abilityLabel = abilityClickResult.label || "";
+
+    if (!result.abilityFound) {
+      result.error = "No combat ability button was available for VFX capture.";
+      return result;
+    }
+
+    const observedActiveVfx = await waitForCombatDioramaDebug(
+      page,
+      () => (window.devCombatDioramaState?.().activeVfxCount || 0) > 0,
+      2200
+    );
+    if (!observedActiveVfx) {
+      await page.waitForTimeout(220);
+    }
+
+    const debugAtCapture = await page.evaluate(() => window.devCombatDioramaState?.() || {});
+    result.vfxFamilyCaptured = debugAtCapture.lastVfxFamily || "";
+    result.activeVfxCountAtCapture = debugAtCapture.activeVfxCount || 0;
+    result.lastVfxSequenceId = debugAtCapture.lastVfxSequenceId || "";
+    result.oldBeamHidden = debugAtCapture.oldBeamHidden ?? null;
+    result.canvasCount = debugAtCapture.canvasCount || await page.evaluate(() => document.querySelectorAll("[data-combat-diorama-stage] canvas").length);
+
+    result.screenshotPath = await capture(page, "combat-vfx-scan");
+    result.vfxScreenshotCaptured = await fileExists(result.screenshotPath);
+
+    await waitForCombatDioramaDebug(
+      page,
+      () => (window.devCombatDioramaState?.().activeVfxCount || 0) === 0,
+      2400
+    );
+  } catch (error) {
+    result.error = error?.message || String(error);
+  }
+
+  return result;
+}
+
 async function main() {
   await mkdir(screenshotDir, { recursive: true });
 
@@ -283,6 +360,7 @@ async function main() {
       await page.waitForFunction(() => document.querySelectorAll("[data-combat-diorama-stage] canvas").length === 1, null, { timeout: 5000 });
       await page.waitForTimeout(1200);
       const combatPath = await capture(page, "combat-hospital");
+      const restingPath = await capture(page, "combat-resting");
       const combatState = await page.evaluate(() => {
         const shell = document.querySelector(".combat-shell[data-combat-art]");
         const canvasCount = document.querySelectorAll("[data-combat-diorama-stage] canvas").length;
@@ -297,9 +375,23 @@ async function main() {
         ...report.combat,
         ...combatState,
         dom: combatDom,
-        screenshotExists: await fileExists(combatPath)
+        screenshotExists: await fileExists(combatPath),
+        restingScreenshotExists: await fileExists(restingPath)
       };
       report.screenshots.push({ screen: "combat-hospital", path: combatPath, exists: report.combat.screenshotExists });
+      report.screenshots.push({ screen: "combat-resting", path: restingPath, exists: report.combat.restingScreenshotExists });
+
+      const scanVfx = await triggerCombatScanVfx(page);
+      report.combat.vfx = {
+        scan: scanVfx
+      };
+      if (scanVfx.screenshotPath) {
+        report.screenshots.push({
+          screen: "combat-vfx-scan",
+          path: scanVfx.screenshotPath,
+          exists: scanVfx.vfxScreenshotCaptured
+        });
+      }
     }
 
     report.consoleMessages = consoleMessages.slice(-25);
