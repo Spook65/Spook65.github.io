@@ -42,7 +42,7 @@
 - PASS: best scan VFX frame was identified (required)
   /Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan-000ms.png
 - PASS: scan VFX active frame was observed (required)
-  activeVfxCountAtCapture: 1
+  activeVfxCountAtCapture: 2
 - PASS: old combat beam hidden during scan VFX capture (required)
   oldBeamHidden: true
 - PASS: scan VFX capture kept one diorama canvas (required)
@@ -76,7 +76,7 @@
 - Best VFX frame: /Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan-000ms.png
 - Active VFX observed: true
 - VFX family captured: scan
-- Active VFX count at capture: 1
+- Active VFX count at capture: 2
 - Old beam hidden: true
 - Canvas count: 1
 - Manual review required: true

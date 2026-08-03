@@ -42,7 +42,7 @@ function getCombatAbilityVfxProfile(ability, context = {}) {
     key = "scan-pulse";
     color = "#58fff1";
     secondaryColor = "#3f96ff";
-    durationMs = 920;
+    durationMs = 4000;
   } else if (has("purge", "sweep", "cleanse", "kernel")) {
     family = "purge";
     key = "purge-lance";
