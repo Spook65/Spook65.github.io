@@ -69,6 +69,42 @@ Stage F:
 - Do not add external assets without a license record.
 - Do not hotlink assets.
 
+## Combat VFX Timing Contract
+
+Normal ability VFX must fit inside the action-resolution window. Effects should support the combat rhythm, not outlive it.
+
+Rules:
+- VFX should not visually linger after command controls return.
+- Windup VFX should be short, readable, and clearly introduce the action.
+- Impact VFX should finish around or before the result hold completes.
+- Long VFX should be reserved for future cinematic or camera-state attacks only.
+- If a VFX needs longer than the command-return window to be readable, do not simply extend duration. Report that the move may need a future camera-state or cinematic attack presentation.
+
+Recommended timing bands:
+- Windup VFX: `350-600ms`.
+- Normal impact VFX: `700-1100ms`.
+- Defensive/recovery pulse: `700-1200ms`.
+- Enemy payload: `800-1300ms`.
+- Cinematic/boss VFX: only after the camera-state system exists.
+
+Current scan baseline:
+- `PLAYER_ACTION_WINDUP_MS`: `280ms`.
+- `PLAYER_ACTION_RESULT_HOLD_MS`: `920ms`.
+- Scan windup: `520ms`.
+- Scan impact: `900ms`.
+- Do not regress scan back to `4000ms`.
+- Scan should clear before command controls return.
+
+Future VFX passes must report:
+- Duration before/after.
+- Whether VFX persists after command controls return.
+- `oldBeamHidden` remains `true`.
+- Canvas count remains `1`.
+- No replay spam from `sequenceId`.
+- `activeVfxCount` clears after duration.
+- `npm run screenshots`.
+- `npm run critic`.
+
 ## Visual Rules
 
 - Do not add decorative overlays without purpose.
