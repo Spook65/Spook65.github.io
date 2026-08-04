@@ -80,6 +80,9 @@
 - Old beam hidden: true
 - Canvas count: 1
 - Manual review required: true
+- Timing reliable: true
+- Intended offsets: 0, 100, 200, 300, 450, 600
+- Actual elapsed times: 1, 2801, 3253, 3686, 4236, 4840
 
 ## What Still Looks Fake
 

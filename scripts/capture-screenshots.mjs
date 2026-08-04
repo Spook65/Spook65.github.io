@@ -82,6 +82,15 @@ async function capture(page, name) {
   return path;
 }
 
+async function getBrowserNow(page) {
+  return page.evaluate(() => {
+    if (typeof performance !== "undefined" && typeof performance.now === "function") {
+      return performance.now();
+    }
+    return Date.now();
+  });
+}
+
 async function fileExists(path) {
   try {
     await access(path);
@@ -251,6 +260,7 @@ async function triggerCombatScanVfx(page) {
       () => (window.devCombatDioramaState?.().activeVfxCount || 0) > 0,
       2200
     );
+    const vfxObservedAt = observedActiveVfx ? await getBrowserNow(page) : null;
     if (!observedActiveVfx) {
       await page.waitForTimeout(220);
     }
@@ -264,19 +274,34 @@ async function triggerCombatScanVfx(page) {
       previousOffset = offsetMs;
 
       const frameName = `combat-vfx-scan-${String(offsetMs).padStart(3, "0")}ms`;
-      const debug = await page.evaluate(() => window.devCombatDioramaState?.() || {});
+      const frameDebug = await page.evaluate(() => ({
+        now: typeof performance !== "undefined" && typeof performance.now === "function" ? performance.now() : Date.now(),
+        debug: window.devCombatDioramaState?.() || {}
+      }));
+      const debug = frameDebug.debug || {};
+      const screenshotStartedAt = await getBrowserNow(page);
       const framePath = await capture(page, frameName);
+      const screenshotFinishedAt = await getBrowserNow(page);
       const frame = {
         name: frameName,
         filename: `${frameName}.png`,
         path: framePath,
         exists: await fileExists(framePath),
         offsetMs,
+        intendedOffsetMs: offsetMs,
+        vfxObservedAt,
+        frameDebugReadAt: frameDebug.now,
+        screenshotStartedAt,
+        screenshotFinishedAt,
+        actualElapsedSinceVfxObserved: Number.isFinite(vfxObservedAt) ? Math.max(0, Math.round(frameDebug.now - vfxObservedAt)) : null,
+        screenshotDurationMs: Math.max(0, Math.round(screenshotFinishedAt - screenshotStartedAt)),
         activeVfxCount: debug.activeVfxCount || 0,
         lastVfxFamily: debug.lastVfxFamily || "",
         lastVfxSequenceId: debug.lastVfxSequenceId || "",
         oldBeamHidden: debug.oldBeamHidden ?? null,
-        canvasCount: debug.canvasCount || await page.evaluate(() => document.querySelectorAll("[data-combat-diorama-stage] canvas").length)
+        canvasCount: debug.canvasCount || await page.evaluate(() => document.querySelectorAll("[data-combat-diorama-stage] canvas").length),
+        persistentVfxRemainingMs: Array.isArray(debug.persistentVfxRemainingMs) ? debug.persistentVfxRemainingMs : [],
+        pageErrors: []
       };
       result.frames.push(frame);
     }

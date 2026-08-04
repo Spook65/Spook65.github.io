@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-03T20:44:27.134Z",
+  "generatedAt": "2026-08-04T03:46:25.551Z",
   "accepted": true,
   "acceptance_scope": "deterministic technical gates only",
   "manual_review_required": true,
@@ -198,6 +198,13 @@
         "filename": "combat-vfx-scan-000ms.png",
         "path": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan-000ms.png",
         "offset_ms": 0,
+        "intended_offset_ms": 0,
+        "actual_elapsed_since_vfx_observed_ms": 1,
+        "screenshot_duration_ms": 2694,
+        "persistent_vfx_remaining_ms": [
+          2938,
+          3967
+        ],
         "active_vfx_count": 2,
         "last_vfx_family": "scan",
         "last_vfx_sequence_id": "2",
@@ -208,6 +215,13 @@
         "filename": "combat-vfx-scan-100ms.png",
         "path": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan-100ms.png",
         "offset_ms": 100,
+        "intended_offset_ms": 100,
+        "actual_elapsed_since_vfx_observed_ms": 2801,
+        "screenshot_duration_ms": 349,
+        "persistent_vfx_remaining_ms": [
+          138,
+          1168
+        ],
         "active_vfx_count": 2,
         "last_vfx_family": "scan",
         "last_vfx_sequence_id": "2",
@@ -218,7 +232,13 @@
         "filename": "combat-vfx-scan-200ms.png",
         "path": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan-200ms.png",
         "offset_ms": 200,
-        "active_vfx_count": 2,
+        "intended_offset_ms": 200,
+        "actual_elapsed_since_vfx_observed_ms": 3253,
+        "screenshot_duration_ms": 326,
+        "persistent_vfx_remaining_ms": [
+          716
+        ],
+        "active_vfx_count": 1,
         "last_vfx_family": "scan",
         "last_vfx_sequence_id": "2",
         "old_beam_hidden": true,
@@ -228,6 +248,12 @@
         "filename": "combat-vfx-scan-300ms.png",
         "path": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan-300ms.png",
         "offset_ms": 300,
+        "intended_offset_ms": 300,
+        "actual_elapsed_since_vfx_observed_ms": 3686,
+        "screenshot_duration_ms": 362,
+        "persistent_vfx_remaining_ms": [
+          282
+        ],
         "active_vfx_count": 1,
         "last_vfx_family": "scan",
         "last_vfx_sequence_id": "2",
@@ -238,7 +264,11 @@
         "filename": "combat-vfx-scan-450ms.png",
         "path": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan-450ms.png",
         "offset_ms": 450,
-        "active_vfx_count": 1,
+        "intended_offset_ms": 450,
+        "actual_elapsed_since_vfx_observed_ms": 4236,
+        "screenshot_duration_ms": 412,
+        "persistent_vfx_remaining_ms": [],
+        "active_vfx_count": 0,
         "last_vfx_family": "scan",
         "last_vfx_sequence_id": "2",
         "old_beam_hidden": true,
@@ -248,6 +278,10 @@
         "filename": "combat-vfx-scan-600ms.png",
         "path": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan-600ms.png",
         "offset_ms": 600,
+        "intended_offset_ms": 600,
+        "actual_elapsed_since_vfx_observed_ms": 4840,
+        "screenshot_duration_ms": 408,
+        "persistent_vfx_remaining_ms": [],
         "active_vfx_count": 0,
         "last_vfx_family": "scan",
         "last_vfx_sequence_id": "2",
@@ -255,6 +289,131 @@
         "canvas_count": 1
       }
     ],
+    "timing": {
+      "manual_review_required": true,
+      "timing_reliable": true,
+      "intended_offsets_ms": [
+        0,
+        100,
+        200,
+        300,
+        450,
+        600
+      ],
+      "actual_elapsed_ms": [
+        1,
+        2801,
+        3253,
+        3686,
+        4236,
+        4840
+      ],
+      "best_vfx_frame": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan-000ms.png",
+      "active_vfx_observed": true,
+      "old_beam_hidden": true,
+      "frames": [
+        {
+          "filename": "combat-vfx-scan-000ms.png",
+          "intended_offset_ms": 0,
+          "actual_elapsed_since_vfx_observed_ms": 1,
+          "frame_debug_read_at": 14123.399999856949,
+          "screenshot_started_at": 14124.5,
+          "screenshot_finished_at": 16818.39999985695,
+          "screenshot_duration_ms": 2694,
+          "active_vfx_count": 2,
+          "last_vfx_family": "scan",
+          "last_vfx_sequence_id": "2",
+          "persistent_vfx_remaining_ms": [
+            2938,
+            3967
+          ],
+          "old_beam_hidden": true,
+          "canvas_count": 1
+        },
+        {
+          "filename": "combat-vfx-scan-100ms.png",
+          "intended_offset_ms": 100,
+          "actual_elapsed_since_vfx_observed_ms": 2801,
+          "frame_debug_read_at": 16923.099999904633,
+          "screenshot_started_at": 16924,
+          "screenshot_finished_at": 17272.699999809265,
+          "screenshot_duration_ms": 349,
+          "active_vfx_count": 2,
+          "last_vfx_family": "scan",
+          "last_vfx_sequence_id": "2",
+          "persistent_vfx_remaining_ms": [
+            138,
+            1168
+          ],
+          "old_beam_hidden": true,
+          "canvas_count": 1
+        },
+        {
+          "filename": "combat-vfx-scan-200ms.png",
+          "intended_offset_ms": 200,
+          "actual_elapsed_since_vfx_observed_ms": 3253,
+          "frame_debug_read_at": 17375,
+          "screenshot_started_at": 17375.89999985695,
+          "screenshot_finished_at": 17701.5,
+          "screenshot_duration_ms": 326,
+          "active_vfx_count": 1,
+          "last_vfx_family": "scan",
+          "last_vfx_sequence_id": "2",
+          "persistent_vfx_remaining_ms": [
+            716
+          ],
+          "old_beam_hidden": true,
+          "canvas_count": 1
+        },
+        {
+          "filename": "combat-vfx-scan-300ms.png",
+          "intended_offset_ms": 300,
+          "actual_elapsed_since_vfx_observed_ms": 3686,
+          "frame_debug_read_at": 17808.599999904633,
+          "screenshot_started_at": 17809.799999952316,
+          "screenshot_finished_at": 18171.39999985695,
+          "screenshot_duration_ms": 362,
+          "active_vfx_count": 1,
+          "last_vfx_family": "scan",
+          "last_vfx_sequence_id": "2",
+          "persistent_vfx_remaining_ms": [
+            282
+          ],
+          "old_beam_hidden": true,
+          "canvas_count": 1
+        },
+        {
+          "filename": "combat-vfx-scan-450ms.png",
+          "intended_offset_ms": 450,
+          "actual_elapsed_since_vfx_observed_ms": 4236,
+          "frame_debug_read_at": 18358.199999809265,
+          "screenshot_started_at": 18359.799999952316,
+          "screenshot_finished_at": 18771.699999809265,
+          "screenshot_duration_ms": 412,
+          "active_vfx_count": 0,
+          "last_vfx_family": "scan",
+          "last_vfx_sequence_id": "2",
+          "persistent_vfx_remaining_ms": [],
+          "old_beam_hidden": true,
+          "canvas_count": 1
+        },
+        {
+          "filename": "combat-vfx-scan-600ms.png",
+          "intended_offset_ms": 600,
+          "actual_elapsed_since_vfx_observed_ms": 4840,
+          "frame_debug_read_at": 18962.39999985695,
+          "screenshot_started_at": 18963.89999985695,
+          "screenshot_finished_at": 19371.699999809265,
+          "screenshot_duration_ms": 408,
+          "active_vfx_count": 0,
+          "last_vfx_family": "scan",
+          "last_vfx_sequence_id": "2",
+          "persistent_vfx_remaining_ms": [],
+          "old_beam_hidden": true,
+          "canvas_count": 1
+        }
+      ]
+    },
     "error": ""
   },
   "what_still_looks_fake": [

@@ -112,6 +112,11 @@ function buildMarkdownReport(result) {
     if (result.vfx.error) {
       lines.push(`- Error: ${result.vfx.error}`);
     }
+    if (result.vfx.timing) {
+      lines.push(`- Timing reliable: ${result.vfx.timing.timing_reliable ? "true" : "false"}`);
+      lines.push(`- Intended offsets: ${result.vfx.timing.intended_offsets_ms.join(", ") || "missing"}`);
+      lines.push(`- Actual elapsed times: ${result.vfx.timing.actual_elapsed_ms.join(", ") || "missing"}`);
+    }
   } else {
     lines.push("- No VFX section recorded.");
   }
@@ -160,6 +165,23 @@ export async function runVisualCritic({
   const scanVfx = combat?.vfx?.scan || {};
   const scanVfxFrames = asArray(scanVfx.frames);
   const bestVfxFrame = scanVfx.bestVfxFrame || scanVfxFrames.find((frame) => frame?.activeVfxCount > 0 && frame?.lastVfxFamily === "scan") || null;
+  const vfxTimingFrames = scanVfxFrames.map((frame) => ({
+    filename: frame.filename || "",
+    intended_offset_ms: frame.intendedOffsetMs ?? frame.offsetMs ?? null,
+    actual_elapsed_since_vfx_observed_ms: frame.actualElapsedSinceVfxObserved ?? null,
+    frame_debug_read_at: frame.frameDebugReadAt ?? null,
+    screenshot_started_at: frame.screenshotStartedAt ?? null,
+    screenshot_finished_at: frame.screenshotFinishedAt ?? null,
+    screenshot_duration_ms: frame.screenshotDurationMs ?? null,
+    active_vfx_count: frame.activeVfxCount || 0,
+    last_vfx_family: frame.lastVfxFamily || "",
+    last_vfx_sequence_id: frame.lastVfxSequenceId || "",
+    persistent_vfx_remaining_ms: asArray(frame.persistentVfxRemainingMs),
+    old_beam_hidden: frame.oldBeamHidden ?? null,
+    canvas_count: frame.canvasCount ?? null
+  }));
+  const timingReliable = vfxTimingFrames.length > 0
+    && vfxTimingFrames.every((frame) => Number.isFinite(frame.intended_offset_ms) && Number.isFinite(frame.actual_elapsed_since_vfx_observed_ms));
   const dom = combat?.dom || {};
   const viewport = report?.viewport || {};
   const pageErrors = asArray(report?.consoleMessages).filter(isPageError);
@@ -379,12 +401,26 @@ export async function runVisualCritic({
         filename: frame.filename || "",
         path: frame.path || "",
         offset_ms: frame.offsetMs ?? null,
+        intended_offset_ms: frame.intendedOffsetMs ?? frame.offsetMs ?? null,
+        actual_elapsed_since_vfx_observed_ms: frame.actualElapsedSinceVfxObserved ?? null,
+        screenshot_duration_ms: frame.screenshotDurationMs ?? null,
+        persistent_vfx_remaining_ms: asArray(frame.persistentVfxRemainingMs),
         active_vfx_count: frame.activeVfxCount || 0,
         last_vfx_family: frame.lastVfxFamily || "",
         last_vfx_sequence_id: frame.lastVfxSequenceId || "",
         old_beam_hidden: frame.oldBeamHidden ?? null,
         canvas_count: frame.canvasCount ?? null
       })),
+      timing: {
+        manual_review_required: true,
+        timing_reliable: timingReliable,
+        intended_offsets_ms: vfxTimingFrames.map((frame) => frame.intended_offset_ms),
+        actual_elapsed_ms: vfxTimingFrames.map((frame) => frame.actual_elapsed_since_vfx_observed_ms),
+        best_vfx_frame: bestVfxFrame?.path || bestVfxFrame?.filename || "",
+        active_vfx_observed: Number(scanVfx.activeVfxCountAtCapture || 0) > 0 || scanVfxFrames.some((frame) => Number(frame?.activeVfxCount || 0) > 0),
+        old_beam_hidden: scanVfx.oldBeamHidden ?? null,
+        frames: vfxTimingFrames
+      },
       error: scanVfx.error || ""
     },
     what_still_looks_fake: [
