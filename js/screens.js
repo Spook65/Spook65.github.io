@@ -1,7 +1,8 @@
 /* Screen-state and mode-selection behavior for THREATGRID's menu, briefing, and gameplay transitions. */
-// screenState controls which overlay is visible: menu, briefing, defender setup, gameplay, combat, or the end-state branch.
-let screenState = "menu"; // 'menu' | 'howtoplay' | 'defenders' | 'expedition-loadout' | 'forge' | 'game' | 'combat' | 'game-over'
+// screenState controls which overlay is visible: menu, briefing, defender setup, gameplay, combat, world-city, or the end-state branch.
+let screenState = "menu"; // 'menu' | 'howtoplay' | 'defenders' | 'expedition-loadout' | 'forge' | 'game' | 'world-city' | 'combat' | 'game-over'
 let globeStarted = false;
+window.screenState = screenState;
 
 // gameMode is chosen before the game starts so later UI logic knows whether to show passive or typed actions.
 let gameMode = "analyst"; // 'analyst' | 'operator'
@@ -11,6 +12,8 @@ const bootOverlay = document.getElementById("boot-overlay");
 const menuScreen = document.getElementById("menu-screen");
 const howtoScreen = document.getElementById("howto-screen");
 const defenderScreen = document.getElementById("defender-screen");
+const worldCityScreen = document.getElementById("world-city-screen");
+const worldCityContent = document.getElementById("world-city-content");
 const analystModeButton = document.getElementById("analyst-mode-button");
 const operatorModeButton = document.getElementById("operator-mode-button");
 const defenderSetupButton = document.getElementById("defender-setup-button");
@@ -77,7 +80,7 @@ function clearMenuExitConfirm() {
 
 function routeAudioScreen(nextScreen) {
   if (typeof window !== "undefined" && window.THREATGRID_AUDIO && typeof window.THREATGRID_AUDIO.setScreen === "function") {
-    window.THREATGRID_AUDIO.setScreen(nextScreen);
+    window.THREATGRID_AUDIO.setScreen(nextScreen === "world-city" ? "game" : nextScreen);
   }
 }
 
@@ -181,11 +184,19 @@ function setAudioMutedFromInput() {
 
 // setScreen() toggles which overlay panel is active inside the shared boot screen.
 function setScreen(nextScreen) {
+  const previousScreen = screenState;
   screenState = nextScreen;
+  window.screenState = nextScreen;
   menuScreen.classList.toggle("is-active", nextScreen === "menu");
   howtoScreen.classList.toggle("is-active", nextScreen === "howtoplay");
+  if (worldCityScreen) {
+    worldCityScreen.classList.toggle("is-active", nextScreen === "world-city");
+  }
   if (defenderScreen) {
     defenderScreen.classList.toggle("is-active", nextScreen === "defenders" || nextScreen === "expedition-loadout" || nextScreen === "forge");
+  }
+  if (previousScreen === "world-city" && nextScreen !== "world-city") {
+    destroyWorldCityScreen();
   }
   routeAudioScreen(nextScreen);
 }
@@ -273,6 +284,152 @@ function showForgeScreen() {
   }
 }
 
+function destroyWorldCityScreen() {
+  if (typeof window !== "undefined" && typeof window.destroyCityIncidentScene === "function") {
+    window.destroyCityIncidentScene();
+  }
+  if (typeof window !== "undefined" && window.THREATGRID_WORLD_MAP_UI) {
+    window.THREATGRID_WORLD_MAP_UI.hideWorldCityHologram?.();
+  }
+}
+
+function handleWorldCityIncidentHover(incident, event) {
+  if (screenState !== "world-city") {
+    return;
+  }
+
+  window.THREATGRID_WORLD_STATE?.setHover?.(incident?.id || "");
+  window.THREATGRID_WORLD_MAP_UI?.showWorldCityHologram?.(incident, event);
+}
+
+function handleWorldCityIncidentLeave() {
+  if (screenState !== "world-city") {
+    return;
+  }
+
+  window.THREATGRID_WORLD_STATE?.setHover?.("");
+  window.THREATGRID_WORLD_MAP_UI?.hideWorldCityHologram?.();
+}
+
+function findWorldCityCombatThreat(incident) {
+  if (window.THREATGRID_WORLD_DATA?.findCombatThreatForWorldIncident) {
+    return window.THREATGRID_WORLD_DATA.findCombatThreatForWorldIncident(incident);
+  }
+
+  if (!incident?.combatThreatId || !Array.isArray(threats)) {
+    return null;
+  }
+
+  return threats.find((threat) => threat?.id === incident.combatThreatId) || null;
+}
+
+function enterWorldCityIncidentCombat(incident) {
+  if (screenState !== "world-city" || !incident) {
+    return false;
+  }
+
+  const threat = findWorldCityCombatThreat(incident);
+  if (!threat || threat.status !== "active") {
+    window.THREATGRID_WORLD_MAP_UI?.setWorldCityActionMessage?.("Incident route unavailable. Combat threat is not active.", "warning");
+    return false;
+  }
+
+  window.THREATGRID_WORLD_STATE?.setSelection?.(incident.id);
+  destroyWorldCityScreen();
+  setScreen("game");
+  bootOverlay.classList.add("is-hiding");
+  window.setTimeout(() => {
+    if (screenState === "game") {
+      bootOverlay.style.display = "none";
+    }
+  }, 150);
+
+  if (typeof startCombatEncounter === "function") {
+    startCombatEncounter(threat);
+    return true;
+  }
+
+  window.THREATGRID_WORLD_MAP_UI?.setWorldCityActionMessage?.("Combat route unavailable. Existing combat entry path was not found.", "warning");
+  return false;
+}
+
+function handleWorldCityIncidentSelect(incident) {
+  if (screenState !== "world-city" || !incident) {
+    return false;
+  }
+
+  window.THREATGRID_WORLD_STATE?.setSelection?.(incident.id);
+  if (!incident.combatThreatId) {
+    window.THREATGRID_WORLD_MAP_UI?.setWorldCityActionMessage?.(`${incident.title}: recon node only in this MVP.`, "info");
+    return false;
+  }
+
+  return enterWorldCityIncidentCombat(incident);
+}
+
+function renderWorldCityScreen(cityData) {
+  if (!worldCityContent || !window.THREATGRID_WORLD_MAP_UI) {
+    return false;
+  }
+
+  worldCityContent.innerHTML = window.THREATGRID_WORLD_MAP_UI.buildWorldCityScreenMarkup(cityData);
+  worldCityContent.querySelector("[data-world-city-return]")?.addEventListener("click", closeWorldCityScreen);
+  const mount = worldCityContent.querySelector("[data-world-city-scene]");
+  const mounted = typeof window.mountCityIncidentScene === "function"
+    ? window.mountCityIncidentScene(mount, cityData, {
+      onIncidentHover: handleWorldCityIncidentHover,
+      onIncidentLeave: handleWorldCityIncidentLeave,
+      onIncidentSelect: handleWorldCityIncidentSelect
+    })
+    : false;
+
+  window.THREATGRID_WORLD_MAP_UI.setWorldCityActionMessage(
+    mounted ? "Hover an incident ring to inspect the local breach." : "City incident renderer unavailable.",
+    mounted ? "" : "warning"
+  );
+  return mounted;
+}
+
+function showWorldCityScreen(cityKey = "hospital-lockout", options = {}) {
+  if (typeof combatState !== "undefined" && combatState) {
+    return false;
+  }
+
+  const cityData = window.THREATGRID_WORLD_DATA?.getWorldCityLayer?.(cityKey);
+  if (!cityData) {
+    console.warn("[WORLD CITY] Unknown city layer.", { cityKey });
+    return false;
+  }
+
+  bootOverlay.style.display = "block";
+  bootOverlay.classList.remove("is-hiding");
+  window.THREATGRID_WORLD_STATE?.setCity?.(cityData.cityKey, { returnTarget: options.returnTarget || "game" });
+  setScreen("world-city");
+  return renderWorldCityScreen(cityData);
+}
+
+function closeWorldCityScreen() {
+  if (screenState !== "world-city") {
+    return;
+  }
+
+  const returnTarget = window.THREATGRID_WORLD_STATE?.getDebugState?.().returnTarget || "game";
+  window.THREATGRID_WORLD_STATE?.clear?.();
+
+  if (returnTarget === "menu" || !globeStarted) {
+    showMenu();
+    return;
+  }
+
+  setScreen("game");
+  bootOverlay.classList.add("is-hiding");
+  window.setTimeout(() => {
+    if (screenState === "game") {
+      bootOverlay.style.display = "none";
+    }
+  }, 150);
+}
+
 function closeForgeScreen() {
   if (screenState !== "forge") {
     return;
@@ -309,6 +466,7 @@ function startGame() {
   }
 
   screenState = "game";
+  window.screenState = "game";
   routeAudioScreen("game");
   // The globe rotates again as the game begins, so the background motion resumes before the fade ends.
   globe.autoRotateSpeed = 0.0012;
@@ -413,4 +571,13 @@ window.showExpeditionLoadout = showExpeditionLoadout;
 window.closeExpeditionLoadout = closeExpeditionLoadout;
 window.showForgeScreen = showForgeScreen;
 window.closeForgeScreen = closeForgeScreen;
+window.showWorldCityScreen = showWorldCityScreen;
+window.closeWorldCityScreen = closeWorldCityScreen;
+window.devOpenWorldCity = (cityKey = "hospital-lockout") => showWorldCityScreen(cityKey, { returnTarget: globeStarted ? "game" : "menu" });
+window.devReturnToWorldMap = closeWorldCityScreen;
+window.devSelectIncidentNode = (incidentId = "hospital-main-lockout") => {
+  const cityKey = window.THREATGRID_WORLD_STATE?.getDebugState?.().currentCityKey || "hospital-lockout";
+  const incident = window.THREATGRID_WORLD_DATA?.getWorldCityIncident?.(cityKey, incidentId);
+  return handleWorldCityIncidentSelect(incident);
+};
 window.devRestoreParty = restoreExpeditionPartyFromHud;

@@ -13,6 +13,16 @@
       "exists": true
     },
     {
+      "screen": "world-city-hospital",
+      "path": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/world-city-hospital.png",
+      "exists": true
+    },
+    {
+      "screen": "world-city-hospital-hover",
+      "path": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/world-city-hospital-hover.png",
+      "exists": true
+    },
+    {
       "screen": "combat-hospital",
       "path": "/Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-hospital.png",
       "exists": true
@@ -71,7 +81,8 @@
     "marker": "composition-alignment-v1",
     "canvasCount": 1,
     "screenshotExists": true,
-    "screenText": "THREATGRID\n\nCYBER-FANTASY ROGUELIKE ARENA\n\n08\n\nACTIVE THREATS\n\nSCORE: 00000\n\nACC: 100%\n\n[ MENU ]\n[ LOADOUT / MODULES ]\nTHREAT MANIFESTS\nENTERING BATTLE FORMATION...\nTHREATGRID ARENA\nHOSPITAL NETWORK LOCKOUT / LVL 3\nTURN ORDER\nIDS\n→\nHONEYPOT\n→\nANTIVIRUS\nHOSPITAL NETWORK LOCKOUT\n77/77\nLVL\n3\nWEAK\nUNKNO",
+    "entryPath": "world-city-node-click",
+    "screenText": "THREATGRID\n\nCYBER-FANTASY ROGUELIKE ARENA\n\n08\n\nACTIVE THREATS\n\nSCORE: 00000\n\nACC: 100%\n\n[ MENU ]\n[ LOADOUT / MODULES ]\nTHREAT MANIFESTS\nENTERING BATTLE FORMATION...\nTHREATGRID ARENA\nREGIONAL MAIL SPOOF WAVE / LVL 2\nTURN ORDER\nIDS\n→\nHONEYPOT\n→\nREGIONAL MAIL SPOOF WAVE\nREGIONAL MAIL SPOOF WAVE\n61/61\nL",
     "dom": {
       "shell": {
         "selector": ".combat-shell",
@@ -235,14 +246,14 @@
         "visible": true,
         "hidden": false,
         "rect": {
-          "x": 1133.036376953125,
-          "y": 132.64524841308594,
+          "x": 1131.6322021484375,
+          "y": 127.02890014648438,
           "width": 204.796875,
-          "height": 81.76564025878906,
-          "top": 132.64524841308594,
-          "right": 1337.833251953125,
-          "bottom": 214.410888671875,
-          "left": 1133.036376953125
+          "height": 81.765625,
+          "top": 127.02890014648438,
+          "right": 1336.4290771484375,
+          "bottom": 208.79452514648438,
+          "left": 1131.6322021484375
         },
         "computed": {
           "display": "grid",
@@ -410,19 +421,19 @@
           "exists": true,
           "offsetMs": 0,
           "intendedOffsetMs": 0,
-          "vfxObservedAt": 14080.799999952316,
-          "frameDebugReadAt": 14081.700000047684,
-          "screenshotStartedAt": 14083,
-          "screenshotFinishedAt": 17095.900000095367,
-          "actualElapsedSinceVfxObserved": 1,
-          "screenshotDurationMs": 3013,
+          "vfxObservedAt": 18079.799999952316,
+          "frameDebugReadAt": 18085.200000047684,
+          "screenshotStartedAt": 18087.5,
+          "screenshotFinishedAt": 21175.60000014305,
+          "actualElapsedSinceVfxObserved": 5,
+          "screenshotDurationMs": 3088,
           "activeVfxCount": 1,
           "lastVfxFamily": "scan",
           "lastVfxSequenceId": "2",
           "oldBeamHidden": true,
           "canvasCount": 1,
           "persistentVfxRemainingMs": [
-            864
+            859
           ],
           "pageErrors": []
         },
@@ -434,19 +445,19 @@
             "exists": true,
             "offsetMs": 0,
             "intendedOffsetMs": 0,
-            "vfxObservedAt": 14080.799999952316,
-            "frameDebugReadAt": 14081.700000047684,
-            "screenshotStartedAt": 14083,
-            "screenshotFinishedAt": 17095.900000095367,
-            "actualElapsedSinceVfxObserved": 1,
-            "screenshotDurationMs": 3013,
+            "vfxObservedAt": 18079.799999952316,
+            "frameDebugReadAt": 18085.200000047684,
+            "screenshotStartedAt": 18087.5,
+            "screenshotFinishedAt": 21175.60000014305,
+            "actualElapsedSinceVfxObserved": 5,
+            "screenshotDurationMs": 3088,
             "activeVfxCount": 1,
             "lastVfxFamily": "scan",
             "lastVfxSequenceId": "2",
             "oldBeamHidden": true,
             "canvasCount": 1,
             "persistentVfxRemainingMs": [
-              864
+              859
             ],
             "pageErrors": []
           },
@@ -457,12 +468,12 @@
             "exists": true,
             "offsetMs": 100,
             "intendedOffsetMs": 100,
-            "vfxObservedAt": 14080.799999952316,
-            "frameDebugReadAt": 17258.700000047684,
-            "screenshotStartedAt": 17261.400000095367,
-            "screenshotFinishedAt": 17682.299999952316,
-            "actualElapsedSinceVfxObserved": 3178,
-            "screenshotDurationMs": 421,
+            "vfxObservedAt": 18079.799999952316,
+            "frameDebugReadAt": 21279.5,
+            "screenshotStartedAt": 21281.200000047684,
+            "screenshotFinishedAt": 21626.10000014305,
+            "actualElapsedSinceVfxObserved": 3200,
+            "screenshotDurationMs": 345,
             "activeVfxCount": 0,
             "lastVfxFamily": "scan",
             "lastVfxSequenceId": "2",
@@ -478,12 +489,12 @@
             "exists": true,
             "offsetMs": 200,
             "intendedOffsetMs": 200,
-            "vfxObservedAt": 14080.799999952316,
-            "frameDebugReadAt": 17785.099999904633,
-            "screenshotStartedAt": 17787.099999904633,
-            "screenshotFinishedAt": 18200.200000047684,
-            "actualElapsedSinceVfxObserved": 3704,
-            "screenshotDurationMs": 413,
+            "vfxObservedAt": 18079.799999952316,
+            "frameDebugReadAt": 21728.799999952316,
+            "screenshotStartedAt": 21730.200000047684,
+            "screenshotFinishedAt": 22062.60000014305,
+            "actualElapsedSinceVfxObserved": 3649,
+            "screenshotDurationMs": 332,
             "activeVfxCount": 0,
             "lastVfxFamily": "scan",
             "lastVfxSequenceId": "2",
@@ -499,12 +510,12 @@
             "exists": true,
             "offsetMs": 300,
             "intendedOffsetMs": 300,
-            "vfxObservedAt": 14080.799999952316,
-            "frameDebugReadAt": 18302.700000047684,
-            "screenshotStartedAt": 18304.400000095367,
-            "screenshotFinishedAt": 18645.299999952316,
-            "actualElapsedSinceVfxObserved": 4222,
-            "screenshotDurationMs": 341,
+            "vfxObservedAt": 18079.799999952316,
+            "frameDebugReadAt": 22200.799999952316,
+            "screenshotStartedAt": 22203.5,
+            "screenshotFinishedAt": 22592,
+            "actualElapsedSinceVfxObserved": 4121,
+            "screenshotDurationMs": 389,
             "activeVfxCount": 0,
             "lastVfxFamily": "scan",
             "lastVfxSequenceId": "2",
@@ -520,12 +531,12 @@
             "exists": true,
             "offsetMs": 450,
             "intendedOffsetMs": 450,
-            "vfxObservedAt": 14080.799999952316,
-            "frameDebugReadAt": 18864.400000095367,
-            "screenshotStartedAt": 18865.900000095367,
-            "screenshotFinishedAt": 19230.700000047684,
-            "actualElapsedSinceVfxObserved": 4784,
-            "screenshotDurationMs": 365,
+            "vfxObservedAt": 18079.799999952316,
+            "frameDebugReadAt": 22779.900000095367,
+            "screenshotStartedAt": 22782,
+            "screenshotFinishedAt": 23157.10000014305,
+            "actualElapsedSinceVfxObserved": 4700,
+            "screenshotDurationMs": 375,
             "activeVfxCount": 0,
             "lastVfxFamily": "scan",
             "lastVfxSequenceId": "2",
@@ -541,12 +552,12 @@
             "exists": true,
             "offsetMs": 600,
             "intendedOffsetMs": 600,
-            "vfxObservedAt": 14080.799999952316,
-            "frameDebugReadAt": 19432,
-            "screenshotStartedAt": 19433.299999952316,
-            "screenshotFinishedAt": 19828.099999904633,
-            "actualElapsedSinceVfxObserved": 5351,
-            "screenshotDurationMs": 395,
+            "vfxObservedAt": 18079.799999952316,
+            "frameDebugReadAt": 23341.60000014305,
+            "screenshotStartedAt": 23343.299999952316,
+            "screenshotFinishedAt": 23825.5,
+            "actualElapsedSinceVfxObserved": 5262,
+            "screenshotDurationMs": 482,
             "activeVfxCount": 0,
             "lastVfxFamily": "scan",
             "lastVfxSequenceId": "2",
@@ -557,6 +568,142 @@
           }
         ],
         "error": ""
+      }
+    }
+  },
+  "worldCity": {
+    "helperAvailable": true,
+    "opened": true,
+    "screenState": "world-city",
+    "worldCityMounted": true,
+    "cityCanvasCount": 1,
+    "visibleIncidentNodeCount": 4,
+    "screenshotExists": true,
+    "hoverScreenshotExists": true,
+    "hoverHologramVisible": true,
+    "worldState": {
+      "screen": "world-city",
+      "currentCityKey": "hospital-lockout",
+      "hoveredIncidentId": "",
+      "selectedIncidentId": "",
+      "returnTarget": "game",
+      "lastAction": "open-city"
+    },
+    "debug": {
+      "mounted": true,
+      "rendererExists": true,
+      "mountConnected": true,
+      "animationRunning": true,
+      "canvasCount": 1,
+      "incidentNodeCount": 4,
+      "incidentNodes": [
+        {
+          "id": "hospital-main-lockout",
+          "title": "Hospital Network Lockout",
+          "severity": "critical",
+          "hasCombat": true,
+          "screenX": 958,
+          "screenY": 379
+        },
+        {
+          "id": "triage-routing-failure",
+          "title": "Triage Routing Failure",
+          "severity": "high",
+          "hasCombat": false,
+          "screenX": 588,
+          "screenY": 424
+        },
+        {
+          "id": "backup-generator-handshake",
+          "title": "Backup Handshake Drift",
+          "severity": "medium",
+          "hasCombat": false,
+          "screenX": 312,
+          "screenY": 579
+        },
+        {
+          "id": "ambulance-comms-delay",
+          "title": "Ambulance Comms Delay",
+          "severity": "medium",
+          "hasCombat": false,
+          "screenX": 899,
+          "screenY": 653
+        }
+      ],
+      "hoveredIncidentId": "",
+      "cityKey": "hospital-lockout",
+      "screenState": "world-city",
+      "lastError": ""
+    },
+    "hover": {
+      "node": {
+        "id": "hospital-main-lockout",
+        "title": "Hospital Network Lockout",
+        "severity": "critical",
+        "hasCombat": true,
+        "screenX": 958,
+        "screenY": 379
+      },
+      "state": {
+        "screenState": "world-city",
+        "worldState": {
+          "screen": "world-city",
+          "currentCityKey": "hospital-lockout",
+          "hoveredIncidentId": "hospital-main-lockout",
+          "selectedIncidentId": "",
+          "returnTarget": "game",
+          "lastAction": "hover-incident"
+        },
+        "debug": {
+          "mounted": true,
+          "rendererExists": true,
+          "mountConnected": true,
+          "animationRunning": true,
+          "canvasCount": 1,
+          "incidentNodeCount": 4,
+          "incidentNodes": [
+            {
+              "id": "hospital-main-lockout",
+              "title": "Hospital Network Lockout",
+              "severity": "critical",
+              "hasCombat": true,
+              "screenX": 958,
+              "screenY": 379
+            },
+            {
+              "id": "triage-routing-failure",
+              "title": "Triage Routing Failure",
+              "severity": "high",
+              "hasCombat": false,
+              "screenX": 588,
+              "screenY": 424
+            },
+            {
+              "id": "backup-generator-handshake",
+              "title": "Backup Handshake Drift",
+              "severity": "medium",
+              "hasCombat": false,
+              "screenX": 312,
+              "screenY": 579
+            },
+            {
+              "id": "ambulance-comms-delay",
+              "title": "Ambulance Comms Delay",
+              "severity": "medium",
+              "hasCombat": false,
+              "screenX": 899,
+              "screenY": 653
+            }
+          ],
+          "hoveredIncidentId": "hospital-main-lockout",
+          "cityKey": "hospital-lockout",
+          "screenState": "world-city",
+          "lastError": ""
+        },
+        "worldCityMounted": true,
+        "cityCanvasCount": 1,
+        "visibleIncidentNodeCount": 4,
+        "hoverHologramVisible": true
       }
     }
   },

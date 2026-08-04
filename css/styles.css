@@ -17686,3 +17686,256 @@ body {
     width: min(22rem, 34vw);
   }
 }
+/* Hospital City Incident Layer MVP: scene-first world-city slice. */
+.world-city-screen {
+  justify-content: stretch;
+  align-items: stretch;
+  padding: 0;
+  background:
+    radial-gradient(circle at 58% 28%, rgba(255, 102, 49, 0.14), transparent 34%),
+    radial-gradient(circle at 24% 72%, rgba(39, 231, 210, 0.13), transparent 32%),
+    linear-gradient(145deg, #03070b 0%, #071116 48%, #100b0d 100%);
+}
+
+.world-city-content,
+.world-city-shell {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+.world-city-shell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(94, 247, 222, 0.05) 1px, transparent 1px),
+    linear-gradient(rgba(255, 178, 111, 0.035) 1px, transparent 1px);
+  background-size: 92px 92px, 92px 92px;
+  mask-image: radial-gradient(circle at 52% 48%, rgba(0, 0, 0, 0.42), transparent 72%);
+  opacity: 0.34;
+  z-index: 1;
+}
+
+.world-city-scene-mount {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  cursor: crosshair;
+}
+
+.world-city-scene-mount.is-unavailable::after {
+  content: "CITY INCIDENT RENDERER UNAVAILABLE";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  border: 1px solid rgba(255, 178, 111, 0.5);
+  padding: 14px 18px;
+  color: #ffd88c;
+  background: rgba(10, 10, 15, 0.82);
+  letter-spacing: 0.18em;
+}
+
+.world-city-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: auto;
+}
+
+.world-city-topbar {
+  position: absolute;
+  top: clamp(18px, 3vw, 34px);
+  left: clamp(18px, 3vw, 38px);
+  right: clamp(18px, 3vw, 38px);
+  z-index: 3;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  pointer-events: none;
+}
+
+.world-city-heading {
+  max-width: min(680px, 62vw);
+  padding: 16px 18px 18px;
+  border-left: 2px solid rgba(95, 255, 224, 0.68);
+  background:
+    linear-gradient(90deg, rgba(6, 18, 22, 0.78), rgba(6, 18, 22, 0.2));
+  box-shadow: 0 20px 80px rgba(0, 0, 0, 0.42);
+}
+
+.world-city-eyebrow,
+.world-city-district-tag span,
+.world-city-hologram-kicker,
+.world-city-action-message {
+  color: rgba(255, 216, 140, 0.82);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.world-city-heading h1 {
+  margin: 4px 0 8px;
+  color: #f5f2e8;
+  font-size: clamp(2rem, 4.8vw, 4.6rem);
+  line-height: 0.9;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-shadow: 0 0 24px rgba(95, 255, 224, 0.16);
+}
+
+.world-city-heading p {
+  max-width: 640px;
+  margin: 0;
+  color: rgba(230, 237, 232, 0.74);
+  font-size: clamp(0.82rem, 1.2vw, 1rem);
+  line-height: 1.6;
+  letter-spacing: 0.08em;
+}
+
+.world-city-return {
+  pointer-events: auto;
+  border: 1px solid rgba(255, 216, 140, 0.38);
+  color: #f5f2e8;
+  background:
+    linear-gradient(135deg, rgba(19, 30, 34, 0.9), rgba(9, 11, 16, 0.78));
+  padding: 14px 18px;
+  font-family: inherit;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  box-shadow: inset 0 0 22px rgba(95, 255, 224, 0.07), 0 18px 60px rgba(0, 0, 0, 0.36);
+}
+
+.world-city-return:hover,
+.world-city-return:focus-visible {
+  border-color: rgba(95, 255, 224, 0.72);
+  color: #5fffe0;
+  outline: none;
+}
+
+.world-city-district-tag {
+  position: absolute;
+  left: clamp(18px, 3vw, 38px);
+  bottom: clamp(24px, 5vw, 56px);
+  z-index: 3;
+  display: grid;
+  gap: 4px;
+  padding: 13px 16px;
+  border: 1px solid rgba(95, 255, 224, 0.24);
+  background: rgba(5, 13, 17, 0.72);
+  box-shadow: 0 14px 56px rgba(0, 0, 0, 0.36);
+  pointer-events: none;
+}
+
+.world-city-district-tag strong {
+  color: #f5f2e8;
+  font-size: 0.95rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.world-city-action-message {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(20px, 4vw, 46px);
+  z-index: 3;
+  max-width: min(620px, 54vw);
+  transform: translateX(-50%);
+  padding: 11px 16px;
+  border: 1px solid rgba(255, 216, 140, 0.32);
+  background: rgba(18, 12, 10, 0.68);
+  color: rgba(255, 224, 172, 0.86);
+  text-align: center;
+  pointer-events: none;
+}
+
+.world-city-action-message[data-tone="warning"] {
+  border-color: rgba(255, 113, 76, 0.58);
+  color: #ffb38f;
+}
+
+.world-city-action-message[data-tone="info"] {
+  border-color: rgba(95, 255, 224, 0.42);
+  color: #95fff1;
+}
+
+.world-city-hologram {
+  position: fixed;
+  z-index: 4;
+  width: min(320px, calc(100vw - 48px));
+  padding: 15px 16px;
+  border: 1px solid rgba(95, 255, 224, 0.48);
+  background:
+    linear-gradient(135deg, rgba(5, 19, 22, 0.88), rgba(10, 8, 13, 0.8));
+  box-shadow:
+    inset 0 0 30px rgba(95, 255, 224, 0.08),
+    0 18px 70px rgba(0, 0, 0, 0.44);
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.world-city-hologram.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.world-city-hologram-title {
+  margin-top: 4px;
+  color: #f5f2e8;
+  font-size: 1.08rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.world-city-hologram-system {
+  margin-top: 7px;
+  color: #5fffe0;
+  font-size: 0.74rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.world-city-hologram p {
+  margin: 10px 0 12px;
+  color: rgba(230, 237, 232, 0.76);
+  font-size: 0.78rem;
+  line-height: 1.55;
+  letter-spacing: 0.06em;
+}
+
+.world-city-hologram-action {
+  color: #ffd88c;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 760px) {
+  .world-city-topbar {
+    flex-direction: column;
+  }
+
+  .world-city-heading {
+    max-width: 100%;
+  }
+
+  .world-city-action-message {
+    max-width: calc(100vw - 36px);
+    left: 18px;
+    right: 18px;
+    transform: none;
+  }
+}

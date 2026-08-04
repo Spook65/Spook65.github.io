@@ -25,6 +25,18 @@
   1440x900
 - PASS: no page errors recorded (required)
   No console error/pageerror entries.
+- PASS: world-city hospital screenshot exists (required)
+  /Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/world-city-hospital.png
+- PASS: world-city screenState was captured (required)
+  screenState: world-city
+- PASS: world-city scene mounted (required)
+  worldCityMounted: true
+- PASS: world-city canvas count equals 1 (required)
+  cityCanvasCount: 1
+- PASS: world-city incident node count is at least 2 (required)
+  visibleIncidentNodeCount: 4
+- PASS: world-city hover hologram was captured if hover frame exists (informational)
+  hoverHologramVisible: true
 - PASS: combat shell is approximately viewport-sized (required)
   shell: 1440x900
 - PASS: diorama mount approximately fills combat shell (required)
@@ -82,7 +94,18 @@
 - Manual review required: true
 - Timing reliable: true
 - Intended offsets: 0, 100, 200, 300, 450, 600
-- Actual elapsed times: 1, 3178, 3704, 4222, 4784, 5351
+- Actual elapsed times: 5, 3200, 3649, 4121, 4700, 5262
+
+## World City Capture
+
+- Screenshot exists: true
+- Hover screenshot exists: true
+- Screen state: world-city
+- Mounted: true
+- City canvas count: 1
+- Incident node count: 4
+- Hover hologram visible: true
+- Manual review required: true
 
 ## What Still Looks Fake
 
@@ -101,6 +124,8 @@
 - capture_report: /Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/capture-report.json
 - menu: /Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/menu.png
 - globe: /Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/globe.png
+- world_city_hospital: /Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/world-city-hospital.png
+- world_city_hospital_hover: /Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/world-city-hospital-hover.png
 - combat: /Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-hospital.png
 - combat_resting: /Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-resting.png
 - combat_vfx_scan: /Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-vfx-scan-000ms.png

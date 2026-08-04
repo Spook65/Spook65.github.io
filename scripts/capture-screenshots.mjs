@@ -205,6 +205,33 @@ async function collectCombatDomMeasurements(page) {
   });
 }
 
+async function collectWorldCityState(page) {
+  return page.evaluate(() => {
+    const debug = window.devCityIncidentSceneState?.() || {};
+    const state = window.devWorldState?.() || {};
+    const hologram = document.querySelector("[data-world-city-hologram]");
+    const hologramRect = hologram?.getBoundingClientRect?.();
+    const hologramComputed = hologram ? getComputedStyle(hologram) : null;
+    const hologramVisible = Boolean(hologram
+      && hologram.classList.contains("is-visible")
+      && hologramComputed?.display !== "none"
+      && hologramComputed?.visibility !== "hidden"
+      && Number(hologramComputed?.opacity || 0) > 0
+      && hologramRect?.width > 0
+      && hologramRect?.height > 0);
+
+    return {
+      screenState: typeof screenState !== "undefined" ? screenState : window.screenState || "",
+      worldState: state,
+      debug,
+      worldCityMounted: Boolean(debug.mounted),
+      cityCanvasCount: debug.canvasCount || document.querySelectorAll("[data-world-city-scene] canvas").length,
+      visibleIncidentNodeCount: debug.incidentNodeCount || 0,
+      hoverHologramVisible: hologramVisible
+    };
+  });
+}
+
 async function waitForCombatDioramaDebug(page, predicate, timeoutMs = 1800) {
   try {
     await page.waitForFunction(predicate, null, { timeout: timeoutMs });
@@ -372,6 +399,17 @@ async function main() {
       marker: "",
       canvasCount: 0,
       screenshotExists: false
+    },
+    worldCity: {
+      helperAvailable: false,
+      opened: false,
+      screenState: "",
+      worldCityMounted: false,
+      cityCanvasCount: 0,
+      visibleIncidentNodeCount: 0,
+      screenshotExists: false,
+      hoverScreenshotExists: false,
+      hoverHologramVisible: false
     }
   };
 
@@ -396,6 +434,44 @@ async function main() {
       await page.waitForTimeout(1800);
       const globePath = await capture(page, "globe");
       report.screenshots.push({ screen: "globe", path: globePath, exists: await fileExists(globePath) });
+
+      const worldCityHelperAvailable = await page.evaluate(() => typeof window.devOpenWorldCity === "function");
+      report.worldCity.helperAvailable = worldCityHelperAvailable;
+      if (worldCityHelperAvailable) {
+        report.worldCity.opened = await page.evaluate(() => window.devOpenWorldCity("hospital-lockout"));
+        await page.waitForSelector("[data-world-city-scene] canvas", { timeout: 5000 });
+        await page.waitForTimeout(700);
+        const worldCityPath = await capture(page, "world-city-hospital");
+        const worldCityState = await collectWorldCityState(page);
+        report.worldCity = {
+          ...report.worldCity,
+          ...worldCityState,
+          screenshotExists: await fileExists(worldCityPath)
+        };
+        report.screenshots.push({ screen: "world-city-hospital", path: worldCityPath, exists: report.worldCity.screenshotExists });
+
+        const hoverNode = worldCityState.debug?.incidentNodes?.find((node) => node.hasCombat)
+          || worldCityState.debug?.incidentNodes?.[0]
+          || null;
+        if (hoverNode?.screenX && hoverNode?.screenY) {
+          await page.mouse.move(hoverNode.screenX, hoverNode.screenY);
+          await page.waitForTimeout(240);
+          const hoverPath = await capture(page, "world-city-hospital-hover");
+          const hoverState = await collectWorldCityState(page);
+          report.worldCity = {
+            ...report.worldCity,
+            hover: {
+              node: hoverNode,
+              state: hoverState
+            },
+            hoverScreenshotExists: await fileExists(hoverPath),
+            hoverHologramVisible: hoverState.hoverHologramVisible
+          };
+          report.screenshots.push({ screen: "world-city-hospital-hover", path: hoverPath, exists: report.worldCity.hoverScreenshotExists });
+        }
+      } else {
+        report.blockers.push("World-city screenshot not captured: devOpenWorldCity was not available on window.");
+      }
     } else {
       report.blockers.push("Globe was not reachable through STARTER SETUP -> BEGIN RUN in the harness.");
     }
@@ -409,13 +485,26 @@ async function main() {
     if (!report.combat.helperAvailable) {
       report.blockers.push("Combat screenshot not captured: deterministic dev combat helper was not available on window.");
     } else {
-      report.combat.helperResult = await page.evaluate(() => {
-        if (typeof window.devStartHospitalCombat === "function") {
-          return window.devStartHospitalCombat();
+      if (report.worldCity.opened && typeof report.worldCity.screenState === "string" && report.worldCity.screenState === "world-city") {
+        const combatNode = report.worldCity.hover?.node || null;
+        if (combatNode?.screenX && combatNode?.screenY) {
+          await page.mouse.click(combatNode.screenX, combatNode.screenY);
+          report.combat.helperResult = true;
+          report.combat.entryPath = "world-city-node-click";
+        } else {
+          report.combat.helperResult = await page.evaluate(() => window.devSelectIncidentNode?.("hospital-main-lockout") || false);
+          report.combat.entryPath = "world-city-dev-select-fallback";
         }
-        return window.devStartCombatByThreatId("tg-001");
-      });
-      await page.waitForSelector(".combat-shell[data-combat-art]", { timeout: 5000 });
+      } else {
+        report.combat.helperResult = await page.evaluate(() => {
+          if (typeof window.devStartHospitalCombat === "function") {
+            return window.devStartHospitalCombat();
+          }
+          return window.devStartCombatByThreatId("tg-001");
+        });
+        report.combat.entryPath = "combat-dev-helper";
+      }
+      await page.waitForFunction(() => Boolean(document.querySelector(".combat-shell[data-combat-art]")), null, { timeout: 5000 });
       await page.waitForFunction(() => document.querySelectorAll("[data-combat-diorama-stage] canvas").length === 1, null, { timeout: 5000 });
       await page.waitForTimeout(1200);
       const combatPath = await capture(page, "combat-hospital");

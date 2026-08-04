@@ -121,6 +121,20 @@ function buildMarkdownReport(result) {
     lines.push("- No VFX section recorded.");
   }
 
+  lines.push("", "## World City Capture", "");
+  if (result.world_city) {
+    lines.push(`- Screenshot exists: ${result.world_city.screenshot_exists ? "true" : "false"}`);
+    lines.push(`- Hover screenshot exists: ${result.world_city.hover_screenshot_exists ? "true" : "false"}`);
+    lines.push(`- Screen state: ${result.world_city.screen_state || "missing"}`);
+    lines.push(`- Mounted: ${result.world_city.mounted ? "true" : "false"}`);
+    lines.push(`- City canvas count: ${result.world_city.canvas_count ?? "missing"}`);
+    lines.push(`- Incident node count: ${result.world_city.incident_node_count ?? "missing"}`);
+    lines.push(`- Hover hologram visible: ${result.world_city.hover_hologram_visible ? "true" : "false"}`);
+    lines.push(`- Manual review required: ${result.world_city.manual_review_required ? "true" : "false"}`);
+  } else {
+    lines.push("- No world-city section recorded.");
+  }
+
   lines.push("", "## What Still Looks Fake", "");
   result.what_still_looks_fake.forEach((item) => lines.push(`- ${item}`));
 
@@ -156,12 +170,17 @@ export async function runVisualCritic({
   }
 
   const combatShot = getCombatScreenshot(report);
+  const worldCityShot = getScreenshot(report, "world-city-hospital");
+  const worldCityHoverShot = getScreenshot(report, "world-city-hospital-hover");
   const scanVfxShot = getScreenshot(report, "combat-vfx-scan");
   const burstFrameShots = asArray(report?.screenshots).filter((shot) => /^combat-vfx-scan-\d+ms$/.test(String(shot?.screen || "")));
   const combatScreenshotExists = Boolean(combatShot?.path && await fileExists(combatShot.path));
+  const worldCityScreenshotExists = Boolean(worldCityShot?.path && await fileExists(worldCityShot.path));
+  const worldCityHoverScreenshotExists = Boolean(worldCityHoverShot?.path && await fileExists(worldCityHoverShot.path));
   const scanVfxScreenshotExists = Boolean(scanVfxShot?.path && await fileExists(scanVfxShot.path));
   const existingBurstFrameCount = (await Promise.all(burstFrameShots.map((shot) => fileExists(shot.path)))).filter(Boolean).length;
   const combat = report?.combat || {};
+  const worldCity = report?.worldCity || {};
   const scanVfx = combat?.vfx?.scan || {};
   const scanVfxFrames = asArray(scanVfx.frames);
   const bestVfxFrame = scanVfx.bestVfxFrame || scanVfxFrames.find((frame) => frame?.activeVfxCount > 0 && frame?.lastVfxFamily === "scan") || null;
@@ -230,6 +249,48 @@ export async function runVisualCritic({
       pass: pageErrors.length === 0,
       required: true,
       detail: pageErrors.length ? pageErrors.map((entry) => entry.text).join(" | ") : "No console error/pageerror entries."
+    },
+    {
+      id: "world_city_screenshot_exists",
+      label: "world-city hospital screenshot exists",
+      pass: worldCityScreenshotExists,
+      required: true,
+      detail: worldCityShot?.path || "No world-city screenshot path recorded."
+    },
+    {
+      id: "world_city_screen_state",
+      label: "world-city screenState was captured",
+      pass: worldCity.screenState === "world-city",
+      required: true,
+      detail: `screenState: ${worldCity.screenState || "missing"}`
+    },
+    {
+      id: "world_city_mounted",
+      label: "world-city scene mounted",
+      pass: worldCity.worldCityMounted === true,
+      required: true,
+      detail: `worldCityMounted: ${worldCity.worldCityMounted ?? "missing"}`
+    },
+    {
+      id: "world_city_canvas_count_one",
+      label: "world-city canvas count equals 1",
+      pass: worldCity.cityCanvasCount === 1,
+      required: true,
+      detail: `cityCanvasCount: ${worldCity.cityCanvasCount ?? "missing"}`
+    },
+    {
+      id: "world_city_incident_node_count",
+      label: "world-city incident node count is at least 2",
+      pass: Number(worldCity.visibleIncidentNodeCount || 0) >= 2,
+      required: true,
+      detail: `visibleIncidentNodeCount: ${worldCity.visibleIncidentNodeCount ?? "missing"}`
+    },
+    {
+      id: "world_city_hover_hologram",
+      label: "world-city hover hologram was captured if hover frame exists",
+      pass: worldCityHoverScreenshotExists ? worldCity.hoverHologramVisible === true : true,
+      required: false,
+      detail: `hoverHologramVisible: ${worldCity.hoverHologramVisible ?? "missing"}`
     },
     {
       id: "shell_viewport_sized",
@@ -423,6 +484,18 @@ export async function runVisualCritic({
       },
       error: scanVfx.error || ""
     },
+    world_city: {
+      manual_review_required: true,
+      screenshot_exists: worldCityScreenshotExists,
+      hover_screenshot_exists: worldCityHoverScreenshotExists,
+      screen_state: worldCity.screenState || "",
+      mounted: worldCity.worldCityMounted === true,
+      canvas_count: worldCity.cityCanvasCount ?? null,
+      incident_node_count: worldCity.visibleIncidentNodeCount ?? null,
+      hover_hologram_visible: worldCity.hoverHologramVisible === true,
+      screenshot: worldCityShot?.path || "",
+      hover_screenshot: worldCityHoverShot?.path || ""
+    },
     what_still_looks_fake: [
       "Automated tooling cannot judge whether the battlefield feels cinematic or grounded without human review.",
       "Defender grounding and enemy anchoring still require screenshot inspection against the combat presentation spec.",
@@ -437,6 +510,8 @@ export async function runVisualCritic({
       capture_report: captureReportPath,
       menu: asArray(report?.screenshots).find((shot) => shot?.screen === "menu")?.path || "",
       globe: asArray(report?.screenshots).find((shot) => shot?.screen === "globe")?.path || "",
+      world_city_hospital: worldCityShot?.path || "",
+      world_city_hospital_hover: worldCityHoverShot?.path || "",
       combat: combatShot?.path || "",
       combat_resting: getScreenshot(report, "combat-resting")?.path || "",
       combat_vfx_scan: scanVfxShot?.path || "",
