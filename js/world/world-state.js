@@ -5,6 +5,8 @@ const threatgridWorldState = {
   hoveredIncidentId: "",
   selectedIncidentId: "",
   returnTarget: "game",
+  entrySource: "",
+  sourceThreatId: "",
   lastAction: ""
 };
 
@@ -19,6 +21,8 @@ function clearWorldMapState() {
   threatgridWorldState.hoveredIncidentId = "";
   threatgridWorldState.selectedIncidentId = "";
   threatgridWorldState.returnTarget = "game";
+  threatgridWorldState.entrySource = "";
+  threatgridWorldState.sourceThreatId = "";
   threatgridWorldState.lastAction = "clear";
   return getWorldMapDebugState();
 }
@@ -29,6 +33,8 @@ function setWorldCityState(cityKey, options = {}) {
   threatgridWorldState.hoveredIncidentId = "";
   threatgridWorldState.selectedIncidentId = "";
   threatgridWorldState.returnTarget = options.returnTarget || "game";
+  threatgridWorldState.entrySource = options.entrySource || "";
+  threatgridWorldState.sourceThreatId = options.sourceThreatId || "";
   threatgridWorldState.lastAction = "open-city";
   return getWorldMapDebugState();
 }

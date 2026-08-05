@@ -37,6 +37,7 @@ let playerDeadlineExpired = false;
 let missionEnded = false;
 let pendingGameOverOutcome = null;
 let playerPath = null;
+let worldCityGlobeRoutingInstalled = false;
 
 // Escalation state is tracked outside globe.js because these are game rules, while globe.js only renders state.
 const escalationStateByThreatId = {};
@@ -50,6 +51,75 @@ const accuracyDisplay = document.getElementById("accuracy-display");
 const deadlineDisplay = document.getElementById("deadline-display");
 const encounterOverlay = document.getElementById("encounter-overlay");
 const gameStateContent = document.getElementById("game-state-content");
+
+function getWorldCityRouteForThreatSelection(threat) {
+  if (window.THREATGRID_WORLD_DATA?.getWorldCityRouteForThreat) {
+    return window.THREATGRID_WORLD_DATA.getWorldCityRouteForThreat(threat);
+  }
+
+  return threat?.id === "tg-001"
+    ? {
+      cityKey: "hospital-lockout",
+      entrySource: "globe",
+      sourceThreatId: threat.id,
+      returnTarget: "game"
+    }
+    : null;
+}
+
+function openWorldCityRouteForThreat(threat, route) {
+  if (!route?.cityKey || typeof showWorldCityScreen !== "function") {
+    return false;
+  }
+
+  const result = showWorldCityScreen(route.cityKey, {
+    returnTarget: route.returnTarget || "game",
+    entrySource: route.entrySource || "globe",
+    sourceThreatId: route.sourceThreatId || threat?.id || ""
+  });
+
+  if (result?.ok) {
+    return true;
+  }
+
+  console.warn("[WorldCity] Globe route failed; preserving direct combat fallback.", {
+    threatId: threat?.id || "",
+    cityKey: route.cityKey,
+    result
+  });
+
+  if (screenState === "world-city" && typeof closeWorldCityScreen === "function") {
+    closeWorldCityScreen();
+  }
+
+  return false;
+}
+
+function installWorldCityGlobeRouting() {
+  if (worldCityGlobeRoutingInstalled || !globe?.clickHandlers?.length) {
+    return false;
+  }
+
+  const existingClickHandlers = globe.clickHandlers.slice();
+  globe.clickHandlers.length = 0;
+  globe.onThreatClick((threat) => {
+    if (screenState !== "game" || threat?.status !== "active" || combatState || encounterTransitionActive) {
+      return;
+    }
+
+    const worldCityRoute = getWorldCityRouteForThreatSelection(threat);
+    if (worldCityRoute && openWorldCityRouteForThreat(threat, worldCityRoute)) {
+      return;
+    }
+
+    existingClickHandlers.forEach((callback) => callback(threat));
+  });
+
+  worldCityGlobeRoutingInstalled = true;
+  return true;
+}
+
+window.installWorldCityGlobeRouting = installWorldCityGlobeRouting;
 
 // Severity colors are reused in the panel so the text UI matches the node colors on the globe.
 const severityColorLookup = {

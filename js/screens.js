@@ -419,7 +419,11 @@ function showWorldCityScreen(cityKey = "hospital-lockout", options = {}) {
 
   bootOverlay.style.display = "block";
   bootOverlay.classList.remove("is-hiding");
-  window.THREATGRID_WORLD_STATE?.setCity?.(cityData.cityKey, { returnTarget: options.returnTarget || "game" });
+  window.THREATGRID_WORLD_STATE?.setCity?.(cityData.cityKey, {
+    returnTarget: options.returnTarget || "game",
+    entrySource: options.entrySource || "",
+    sourceThreatId: options.sourceThreatId || ""
+  });
   setScreen("world-city");
   const mounted = renderWorldCityScreen(cityData);
   const debug = window.getCityIncidentSceneDebugState?.() || {};
@@ -437,6 +441,8 @@ function showWorldCityScreen(cityKey = "hospital-lockout", options = {}) {
     canvasCount: debug.canvasCount || 0,
     incidentNodeCount: debug.incidentNodeCount || 0,
     returnTarget: window.THREATGRID_WORLD_STATE?.getDebugState?.().returnTarget || options.returnTarget || "game",
+    entrySource: window.THREATGRID_WORLD_STATE?.getDebugState?.().entrySource || options.entrySource || "",
+    sourceThreatId: window.THREATGRID_WORLD_STATE?.getDebugState?.().sourceThreatId || options.sourceThreatId || "",
     lastError: debug.lastError || ""
   };
 }
@@ -510,6 +516,9 @@ function startGame() {
     globeStarted = true;
     globe.init();
     wireThreatResponses();
+    if (typeof installWorldCityGlobeRouting === "function") {
+      installWorldCityGlobeRouting();
+    }
   } else if (typeof startRespawnInterval === "function") {
     startRespawnInterval();
   }
@@ -606,7 +615,10 @@ window.showForgeScreen = showForgeScreen;
 window.closeForgeScreen = closeForgeScreen;
 window.showWorldCityScreen = showWorldCityScreen;
 window.closeWorldCityScreen = closeWorldCityScreen;
-window.devOpenWorldCity = (cityKey = "hospital-lockout") => showWorldCityScreen(cityKey, { returnTarget: globeStarted ? "game" : "menu" });
+window.devOpenWorldCity = (cityKey = "hospital-lockout") => showWorldCityScreen(cityKey, {
+  returnTarget: globeStarted ? "game" : "menu",
+  entrySource: "dev-helper"
+});
 window.devReturnToWorldMap = closeWorldCityScreen;
 window.devSelectIncidentNode = (incidentId = "hospital-main-lockout") => {
   const cityKey = window.THREATGRID_WORLD_STATE?.getDebugState?.().currentCityKey || "hospital-lockout";

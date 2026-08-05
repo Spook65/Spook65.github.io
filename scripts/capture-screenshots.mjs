@@ -209,6 +209,12 @@ async function collectWorldCityState(page) {
   return page.evaluate(() => {
     const debug = window.devCityIncidentSceneState?.() || {};
     const state = window.devWorldState?.() || {};
+    const screen = document.querySelector("#world-city-screen");
+    const title = document.querySelector(".world-city-heading h1");
+    const screenRect = screen?.getBoundingClientRect?.();
+    const titleRect = title?.getBoundingClientRect?.();
+    const screenComputed = screen ? getComputedStyle(screen) : null;
+    const titleComputed = title ? getComputedStyle(title) : null;
     const hologram = document.querySelector("[data-world-city-hologram]");
     const hologramRect = hologram?.getBoundingClientRect?.();
     const hologramComputed = hologram ? getComputedStyle(hologram) : null;
@@ -227,9 +233,67 @@ async function collectWorldCityState(page) {
       worldCityMounted: Boolean(debug.mounted),
       cityCanvasCount: debug.canvasCount || document.querySelectorAll("[data-world-city-scene] canvas").length,
       visibleIncidentNodeCount: debug.incidentNodeCount || 0,
+      worldCityScreenOpacity: Number(screenComputed?.opacity || 0),
+      worldCityScreenVisible: Boolean(screen
+        && screenComputed?.display !== "none"
+        && screenComputed?.visibility !== "hidden"
+        && Number(screenComputed?.opacity || 0) > 0.9
+        && screenRect?.width > 0
+        && screenRect?.height > 0),
+      worldCityTitleVisible: Boolean(title
+        && titleComputed?.display !== "none"
+        && titleComputed?.visibility !== "hidden"
+        && Number(titleComputed?.opacity || 0) > 0.9
+        && titleRect?.width > 0
+        && titleRect?.height > 0),
+      worldCityTitleText: title?.textContent?.trim?.() || "",
       hoverHologramVisible: hologramVisible
     };
   });
+}
+
+async function tryOpenWorldCityFromGlobeNode(page) {
+  const projection = await page.evaluate(() => {
+    const globe = window.threatGlobe;
+    const entry = globe?.nodeMap?.get?.("tg-001");
+    if (!globe || !entry?.group || !globe.camera || typeof THREE === "undefined") {
+      return {
+        ok: false,
+        reason: "Hospital globe node or THREE camera context unavailable."
+      };
+    }
+
+    globe.scene?.updateMatrixWorld?.(true);
+    globe.camera.updateMatrixWorld?.(true);
+    const projected = new THREE.Vector3();
+    entry.group.getWorldPosition(projected);
+    projected.project(globe.camera);
+
+    return {
+      ok: Number.isFinite(projected.x) && Number.isFinite(projected.y),
+      x: Math.round((projected.x + 1) * window.innerWidth / 2),
+      y: Math.round((-projected.y + 1) * window.innerHeight / 2),
+      screenState: typeof screenState !== "undefined" ? screenState : window.screenState || "",
+      threatId: entry.threat?.id || ""
+    };
+  });
+
+  if (!projection.ok) {
+    return { ok: false, route: "globe-route", projection };
+  }
+
+  await page.mouse.click(projection.x, projection.y);
+  try {
+    await page.waitForSelector("[data-world-city-scene] canvas", { timeout: 5000 });
+    return { ok: true, route: "globe-route", projection };
+  } catch (error) {
+    return {
+      ok: false,
+      route: "globe-route",
+      projection,
+      reason: error?.message || String(error)
+    };
+  }
 }
 
 async function waitForCombatDioramaDebug(page, predicate, timeoutMs = 1800) {
@@ -437,8 +501,17 @@ async function main() {
 
       const worldCityHelperAvailable = await page.evaluate(() => typeof window.devOpenWorldCity === "function");
       report.worldCity.helperAvailable = worldCityHelperAvailable;
-      if (worldCityHelperAvailable) {
-        report.worldCity.opened = await page.evaluate(() => window.devOpenWorldCity("hospital-lockout"));
+      const globeRouteAttempt = await tryOpenWorldCityFromGlobeNode(page);
+      report.worldCity.globeRouteAttempt = globeRouteAttempt;
+      report.worldCity.entryRoute = globeRouteAttempt.ok ? "globe-route" : "";
+
+      if (globeRouteAttempt.ok || worldCityHelperAvailable) {
+        if (!globeRouteAttempt.ok) {
+          report.worldCity.entryRoute = "dev-helper";
+          report.worldCity.opened = await page.evaluate(() => window.devOpenWorldCity("hospital-lockout"));
+        } else {
+          report.worldCity.opened = true;
+        }
         await page.waitForSelector("[data-world-city-scene] canvas", { timeout: 5000 });
         await page.waitForTimeout(700);
         const worldCityPath = await capture(page, "world-city-hospital");
@@ -470,7 +543,7 @@ async function main() {
           report.screenshots.push({ screen: "world-city-hospital-hover", path: hoverPath, exists: report.worldCity.hoverScreenshotExists });
         }
       } else {
-        report.blockers.push("World-city screenshot not captured: devOpenWorldCity was not available on window.");
+        report.blockers.push("World-city screenshot not captured: globe route failed and devOpenWorldCity was not available on window.");
       }
     } else {
       report.blockers.push("Globe was not reachable through STARTER SETUP -> BEGIN RUN in the harness.");

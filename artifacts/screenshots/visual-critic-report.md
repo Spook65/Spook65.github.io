@@ -35,6 +35,12 @@
   cityCanvasCount: 1
 - PASS: world-city incident node count is at least 2 (required)
   visibleIncidentNodeCount: 4
+- PASS: world-city visible screen opacity is above 0.9 (required)
+  opacity: 1, visible: true
+- PASS: world-city title/header is visible (required)
+  title: Hospital Network Lockout
+- PASS: world-city entry route recorded (informational)
+  entryRoute: globe-route
 - PASS: world-city hover hologram was captured if hover frame exists (informational)
   hoverHologramVisible: true
 - PASS: combat shell is approximately viewport-sized (required)
@@ -94,7 +100,7 @@
 - Manual review required: true
 - Timing reliable: true
 - Intended offsets: 0, 100, 200, 300, 450, 600
-- Actual elapsed times: 74, 2487, 3007, 3590, 4140, 4671
+- Actual elapsed times: 125, 2857, 3322, 3768, 4371, 4923
 
 ## World City Capture
 
@@ -104,6 +110,9 @@
 - Mounted: true
 - City canvas count: 1
 - Incident node count: 4
+- Entry route: globe-route
+- Screen opacity: 1
+- Title visible: true
 - Hover hologram visible: true
 - Manual review required: true
 

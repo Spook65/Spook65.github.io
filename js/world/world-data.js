@@ -83,10 +83,24 @@ function findCombatThreatForWorldIncident(incident) {
   return threats.find((threat) => threat?.id === incident.combatThreatId) || null;
 }
 
+function getWorldCityRouteForThreat(threat) {
+  if (threat?.id !== "tg-001") {
+    return null;
+  }
+
+  return {
+    cityKey: "hospital-lockout",
+    entrySource: "globe",
+    sourceThreatId: threat.id,
+    returnTarget: "game"
+  };
+}
+
 if (typeof window !== "undefined") {
   window.THREATGRID_WORLD_DATA = {
     getWorldCityLayer,
     getWorldCityIncident,
-    findCombatThreatForWorldIncident
+    findCombatThreatForWorldIncident,
+    getWorldCityRouteForThreat
   };
 }

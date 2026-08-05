@@ -129,6 +129,9 @@ function buildMarkdownReport(result) {
     lines.push(`- Mounted: ${result.world_city.mounted ? "true" : "false"}`);
     lines.push(`- City canvas count: ${result.world_city.canvas_count ?? "missing"}`);
     lines.push(`- Incident node count: ${result.world_city.incident_node_count ?? "missing"}`);
+    lines.push(`- Entry route: ${result.world_city.entry_route || "missing"}`);
+    lines.push(`- Screen opacity: ${result.world_city.screen_opacity ?? "missing"}`);
+    lines.push(`- Title visible: ${result.world_city.title_visible ? "true" : "false"}`);
     lines.push(`- Hover hologram visible: ${result.world_city.hover_hologram_visible ? "true" : "false"}`);
     lines.push(`- Manual review required: ${result.world_city.manual_review_required ? "true" : "false"}`);
   } else {
@@ -284,6 +287,27 @@ export async function runVisualCritic({
       pass: Number(worldCity.visibleIncidentNodeCount || 0) >= 2,
       required: true,
       detail: `visibleIncidentNodeCount: ${worldCity.visibleIncidentNodeCount ?? "missing"}`
+    },
+    {
+      id: "world_city_screen_visible_opacity",
+      label: "world-city visible screen opacity is above 0.9",
+      pass: Number(worldCity.worldCityScreenOpacity || 0) > 0.9 && worldCity.worldCityScreenVisible === true,
+      required: true,
+      detail: `opacity: ${worldCity.worldCityScreenOpacity ?? "missing"}, visible: ${worldCity.worldCityScreenVisible ?? "missing"}`
+    },
+    {
+      id: "world_city_title_visible",
+      label: "world-city title/header is visible",
+      pass: worldCity.worldCityTitleVisible === true,
+      required: true,
+      detail: worldCity.worldCityTitleText ? `title: ${worldCity.worldCityTitleText}` : "No visible world-city title text recorded."
+    },
+    {
+      id: "world_city_entry_route_recorded",
+      label: "world-city entry route recorded",
+      pass: Boolean(worldCity.entryRoute),
+      required: false,
+      detail: `entryRoute: ${worldCity.entryRoute || "missing"}`
     },
     {
       id: "world_city_hover_hologram",
@@ -492,6 +516,11 @@ export async function runVisualCritic({
       mounted: worldCity.worldCityMounted === true,
       canvas_count: worldCity.cityCanvasCount ?? null,
       incident_node_count: worldCity.visibleIncidentNodeCount ?? null,
+      entry_route: worldCity.entryRoute || "",
+      screen_opacity: worldCity.worldCityScreenOpacity ?? null,
+      screen_visible: worldCity.worldCityScreenVisible === true,
+      title_visible: worldCity.worldCityTitleVisible === true,
+      title_text: worldCity.worldCityTitleText || "",
       hover_hologram_visible: worldCity.hoverHologramVisible === true,
       screenshot: worldCityShot?.path || "",
       hover_screenshot: worldCityHoverShot?.path || ""
