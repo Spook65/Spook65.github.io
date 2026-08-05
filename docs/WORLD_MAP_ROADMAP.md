@@ -35,6 +35,87 @@ Intent:
 
 Do not build the full map now.
 
+## Region-First Progression
+
+Target player-facing flow:
+
+Globe -> Region Hover/Select -> Sector/State/Province Selection -> City Incident Layer -> Incident Node -> Combat -> Reward/Combat Resolution -> Return To City/Sector/Globe
+
+Region-first progression means the player should understand the world threat layer in broad, readable steps before committing to a specific incident. The globe should first communicate large cyber-pressure zones such as North America, Europe, East Asia, South America, Africa, Oceania, or other future region groups. Selecting a region then reveals fictionalized state, province, or sector entries. Those sectors route into city incident layers that stage actual cyber incidents as places rather than dashboard rows.
+
+City and sector names should be inspired by real geography and infrastructure, but they should not require exact real-world geography knowledge. THREATGRID is a cyber-fantasy roguelike, not a GIS quiz. Use fictionalized sector names that imply infrastructure, threat flavor, and mission tone while staying recognizable enough for the player to orient themselves.
+
+Current first-slice framing:
+
+- Globe node: `tg-001` / Hospital Network Lockout.
+- Region: North America.
+- Sector: Atlantic Medical Corridor.
+- City layer: New York Medical Corridor.
+- Incident: Hospital Network Lockout.
+- Runtime route today: `game` globe -> `world-city` hospital-lockout -> incident node -> existing combat.
+
+### Region Hover Behavior Contract
+
+Future globe region hover should:
+
+- Highlight broad world regions, not individual city nodes only.
+- Make the selected region feel like a cyber-threat zone rather than a flat menu item.
+- Use readable atmospheric emphasis: glow bands, arcs, cluster energy, regional pulse fields, or similar restrained effects.
+- Avoid exact political border complexity for the MVP if geo-boundary data is not ready.
+- Allow approximate region glow, arc, or cluster highlighting for the first implementation.
+- Reserve proper region/country polygon boundaries for a later data-backed upgrade.
+
+Example behavior:
+
+- Hover North America -> continent or region pressure glow appears around the relevant globe area.
+- Select North America -> sector options appear.
+- Select a sector -> city incident layer opens.
+
+Do not require accurate GIS boundaries in the first region-hover pass. The goal is readable game progression, not cartographic precision.
+
+### Sector/State/Province Selection Contract
+
+After selecting a region, show a sector selection layer. This can be an HTML/Three.js hybrid scene or a scoped UI overlay attached to the selected region, but it must feel like a mission route choice rather than a generic list panel.
+
+Example North America sector options:
+
+- Atlantic Medical Corridor.
+- Pacific Grid Sector.
+- Midwest Logistics Spine.
+- Gulf Energy Belt.
+- Northern Research Arc.
+
+Current first-slice route:
+
+North America -> Atlantic Medical Corridor -> New York Medical Corridor -> Hospital Network Lockout.
+
+Rules:
+
+- Sector names should be fictionalized but clearly inspired by real places.
+- Avoid turning map progression into a geography quiz.
+- Each sector should imply cyber infrastructure and threat flavor.
+- Each sector can contain multiple future city incident layers.
+- Each city layer should represent a cyber incident zone, not an exact recreation of a real city.
+
+### Major Threat Routing Rule
+
+All major player-facing threats should eventually route through at least one world/map layer before combat:
+
+Globe -> Region/Sector/City Context -> Incident Node -> Combat
+
+Direct globe-to-combat is allowed only as:
+
+- Temporary legacy fallback during migration.
+- Minor threat quick-start behavior.
+- Debug or screenshot-harness route.
+- Emergency fallback if a map layer fails to mount.
+
+Current migration status:
+
+- `tg-001` Hospital Network Lockout routes to the `hospital-lockout` city layer.
+- Non-hospital nodes still route directly to combat for now.
+- This is temporary while region, sector, and city-layer coverage is built out.
+
 ## World Map Architecture
 
 Chosen architecture: Option C, the hybrid staged approach.
@@ -95,6 +176,8 @@ Planned states:
 - `menu`
 - `defenders`
 - `game`
+- `world-region`
+- `world-sector`
 - `world-city`
 - `incident-detail`
 - `combat`
@@ -118,21 +201,37 @@ Allowed first-slice transitions:
 Optional later transitions:
 
 - `game` -> `world-region`
-- `world-region` -> `world-state`
-- `world-state` -> `world-city`
-- `world-city` -> `world-state`
-- `world-state` -> `world-region`
+- `world-region` -> `world-sector`
+- `world-sector` -> `world-city`
+- `world-city` -> `world-sector`
+- `world-sector` -> `world-region`
 - `world-region` -> `game`
+
+Future full progression transitions:
+
+- `game` -> `world-region`
+- `world-region` -> `world-sector`
+- `world-sector` -> `world-city`
+- `world-city` -> `incident-detail`
+- `world-city` -> `combat`
+- `incident-detail` -> `combat`
+- `combat` -> `reward/combat-resolution`
+- `reward/combat-resolution` -> `world-city`
+- `reward/combat-resolution` -> `world-sector`
+- `reward/combat-resolution` -> `game`
 
 Cleanup rules:
 
 - Hidden scenes must not process input.
 - Hidden scenes must stop animation loops or be explicitly gated by `screenState`.
-- No hidden globe or city listeners may respond behind combat.
+- No hidden globe, region, sector, or city listeners may respond behind combat.
 - No duplicate Three.js renderers may remain mounted.
+- Only one active Three.js renderer should exist per active scene.
 - No map or combat audio should leak across states.
 - Exiting a map scene must remove or disable hover holograms.
 - Returning from combat must use an explicit return target, such as `world-city` or `game`.
+- Region and sector layers must not bloat `js/globe.js`.
+- Region, sector, and city scenes should follow the city/combat lifecycle patterns: mount only while active, gate input by `screenState`, stop loops on exit, and dispose resources.
 
 Fallback behavior:
 
@@ -173,6 +272,82 @@ Future map nodes should use an additive planning-only shape:
 }
 ```
 
+Future region shape:
+
+```js
+{
+  id,
+  title,
+  worldLayer,
+  regionKey,
+  displayName,
+  inspiredBy,
+  centerLatLng,
+  approximateBounds,
+  threatPressure,
+  sectorIds,
+  unlockTier,
+  summary,
+  visualTheme
+}
+```
+
+Future sector/state/province shape:
+
+```js
+{
+  id,
+  regionKey,
+  title,
+  sectorType,
+  inspiredBy,
+  fictionalName,
+  cityLayerIds,
+  dominantThreatFamilies,
+  infrastructureTags,
+  recommendedLevel,
+  riskIndex,
+  summary,
+  visualTheme
+}
+```
+
+Future city layer shape:
+
+```js
+{
+  id,
+  sectorId,
+  title,
+  cityDisplayName,
+  inspiredBy,
+  environmentKey,
+  sceneKey,
+  incidentNodeIds,
+  returnTargets,
+  visualTheme
+}
+```
+
+Future incident node shape:
+
+```js
+{
+  id,
+  cityLayerId,
+  title,
+  severity,
+  threatFamily,
+  affectedSystem,
+  cityPosition,
+  buildingKey,
+  combatThreatId,
+  hologramSummary,
+  rewardsPreview,
+  status
+}
+```
+
 Data rules:
 
 - Add fields only when an implementation pass explicitly requests them.
@@ -180,6 +355,7 @@ Data rules:
 - Existing threat objects must continue to work when metadata is missing.
 - Do not mutate existing threat objects for presentation state.
 - Use adapters before migrating `js/threats.js`.
+- Current threats can be mapped to region, sector, city, and incident nodes through route adapters.
 - Migrate threat data only after the Hospital City Incident Layer proves itself.
 - Keep `location.lat`, `location.lng`, `location.city`, and `location.country` stable.
 - `combatThreatId` should point to the existing combat threat source when city nodes are presentation wrappers.
@@ -217,6 +393,41 @@ Hospital city visual target:
 - Holographic incident rings pinned to hospital systems.
 - A calm strategic map tone, not combat intensity and not Forge industrial noise.
 
+## Hybrid Tactical / 3D City Map Direction
+
+City incident layers should combine top-down tactical readability with isometric or 3D diorama depth. They should be easy to scan like tactical maps, but still feel like physical places the player is entering.
+
+Use:
+
+- Top-down tactical district clarity.
+- Isometric or 3D depth.
+- Physical infrastructure landmarks.
+- Building rooftops, towers, tunnels, yards, or command rooms as threat-node anchors.
+- Dim, moody, Gotham-like cyber atmosphere where appropriate.
+- District backgrounds richer than a few boxes.
+- Holograms pinned to infrastructure rather than floating as generic panels.
+
+For the New York Medical Corridor, future visual upgrades should consider:
+
+- Dense hospital district massing.
+- Emergency roads.
+- Ambulance bay.
+- Rooftop medical helipad.
+- Radiology/EHR tower.
+- Backup generator yard.
+- Subway or utility tunnel hint.
+- Rain or dim night atmosphere if cheap and performant.
+- Incident nodes pinned to rooftops, infrastructure cores, or emergency systems.
+
+Avoid:
+
+- Bland few-building dioramas.
+- Random panels.
+- Generic neon grids.
+- Too many map markers.
+- Exact real-world copies.
+- Overbuilding realism before interaction, routing, and lifecycle are stable.
+
 ## Recommended Module Structure
 
 Small first version:
@@ -229,14 +440,16 @@ Small first version:
 Later expansion:
 
 - `js/world/world-region-scene.js`
-- `js/world/world-state-scene.js`
+- `js/world/world-sector-scene.js`
 - `js/world/world-transitions.js`
 
 Ownership rules:
 
 - `js/globe.js` owns the current globe only.
-- `js/world/world-state.js` should own world map routing state and return targets.
-- `js/world/world-data.js` should adapt existing threat data without mutating it.
+- `js/world/world-state.js` should own world map routing state, active world layer, selected region/sector/city, and return targets.
+- `js/world/world-data.js` should adapt existing threat data into region, sector, city, and incident node data without mutating it.
+- `js/world/world-region-scene.js` should own future region hover/select lifecycle if the selected layer needs its own scene.
+- `js/world/world-sector-scene.js` should own future sector/state/province selection lifecycle.
 - `js/world/city-incident-scene.js` should own the city scene lifecycle.
 - `js/world/world-map-ui.js` should own city hover holograms and incident detail markup.
 
@@ -244,6 +457,8 @@ Ownership rules:
 
 Future dev helpers:
 
+- `window.devOpenWorldRegion("north-america")`
+- `window.devOpenWorldSector("atlantic-medical-corridor")`
 - `window.devOpenWorldCity("hospital-lockout")`
 - `window.devSelectIncidentNode("tg-001")`
 - `window.devWorldState()`
@@ -255,8 +470,67 @@ Rules:
 - Helpers must not appear in player UI.
 - Helpers must not change normal player flow.
 - Helpers must not mutate threat data, combat math, rewards, save state, or run progression.
-- The screenshot harness should eventually capture globe, city layer, incident hover, combat, and return behavior.
+- The screenshot harness should eventually capture globe region hover, region selected, sector selection, city layer, city node hover, city node combat entry, and return behavior.
 - Harness reports must not claim visual success without captured screenshots or an explicit blocker.
+
+Future critic checks should include:
+
+- Screen visible opacity and title/header visibility.
+- Correct `screenState`.
+- Active renderer/canvas count.
+- No duplicate listeners or canvases.
+- Hover/selection debug state.
+- No page errors.
+
+## Implementation Stages
+
+Stage 0: Current city MVP exists.
+
+- `tg-001` Hospital Network Lockout routes from globe to `world-city` hospital-lockout.
+- The main hospital city incident node enters existing combat.
+- Non-hospital nodes still use direct combat as temporary migration fallback.
+
+Stage 1: Region-to-city progression spec.
+
+- Document region hover, sector selection, city routing, data contracts, visual direction, lifecycle rules, and harness expectations.
+- Do not change runtime files in this stage.
+
+Stage 2: Region/sector data adapters only.
+
+- Add planning data for North America and Atlantic Medical Corridor.
+- Map current hospital city data through adapters.
+- Do not alter threat object shape or gameplay behavior.
+
+Stage 3: Globe region hover MVP.
+
+- Use approximate region highlight, glow, arcs, or cluster emphasis.
+- Do not require exact borders.
+- Keep `js/globe.js` focused on globe rendering and expose only minimal hooks if needed.
+
+Stage 4: Region select -> sector selection UI/scene.
+
+- Show sector/state/province choices as scene-attached route options.
+- Preserve `screenState` boundaries and cleanup.
+
+Stage 5: Sector select -> New York Medical Corridor city layer.
+
+- Route North America -> Atlantic Medical Corridor -> New York Medical Corridor -> `hospital-lockout`.
+- Keep city combat entry through existing combat start path.
+
+Stage 6: Upgrade Hospital City visual design into a richer hybrid tactical district.
+
+- Improve city depth, landmarks, building anchors, and district atmosphere.
+- Do not redesign region or combat in the same pass.
+
+Stage 7: Route additional major threats through their city layers.
+
+- Add more city/sector adapters for major threats.
+- Direct globe-to-combat remains only as legacy/minor/debug fallback.
+
+Stage 8: Future proper geo boundaries and expanded regions.
+
+- Add real region/country polygon boundaries only after the region/sector/city flow is stable.
+- Expand additional regions and sectors incrementally.
 
 ## Staged Implementation Plan
 
