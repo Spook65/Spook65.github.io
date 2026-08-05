@@ -46,7 +46,17 @@ function setWorldCitySelection(incidentId = "") {
 }
 
 function getWorldMapDebugState() {
-  return { ...threatgridWorldState };
+  const cityScene = typeof window !== "undefined" && typeof window.getCityIncidentSceneDebugState === "function"
+    ? window.getCityIncidentSceneDebugState()
+    : null;
+  return {
+    ...threatgridWorldState,
+    cityMounted: Boolean(cityScene?.mounted),
+    canvasCount: cityScene?.canvasCount || 0,
+    incidentNodeCount: cityScene?.incidentNodeCount || 0,
+    cityHoveredIncidentId: cityScene?.hoveredIncidentId || "",
+    lastError: cityScene?.lastError || ""
+  };
 }
 
 if (typeof window !== "undefined") {

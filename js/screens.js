@@ -392,20 +392,53 @@ function renderWorldCityScreen(cityData) {
 
 function showWorldCityScreen(cityKey = "hospital-lockout", options = {}) {
   if (typeof combatState !== "undefined" && combatState) {
-    return false;
+    return { ok: false, reason: "Combat is active." };
+  }
+
+  const dependenciesReady = Boolean(
+    window.THREATGRID_WORLD_DATA?.getWorldCityLayer
+    && window.THREATGRID_WORLD_MAP_UI?.buildWorldCityScreenMarkup
+    && typeof window.mountCityIncidentScene === "function"
+  );
+  if (!dependenciesReady) {
+    const reason = "World-city modules are not ready. Refresh with cache disabled or verify world script loading.";
+    console.warn("[WorldCity]", reason, {
+      data: Boolean(window.THREATGRID_WORLD_DATA?.getWorldCityLayer),
+      ui: Boolean(window.THREATGRID_WORLD_MAP_UI?.buildWorldCityScreenMarkup),
+      scene: typeof window.mountCityIncidentScene === "function"
+    });
+    return { ok: false, reason };
   }
 
   const cityData = window.THREATGRID_WORLD_DATA?.getWorldCityLayer?.(cityKey);
   if (!cityData) {
-    console.warn("[WORLD CITY] Unknown city layer.", { cityKey });
-    return false;
+    const reason = `Unknown city layer: ${cityKey}`;
+    console.warn("[WorldCity]", reason);
+    return { ok: false, reason };
   }
 
   bootOverlay.style.display = "block";
   bootOverlay.classList.remove("is-hiding");
   window.THREATGRID_WORLD_STATE?.setCity?.(cityData.cityKey, { returnTarget: options.returnTarget || "game" });
   setScreen("world-city");
-  return renderWorldCityScreen(cityData);
+  const mounted = renderWorldCityScreen(cityData);
+  const debug = window.getCityIncidentSceneDebugState?.() || {};
+  if (!mounted) {
+    const reason = debug.lastError || "City incident scene failed to mount.";
+    console.warn("[WorldCity]", reason, debug);
+    return { ok: false, reason, ...debug };
+  }
+
+  return {
+    ok: true,
+    screen: "world-city",
+    currentCityKey: cityData.cityKey,
+    mounted: Boolean(debug.mounted),
+    canvasCount: debug.canvasCount || 0,
+    incidentNodeCount: debug.incidentNodeCount || 0,
+    returnTarget: window.THREATGRID_WORLD_STATE?.getDebugState?.().returnTarget || options.returnTarget || "game",
+    lastError: debug.lastError || ""
+  };
 }
 
 function closeWorldCityScreen() {
@@ -580,4 +613,5 @@ window.devSelectIncidentNode = (incidentId = "hospital-main-lockout") => {
   const incident = window.THREATGRID_WORLD_DATA?.getWorldCityIncident?.(cityKey, incidentId);
   return handleWorldCityIncidentSelect(incident);
 };
+window.devWorldState = () => window.THREATGRID_WORLD_STATE?.getDebugState?.() || {};
 window.devRestoreParty = restoreExpeditionPartyFromHud;

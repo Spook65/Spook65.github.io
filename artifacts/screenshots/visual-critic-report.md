@@ -94,7 +94,7 @@
 - Manual review required: true
 - Timing reliable: true
 - Intended offsets: 0, 100, 200, 300, 450, 600
-- Actual elapsed times: 5, 3200, 3649, 4121, 4700, 5262
+- Actual elapsed times: 74, 2487, 3007, 3590, 4140, 4671
 
 ## World City Capture
 
