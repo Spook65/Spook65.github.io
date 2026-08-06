@@ -41,6 +41,8 @@
   title: Hospital Network Lockout
 - PASS: world-city entry route recorded (informational)
   entryRoute: globe-route
+- PASS: world-city route chain includes region, sector, and city (informational)
+  routeChain: north-america -> atlantic-medical-corridor -> hospital-lockout
 - PASS: world-city hover hologram was captured if hover frame exists (informational)
   hoverHologramVisible: true
 - PASS: combat shell is approximately viewport-sized (required)
@@ -100,7 +102,7 @@
 - Manual review required: true
 - Timing reliable: true
 - Intended offsets: 0, 100, 200, 300, 450, 600
-- Actual elapsed times: 125, 2857, 3322, 3768, 4371, 4923
+- Actual elapsed times: 83, 2412, 2944, 3451, 4006, 4538
 
 ## World City Capture
 
@@ -111,6 +113,7 @@
 - City canvas count: 1
 - Incident node count: 4
 - Entry route: globe-route
+- Route chain: north-america -> atlantic-medical-corridor -> hospital-lockout
 - Screen opacity: 1
 - Title visible: true
 - Hover hologram visible: true

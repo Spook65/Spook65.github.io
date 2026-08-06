@@ -1,16 +1,79 @@
 /* Planning-adapter data for the Hospital Network Lockout city incident MVP. */
+const threatgridWorldRegions = {
+  "north-america": {
+    id: "north-america",
+    title: "North America",
+    displayName: "North America",
+    worldLayer: "region",
+    regionKey: "north-america",
+    inspiredBy: "Broad North America",
+    centerLatLng: { lat: 39.5, lng: -98.35 },
+    approximateBounds: {
+      north: 72,
+      south: 15,
+      west: -168,
+      east: -52
+    },
+    threatPressure: "critical medical infrastructure pressure along the Atlantic corridor",
+    sectorIds: ["atlantic-medical-corridor"],
+    unlockTier: 1,
+    summary: "A broad region of dense civic, medical, research, logistics, and energy systems under escalating protocol pressure.",
+    visualTheme: "continent-scale threat glow, satellite scan arcs, restrained teal/coral pressure clusters"
+  }
+};
+
+const threatgridWorldSectors = {
+  "atlantic-medical-corridor": {
+    id: "atlantic-medical-corridor",
+    regionKey: "north-america",
+    title: "Atlantic Medical Corridor",
+    sectorType: "fictionalized infrastructure corridor",
+    inspiredBy: "Dense East Coast hospital, research, emergency, and civic infrastructure",
+    fictionalName: "Atlantic Medical Corridor",
+    cityLayerIds: ["hospital-lockout"],
+    dominantThreatFamilies: ["ransomware", "lateral_movement", "clinical_system_lockout"],
+    infrastructureTags: ["hospital", "emergency_services", "radiology", "identity", "backup_power"],
+    recommendedLevel: 4,
+    riskIndex: "critical",
+    summary: "A medical infrastructure spine where clinical networks, emergency routing, and backup systems are tightly coupled.",
+    visualTheme: "rain-dark medical district routes, emergency amber, cyan diagnostic scanlines, muted civic silhouettes"
+  }
+};
+
+const threatgridWorldThreatRoutes = {
+  "tg-001": {
+    threatId: "tg-001",
+    regionId: "north-america",
+    sectorId: "atlantic-medical-corridor",
+    cityKey: "hospital-lockout",
+    incidentNodeId: "hospital-main-lockout",
+    routeChain: ["north-america", "atlantic-medical-corridor", "hospital-lockout"],
+    entrySource: "globe",
+    returnTarget: "game"
+  }
+};
+
 const threatgridWorldCities = {
   "hospital-lockout": {
+    id: "hospital-lockout",
     cityKey: "hospital-lockout",
+    sectorId: "atlantic-medical-corridor",
+    cityDisplayName: "New York Medical Corridor",
+    inspiredBy: "New York medical district / dense East Coast emergency infrastructure",
     title: "Hospital Network Lockout",
     eyebrow: "WORLD-CITY / NEW YORK MEDICAL CORRIDOR",
     region: "North America",
+    regionKey: "north-america",
     country: "United States",
     state: "New York",
     city: "New York",
     district: "Medical corridor",
     environmentKey: "hospital-lockout",
+    sceneKey: "hospital-lockout",
     threatFamily: "ransomware",
+    incidentNodeIds: ["hospital-main-lockout", "triage-routing-failure", "backup-generator-handshake", "ambulance-comms-delay"],
+    returnTargets: ["game", "world-sector"],
+    visualTheme: "dystopian night hospital corridor, emergency roads, EHR tower, backup systems, rain-dark civic infrastructure",
     summary: "A hospital district is running on backup coordination while ransomware pressure spreads across clinical systems.",
     incidents: [
       {
@@ -62,17 +125,48 @@ const threatgridWorldCities = {
 };
 
 function cloneWorldData(value) {
-  return JSON.parse(JSON.stringify(value));
+  return value ? JSON.parse(JSON.stringify(value)) : null;
 }
 
-function getWorldCityLayer(cityKey = "hospital-lockout") {
+function getWorldRegion(regionId = "north-america") {
+  return cloneWorldData(threatgridWorldRegions[String(regionId || "north-america")] || null);
+}
+
+function getWorldSectorsForRegion(regionId = "north-america") {
+  const normalizedRegionId = String(regionId || "north-america");
+  return Object.values(threatgridWorldSectors)
+    .filter((sector) => sector.regionKey === normalizedRegionId)
+    .map(cloneWorldData);
+}
+
+function getWorldSector(sectorId = "atlantic-medical-corridor") {
+  return cloneWorldData(threatgridWorldSectors[String(sectorId || "atlantic-medical-corridor")] || null);
+}
+
+function getWorldCitiesForSector(sectorId = "atlantic-medical-corridor") {
+  const sector = threatgridWorldSectors[String(sectorId || "atlantic-medical-corridor")];
+  if (!sector) {
+    return [];
+  }
+
+  return sector.cityLayerIds
+    .map((cityKey) => threatgridWorldCities[cityKey])
+    .filter(Boolean)
+    .map(cloneWorldData);
+}
+
+function getWorldCity(cityKey = "hospital-lockout") {
   const layer = threatgridWorldCities[String(cityKey || "hospital-lockout")] || threatgridWorldCities["hospital-lockout"];
   return cloneWorldData(layer);
 }
 
+function getWorldCityLayer(cityKey = "hospital-lockout") {
+  return getWorldCity(cityKey);
+}
+
 function getWorldCityIncident(cityKey, incidentId) {
   const layer = getWorldCityLayer(cityKey);
-  return layer.incidents.find((incident) => incident.id === incidentId) || null;
+  return layer?.incidents?.find((incident) => incident.id === incidentId) || null;
 }
 
 function findCombatThreatForWorldIncident(incident) {
@@ -83,24 +177,56 @@ function findCombatThreatForWorldIncident(incident) {
   return threats.find((threat) => threat?.id === incident.combatThreatId) || null;
 }
 
+function getWorldRouteForThreat(threatOrId) {
+  const threatId = typeof threatOrId === "string" ? threatOrId : threatOrId?.id;
+  const route = threatgridWorldThreatRoutes[String(threatId || "")];
+  if (!route) {
+    return null;
+  }
+
+  const city = getWorldCity(route.cityKey);
+  const sector = getWorldSector(route.sectorId);
+  const region = getWorldRegion(route.regionId);
+  return {
+    ...cloneWorldData(route),
+    sourceThreatId: route.threatId,
+    city,
+    sector,
+    region
+  };
+}
+
 function getWorldCityRouteForThreat(threat) {
-  if (threat?.id !== "tg-001") {
+  const route = getWorldRouteForThreat(threat);
+  if (!route) {
     return null;
   }
 
   return {
-    cityKey: "hospital-lockout",
-    entrySource: "globe",
-    sourceThreatId: threat.id,
-    returnTarget: "game"
+    cityKey: route.cityKey,
+    regionId: route.regionId,
+    sectorId: route.sectorId,
+    incidentNodeId: route.incidentNodeId,
+    routeChain: route.routeChain,
+    entrySource: route.entrySource,
+    sourceThreatId: route.threatId,
+    returnTarget: route.returnTarget
   };
 }
 
 if (typeof window !== "undefined") {
   window.THREATGRID_WORLD_DATA = {
+    getWorldRegion,
+    getWorldSectorsForRegion,
+    getWorldSector,
+    getWorldCitiesForSector,
+    getWorldCity,
     getWorldCityLayer,
     getWorldCityIncident,
     findCombatThreatForWorldIncident,
+    getWorldRouteForThreat,
     getWorldCityRouteForThreat
   };
+
+  window.devWorldRouteForThreat = (threatId = "tg-001") => getWorldRouteForThreat(threatId);
 }

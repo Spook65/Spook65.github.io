@@ -82,7 +82,7 @@
     "canvasCount": 1,
     "screenshotExists": true,
     "entryPath": "world-city-node-click",
-    "screenText": "THREATGRID\n\nCYBER-FANTASY ROGUELIKE ARENA\n\n08\n\nACTIVE THREATS\n\nSCORE: 00000\n\nACC: 100%\n\n[ MENU ]\n[ LOADOUT / MODULES ]\nTHREAT MANIFESTS\nENTERING BATTLE FORMATION...\nTHREATGRID ARENA\nREGIONAL MAIL SPOOF WAVE / LVL 2\nTURN ORDER\nIDS\n→\nHONEYPOT\n→\nREGIONAL MAIL SPOOF WAVE\nREGIONAL MAIL SPOOF WAVE\n61/61\nL",
+    "screenText": "THREATGRID\n\nCYBER-FANTASY ROGUELIKE ARENA\n\n08\n\nACTIVE THREATS\n\nSCORE: 00000\n\nACC: 100%\n\n[ MENU ]\n[ LOADOUT / MODULES ]\nTHREAT MANIFESTS\nENTERING BATTLE FORMATION...\nTHREATGRID ARENA\nREGIONAL MAIL SPOOF WAVE / LVL 1\nTURN ORDER\nIDS\n→\nHONEYPOT\n→\nREGIONAL MAIL SPOOF WAVE\nREGIONAL MAIL SPOOF WAVE\n55/55\nL",
     "dom": {
       "shell": {
         "selector": ".combat-shell",
@@ -246,14 +246,14 @@
         "visible": true,
         "hidden": false,
         "rect": {
-          "x": 1131.641845703125,
-          "y": 127.06748962402344,
+          "x": 1131.695556640625,
+          "y": 127.28230285644531,
           "width": 204.796875,
           "height": 81.765625,
-          "top": 127.06748962402344,
-          "right": 1336.438720703125,
-          "bottom": 208.83311462402344,
-          "left": 1131.641845703125
+          "top": 127.28230285644531,
+          "right": 1336.492431640625,
+          "bottom": 209.0479278564453,
+          "left": 1131.695556640625
         },
         "computed": {
           "display": "grid",
@@ -421,19 +421,19 @@
           "exists": true,
           "offsetMs": 0,
           "intendedOffsetMs": 0,
-          "vfxObservedAt": 18011.299999952316,
-          "frameDebugReadAt": 18136.699999809265,
-          "screenshotStartedAt": 18143.599999904633,
-          "screenshotFinishedAt": 20765.299999952316,
-          "actualElapsedSinceVfxObserved": 125,
-          "screenshotDurationMs": 2622,
+          "vfxObservedAt": 17462.400000095367,
+          "frameDebugReadAt": 17545.700000047684,
+          "screenshotStartedAt": 17654.099999904633,
+          "screenshotFinishedAt": 19771.700000047684,
+          "actualElapsedSinceVfxObserved": 83,
+          "screenshotDurationMs": 2118,
           "activeVfxCount": 1,
           "lastVfxFamily": "scan",
           "lastVfxSequenceId": "2",
           "oldBeamHidden": true,
           "canvasCount": 1,
           "persistentVfxRemainingMs": [
-            161
+            241
           ],
           "pageErrors": []
         },
@@ -445,19 +445,19 @@
             "exists": true,
             "offsetMs": 0,
             "intendedOffsetMs": 0,
-            "vfxObservedAt": 18011.299999952316,
-            "frameDebugReadAt": 18136.699999809265,
-            "screenshotStartedAt": 18143.599999904633,
-            "screenshotFinishedAt": 20765.299999952316,
-            "actualElapsedSinceVfxObserved": 125,
-            "screenshotDurationMs": 2622,
+            "vfxObservedAt": 17462.400000095367,
+            "frameDebugReadAt": 17545.700000047684,
+            "screenshotStartedAt": 17654.099999904633,
+            "screenshotFinishedAt": 19771.700000047684,
+            "actualElapsedSinceVfxObserved": 83,
+            "screenshotDurationMs": 2118,
             "activeVfxCount": 1,
             "lastVfxFamily": "scan",
             "lastVfxSequenceId": "2",
             "oldBeamHidden": true,
             "canvasCount": 1,
             "persistentVfxRemainingMs": [
-              161
+              241
             ],
             "pageErrors": []
           },
@@ -468,12 +468,12 @@
             "exists": true,
             "offsetMs": 100,
             "intendedOffsetMs": 100,
-            "vfxObservedAt": 18011.299999952316,
-            "frameDebugReadAt": 20868.099999904633,
-            "screenshotStartedAt": 20870.199999809265,
-            "screenshotFinishedAt": 21231.199999809265,
-            "actualElapsedSinceVfxObserved": 2857,
-            "screenshotDurationMs": 361,
+            "vfxObservedAt": 17462.400000095367,
+            "frameDebugReadAt": 19874.200000047684,
+            "screenshotStartedAt": 19875.599999904633,
+            "screenshotFinishedAt": 20304.200000047684,
+            "actualElapsedSinceVfxObserved": 2412,
+            "screenshotDurationMs": 429,
             "activeVfxCount": 0,
             "lastVfxFamily": "scan",
             "lastVfxSequenceId": "2",
@@ -489,12 +489,12 @@
             "exists": true,
             "offsetMs": 200,
             "intendedOffsetMs": 200,
-            "vfxObservedAt": 18011.299999952316,
-            "frameDebugReadAt": 21333.299999952316,
-            "screenshotStartedAt": 21335.699999809265,
-            "screenshotFinishedAt": 21675.699999809265,
-            "actualElapsedSinceVfxObserved": 3322,
-            "screenshotDurationMs": 340,
+            "vfxObservedAt": 17462.400000095367,
+            "frameDebugReadAt": 20406.099999904633,
+            "screenshotStartedAt": 20407.200000047684,
+            "screenshotFinishedAt": 20811.200000047684,
+            "actualElapsedSinceVfxObserved": 2944,
+            "screenshotDurationMs": 404,
             "activeVfxCount": 0,
             "lastVfxFamily": "scan",
             "lastVfxSequenceId": "2",
@@ -510,12 +510,12 @@
             "exists": true,
             "offsetMs": 300,
             "intendedOffsetMs": 300,
-            "vfxObservedAt": 18011.299999952316,
-            "frameDebugReadAt": 21778.89999985695,
-            "screenshotStartedAt": 21780.599999904633,
-            "screenshotFinishedAt": 22186.199999809265,
-            "actualElapsedSinceVfxObserved": 3768,
-            "screenshotDurationMs": 406,
+            "vfxObservedAt": 17462.400000095367,
+            "frameDebugReadAt": 20913.200000047684,
+            "screenshotStartedAt": 20914.400000095367,
+            "screenshotFinishedAt": 21256.599999904633,
+            "actualElapsedSinceVfxObserved": 3451,
+            "screenshotDurationMs": 342,
             "activeVfxCount": 0,
             "lastVfxFamily": "scan",
             "lastVfxSequenceId": "2",
@@ -531,12 +531,12 @@
             "exists": true,
             "offsetMs": 450,
             "intendedOffsetMs": 450,
-            "vfxObservedAt": 18011.299999952316,
-            "frameDebugReadAt": 22382.299999952316,
-            "screenshotStartedAt": 22383.89999985695,
-            "screenshotFinishedAt": 22732.5,
-            "actualElapsedSinceVfxObserved": 4371,
-            "screenshotDurationMs": 349,
+            "vfxObservedAt": 17462.400000095367,
+            "frameDebugReadAt": 21468.299999952316,
+            "screenshotStartedAt": 21469.700000047684,
+            "screenshotFinishedAt": 21847.099999904633,
+            "actualElapsedSinceVfxObserved": 4006,
+            "screenshotDurationMs": 377,
             "activeVfxCount": 0,
             "lastVfxFamily": "scan",
             "lastVfxSequenceId": "2",
@@ -552,12 +552,12 @@
             "exists": true,
             "offsetMs": 600,
             "intendedOffsetMs": 600,
-            "vfxObservedAt": 18011.299999952316,
-            "frameDebugReadAt": 22934.39999985695,
-            "screenshotStartedAt": 23095.599999904633,
-            "screenshotFinishedAt": 23436.099999904633,
-            "actualElapsedSinceVfxObserved": 4923,
-            "screenshotDurationMs": 341,
+            "vfxObservedAt": 17462.400000095367,
+            "frameDebugReadAt": 22000,
+            "screenshotStartedAt": 22001.299999952316,
+            "screenshotFinishedAt": 22427.5,
+            "actualElapsedSinceVfxObserved": 4538,
+            "screenshotDurationMs": 426,
             "activeVfxCount": 0,
             "lastVfxFamily": "scan",
             "lastVfxSequenceId": "2",
@@ -574,6 +574,165 @@
   "worldCity": {
     "helperAvailable": true,
     "opened": true,
+    "routeForHospitalThreat": {
+      "threatId": "tg-001",
+      "regionId": "north-america",
+      "sectorId": "atlantic-medical-corridor",
+      "cityKey": "hospital-lockout",
+      "incidentNodeId": "hospital-main-lockout",
+      "routeChain": [
+        "north-america",
+        "atlantic-medical-corridor",
+        "hospital-lockout"
+      ],
+      "entrySource": "globe",
+      "returnTarget": "game",
+      "sourceThreatId": "tg-001",
+      "city": {
+        "id": "hospital-lockout",
+        "cityKey": "hospital-lockout",
+        "sectorId": "atlantic-medical-corridor",
+        "cityDisplayName": "New York Medical Corridor",
+        "inspiredBy": "New York medical district / dense East Coast emergency infrastructure",
+        "title": "Hospital Network Lockout",
+        "eyebrow": "WORLD-CITY / NEW YORK MEDICAL CORRIDOR",
+        "region": "North America",
+        "regionKey": "north-america",
+        "country": "United States",
+        "state": "New York",
+        "city": "New York",
+        "district": "Medical corridor",
+        "environmentKey": "hospital-lockout",
+        "sceneKey": "hospital-lockout",
+        "threatFamily": "ransomware",
+        "incidentNodeIds": [
+          "hospital-main-lockout",
+          "triage-routing-failure",
+          "backup-generator-handshake",
+          "ambulance-comms-delay"
+        ],
+        "returnTargets": [
+          "game",
+          "world-sector"
+        ],
+        "visualTheme": "dystopian night hospital corridor, emergency roads, EHR tower, backup systems, rain-dark civic infrastructure",
+        "summary": "A hospital district is running on backup coordination while ransomware pressure spreads across clinical systems.",
+        "incidents": [
+          {
+            "id": "hospital-main-lockout",
+            "title": "Hospital Network Lockout",
+            "severity": "critical",
+            "system": "EHR / radiology core",
+            "summary": "Clinical scheduling, imaging, and medication workflows are degrading under active encryption pressure.",
+            "actionHint": "Select Incident",
+            "combatThreatId": "tg-001",
+            "status": "active",
+            "cityPosition": {
+              "x": 1.65,
+              "y": 0.08,
+              "z": -1.25
+            }
+          },
+          {
+            "id": "triage-routing-failure",
+            "title": "Triage Routing Failure",
+            "severity": "high",
+            "system": "Admissions routing",
+            "summary": "Patient intake queues are falling back to manual triage while routing services lose trust signals.",
+            "actionHint": "Recon only",
+            "combatThreatId": "",
+            "status": "contained",
+            "cityPosition": {
+              "x": -0.55,
+              "y": 0.08,
+              "z": -0.8
+            }
+          },
+          {
+            "id": "backup-generator-handshake",
+            "title": "Backup Handshake Drift",
+            "severity": "medium",
+            "system": "Generator network bridge",
+            "summary": "Emergency power telemetry is online, but stale credentials are polluting recovery handshakes.",
+            "actionHint": "Recon only",
+            "combatThreatId": "",
+            "status": "monitoring",
+            "cityPosition": {
+              "x": -1.75,
+              "y": 0.08,
+              "z": 0.55
+            }
+          },
+          {
+            "id": "ambulance-comms-delay",
+            "title": "Ambulance Comms Delay",
+            "severity": "medium",
+            "system": "Dispatch relay",
+            "summary": "Field units are receiving delayed routing updates as dispatch relays shed encrypted packets.",
+            "actionHint": "Recon only",
+            "combatThreatId": "",
+            "status": "monitoring",
+            "cityPosition": {
+              "x": 0.9,
+              "y": 0.08,
+              "z": 1.15
+            }
+          }
+        ]
+      },
+      "sector": {
+        "id": "atlantic-medical-corridor",
+        "regionKey": "north-america",
+        "title": "Atlantic Medical Corridor",
+        "sectorType": "fictionalized infrastructure corridor",
+        "inspiredBy": "Dense East Coast hospital, research, emergency, and civic infrastructure",
+        "fictionalName": "Atlantic Medical Corridor",
+        "cityLayerIds": [
+          "hospital-lockout"
+        ],
+        "dominantThreatFamilies": [
+          "ransomware",
+          "lateral_movement",
+          "clinical_system_lockout"
+        ],
+        "infrastructureTags": [
+          "hospital",
+          "emergency_services",
+          "radiology",
+          "identity",
+          "backup_power"
+        ],
+        "recommendedLevel": 4,
+        "riskIndex": "critical",
+        "summary": "A medical infrastructure spine where clinical networks, emergency routing, and backup systems are tightly coupled.",
+        "visualTheme": "rain-dark medical district routes, emergency amber, cyan diagnostic scanlines, muted civic silhouettes"
+      },
+      "region": {
+        "id": "north-america",
+        "title": "North America",
+        "displayName": "North America",
+        "worldLayer": "region",
+        "regionKey": "north-america",
+        "inspiredBy": "Broad North America",
+        "centerLatLng": {
+          "lat": 39.5,
+          "lng": -98.35
+        },
+        "approximateBounds": {
+          "north": 72,
+          "south": 15,
+          "west": -168,
+          "east": -52
+        },
+        "threatPressure": "critical medical infrastructure pressure along the Atlantic corridor",
+        "sectorIds": [
+          "atlantic-medical-corridor"
+        ],
+        "unlockTier": 1,
+        "summary": "A broad region of dense civic, medical, research, logistics, and energy systems under escalating protocol pressure.",
+        "visualTheme": "continent-scale threat glow, satellite scan arcs, restrained teal/coral pressure clusters"
+      }
+    },
     "screenState": "world-city",
     "worldCityMounted": true,
     "cityCanvasCount": 1,
@@ -595,12 +754,19 @@
     "entryRoute": "globe-route",
     "worldState": {
       "screen": "world-city",
+      "currentRegionKey": "north-america",
+      "currentSectorKey": "atlantic-medical-corridor",
       "currentCityKey": "hospital-lockout",
       "hoveredIncidentId": "",
       "selectedIncidentId": "",
       "returnTarget": "game",
       "entrySource": "globe",
       "sourceThreatId": "tg-001",
+      "routeChain": [
+        "north-america",
+        "atlantic-medical-corridor",
+        "hospital-lockout"
+      ],
       "lastAction": "open-city",
       "cityMounted": true,
       "canvasCount": 1,
@@ -671,12 +837,19 @@
         "screenState": "world-city",
         "worldState": {
           "screen": "world-city",
+          "currentRegionKey": "north-america",
+          "currentSectorKey": "atlantic-medical-corridor",
           "currentCityKey": "hospital-lockout",
           "hoveredIncidentId": "hospital-main-lockout",
           "selectedIncidentId": "",
           "returnTarget": "game",
           "entrySource": "globe",
           "sourceThreatId": "tg-001",
+          "routeChain": [
+            "north-america",
+            "atlantic-medical-corridor",
+            "hospital-lockout"
+          ],
           "lastAction": "hover-incident",
           "cityMounted": true,
           "canvasCount": 1,

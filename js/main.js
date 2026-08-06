@@ -75,7 +75,10 @@ function openWorldCityRouteForThreat(threat, route) {
   const result = showWorldCityScreen(route.cityKey, {
     returnTarget: route.returnTarget || "game",
     entrySource: route.entrySource || "globe",
-    sourceThreatId: route.sourceThreatId || threat?.id || ""
+    sourceThreatId: route.sourceThreatId || threat?.id || "",
+    regionId: route.regionId || "",
+    sectorId: route.sectorId || "",
+    routeChain: route.routeChain || []
   });
 
   if (result?.ok) {

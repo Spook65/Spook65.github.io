@@ -467,6 +467,7 @@ async function main() {
     worldCity: {
       helperAvailable: false,
       opened: false,
+      routeForHospitalThreat: null,
       screenState: "",
       worldCityMounted: false,
       cityCanvasCount: 0,
@@ -499,6 +500,7 @@ async function main() {
       const globePath = await capture(page, "globe");
       report.screenshots.push({ screen: "globe", path: globePath, exists: await fileExists(globePath) });
 
+      report.worldCity.routeForHospitalThreat = await page.evaluate(() => window.devWorldRouteForThreat?.("tg-001") || null);
       const worldCityHelperAvailable = await page.evaluate(() => typeof window.devOpenWorldCity === "function");
       report.worldCity.helperAvailable = worldCityHelperAvailable;
       const globeRouteAttempt = await tryOpenWorldCityFromGlobeNode(page);

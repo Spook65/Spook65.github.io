@@ -130,6 +130,7 @@ function buildMarkdownReport(result) {
     lines.push(`- City canvas count: ${result.world_city.canvas_count ?? "missing"}`);
     lines.push(`- Incident node count: ${result.world_city.incident_node_count ?? "missing"}`);
     lines.push(`- Entry route: ${result.world_city.entry_route || "missing"}`);
+    lines.push(`- Route chain: ${asArray(result.world_city.route_chain).join(" -> ") || "missing"}`);
     lines.push(`- Screen opacity: ${result.world_city.screen_opacity ?? "missing"}`);
     lines.push(`- Title visible: ${result.world_city.title_visible ? "true" : "false"}`);
     lines.push(`- Hover hologram visible: ${result.world_city.hover_hologram_visible ? "true" : "false"}`);
@@ -308,6 +309,15 @@ export async function runVisualCritic({
       pass: Boolean(worldCity.entryRoute),
       required: false,
       detail: `entryRoute: ${worldCity.entryRoute || "missing"}`
+    },
+    {
+      id: "world_city_route_chain_recorded",
+      label: "world-city route chain includes region, sector, and city",
+      pass: asArray(worldCity.worldState?.routeChain).includes("north-america")
+        && asArray(worldCity.worldState?.routeChain).includes("atlantic-medical-corridor")
+        && asArray(worldCity.worldState?.routeChain).includes("hospital-lockout"),
+      required: false,
+      detail: `routeChain: ${asArray(worldCity.worldState?.routeChain).join(" -> ") || "missing"}`
     },
     {
       id: "world_city_hover_hologram",
@@ -517,6 +527,8 @@ export async function runVisualCritic({
       canvas_count: worldCity.cityCanvasCount ?? null,
       incident_node_count: worldCity.visibleIncidentNodeCount ?? null,
       entry_route: worldCity.entryRoute || "",
+      route_chain: asArray(worldCity.worldState?.routeChain),
+      route_for_hospital_threat: worldCity.routeForHospitalThreat || null,
       screen_opacity: worldCity.worldCityScreenOpacity ?? null,
       screen_visible: worldCity.worldCityScreenVisible === true,
       title_visible: worldCity.worldCityTitleVisible === true,

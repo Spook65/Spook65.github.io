@@ -1,14 +1,36 @@
 /* Dev-only world map state helpers for the first THREATGRID city incident slice. */
 const threatgridWorldState = {
   screen: "game",
+  currentRegionKey: "",
+  currentSectorKey: "",
   currentCityKey: "",
   hoveredIncidentId: "",
   selectedIncidentId: "",
   returnTarget: "game",
   entrySource: "",
   sourceThreatId: "",
+  routeChain: [],
   lastAction: ""
 };
+
+function resolveWorldCityRouteState(cityKey, options = {}) {
+  const city = window.THREATGRID_WORLD_DATA?.getWorldCity?.(cityKey);
+  const route = options.sourceThreatId
+    ? window.THREATGRID_WORLD_DATA?.getWorldRouteForThreat?.(options.sourceThreatId)
+    : null;
+  const regionKey = options.regionId || route?.regionId || city?.regionKey || "";
+  const sectorKey = options.sectorId || route?.sectorId || city?.sectorId || "";
+  const resolvedCityKey = String(cityKey || city?.cityKey || "");
+  const routeChain = Array.isArray(options.routeChain) && options.routeChain.length
+    ? options.routeChain
+    : route?.routeChain || [regionKey, sectorKey, resolvedCityKey].filter(Boolean);
+
+  return {
+    regionKey,
+    sectorKey,
+    routeChain
+  };
+}
 
 function setWorldMapState(nextState = {}) {
   Object.assign(threatgridWorldState, nextState);
@@ -17,24 +39,31 @@ function setWorldMapState(nextState = {}) {
 
 function clearWorldMapState() {
   threatgridWorldState.screen = "game";
+  threatgridWorldState.currentRegionKey = "";
+  threatgridWorldState.currentSectorKey = "";
   threatgridWorldState.currentCityKey = "";
   threatgridWorldState.hoveredIncidentId = "";
   threatgridWorldState.selectedIncidentId = "";
   threatgridWorldState.returnTarget = "game";
   threatgridWorldState.entrySource = "";
   threatgridWorldState.sourceThreatId = "";
+  threatgridWorldState.routeChain = [];
   threatgridWorldState.lastAction = "clear";
   return getWorldMapDebugState();
 }
 
 function setWorldCityState(cityKey, options = {}) {
+  const routeState = resolveWorldCityRouteState(cityKey, options);
   threatgridWorldState.screen = "world-city";
+  threatgridWorldState.currentRegionKey = routeState.regionKey;
+  threatgridWorldState.currentSectorKey = routeState.sectorKey;
   threatgridWorldState.currentCityKey = String(cityKey || "");
   threatgridWorldState.hoveredIncidentId = "";
   threatgridWorldState.selectedIncidentId = "";
   threatgridWorldState.returnTarget = options.returnTarget || "game";
   threatgridWorldState.entrySource = options.entrySource || "";
   threatgridWorldState.sourceThreatId = options.sourceThreatId || "";
+  threatgridWorldState.routeChain = routeState.routeChain;
   threatgridWorldState.lastAction = "open-city";
   return getWorldMapDebugState();
 }

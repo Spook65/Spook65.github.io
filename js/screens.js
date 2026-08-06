@@ -422,11 +422,15 @@ function showWorldCityScreen(cityKey = "hospital-lockout", options = {}) {
   window.THREATGRID_WORLD_STATE?.setCity?.(cityData.cityKey, {
     returnTarget: options.returnTarget || "game",
     entrySource: options.entrySource || "",
-    sourceThreatId: options.sourceThreatId || ""
+    sourceThreatId: options.sourceThreatId || "",
+    regionId: options.regionId || "",
+    sectorId: options.sectorId || "",
+    routeChain: options.routeChain || []
   });
   setScreen("world-city");
   const mounted = renderWorldCityScreen(cityData);
   const debug = window.getCityIncidentSceneDebugState?.() || {};
+  const worldDebug = window.THREATGRID_WORLD_STATE?.getDebugState?.() || {};
   if (!mounted) {
     const reason = debug.lastError || "City incident scene failed to mount.";
     console.warn("[WorldCity]", reason, debug);
@@ -440,9 +444,12 @@ function showWorldCityScreen(cityKey = "hospital-lockout", options = {}) {
     mounted: Boolean(debug.mounted),
     canvasCount: debug.canvasCount || 0,
     incidentNodeCount: debug.incidentNodeCount || 0,
-    returnTarget: window.THREATGRID_WORLD_STATE?.getDebugState?.().returnTarget || options.returnTarget || "game",
-    entrySource: window.THREATGRID_WORLD_STATE?.getDebugState?.().entrySource || options.entrySource || "",
-    sourceThreatId: window.THREATGRID_WORLD_STATE?.getDebugState?.().sourceThreatId || options.sourceThreatId || "",
+    currentRegionKey: worldDebug.currentRegionKey || options.regionId || "",
+    currentSectorKey: worldDebug.currentSectorKey || options.sectorId || "",
+    routeChain: worldDebug.routeChain || options.routeChain || [],
+    returnTarget: worldDebug.returnTarget || options.returnTarget || "game",
+    entrySource: worldDebug.entrySource || options.entrySource || "",
+    sourceThreatId: worldDebug.sourceThreatId || options.sourceThreatId || "",
     lastError: debug.lastError || ""
   };
 }
@@ -615,6 +622,28 @@ window.showForgeScreen = showForgeScreen;
 window.closeForgeScreen = closeForgeScreen;
 window.showWorldCityScreen = showWorldCityScreen;
 window.closeWorldCityScreen = closeWorldCityScreen;
+window.devOpenWorldRegion = (regionId = "north-america") => {
+  const region = window.THREATGRID_WORLD_DATA?.getWorldRegion?.(regionId);
+  return {
+    ok: Boolean(region),
+    visualScreenImplemented: false,
+    screenOpened: false,
+    reason: region ? "Region visual screen is not implemented yet; returning adapter data only." : `Unknown region: ${regionId}`,
+    region,
+    sectors: region ? window.THREATGRID_WORLD_DATA?.getWorldSectorsForRegion?.(region.id) || [] : []
+  };
+};
+window.devOpenWorldSector = (sectorId = "atlantic-medical-corridor") => {
+  const sector = window.THREATGRID_WORLD_DATA?.getWorldSector?.(sectorId);
+  return {
+    ok: Boolean(sector),
+    visualScreenImplemented: false,
+    screenOpened: false,
+    reason: sector ? "Sector visual screen is not implemented yet; returning adapter data only." : `Unknown sector: ${sectorId}`,
+    sector,
+    cities: sector ? window.THREATGRID_WORLD_DATA?.getWorldCitiesForSector?.(sector.id) || [] : []
+  };
+};
 window.devOpenWorldCity = (cityKey = "hospital-lockout") => showWorldCityScreen(cityKey, {
   returnTarget: globeStarted ? "game" : "menu",
   entrySource: "dev-helper"
