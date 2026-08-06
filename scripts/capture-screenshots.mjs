@@ -252,6 +252,33 @@ async function collectWorldCityState(page) {
   });
 }
 
+async function collectGlobeRegionState(page) {
+  return page.evaluate(() => {
+    const state = window.devWorldState?.() || {};
+    const regionEntry = window.threatGlobe?.regionMap?.get?.("north-america") || null;
+    const sectorOption = document.querySelector("[data-world-sector-open='atlantic-medical-corridor']");
+    const sectorRect = sectorOption?.getBoundingClientRect?.();
+    const sectorStyle = sectorOption ? getComputedStyle(sectorOption) : null;
+    return {
+      screenState: typeof screenState !== "undefined" ? screenState : window.screenState || "",
+      hoveredRegionKey: state.hoveredRegionKey || "",
+      selectedRegionKey: state.selectedRegionKey || "",
+      currentRegionKey: state.currentRegionKey || "",
+      routeChain: state.routeChain || [],
+      regionHighlightVisible: Boolean(regionEntry && regionEntry.group?.visible !== false),
+      regionHoveredInScene: Boolean(regionEntry?.group?.userData?.hovered),
+      regionSelectedInScene: Boolean(regionEntry?.group?.userData?.selected),
+      sectorOptionVisible: Boolean(sectorOption
+        && sectorStyle?.display !== "none"
+        && sectorStyle?.visibility !== "hidden"
+        && Number(sectorStyle?.opacity || 1) > 0
+        && sectorRect?.width > 0
+        && sectorRect?.height > 0),
+      sectorOptionText: sectorOption?.innerText?.trim?.() || ""
+    };
+  });
+}
+
 async function tryOpenWorldCityFromGlobeNode(page) {
   const projection = await page.evaluate(() => {
     const globe = window.threatGlobe;
@@ -464,6 +491,15 @@ async function main() {
       canvasCount: 0,
       screenshotExists: false
     },
+    globeRegion: {
+      hoverScreenshotExists: false,
+      selectedScreenshotExists: false,
+      screenState: "",
+      hoveredRegionKey: "",
+      selectedRegionKey: "",
+      regionHighlightVisible: false,
+      sectorOptionVisible: false
+    },
     worldCity: {
       helperAvailable: false,
       opened: false,
@@ -499,6 +535,40 @@ async function main() {
       await page.waitForTimeout(1800);
       const globePath = await capture(page, "globe");
       report.screenshots.push({ screen: "globe", path: globePath, exists: await fileExists(globePath) });
+
+      const regionHoverResult = await page.evaluate(() => window.devHoverWorldRegion?.("north-america") || null);
+      await page.waitForTimeout(320);
+      const regionHoverPath = await capture(page, "globe-region-north-america-hover");
+      const regionHoverState = await collectGlobeRegionState(page);
+      report.globeRegion = {
+        ...report.globeRegion,
+        hoverResult: regionHoverResult,
+        ...regionHoverState,
+        hoverScreenshotExists: await fileExists(regionHoverPath)
+      };
+      report.screenshots.push({
+        screen: "globe-region-north-america-hover",
+        path: regionHoverPath,
+        exists: report.globeRegion.hoverScreenshotExists
+      });
+
+      const regionSelectResult = await page.evaluate(() => window.devSelectWorldRegion?.("north-america") || null);
+      await page.waitForTimeout(240);
+      const regionSelectedPath = await capture(page, "globe-region-north-america-selected");
+      const regionSelectedState = await collectGlobeRegionState(page);
+      report.globeRegion = {
+        ...report.globeRegion,
+        selectResult: regionSelectResult,
+        selected: regionSelectedState,
+        selectedScreenshotExists: await fileExists(regionSelectedPath),
+        selectedRegionKey: regionSelectedState.selectedRegionKey,
+        sectorOptionVisible: regionSelectedState.sectorOptionVisible
+      };
+      report.screenshots.push({
+        screen: "globe-region-north-america-selected",
+        path: regionSelectedPath,
+        exists: report.globeRegion.selectedScreenshotExists
+      });
 
       report.worldCity.routeForHospitalThreat = await page.evaluate(() => window.devWorldRouteForThreat?.("tg-001") || null);
       const worldCityHelperAvailable = await page.evaluate(() => typeof window.devOpenWorldCity === "function");

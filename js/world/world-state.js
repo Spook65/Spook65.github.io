@@ -4,6 +4,8 @@ const threatgridWorldState = {
   currentRegionKey: "",
   currentSectorKey: "",
   currentCityKey: "",
+  hoveredRegionKey: "",
+  selectedRegionKey: "",
   hoveredIncidentId: "",
   selectedIncidentId: "",
   returnTarget: "game",
@@ -42,6 +44,8 @@ function clearWorldMapState() {
   threatgridWorldState.currentRegionKey = "";
   threatgridWorldState.currentSectorKey = "";
   threatgridWorldState.currentCityKey = "";
+  threatgridWorldState.hoveredRegionKey = "";
+  threatgridWorldState.selectedRegionKey = "";
   threatgridWorldState.hoveredIncidentId = "";
   threatgridWorldState.selectedIncidentId = "";
   threatgridWorldState.returnTarget = "game";
@@ -49,6 +53,19 @@ function clearWorldMapState() {
   threatgridWorldState.sourceThreatId = "";
   threatgridWorldState.routeChain = [];
   threatgridWorldState.lastAction = "clear";
+  return getWorldMapDebugState();
+}
+
+function setWorldRegionHover(regionKey = "") {
+  threatgridWorldState.hoveredRegionKey = String(regionKey || "");
+  threatgridWorldState.lastAction = regionKey ? "hover-region" : "clear-region-hover";
+  return getWorldMapDebugState();
+}
+
+function setWorldRegionSelection(regionKey = "") {
+  threatgridWorldState.selectedRegionKey = String(regionKey || "");
+  threatgridWorldState.currentRegionKey = String(regionKey || threatgridWorldState.currentRegionKey || "");
+  threatgridWorldState.lastAction = regionKey ? "select-region" : "clear-region-selection";
   return getWorldMapDebugState();
 }
 
@@ -99,6 +116,8 @@ if (typeof window !== "undefined") {
     setState: setWorldMapState,
     clear: clearWorldMapState,
     setCity: setWorldCityState,
+    setRegionHover: setWorldRegionHover,
+    setRegionSelection: setWorldRegionSelection,
     setHover: setWorldCityHover,
     setSelection: setWorldCitySelection,
     getDebugState: getWorldMapDebugState

@@ -23,15 +23,20 @@ class ThreatGlobe {
 
     // nodeMap keeps the live 3D meshes aligned with each active threat object.
     this.nodeMap = new Map();
+    this.regionMap = new Map();
 
     // Layer 2 will subscribe through this hook when it needs to react to clicks.
     this.clickHandlers = [];
+    this.regionClickHandlers = [];
     this.hoveredThreatId = null;
+    this.hoveredRegionKey = null;
+    this.selectedRegionKey = null;
     this.hologram = null;
     this.hologramThreatId = null;
     this.lastHologramPointerLogAt = 0;
     this.isThreatHoverLocked = false;
     this.projectedHoverRadius = 42;
+    this.projectedRegionHoverRadius = 104;
     this.lastInactiveHologramSkipState = null;
 
     // Drag state stores the last pointer position so rotation can follow the mouse.
@@ -98,6 +103,7 @@ class ThreatGlobe {
     this.addBackdrop();
     this.createGlobe();
     this.mountThreatHologram();
+    this.addWorldRegionHighlights();
     this.syncThreatNodes();
     this.attachEvents();
     this.updateActiveCount();
@@ -397,6 +403,108 @@ class ThreatGlobe {
     this.clickHandlers.push(callback);
   }
 
+  onRegionClick(callback) {
+    this.regionClickHandlers.push(callback);
+  }
+
+  addWorldRegionHighlights() {
+    const region = window.THREATGRID_WORLD_DATA?.getWorldRegion?.("north-america") || {
+      id: "north-america",
+      displayName: "North America"
+    };
+    const group = new THREE.Group();
+    const regionKey = region.id || "north-america";
+    const accent = new THREE.Color("#ff6e4a");
+    const softAccent = new THREE.Color("#ffcf73");
+    const anchorPoints = [
+      { lat: 48, lng: -125 },
+      { lat: 53, lng: -101 },
+      { lat: 45, lng: -78 },
+      { lat: 32, lng: -82 },
+      { lat: 26, lng: -104 },
+      { lat: 35, lng: -122 }
+    ];
+    const rings = [];
+
+    anchorPoints.forEach((point, index) => {
+      const ringGeometry = new THREE.RingGeometry(0.055, 0.105 + (index % 2) * 0.025, 52);
+      const ringMaterial = new THREE.MeshBasicMaterial({
+        color: index % 2 === 0 ? accent : softAccent,
+        transparent: true,
+        opacity: 0.22,
+        side: THREE.DoubleSide,
+        depthWrite: false
+      });
+      const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+      ring.position.copy(this.latLngToVector3(point.lat, point.lng, this.globeRadius + 0.05));
+      ring.userData.regionKey = regionKey;
+      group.add(ring);
+      rings.push(ring);
+    });
+
+    const outlinePoints = [
+      { lat: 56, lng: -132 },
+      { lat: 55, lng: -98 },
+      { lat: 47, lng: -70 },
+      { lat: 30, lng: -80 },
+      { lat: 24, lng: -104 },
+      { lat: 36, lng: -126 },
+      { lat: 56, lng: -132 }
+    ].map((point) => this.latLngToVector3(point.lat, point.lng, this.globeRadius + 0.055));
+    const outlineGeometry = new THREE.BufferGeometry().setFromPoints(outlinePoints);
+    const outlineMaterial = new THREE.LineBasicMaterial({
+      color: accent,
+      transparent: true,
+      opacity: 0.34,
+      depthWrite: false
+    });
+    const outline = new THREE.Line(outlineGeometry, outlineMaterial);
+    outline.userData.regionKey = regionKey;
+    group.add(outline);
+
+    const haloGeometry = new THREE.SphereGeometry(0.52, 32, 20);
+    const haloMaterial = new THREE.MeshBasicMaterial({
+      color: accent,
+      transparent: true,
+      opacity: 0.055,
+      depthWrite: false
+    });
+    const halo = new THREE.Mesh(haloGeometry, haloMaterial);
+    halo.position.copy(this.latLngToVector3(43, -101, this.globeRadius + 0.08));
+    halo.scale.set(1.25, 0.68, 0.26);
+    halo.userData.regionKey = regionKey;
+    group.add(halo);
+
+    const hitGeometry = new THREE.SphereGeometry(0.58, 24, 18);
+    const hitMaterial = new THREE.MeshBasicMaterial({
+      color: accent,
+      transparent: true,
+      opacity: 0,
+      depthWrite: false
+    });
+    const hitMesh = new THREE.Mesh(hitGeometry, hitMaterial);
+    hitMesh.position.copy(this.latLngToVector3(43, -101, this.globeRadius + 0.09));
+    hitMesh.scale.set(1.25, 0.9, 0.58);
+    hitMesh.userData.regionKey = regionKey;
+    group.add(hitMesh);
+
+    group.userData = {
+      regionKey,
+      hovered: false,
+      selected: false
+    };
+
+    this.globeGroup.add(group);
+    this.regionMap.set(regionKey, {
+      group,
+      region,
+      rings,
+      outline,
+      halo,
+      hitMesh
+    });
+  }
+
   // attachEvents() wires resize, drag, hover, and click behavior to the rendered canvas.
   attachEvents() {
     window.addEventListener("resize", () => this.handleResize());
@@ -539,6 +647,55 @@ class ThreatGlobe {
         { projected: closest.projected }
       );
     }
+
+    return closest;
+  }
+
+  getRegionIntersection() {
+    const hitTargets = Array.from(this.regionMap.values()).map((region) => region.hitMesh).filter(Boolean);
+    if (!hitTargets.length) {
+      return null;
+    }
+
+    this.raycaster.setFromCamera(this.pointer, this.camera);
+    const intersections = this.raycaster.intersectObjects(hitTargets, false);
+    return intersections[0] || this.getProjectedRegionIntersection();
+  }
+
+  getProjectedRegionIntersection() {
+    if (!this.camera || !this.renderer) {
+      return null;
+    }
+
+    const rect = this.renderer.domElement.getBoundingClientRect();
+    const pointerX = ((this.pointer.x + 1) / 2) * rect.width + rect.left;
+    const pointerY = ((1 - this.pointer.y) / 2) * rect.height + rect.top;
+    let closest = null;
+
+    this.regionMap.forEach((region) => {
+      const worldPosition = new THREE.Vector3();
+      region.hitMesh.getWorldPosition(worldPosition);
+      const projected = worldPosition.clone().project(this.camera);
+      if (projected.z < -1 || projected.z > 1) {
+        return;
+      }
+
+      const screenX = ((projected.x + 1) / 2) * rect.width + rect.left;
+      const screenY = ((1 - projected.y) / 2) * rect.height + rect.top;
+      const distance = Math.hypot(pointerX - screenX, pointerY - screenY);
+      if (distance > this.projectedRegionHoverRadius) {
+        return;
+      }
+
+      if (!closest || distance < closest.distance) {
+        closest = {
+          distance,
+          object: { userData: { regionKey: region.region.id || region.group.userData.regionKey } },
+          point: worldPosition,
+          projected: { x: Math.round(screenX), y: Math.round(screenY) }
+        };
+      }
+    });
 
     return closest;
   }
@@ -1057,6 +1214,66 @@ class ThreatGlobe {
     this.logHologramDomState();
   }
 
+  buildRegionHologramMarkup(region) {
+    const sectors = window.THREATGRID_WORLD_DATA?.getWorldSectorsForRegion?.(region?.id) || [];
+    const firstSector = sectors[0];
+    return `
+      <div class="globe-threat-hologram-scan"></div>
+      <div class="globe-threat-hologram-kicker">REGION PRESSURE / SELECTABLE</div>
+      <div class="globe-threat-hologram-title">${this.escapeHologramText(region?.displayName || region?.title, "NORTH AMERICA")}</div>
+      <div class="globe-threat-hologram-risk">
+        <span>Threat Pressure</span>
+        <strong>${this.escapeHologramText(region?.threatPressure, "CRITICAL CORRIDOR ACTIVITY")}</strong>
+      </div>
+      <div class="globe-threat-hologram-decision-strip">
+        <div><span>Sector Count</span><strong>${sectors.length || 0}</strong></div>
+        <div><span>Available Sector</span><strong>${this.escapeHologramText(firstSector?.title, "ATLANTIC MEDICAL CORRIDOR")}</strong></div>
+        <div><span>Action</span><strong>SELECT REGION</strong></div>
+      </div>
+      <div class="globe-threat-hologram-grid">
+        <span>Summary</span>
+        <strong>${this.escapeHologramText(region?.summary, "REGIONAL CYBER DEFENSE ROUTE AVAILABLE.")}</strong>
+      </div>
+    `;
+  }
+
+  showRegionHologram(region, event, options = {}) {
+    if (!options.force && !this.canShowGlobeThreatHologram()) {
+      this.logInactiveHologramSkip();
+      this.clearHoverState();
+      return;
+    }
+
+    this.ensureThreatHologram();
+    if (!this.hologram || !region) {
+      return;
+    }
+
+    const regionKey = region.id || "north-america";
+    if (this.hologramThreatId !== `region:${regionKey}`) {
+      const debugClass = this.shouldLogHologramDebug() ? " is-debug" : "";
+      this.hologram.className = `globe-threat-hologram is-visible is-region${debugClass}`;
+      this.hologram.innerHTML = this.buildRegionHologramMarkup(region);
+      this.hologramThreatId = `region:${regionKey}`;
+    } else if (!this.hologram.classList.contains("is-visible")) {
+      this.hologram.classList.add("is-visible");
+    }
+
+    this.hologram.setAttribute("aria-hidden", "false");
+    this.positionThreatHologram(event?.clientX || window.innerWidth - 380, event?.clientY || 180, {
+      ...options,
+      fixed: options.fixed !== false
+    });
+  }
+
+  selectWorldRegion(regionKey = "north-america") {
+    this.selectedRegionKey = regionKey;
+    this.regionMap.forEach((region, key) => {
+      region.group.userData.selected = key === regionKey;
+    });
+    window.THREATGRID_WORLD_STATE?.setRegionSelection?.(regionKey);
+  }
+
   hideThreatHologram() {
     if (!this.hologram) {
       this.logHologramDebug("[HOLOGRAM ERROR] missing hologram element");
@@ -1067,7 +1284,7 @@ class ThreatGlobe {
       console.info("[HOLOGRAM] hide");
     }
 
-    this.hologram.classList.remove("is-visible", "is-low", "is-medium", "is-high", "is-critical", "is-debug");
+    this.hologram.classList.remove("is-visible", "is-low", "is-medium", "is-high", "is-critical", "is-region", "is-debug");
     this.hologram.setAttribute("aria-hidden", "true");
     this.hologramThreatId = null;
     this.setThreatHoverLock(false);
@@ -1127,19 +1344,32 @@ class ThreatGlobe {
     }
 
     this.updatePointer(event);
-    const intersection = this.getThreatIntersection();
-    if (!intersection) {
+    const threatIntersection = this.getThreatIntersection();
+    if (threatIntersection) {
+      const threatId = threatIntersection.object.userData.threatId;
+      const node = this.nodeMap.get(threatId);
+      if (!node) {
+        return;
+      }
+
+      this.clearHoverState();
+      this.clickHandlers.forEach((callback) => callback(node.threat));
       return;
     }
 
-    const threatId = intersection.object.userData.threatId;
-    const node = this.nodeMap.get(threatId);
-    if (!node) {
+    const regionIntersection = this.getRegionIntersection();
+    if (!regionIntersection) {
       return;
     }
 
-    this.clearHoverState();
-    this.clickHandlers.forEach((callback) => callback(node.threat));
+    const regionKey = regionIntersection.object.userData.regionKey;
+    const region = this.regionMap.get(regionKey);
+    if (!region) {
+      return;
+    }
+
+    this.selectWorldRegion(regionKey);
+    this.regionClickHandlers.forEach((callback) => callback(region.region, regionKey));
   }
 
   // updateHoverState() changes the cursor and marks the hovered node so the pulse can brighten.
@@ -1152,18 +1382,24 @@ class ThreatGlobe {
 
     const intersection = this.getThreatIntersection();
     const nextId = intersection ? intersection.object.userData.threatId : null;
+    const regionIntersection = nextId ? null : this.getRegionIntersection();
+    const nextRegionKey = regionIntersection ? regionIntersection.object.userData.regionKey : null;
 
-    if (this.hoveredThreatId === nextId) {
+    if (this.hoveredThreatId === nextId && this.hoveredRegionKey === nextRegionKey) {
       if (nextId && event) {
         const node = this.nodeMap.get(nextId);
         this.showThreatHologram(node?.threat, event);
         this.setThreatHoverLock(true);
+      } else if (nextRegionKey && event) {
+        const region = this.regionMap.get(nextRegionKey);
+        this.showRegionHologram(region?.region, event);
       }
       return;
     }
 
     this.hoveredThreatId = nextId;
-    document.body.style.cursor = nextId ? "pointer" : "default";
+    this.hoveredRegionKey = nextRegionKey;
+    document.body.style.cursor = nextId || nextRegionKey ? "pointer" : "default";
     if (nextId) {
       const node = this.nodeMap.get(nextId);
       const title = node?.threat?.title || "Unknown Threat";
@@ -1173,25 +1409,40 @@ class ThreatGlobe {
     this.nodeMap.forEach((node, id) => {
       node.group.userData.hovered = id === nextId;
     });
+    this.regionMap.forEach((region, key) => {
+      region.group.userData.hovered = key === nextRegionKey;
+    });
 
     if (nextId) {
       const node = this.nodeMap.get(nextId);
       this.setThreatHoverLock(true);
       this.showThreatHologram(node?.threat, event);
+      window.THREATGRID_WORLD_STATE?.setRegionHover?.("");
+    } else if (nextRegionKey) {
+      const region = this.regionMap.get(nextRegionKey);
+      this.setThreatHoverLock(true);
+      window.THREATGRID_WORLD_STATE?.setRegionHover?.(nextRegionKey);
+      this.showRegionHologram(region?.region, event);
     } else {
       this.logHologramDebug("[HOLOGRAM DEBUG] hover cleared");
       this.hideThreatHologram();
+      window.THREATGRID_WORLD_STATE?.setRegionHover?.("");
     }
   }
 
   // clearHoverState() resets any highlight when the pointer leaves the globe area.
   clearHoverState() {
     this.hoveredThreatId = null;
+    this.hoveredRegionKey = null;
     document.body.style.cursor = "default";
     this.nodeMap.forEach((node) => {
       node.group.userData.hovered = false;
     });
+    this.regionMap.forEach((region) => {
+      region.group.userData.hovered = false;
+    });
     this.hideThreatHologram();
+    window.THREATGRID_WORLD_STATE?.setRegionHover?.("");
     this.setThreatHoverLock(false);
   }
 
@@ -1249,6 +1500,22 @@ class ThreatGlobe {
       pointMesh.material.opacity = hovered ? 1 : 0.92;
       glowMesh.material.opacity = hovered ? 0.24 : 0.16;
       ringMesh.material.opacity = hovered ? 0.55 : 0.35;
+    });
+
+    this.regionMap.forEach((region) => {
+      const hovered = Boolean(region.group.userData.hovered);
+      const selected = Boolean(region.group.userData.selected);
+      const wave = (Math.sin(elapsed * 2.1) + 1) * 0.5;
+      const strength = selected ? 1 : hovered ? 0.82 : 0.42;
+
+      region.rings.forEach((ring, index) => {
+        ring.lookAt(this.camera.position);
+        ring.scale.setScalar(1 + wave * 0.28 + (hovered ? 0.28 : 0) + (selected ? 0.18 : 0) + index * 0.015);
+        ring.material.opacity = (0.16 + wave * 0.1) * strength;
+      });
+
+      region.outline.material.opacity = (0.2 + wave * 0.1) * strength;
+      region.halo.material.opacity = (0.035 + wave * 0.05) * strength;
     });
 
     this.renderer.render(this.scene, this.camera);

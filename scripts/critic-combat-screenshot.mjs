@@ -139,6 +139,20 @@ function buildMarkdownReport(result) {
     lines.push("- No world-city section recorded.");
   }
 
+  lines.push("", "## Globe Region Capture", "");
+  if (result.globe_region) {
+    lines.push(`- Hover screenshot exists: ${result.globe_region.hover_screenshot_exists ? "true" : "false"}`);
+    lines.push(`- Selected screenshot exists: ${result.globe_region.selected_screenshot_exists ? "true" : "false"}`);
+    lines.push(`- Screen state: ${result.globe_region.screen_state || "missing"}`);
+    lines.push(`- Hovered region: ${result.globe_region.hovered_region_key || "missing"}`);
+    lines.push(`- Selected region: ${result.globe_region.selected_region_key || "missing"}`);
+    lines.push(`- Region highlight visible: ${result.globe_region.region_highlight_visible ? "true" : "false"}`);
+    lines.push(`- Sector option visible: ${result.globe_region.sector_option_visible ? "true" : "false"}`);
+    lines.push(`- Manual review required: ${result.globe_region.manual_review_required ? "true" : "false"}`);
+  } else {
+    lines.push("- No globe-region section recorded.");
+  }
+
   lines.push("", "## What Still Looks Fake", "");
   result.what_still_looks_fake.forEach((item) => lines.push(`- ${item}`));
 
@@ -176,15 +190,20 @@ export async function runVisualCritic({
   const combatShot = getCombatScreenshot(report);
   const worldCityShot = getScreenshot(report, "world-city-hospital");
   const worldCityHoverShot = getScreenshot(report, "world-city-hospital-hover");
+  const globeRegionHoverShot = getScreenshot(report, "globe-region-north-america-hover");
+  const globeRegionSelectedShot = getScreenshot(report, "globe-region-north-america-selected");
   const scanVfxShot = getScreenshot(report, "combat-vfx-scan");
   const burstFrameShots = asArray(report?.screenshots).filter((shot) => /^combat-vfx-scan-\d+ms$/.test(String(shot?.screen || "")));
   const combatScreenshotExists = Boolean(combatShot?.path && await fileExists(combatShot.path));
   const worldCityScreenshotExists = Boolean(worldCityShot?.path && await fileExists(worldCityShot.path));
   const worldCityHoverScreenshotExists = Boolean(worldCityHoverShot?.path && await fileExists(worldCityHoverShot.path));
+  const globeRegionHoverScreenshotExists = Boolean(globeRegionHoverShot?.path && await fileExists(globeRegionHoverShot.path));
+  const globeRegionSelectedScreenshotExists = Boolean(globeRegionSelectedShot?.path && await fileExists(globeRegionSelectedShot.path));
   const scanVfxScreenshotExists = Boolean(scanVfxShot?.path && await fileExists(scanVfxShot.path));
   const existingBurstFrameCount = (await Promise.all(burstFrameShots.map((shot) => fileExists(shot.path)))).filter(Boolean).length;
   const combat = report?.combat || {};
   const worldCity = report?.worldCity || {};
+  const globeRegion = report?.globeRegion || {};
   const scanVfx = combat?.vfx?.scan || {};
   const scanVfxFrames = asArray(scanVfx.frames);
   const bestVfxFrame = scanVfx.bestVfxFrame || scanVfxFrames.find((frame) => frame?.activeVfxCount > 0 && frame?.lastVfxFamily === "scan") || null;
@@ -325,6 +344,41 @@ export async function runVisualCritic({
       pass: worldCityHoverScreenshotExists ? worldCity.hoverHologramVisible === true : true,
       required: false,
       detail: `hoverHologramVisible: ${worldCity.hoverHologramVisible ?? "missing"}`
+    },
+    {
+      id: "globe_region_hover_screenshot_exists",
+      label: "North America region hover screenshot exists",
+      pass: globeRegionHoverScreenshotExists,
+      required: true,
+      detail: globeRegionHoverShot?.path || "No globe region hover screenshot path recorded."
+    },
+    {
+      id: "globe_region_screen_state",
+      label: "globe region capture stayed on game screen",
+      pass: globeRegion.screenState === "game",
+      required: true,
+      detail: `screenState: ${globeRegion.screenState || "missing"}`
+    },
+    {
+      id: "globe_region_hover_key",
+      label: "North America region hover was recorded",
+      pass: globeRegion.hoveredRegionKey === "north-america",
+      required: true,
+      detail: `hoveredRegionKey: ${globeRegion.hoveredRegionKey || "missing"}`
+    },
+    {
+      id: "globe_region_highlight_visible",
+      label: "North America region highlight is present",
+      pass: globeRegion.regionHighlightVisible === true,
+      required: true,
+      detail: `regionHighlightVisible: ${globeRegion.regionHighlightVisible ?? "missing"}`
+    },
+    {
+      id: "globe_region_sector_option_visible",
+      label: "Atlantic Medical Corridor sector option appears after selection",
+      pass: globeRegionSelectedScreenshotExists ? globeRegion.sectorOptionVisible === true : true,
+      required: false,
+      detail: `sectorOptionVisible: ${globeRegion.sectorOptionVisible ?? "missing"}`
     },
     {
       id: "shell_viewport_sized",
@@ -537,6 +591,18 @@ export async function runVisualCritic({
       screenshot: worldCityShot?.path || "",
       hover_screenshot: worldCityHoverShot?.path || ""
     },
+    globe_region: {
+      manual_review_required: true,
+      hover_screenshot_exists: globeRegionHoverScreenshotExists,
+      selected_screenshot_exists: globeRegionSelectedScreenshotExists,
+      screen_state: globeRegion.screenState || "",
+      hovered_region_key: globeRegion.hoveredRegionKey || "",
+      selected_region_key: globeRegion.selectedRegionKey || "",
+      region_highlight_visible: globeRegion.regionHighlightVisible === true,
+      sector_option_visible: globeRegion.sectorOptionVisible === true,
+      hover_screenshot: globeRegionHoverShot?.path || "",
+      selected_screenshot: globeRegionSelectedShot?.path || ""
+    },
     what_still_looks_fake: [
       "Automated tooling cannot judge whether the battlefield feels cinematic or grounded without human review.",
       "Defender grounding and enemy anchoring still require screenshot inspection against the combat presentation spec.",
@@ -551,6 +617,8 @@ export async function runVisualCritic({
       capture_report: captureReportPath,
       menu: asArray(report?.screenshots).find((shot) => shot?.screen === "menu")?.path || "",
       globe: asArray(report?.screenshots).find((shot) => shot?.screen === "globe")?.path || "",
+      globe_region_north_america_hover: globeRegionHoverShot?.path || "",
+      globe_region_north_america_selected: globeRegionSelectedShot?.path || "",
       world_city_hospital: worldCityShot?.path || "",
       world_city_hospital_hover: worldCityHoverShot?.path || "",
       combat: combatShot?.path || "",

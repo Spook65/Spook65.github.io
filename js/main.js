@@ -38,6 +38,7 @@ let missionEnded = false;
 let pendingGameOverOutcome = null;
 let playerPath = null;
 let worldCityGlobeRoutingInstalled = false;
+let worldRegionSectorCard = null;
 
 // Escalation state is tracked outside globe.js because these are game rules, while globe.js only renders state.
 const escalationStateByThreatId = {};
@@ -98,6 +99,90 @@ function openWorldCityRouteForThreat(threat, route) {
   return false;
 }
 
+function getWorldRegionSectorCard() {
+  if (worldRegionSectorCard?.isConnected) {
+    return worldRegionSectorCard;
+  }
+
+  worldRegionSectorCard = document.createElement("aside");
+  worldRegionSectorCard.className = "world-region-sector-card";
+  worldRegionSectorCard.setAttribute("aria-hidden", "true");
+  document.body.appendChild(worldRegionSectorCard);
+  return worldRegionSectorCard;
+}
+
+function hideWorldRegionSectorCard() {
+  if (!worldRegionSectorCard) {
+    return;
+  }
+  worldRegionSectorCard.classList.remove("is-visible");
+  worldRegionSectorCard.setAttribute("aria-hidden", "true");
+}
+
+function openWorldSectorCityRoute(sectorId = "atlantic-medical-corridor") {
+  const sector = window.THREATGRID_WORLD_DATA?.getWorldSector?.(sectorId);
+  const city = window.THREATGRID_WORLD_DATA?.getWorldCitiesForSector?.(sectorId)?.[0];
+  if (!sector || !city || typeof showWorldCityScreen !== "function") {
+    console.warn("[WorldRegion] Sector route unavailable.", { sectorId, sector, city });
+    return false;
+  }
+
+  hideWorldRegionSectorCard();
+  return showWorldCityScreen(city.cityKey, {
+    returnTarget: "game",
+    entrySource: "region",
+    regionId: sector.regionKey,
+    sectorId: sector.id,
+    routeChain: [sector.regionKey, sector.id, city.cityKey]
+  });
+}
+
+function showWorldRegionSectorCard(regionKey = "north-america") {
+  const region = window.THREATGRID_WORLD_DATA?.getWorldRegion?.(regionKey);
+  const sectors = window.THREATGRID_WORLD_DATA?.getWorldSectorsForRegion?.(regionKey) || [];
+  const firstSector = sectors[0] || null;
+  const card = getWorldRegionSectorCard();
+
+  if (!region || !firstSector) {
+    card.innerHTML = `
+      <div class="world-region-sector-kicker">REGION ROUTE UNAVAILABLE</div>
+      <h2>${regionKey}</h2>
+      <p>No sector adapter exists for this region yet.</p>
+    `;
+    card.classList.add("is-visible");
+    card.setAttribute("aria-hidden", "false");
+    return { ok: false, reason: "No region or sector adapter.", regionKey };
+  }
+
+  window.THREATGRID_WORLD_STATE?.setRegionSelection?.(region.id);
+  card.innerHTML = `
+    <div class="world-region-sector-kicker">REGION SELECTED</div>
+    <h2>${region.displayName || region.title}</h2>
+    <p>${region.summary}</p>
+    <div class="world-region-sector-pressure">
+      <span>Threat Pressure</span>
+      <strong>${region.threatPressure}</strong>
+    </div>
+    <button class="world-region-sector-option" type="button" data-world-sector-open="${firstSector.id}">
+      <span>Available Sector</span>
+      <strong>${firstSector.title}</strong>
+      <em>Open New York Medical Corridor</em>
+    </button>
+  `;
+  card.querySelector("[data-world-sector-open]")?.addEventListener("click", (event) => {
+    openWorldSectorCityRoute(event.currentTarget.getAttribute("data-world-sector-open"));
+  });
+  card.classList.add("is-visible");
+  card.setAttribute("aria-hidden", "false");
+  return {
+    ok: true,
+    visualScreenImplemented: false,
+    screenOpened: false,
+    region,
+    sectors
+  };
+}
+
 function installWorldCityGlobeRouting() {
   if (worldCityGlobeRoutingInstalled || !globe?.clickHandlers?.length) {
     return false;
@@ -112,10 +197,18 @@ function installWorldCityGlobeRouting() {
 
     const worldCityRoute = getWorldCityRouteForThreatSelection(threat);
     if (worldCityRoute && openWorldCityRouteForThreat(threat, worldCityRoute)) {
+      hideWorldRegionSectorCard();
       return;
     }
 
+    hideWorldRegionSectorCard();
     existingClickHandlers.forEach((callback) => callback(threat));
+  });
+  globe.onRegionClick((region, regionKey) => {
+    if (screenState !== "game" || combatState || encounterTransitionActive) {
+      return;
+    }
+    showWorldRegionSectorCard(regionKey || region?.id || "north-america");
   });
 
   worldCityGlobeRoutingInstalled = true;
@@ -123,6 +216,29 @@ function installWorldCityGlobeRouting() {
 }
 
 window.installWorldCityGlobeRouting = installWorldCityGlobeRouting;
+window.devHoverWorldRegion = (regionKey = "north-america") => {
+  const region = window.THREATGRID_WORLD_DATA?.getWorldRegion?.(regionKey);
+  if (!region || !globe) {
+    return { ok: false, reason: `Unknown region: ${regionKey}` };
+  }
+
+  globe.regionMap?.forEach?.((entry, key) => {
+    entry.group.userData.hovered = key === regionKey;
+  });
+  window.THREATGRID_WORLD_STATE?.setRegionHover?.(regionKey);
+  globe.showRegionHologram?.(region, { clientX: window.innerWidth - 430, clientY: 210 }, { force: true });
+  return {
+    ok: true,
+    hoveredRegionKey: regionKey,
+    region,
+    highlightVisible: Boolean(globe.regionMap?.get?.(regionKey))
+  };
+};
+window.devSelectWorldRegion = (regionKey = "north-america") => {
+  globe?.selectWorldRegion?.(regionKey);
+  return showWorldRegionSectorCard(regionKey);
+};
+window.devOpenWorldSectorRoute = openWorldSectorCityRoute;
 
 // Severity colors are reused in the panel so the text UI matches the node colors on the globe.
 const severityColorLookup = {

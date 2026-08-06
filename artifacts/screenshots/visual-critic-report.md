@@ -45,6 +45,16 @@
   routeChain: north-america -> atlantic-medical-corridor -> hospital-lockout
 - PASS: world-city hover hologram was captured if hover frame exists (informational)
   hoverHologramVisible: true
+- PASS: North America region hover screenshot exists (required)
+  /Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/globe-region-north-america-hover.png
+- PASS: globe region capture stayed on game screen (required)
+  screenState: game
+- PASS: North America region hover was recorded (required)
+  hoveredRegionKey: north-america
+- PASS: North America region highlight is present (required)
+  regionHighlightVisible: true
+- PASS: Atlantic Medical Corridor sector option appears after selection (informational)
+  sectorOptionVisible: true
 - PASS: combat shell is approximately viewport-sized (required)
   shell: 1440x900
 - PASS: diorama mount approximately fills combat shell (required)
@@ -102,7 +112,7 @@
 - Manual review required: true
 - Timing reliable: true
 - Intended offsets: 0, 100, 200, 300, 450, 600
-- Actual elapsed times: 83, 2412, 2944, 3451, 4006, 4538
+- Actual elapsed times: 700, 3022, 3473, 4065, 4674, 5244
 
 ## World City Capture
 
@@ -117,6 +127,17 @@
 - Screen opacity: 1
 - Title visible: true
 - Hover hologram visible: true
+- Manual review required: true
+
+## Globe Region Capture
+
+- Hover screenshot exists: true
+- Selected screenshot exists: true
+- Screen state: game
+- Hovered region: north-america
+- Selected region: north-america
+- Region highlight visible: true
+- Sector option visible: true
 - Manual review required: true
 
 ## What Still Looks Fake
@@ -136,6 +157,8 @@
 - capture_report: /Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/capture-report.json
 - menu: /Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/menu.png
 - globe: /Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/globe.png
+- globe_region_north_america_hover: /Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/globe-region-north-america-hover.png
+- globe_region_north_america_selected: /Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/globe-region-north-america-selected.png
 - world_city_hospital: /Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/world-city-hospital.png
 - world_city_hospital_hover: /Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/world-city-hospital-hover.png
 - combat: /Users/bhann/Documents/cyber-globe/Spook65.github.io/artifacts/screenshots/combat-hospital.png
