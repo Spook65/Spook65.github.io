@@ -146,6 +146,8 @@ function buildMarkdownReport(result) {
     lines.push(`- Screen state: ${result.globe_region.screen_state || "missing"}`);
     lines.push(`- Hovered region: ${result.globe_region.hovered_region_key || "missing"}`);
     lines.push(`- Selected region: ${result.globe_region.selected_region_key || "missing"}`);
+    lines.push(`- Highlight mode: ${result.globe_region.region_highlight_mode || "missing"}`);
+    lines.push(`- Selected panel visible: ${result.globe_region.selected_panel_visible ? "true" : "false"}`);
     lines.push(`- Region highlight visible: ${result.globe_region.region_highlight_visible ? "true" : "false"}`);
     lines.push(`- Sector option visible: ${result.globe_region.sector_option_visible ? "true" : "false"}`);
     lines.push(`- Manual review required: ${result.globe_region.manual_review_required ? "true" : "false"}`);
@@ -381,6 +383,13 @@ export async function runVisualCritic({
       detail: `sectorOptionVisible: ${globeRegion.sectorOptionVisible ?? "missing"}`
     },
     {
+      id: "globe_region_selected_panel_visible",
+      label: "selected North America route dossier is visible",
+      pass: globeRegionSelectedScreenshotExists ? globeRegion.selectedPanelVisible === true : true,
+      required: false,
+      detail: `selectedPanelVisible: ${globeRegion.selectedPanelVisible ?? "missing"}`
+    },
+    {
       id: "shell_viewport_sized",
       label: "combat shell is approximately viewport-sized",
       pass: viewportRatioAtLeast(dom.shell, viewport, 0.9),
@@ -598,7 +607,10 @@ export async function runVisualCritic({
       screen_state: globeRegion.screenState || "",
       hovered_region_key: globeRegion.hoveredRegionKey || "",
       selected_region_key: globeRegion.selectedRegionKey || "",
+      selected_sector_key: globeRegion.selectedSectorKey || "",
+      region_highlight_mode: globeRegion.regionHighlightMode || "",
       region_highlight_visible: globeRegion.regionHighlightVisible === true,
+      selected_panel_visible: globeRegion.selectedPanelVisible === true,
       sector_option_visible: globeRegion.sectorOptionVisible === true,
       hover_screenshot: globeRegionHoverShot?.path || "",
       selected_screenshot: globeRegionSelectedShot?.path || ""

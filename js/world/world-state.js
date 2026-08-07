@@ -6,6 +6,7 @@ const threatgridWorldState = {
   currentCityKey: "",
   hoveredRegionKey: "",
   selectedRegionKey: "",
+  selectedSectorKey: "",
   hoveredIncidentId: "",
   selectedIncidentId: "",
   returnTarget: "game",
@@ -46,6 +47,7 @@ function clearWorldMapState() {
   threatgridWorldState.currentCityKey = "";
   threatgridWorldState.hoveredRegionKey = "";
   threatgridWorldState.selectedRegionKey = "";
+  threatgridWorldState.selectedSectorKey = "";
   threatgridWorldState.hoveredIncidentId = "";
   threatgridWorldState.selectedIncidentId = "";
   threatgridWorldState.returnTarget = "game";
@@ -103,6 +105,9 @@ function getWorldMapDebugState() {
     : null;
   return {
     ...threatgridWorldState,
+    regionHighlightMode: threatgridWorldState.selectedRegionKey
+      ? "selected"
+      : threatgridWorldState.hoveredRegionKey ? "hover" : "",
     cityMounted: Boolean(cityScene?.mounted),
     canvasCount: cityScene?.canvasCount || 0,
     incidentNodeCount: cityScene?.incidentNodeCount || 0,

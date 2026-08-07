@@ -256,7 +256,10 @@ async function collectGlobeRegionState(page) {
   return page.evaluate(() => {
     const state = window.devWorldState?.() || {};
     const regionEntry = window.threatGlobe?.regionMap?.get?.("north-america") || null;
+    const selectedPanel = document.querySelector(".world-region-sector-card.is-visible");
     const sectorOption = document.querySelector("[data-world-sector-open='atlantic-medical-corridor']");
+    const selectedPanelRect = selectedPanel?.getBoundingClientRect?.();
+    const selectedPanelStyle = selectedPanel ? getComputedStyle(selectedPanel) : null;
     const sectorRect = sectorOption?.getBoundingClientRect?.();
     const sectorStyle = sectorOption ? getComputedStyle(sectorOption) : null;
     return {
@@ -264,10 +267,18 @@ async function collectGlobeRegionState(page) {
       hoveredRegionKey: state.hoveredRegionKey || "",
       selectedRegionKey: state.selectedRegionKey || "",
       currentRegionKey: state.currentRegionKey || "",
+      selectedSectorKey: state.selectedSectorKey || "",
+      regionHighlightMode: state.regionHighlightMode || "",
       routeChain: state.routeChain || [],
       regionHighlightVisible: Boolean(regionEntry && regionEntry.group?.visible !== false),
       regionHoveredInScene: Boolean(regionEntry?.group?.userData?.hovered),
       regionSelectedInScene: Boolean(regionEntry?.group?.userData?.selected),
+      selectedPanelVisible: Boolean(selectedPanel
+        && selectedPanelStyle?.display !== "none"
+        && selectedPanelStyle?.visibility !== "hidden"
+        && Number(selectedPanelStyle?.opacity || 0) > 0.9
+        && selectedPanelRect?.width > 0
+        && selectedPanelRect?.height > 0),
       sectorOptionVisible: Boolean(sectorOption
         && sectorStyle?.display !== "none"
         && sectorStyle?.visibility !== "hidden"
@@ -497,7 +508,10 @@ async function main() {
       screenState: "",
       hoveredRegionKey: "",
       selectedRegionKey: "",
+      selectedSectorKey: "",
+      regionHighlightMode: "",
       regionHighlightVisible: false,
+      selectedPanelVisible: false,
       sectorOptionVisible: false
     },
     worldCity: {
@@ -562,6 +576,9 @@ async function main() {
         selected: regionSelectedState,
         selectedScreenshotExists: await fileExists(regionSelectedPath),
         selectedRegionKey: regionSelectedState.selectedRegionKey,
+        selectedSectorKey: regionSelectedState.selectedSectorKey,
+        regionHighlightMode: regionSelectedState.regionHighlightMode,
+        selectedPanelVisible: regionSelectedState.selectedPanelVisible,
         sectorOptionVisible: regionSelectedState.sectorOptionVisible
       };
       report.screenshots.push({

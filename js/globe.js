@@ -417,21 +417,84 @@ class ThreatGlobe {
     const accent = new THREE.Color("#ff6e4a");
     const softAccent = new THREE.Color("#ffcf73");
     const anchorPoints = [
-      { lat: 48, lng: -125 },
-      { lat: 53, lng: -101 },
-      { lat: 45, lng: -78 },
-      { lat: 32, lng: -82 },
-      { lat: 26, lng: -104 },
-      { lat: 35, lng: -122 }
+      { lat: 49, lng: -124 },
+      { lat: 52, lng: -98 },
+      { lat: 43, lng: -78 },
+      { lat: 30, lng: -86 },
+      { lat: 31, lng: -112 }
     ];
     const rings = [];
+    const fieldMeshes = [];
+
+    const regionBoundary = [
+      { lat: 59, lng: -138 },
+      { lat: 63, lng: -112 },
+      { lat: 55, lng: -72 },
+      { lat: 43, lng: -61 },
+      { lat: 27, lng: -79 },
+      { lat: 18, lng: -97 },
+      { lat: 29, lng: -122 },
+      { lat: 45, lng: -131 },
+      { lat: 59, lng: -138 }
+    ];
+
+    const pressureFieldPoints = regionBoundary.map((point) => this.latLngToVector3(point.lat, point.lng, this.globeRadius + 0.075));
+    const pressureCenter = this.latLngToVector3(43, -101, this.globeRadius + 0.078);
+    const pressureVertices = [];
+    for (let index = 0; index < pressureFieldPoints.length - 1; index += 1) {
+      pressureVertices.push(
+        pressureCenter.x, pressureCenter.y, pressureCenter.z,
+        pressureFieldPoints[index].x, pressureFieldPoints[index].y, pressureFieldPoints[index].z,
+        pressureFieldPoints[index + 1].x, pressureFieldPoints[index + 1].y, pressureFieldPoints[index + 1].z
+      );
+    }
+    const pressureGeometry = new THREE.BufferGeometry();
+    pressureGeometry.setAttribute("position", new THREE.Float32BufferAttribute(pressureVertices, 3));
+    const pressureMaterial = new THREE.MeshBasicMaterial({
+      color: accent,
+      transparent: true,
+      opacity: 0.115,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    });
+    const pressureField = new THREE.Mesh(pressureGeometry, pressureMaterial);
+    pressureField.userData.regionKey = regionKey;
+    group.add(pressureField);
+
+    [
+      { lat: 49, lng: -103, radius: 0.42, scaleX: 1.85, scaleY: 0.92, color: "#ff6e4a", opacity: 0.055 },
+      { lat: 38, lng: -94, radius: 0.37, scaleX: 1.7, scaleY: 0.78, color: "#ff9f57", opacity: 0.048 },
+      { lat: 31, lng: -108, radius: 0.28, scaleX: 1.35, scaleY: 0.64, color: "#ffcf73", opacity: 0.038 }
+    ].forEach((field) => {
+      const fieldGeometry = new THREE.CircleGeometry(field.radius, 56);
+      const fieldMaterial = new THREE.MeshBasicMaterial({
+        color: new THREE.Color(field.color),
+        transparent: true,
+        opacity: field.opacity,
+        side: THREE.DoubleSide,
+        depthWrite: false
+      });
+      const fieldMesh = new THREE.Mesh(fieldGeometry, fieldMaterial);
+      const position = this.latLngToVector3(field.lat, field.lng, this.globeRadius + 0.09);
+      fieldMesh.position.copy(position);
+      fieldMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), position.clone().normalize());
+      fieldMesh.scale.set(field.scaleX, field.scaleY, 1);
+      fieldMesh.userData = {
+        regionKey,
+        baseOpacity: field.opacity,
+        baseScaleX: field.scaleX,
+        baseScaleY: field.scaleY
+      };
+      group.add(fieldMesh);
+      fieldMeshes.push(fieldMesh);
+    });
 
     anchorPoints.forEach((point, index) => {
-      const ringGeometry = new THREE.RingGeometry(0.055, 0.105 + (index % 2) * 0.025, 52);
+      const ringGeometry = new THREE.RingGeometry(0.03, 0.058 + (index % 2) * 0.012, 42);
       const ringMaterial = new THREE.MeshBasicMaterial({
         color: index % 2 === 0 ? accent : softAccent,
         transparent: true,
-        opacity: 0.22,
+        opacity: 0.11,
         side: THREE.DoubleSide,
         depthWrite: false
       });
@@ -442,15 +505,7 @@ class ThreatGlobe {
       rings.push(ring);
     });
 
-    const outlinePoints = [
-      { lat: 56, lng: -132 },
-      { lat: 55, lng: -98 },
-      { lat: 47, lng: -70 },
-      { lat: 30, lng: -80 },
-      { lat: 24, lng: -104 },
-      { lat: 36, lng: -126 },
-      { lat: 56, lng: -132 }
-    ].map((point) => this.latLngToVector3(point.lat, point.lng, this.globeRadius + 0.055));
+    const outlinePoints = regionBoundary.map((point) => this.latLngToVector3(point.lat, point.lng, this.globeRadius + 0.085));
     const outlineGeometry = new THREE.BufferGeometry().setFromPoints(outlinePoints);
     const outlineMaterial = new THREE.LineBasicMaterial({
       color: accent,
@@ -499,6 +554,8 @@ class ThreatGlobe {
       group,
       region,
       rings,
+      fieldMeshes,
+      pressureField,
       outline,
       halo,
       hitMesh
@@ -1508,14 +1565,22 @@ class ThreatGlobe {
       const wave = (Math.sin(elapsed * 2.1) + 1) * 0.5;
       const strength = selected ? 1 : hovered ? 0.82 : 0.42;
 
-      region.rings.forEach((ring, index) => {
-        ring.lookAt(this.camera.position);
-        ring.scale.setScalar(1 + wave * 0.28 + (hovered ? 0.28 : 0) + (selected ? 0.18 : 0) + index * 0.015);
-        ring.material.opacity = (0.16 + wave * 0.1) * strength;
+      region.fieldMeshes.forEach((field, index) => {
+        const fieldPulse = selected ? 0.16 : hovered ? 0.11 : 0.035;
+        const scalePulse = 1 + wave * (selected ? 0.085 : hovered ? 0.06 : 0.025);
+        field.material.opacity = Math.min(0.22, field.userData.baseOpacity + fieldPulse + index * 0.008);
+        field.scale.set(field.userData.baseScaleX * scalePulse, field.userData.baseScaleY * scalePulse, 1);
       });
 
-      region.outline.material.opacity = (0.2 + wave * 0.1) * strength;
-      region.halo.material.opacity = (0.035 + wave * 0.05) * strength;
+      region.rings.forEach((ring, index) => {
+        ring.lookAt(this.camera.position);
+        ring.scale.setScalar(0.82 + wave * 0.18 + (hovered ? 0.11 : 0) + (selected ? 0.1 : 0) + index * 0.008);
+        ring.material.opacity = (0.06 + wave * 0.035) * strength;
+      });
+
+      region.pressureField.material.opacity = (0.07 + wave * 0.055) * strength;
+      region.outline.material.opacity = (0.22 + wave * 0.16) * strength;
+      region.halo.material.opacity = (0.025 + wave * 0.04) * strength;
     });
 
     this.renderer.render(this.scene, this.camera);

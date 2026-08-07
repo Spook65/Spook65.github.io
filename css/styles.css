@@ -353,14 +353,15 @@ canvas {
 
 .world-region-sector-card {
   position: fixed;
-  left: clamp(22px, 4vw, 72px);
-  bottom: clamp(26px, 6vh, 74px);
+  top: clamp(150px, 22vh, 220px);
+  right: clamp(22px, 3vw, 44px);
   z-index: 15;
-  width: min(360px, calc(100vw - 44px));
+  width: min(420px, calc(100vw - 44px));
   border: 1px solid rgba(255, 116, 76, 0.48);
   background:
     linear-gradient(90deg, rgba(255, 116, 76, 0.72) 0 3px, transparent 3px),
-    radial-gradient(circle at 18% 14%, rgba(255, 116, 76, 0.16), transparent 38%),
+    radial-gradient(circle at 18% 14%, rgba(255, 116, 76, 0.18), transparent 38%),
+    linear-gradient(140deg, rgba(255, 116, 76, 0.12), rgba(7, 13, 21, 0.24) 44%, rgba(120, 255, 218, 0.055)),
     rgba(5, 8, 13, 0.92);
   box-shadow:
     0 18px 42px rgba(0, 0, 0, 0.42),
@@ -369,9 +370,9 @@ canvas {
   color: rgba(244, 239, 227, 0.9);
   opacity: 0;
   pointer-events: none;
-  transform: translate3d(-10px, 10px, 0) scale(0.98);
+  transform: translate3d(12px, 0, 0) scale(0.98);
   transition: opacity 140ms ease, transform 140ms ease;
-  padding: 16px 17px 17px;
+  padding: 17px 18px 18px;
 }
 
 .world-region-sector-card.is-visible {
@@ -380,9 +381,27 @@ canvas {
   transform: translate3d(0, 0, 0) scale(1);
 }
 
+.world-region-sector-scan {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  clip-path: inherit;
+  pointer-events: none;
+}
+
+.world-region-sector-scan::before {
+  content: "";
+  position: absolute;
+  inset: -35% 0 auto;
+  height: 34%;
+  background: linear-gradient(180deg, transparent, rgba(255, 116, 76, 0.16), transparent);
+  animation: globe-hologram-scan 3.2s linear infinite;
+}
+
 .world-region-sector-kicker,
 .world-region-sector-pressure span,
-.world-region-sector-option span {
+.world-region-sector-option span,
+.world-region-route-chain span {
   color: rgba(255, 194, 128, 0.72);
   font-size: 0.56rem;
   font-weight: 700;
@@ -394,10 +413,42 @@ canvas {
 .world-region-sector-card h2 {
   margin: 7px 0 9px;
   color: rgba(244, 239, 227, 0.96);
-  font-size: 1rem;
+  font-size: 1.08rem;
   letter-spacing: 0.13em;
   line-height: 1.15;
   text-transform: uppercase;
+}
+
+.world-region-route-chain {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 5px;
+  margin: 0 0 12px;
+  border: 1px solid rgba(120, 255, 218, 0.18);
+  background:
+    linear-gradient(90deg, rgba(120, 255, 218, 0.22) 0 2px, transparent 2px),
+    rgba(120, 255, 218, 0.055);
+  padding: 9px 10px;
+  text-transform: uppercase;
+}
+
+.world-region-route-chain b,
+.world-region-route-chain em {
+  color: rgba(244, 239, 227, 0.86);
+  font-size: 0.62rem;
+  font-style: normal;
+  letter-spacing: 0.11em;
+  line-height: 1.25;
+}
+
+.world-region-route-chain b::before,
+.world-region-route-chain em::before {
+  content: "-> ";
+  color: rgba(120, 255, 218, 0.64);
+}
+
+.world-region-route-chain em {
+  color: rgba(120, 255, 218, 0.76);
 }
 
 .world-region-sector-card p {
@@ -427,6 +478,11 @@ canvas {
   text-transform: uppercase;
 }
 
+.world-region-sector-list {
+  display: grid;
+  gap: 8px;
+}
+
 .world-region-sector-option {
   display: grid;
   gap: 4px;
@@ -443,11 +499,27 @@ canvas {
   text-transform: uppercase;
 }
 
+.world-region-sector-option.is-primary {
+  min-height: 116px;
+  background:
+    linear-gradient(90deg, rgba(255, 193, 118, 0.68) 0 3px, transparent 3px),
+    radial-gradient(circle at 88% 18%, rgba(120, 255, 218, 0.18), transparent 32%),
+    rgba(255, 193, 118, 0.105);
+}
+
 .world-region-sector-option strong {
   color: rgba(255, 223, 164, 0.96);
-  font-size: 0.76rem;
+  font-size: 0.82rem;
   letter-spacing: 0.13em;
   line-height: 1.2;
+}
+
+.world-region-sector-option small {
+  color: rgba(244, 239, 227, 0.64);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  line-height: 1.38;
 }
 
 .world-region-sector-option em {
@@ -459,11 +531,35 @@ canvas {
   line-height: 1.25;
 }
 
+.world-region-sector-option.is-locked {
+  cursor: default;
+  opacity: 0.52;
+  padding-block: 8px;
+  border-color: rgba(244, 239, 227, 0.13);
+  background:
+    linear-gradient(90deg, rgba(244, 239, 227, 0.16) 0 2px, transparent 2px),
+    rgba(244, 239, 227, 0.035);
+}
+
+.world-region-sector-option.is-locked strong {
+  color: rgba(244, 239, 227, 0.56);
+  font-size: 0.68rem;
+}
+
+.world-region-sector-option.is-locked em {
+  color: rgba(244, 239, 227, 0.38);
+}
+
 .world-region-sector-option:hover,
 .world-region-sector-option:focus-visible {
   border-color: rgba(120, 255, 218, 0.75);
   box-shadow: 0 0 24px rgba(120, 255, 218, 0.14);
   outline: none;
+}
+
+.world-region-sector-option.is-locked:hover {
+  border-color: rgba(244, 239, 227, 0.13);
+  box-shadow: none;
 }
 
 /* The threat panel is fixed to the right and slides on/off screen without dimming the globe. */

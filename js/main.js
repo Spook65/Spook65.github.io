@@ -115,7 +115,7 @@ function hideWorldRegionSectorCard() {
   if (!worldRegionSectorCard) {
     return;
   }
-  worldRegionSectorCard.classList.remove("is-visible");
+  worldRegionSectorCard.classList.remove("is-visible", "is-route-dossier");
   worldRegionSectorCard.setAttribute("aria-hidden", "true");
 }
 
@@ -155,34 +155,57 @@ function showWorldRegionSectorCard(regionKey = "north-america") {
   }
 
   window.THREATGRID_WORLD_STATE?.setRegionSelection?.(region.id);
+  window.THREATGRID_WORLD_STATE?.setState?.({ selectedSectorKey: firstSector.id });
+  globe?.hideThreatHologram?.();
   card.innerHTML = `
+    <div class="world-region-sector-scan"></div>
     <div class="world-region-sector-kicker">REGION SELECTED</div>
     <h2>${region.displayName || region.title}</h2>
+    <div class="world-region-route-chain">
+      <span>North America</span>
+      <b>Atlantic Medical Corridor</b>
+      <em>New York Medical Corridor</em>
+    </div>
     <p>${region.summary}</p>
     <div class="world-region-sector-pressure">
       <span>Threat Pressure</span>
       <strong>${region.threatPressure}</strong>
     </div>
-    <button class="world-region-sector-option" type="button" data-world-sector-open="${firstSector.id}">
-      <span>Available Sector</span>
-      <strong>${firstSector.title}</strong>
-      <em>Open New York Medical Corridor</em>
-    </button>
+    <div class="world-region-sector-list" aria-label="Available North America sectors">
+      <button class="world-region-sector-option is-primary" type="button" data-world-sector-open="${firstSector.id}">
+        <span>Open Corridor</span>
+        <strong>${firstSector.title}</strong>
+        <small>${firstSector.summary}</small>
+        <em>Enter Sector / New York Medical Corridor</em>
+      </button>
+      <div class="world-region-sector-option is-locked" aria-disabled="true">
+        <span>Future Sector</span>
+        <strong>Pacific Grid Sector</strong>
+        <em>Locked / Future Route</em>
+      </div>
+      <div class="world-region-sector-option is-locked" aria-disabled="true">
+        <span>Future Sector</span>
+        <strong>Midwest Logistics Spine</strong>
+        <em>Locked / Future Route</em>
+      </div>
+    </div>
   `;
   card.querySelector("[data-world-sector-open]")?.addEventListener("click", (event) => {
     openWorldSectorCityRoute(event.currentTarget.getAttribute("data-world-sector-open"));
   });
-  card.classList.add("is-visible");
+  card.classList.add("is-visible", "is-route-dossier");
   card.setAttribute("aria-hidden", "false");
   return {
     ok: true,
     visualScreenImplemented: false,
     screenOpened: false,
+    selectedPanelVisible: true,
+    selectedSectorKey: firstSector.id,
+    routeHint: "North America -> Atlantic Medical Corridor -> New York Medical Corridor",
     region,
     sectors
   };
 }
-
 function installWorldCityGlobeRouting() {
   if (worldCityGlobeRoutingInstalled || !globe?.clickHandlers?.length) {
     return false;

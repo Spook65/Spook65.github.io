@@ -55,6 +55,8 @@
   regionHighlightVisible: true
 - PASS: Atlantic Medical Corridor sector option appears after selection (informational)
   sectorOptionVisible: true
+- PASS: selected North America route dossier is visible (informational)
+  selectedPanelVisible: true
 - PASS: combat shell is approximately viewport-sized (required)
   shell: 1440x900
 - PASS: diorama mount approximately fills combat shell (required)
@@ -112,7 +114,7 @@
 - Manual review required: true
 - Timing reliable: true
 - Intended offsets: 0, 100, 200, 300, 450, 600
-- Actual elapsed times: 700, 3022, 3473, 4065, 4674, 5244
+- Actual elapsed times: 682, 2917, 3487, 4148, 4812, 5390
 
 ## World City Capture
 
@@ -136,6 +138,8 @@
 - Screen state: game
 - Hovered region: north-america
 - Selected region: north-america
+- Highlight mode: selected
+- Selected panel visible: true
 - Region highlight visible: true
 - Sector option visible: true
 - Manual review required: true
