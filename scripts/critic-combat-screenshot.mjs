@@ -147,6 +147,8 @@ function buildMarkdownReport(result) {
     lines.push(`- Hovered region: ${result.globe_region.hovered_region_key || "missing"}`);
     lines.push(`- Selected region: ${result.globe_region.selected_region_key || "missing"}`);
     lines.push(`- Highlight mode: ${result.globe_region.region_highlight_mode || "missing"}`);
+    lines.push(`- Surface highlight object exists: ${result.globe_region.surface_highlight_object_exists ? "true" : "false"}`);
+    lines.push(`- Surface highlight visible: ${result.globe_region.surface_highlight_visible ? "true" : "false"}`);
     lines.push(`- Selected panel visible: ${result.globe_region.selected_panel_visible ? "true" : "false"}`);
     lines.push(`- Region highlight visible: ${result.globe_region.region_highlight_visible ? "true" : "false"}`);
     lines.push(`- Sector option visible: ${result.globe_region.sector_option_visible ? "true" : "false"}`);
@@ -374,6 +376,20 @@ export async function runVisualCritic({
       pass: globeRegion.regionHighlightVisible === true,
       required: true,
       detail: `regionHighlightVisible: ${globeRegion.regionHighlightVisible ?? "missing"}`
+    },
+    {
+      id: "globe_region_surface_highlight_exists",
+      label: "North America surface highlight mesh exists",
+      pass: globeRegion.regionSurfaceHighlightObjectExists === true,
+      required: true,
+      detail: `regionSurfaceHighlightObjectExists: ${globeRegion.regionSurfaceHighlightObjectExists ?? "missing"}`
+    },
+    {
+      id: "globe_region_surface_highlight_visible",
+      label: "North America surface highlight is visible during capture",
+      pass: globeRegion.regionSurfaceHighlightVisible === true,
+      required: true,
+      detail: `regionSurfaceHighlightVisible: ${globeRegion.regionSurfaceHighlightVisible ?? "missing"}, opacity: ${globeRegion.regionSurfaceHighlightOpacity ?? "missing"}`
     },
     {
       id: "globe_region_sector_option_visible",
@@ -609,6 +625,9 @@ export async function runVisualCritic({
       selected_region_key: globeRegion.selectedRegionKey || "",
       selected_sector_key: globeRegion.selectedSectorKey || "",
       region_highlight_mode: globeRegion.regionHighlightMode || "",
+      surface_highlight_object_exists: globeRegion.regionSurfaceHighlightObjectExists === true,
+      surface_highlight_visible: globeRegion.regionSurfaceHighlightVisible === true,
+      surface_highlight_opacity: globeRegion.regionSurfaceHighlightOpacity ?? null,
       region_highlight_visible: globeRegion.regionHighlightVisible === true,
       selected_panel_visible: globeRegion.selectedPanelVisible === true,
       sector_option_visible: globeRegion.sectorOptionVisible === true,

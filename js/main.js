@@ -176,7 +176,7 @@ function showWorldRegionSectorCard(regionKey = "north-america") {
         <span>Open Corridor</span>
         <strong>${firstSector.title}</strong>
         <small>${firstSector.summary}</small>
-        <em>Enter Sector / New York Medical Corridor</em>
+        <em>Enter Atlantic Medical Corridor / New York Medical Corridor</em>
       </button>
       <div class="world-region-sector-option is-locked" aria-disabled="true">
         <span>Future Sector</span>

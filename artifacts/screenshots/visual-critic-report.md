@@ -53,6 +53,10 @@
   hoveredRegionKey: north-america
 - PASS: North America region highlight is present (required)
   regionHighlightVisible: true
+- PASS: North America surface highlight mesh exists (required)
+  regionSurfaceHighlightObjectExists: true
+- PASS: North America surface highlight is visible during capture (required)
+  regionSurfaceHighlightVisible: true, opacity: 0.146
 - PASS: Atlantic Medical Corridor sector option appears after selection (informational)
   sectorOptionVisible: true
 - PASS: selected North America route dossier is visible (informational)
@@ -114,7 +118,7 @@
 - Manual review required: true
 - Timing reliable: true
 - Intended offsets: 0, 100, 200, 300, 450, 600
-- Actual elapsed times: 682, 2917, 3487, 4148, 4812, 5390
+- Actual elapsed times: 87, 2956, 3399, 3825, 4374, 4875
 
 ## World City Capture
 
@@ -139,6 +143,8 @@
 - Hovered region: north-america
 - Selected region: north-america
 - Highlight mode: selected
+- Surface highlight object exists: true
+- Surface highlight visible: true
 - Selected panel visible: true
 - Region highlight visible: true
 - Sector option visible: true

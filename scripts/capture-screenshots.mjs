@@ -256,6 +256,8 @@ async function collectGlobeRegionState(page) {
   return page.evaluate(() => {
     const state = window.devWorldState?.() || {};
     const regionEntry = window.threatGlobe?.regionMap?.get?.("north-america") || null;
+    const surfaceFields = Array.isArray(regionEntry?.surfaceFields) ? regionEntry.surfaceFields : [];
+    const surfaceOpacity = Math.max(0, ...surfaceFields.map((field) => Number(field?.material?.opacity || 0)));
     const selectedPanel = document.querySelector(".world-region-sector-card.is-visible");
     const sectorOption = document.querySelector("[data-world-sector-open='atlantic-medical-corridor']");
     const selectedPanelRect = selectedPanel?.getBoundingClientRect?.();
@@ -269,6 +271,9 @@ async function collectGlobeRegionState(page) {
       currentRegionKey: state.currentRegionKey || "",
       selectedSectorKey: state.selectedSectorKey || "",
       regionHighlightMode: state.regionHighlightMode || "",
+      regionSurfaceHighlightVisible: Boolean(state.regionSurfaceHighlightVisible || surfaceOpacity > 0.02),
+      regionSurfaceHighlightObjectExists: surfaceFields.length > 0,
+      regionSurfaceHighlightOpacity: Number(surfaceOpacity.toFixed(3)),
       routeChain: state.routeChain || [],
       regionHighlightVisible: Boolean(regionEntry && regionEntry.group?.visible !== false),
       regionHoveredInScene: Boolean(regionEntry?.group?.userData?.hovered),
@@ -510,6 +515,9 @@ async function main() {
       selectedRegionKey: "",
       selectedSectorKey: "",
       regionHighlightMode: "",
+      regionSurfaceHighlightVisible: false,
+      regionSurfaceHighlightObjectExists: false,
+      regionSurfaceHighlightOpacity: 0,
       regionHighlightVisible: false,
       selectedPanelVisible: false,
       sectorOptionVisible: false
