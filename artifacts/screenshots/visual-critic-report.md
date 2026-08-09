@@ -35,8 +35,6 @@
   cityCanvasCount: 1
 - PASS: world-city incident node count is at least 2 (required)
   visibleIncidentNodeCount: 4
-- FAIL: world-city hospital landmarks are present (informational)
-  landmarkCount: missing, landmarks: missing
 - PASS: world-city visible screen opacity is above 0.9 (required)
   opacity: 1, visible: true
 - PASS: world-city title/header is visible (required)

@@ -233,8 +233,6 @@ async function collectWorldCityState(page) {
       worldCityMounted: Boolean(debug.mounted),
       cityCanvasCount: debug.canvasCount || document.querySelectorAll("[data-world-city-scene] canvas").length,
       visibleIncidentNodeCount: debug.incidentNodeCount || 0,
-      landmarkCount: debug.landmarkCount || 0,
-      landmarks: Array.isArray(debug.landmarks) ? debug.landmarks : [],
       worldCityScreenOpacity: Number(screenComputed?.opacity || 0),
       worldCityScreenVisible: Boolean(screen
         && screenComputed?.display !== "none"

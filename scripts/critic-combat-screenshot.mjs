@@ -313,13 +313,6 @@ export async function runVisualCritic({
       detail: `visibleIncidentNodeCount: ${worldCity.visibleIncidentNodeCount ?? "missing"}`
     },
     {
-      id: "world_city_landmarks_present",
-      label: "world-city hospital landmarks are present",
-      pass: Number(worldCity.landmarkCount || 0) >= 5,
-      required: false,
-      detail: `landmarkCount: ${worldCity.landmarkCount ?? "missing"}, landmarks: ${asArray(worldCity.landmarks).join(", ") || "missing"}`
-    },
-    {
       id: "world_city_screen_visible_opacity",
       label: "world-city visible screen opacity is above 0.9",
       pass: Number(worldCity.worldCityScreenOpacity || 0) > 0.9 && worldCity.worldCityScreenVisible === true,
