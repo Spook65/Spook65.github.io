@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-07T22:47:58.990Z",
+  "generatedAt": "2026-08-09T05:44:50.690Z",
   "accepted": true,
   "acceptance_scope": "deterministic technical gates only",
   "manual_review_required": true,
@@ -86,6 +86,13 @@
       "pass": true,
       "required": true,
       "detail": "visibleIncidentNodeCount: 4"
+    },
+    {
+      "id": "world_city_landmarks_present",
+      "label": "world-city hospital landmarks are present",
+      "pass": false,
+      "required": false,
+      "detail": "landmarkCount: missing, landmarks: missing"
     },
     {
       "id": "world_city_screen_visible_opacity",

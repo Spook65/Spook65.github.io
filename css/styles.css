@@ -17918,9 +17918,9 @@ body {
   align-items: stretch;
   padding: 0;
   background:
-    radial-gradient(circle at 58% 28%, rgba(255, 102, 49, 0.14), transparent 34%),
-    radial-gradient(circle at 24% 72%, rgba(39, 231, 210, 0.13), transparent 32%),
-    linear-gradient(145deg, #03070b 0%, #071116 48%, #100b0d 100%);
+    radial-gradient(circle at 58% 28%, rgba(255, 102, 49, 0.1), transparent 34%),
+    radial-gradient(circle at 24% 72%, rgba(39, 231, 210, 0.1), transparent 32%),
+    linear-gradient(145deg, #020609 0%, #061014 48%, #0e090c 100%);
 }
 
 #boot-overlay:has(#world-city-screen.is-active) {
@@ -17952,11 +17952,12 @@ body {
   inset: 0;
   pointer-events: none;
   background:
-    linear-gradient(90deg, rgba(94, 247, 222, 0.05) 1px, transparent 1px),
-    linear-gradient(rgba(255, 178, 111, 0.035) 1px, transparent 1px);
-  background-size: 92px 92px, 92px 92px;
-  mask-image: radial-gradient(circle at 52% 48%, rgba(0, 0, 0, 0.42), transparent 72%);
-  opacity: 0.34;
+    radial-gradient(circle at 62% 40%, rgba(255, 109, 68, 0.08), transparent 30%),
+    linear-gradient(90deg, rgba(94, 247, 222, 0.035) 1px, transparent 1px),
+    linear-gradient(rgba(255, 178, 111, 0.026) 1px, transparent 1px);
+  background-size: auto, 118px 118px, 118px 118px;
+  mask-image: radial-gradient(circle at 54% 48%, rgba(0, 0, 0, 0.36), transparent 74%);
+  opacity: 0.28;
   z-index: 1;
 }
 
@@ -18002,12 +18003,12 @@ body {
 }
 
 .world-city-heading {
-  max-width: min(680px, 62vw);
-  padding: 16px 18px 18px;
+  max-width: min(560px, 50vw);
+  padding: 14px 17px 16px;
   border-left: 2px solid rgba(95, 255, 224, 0.68);
   background:
-    linear-gradient(90deg, rgba(6, 18, 22, 0.78), rgba(6, 18, 22, 0.2));
-  box-shadow: 0 20px 80px rgba(0, 0, 0, 0.42);
+    linear-gradient(90deg, rgba(6, 18, 22, 0.7), rgba(6, 18, 22, 0.1));
+  box-shadow: 0 16px 56px rgba(0, 0, 0, 0.34);
 }
 
 .world-city-eyebrow,
@@ -18024,20 +18025,20 @@ body {
 .world-city-heading h1 {
   margin: 4px 0 8px;
   color: #f5f2e8;
-  font-size: clamp(2rem, 4.8vw, 4.6rem);
-  line-height: 0.9;
-  letter-spacing: 0.18em;
+  font-size: clamp(1.7rem, 3.2vw, 3.25rem);
+  line-height: 0.96;
+  letter-spacing: 0.13em;
   text-transform: uppercase;
   text-shadow: 0 0 24px rgba(95, 255, 224, 0.16);
 }
 
 .world-city-heading p {
-  max-width: 640px;
+  max-width: 540px;
   margin: 0;
   color: rgba(230, 237, 232, 0.74);
-  font-size: clamp(0.82rem, 1.2vw, 1rem);
-  line-height: 1.6;
-  letter-spacing: 0.08em;
+  font-size: clamp(0.78rem, 1vw, 0.94rem);
+  line-height: 1.55;
+  letter-spacing: 0.06em;
 }
 
 .world-city-return {
@@ -18122,6 +18123,16 @@ body {
   transform: translateY(8px);
   pointer-events: none;
   transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.world-city-hologram::before {
+  content: "";
+  position: absolute;
+  left: -22px;
+  top: 24px;
+  width: 22px;
+  border-top: 1px solid rgba(95, 255, 224, 0.44);
+  box-shadow: 0 0 18px rgba(95, 255, 224, 0.18);
 }
 
 .world-city-hologram.is-visible {
