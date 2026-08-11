@@ -428,6 +428,228 @@ Avoid:
 - Exact real-world copies.
 - Overbuilding realism before interaction, routing, and lifecycle are stable.
 
+## New York Medical Corridor Composition Spec
+
+The New York Medical Corridor city layer should be a hybrid top-down/isometric tactical district map with 3D depth. It should read as a hospital campus under ransomware pressure, a tactical mission board, and a cyber-medical infrastructure district. It should not read as a realistic city simulation, a greybox blockout, a cluttered pile of landmarks, or a checklist of procedural props.
+
+This layer exists to stage the `hospital-lockout` city incident. Composition comes before object count.
+
+### Four-Zone District Composition
+
+Use only four primary readable zones.
+
+Zone A: Main Hospital Campus
+
+- Purpose: visual anchor and largest mass.
+- Represents the hospital system under pressure.
+- Use one connected hospital complex rather than random towers.
+- Give it a clear entrance or front face.
+- Medical identity should be readable through massing, entrance language, controlled signage, or rooftop structure.
+- A subtle rooftop helipad is allowed only if it supports the campus read and does not become the dominant icon.
+
+Zone B: Emergency Intake Route
+
+- Purpose: ambulance, triage, and patient routing.
+- Supports the `triage-routing-failure` node.
+- Use a simple curved or L-shaped road, driveway, or intake path.
+- Include an ambulance bay or intake canopy if it improves readability.
+- The road should guide the eye through the district, not dominate the scene.
+
+Zone C: Network / Radiology Core
+
+- Purpose: EHR, radiology, server, and network breach focal point.
+- Supports the `hospital-main-lockout` node.
+- Use one contained network/radiology structure such as a rooftop array, server core, dish, diagnostic column, or controlled glow column.
+- It should feel corrupted, important, and system-critical.
+- This is the only zone allowed to compete visually with the main hospital campus.
+
+Zone D: Backup Infrastructure Yard
+
+- Purpose: generator, power, and utility support.
+- Supports the `backup-generator-handshake` node.
+- Use a compact utility yard.
+- Generator blocks or one or two cylinders may be used sparingly.
+- This zone should be quieter than the main hospital and network core.
+
+Optional minor element: Dispatch / Comms Point
+
+- Supports the `ambulance-comms-delay` node.
+- Keep it small and secondary.
+- It may be a mast, dispatch kiosk, comms relay, or marked section of the emergency route.
+- It must not become a fifth major zone.
+
+### Focal Hierarchy
+
+The scene hierarchy must be:
+
+1. Main hospital campus.
+2. Network/radiology core.
+3. Emergency route/intake.
+4. Incident nodes.
+5. Backup yard/comms props.
+6. Background/support buildings.
+
+Rules:
+
+- No object should compete with the hospital unless it is the network/radiology core.
+- Roads should guide the eye and explain flow.
+- Support buildings should stay dark, simple, and secondary.
+- Neon should be reserved for state, threat, route, or diagnostic meaning.
+- If every object is bright, important, or equally detailed, the composition has failed.
+
+### Camera And Framing
+
+Use a hybrid top-down/isometric camera.
+
+Requirements:
+
+- High enough to read the whole district layout.
+- Angled enough to show 3D depth and object hierarchy.
+- Wide enough that the scene is not cramped.
+- Close enough that nodes and zone identities remain readable.
+- Avoid camera framing that makes props feel like isolated toys.
+- Avoid pulling so far back that incident nodes become tiny map dust.
+
+The standard screenshot should show:
+
+- The whole hospital campus.
+- The emergency route/intake zone.
+- The network/radiology core.
+- The backup infrastructure yard.
+- All four incident nodes.
+
+### Incident Node Placement Rules
+
+Incident nodes must be attached to infrastructure.
+
+`hospital-main-lockout`:
+
+- Pin to the Network / Radiology Core.
+- It should feel like the main breach source.
+
+`triage-routing-failure`:
+
+- Pin to the Emergency Intake Route or ambulance bay.
+- It should read as patient routing or admissions trouble.
+
+`backup-generator-handshake`:
+
+- Pin to the Backup Infrastructure Yard.
+- It should read as power, generator, or utility system trouble.
+
+`ambulance-comms-delay`:
+
+- Pin to the Dispatch / Comms Point or the emergency road route.
+- It should read as dispatch, routing, or field-unit communication delay.
+
+Rules:
+
+- No floating random nodes.
+- Every node must have a physical reason to exist.
+- Hover holograms should appear near the selected node or connect to it with a subtle line.
+- Node styling should not overpower the infrastructure it is attached to.
+
+### Procedural Form Language
+
+Use simple procedural geometry with restraint.
+
+Allowed shapes:
+
+- Large connected slabs for the hospital campus.
+- Simple towers only when they clarify hierarchy.
+- Thin road strips.
+- Small utility blocks.
+- One or two cylindrical generator forms.
+- One mast, dish, or array if needed for the comms/network read.
+- Subtle cables or lines only when they clarify system connections.
+
+Avoid:
+
+- Random orange cylinders.
+- Many equal-height boxes.
+- Unrelated props.
+- Generic sci-fi panels.
+- Noisy neon grids.
+- Too many colors.
+- Landmark checklist thinking.
+- Adding objects just because the prompt mentioned them.
+
+### Color And Lighting
+
+Base:
+
+- Dark blue/black city floor.
+- Deep green/teal building shadows.
+- Bone/silver text and UI accents outside the scene.
+
+Meaning colors:
+
+- Cyan means diagnostics, network systems, scans, or system links.
+- Coral/red means active threat, corruption, ransomware pressure, or breach focus.
+- Amber/gold means route, priority, emergency lighting, or mission emphasis.
+- Green means recovery, safe, or restored state only.
+
+Lighting:
+
+- Moody night.
+- Restrained emergency glow.
+- No bright toy colors.
+- No object should glow unless the glow communicates state.
+- Atmosphere should support depth, not hide weak composition.
+
+### UI Relationship
+
+The UI must support the map instead of becoming the map.
+
+Rules:
+
+- The title/header should not cover the main district.
+- The return button stays peripheral.
+- The district plaque stays small.
+- Instruction text stays low priority.
+- Hover dossiers should feel attached to selected nodes.
+- Avoid huge detached dashboard panels.
+- If the player remembers the panel more than the district, the screen has failed.
+
+### Hard Rejection Criteria
+
+Reject the next city implementation if:
+
+- It looks like a pile of boxes.
+- It adds many landmarks without composition.
+- The hospital identity is only a plus sign.
+- Nodes float randomly.
+- The road layout is unreadable.
+- UI dominates the district.
+- Colors feel toy-like.
+- It looks more cluttered than the reverted version.
+- Screenshot improvement is not obvious.
+
+### Next Implementation Constraints
+
+The next Hospital City implementation should:
+
+- Replace or demote existing clutter rather than layering over it.
+- Use fewer, larger, clearer forms.
+- Prioritize layout over props.
+- Preserve existing behavior, routes, and incident IDs.
+- Preserve `world-city` lifecycle and one active city canvas.
+- Preserve all four incident nodes.
+- Run screenshots and critic.
+- Require manual screenshot judgment; deterministic gates alone are not visual approval.
+
+### City Visual Anti-Cycle Rule
+
+For city visual work:
+
+1. Write one spec pass.
+2. Do one implementation pass.
+3. Do one screenshot critique.
+4. Do one replacement pass only if representation is wrong.
+5. Then stop and either accept the direction or write an asset/model spec.
+
+Do not keep layering new geometry on top of a bad composition.
+
 ## Recommended Module Structure
 
 Small first version:
